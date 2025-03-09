@@ -1924,7 +1924,7 @@ def bulk_add_products_to_warehouse(request, warehouse_id):
 
                     # Gesamtbestand des Produkts aktualisieren
                     total_stock = ProductWarehouse.objects.filter(product=product).aggregate(
-                        total=models.Sum('quantity'))['total'] or 0
+                        total=Sum('quantity'))['total'] or 0
                     product.current_stock = total_stock
                     product.save()
 
@@ -1974,3 +1974,143 @@ class WarehouseAccessForm(forms.ModelForm):
             self.fields['warehouse'].help_text = "Wählen Sie ein Lager aus."
             self.fields[
                 'department'].help_text = "Wählen Sie eine Abteilung aus. Für jede Kombination aus Lager und Abteilung kann es nur einen Zugriffsrecht-Eintrag geben."
+
+
+@login_required
+@permission_required('inventory', 'edit')
+def bulk_warehouse_transfer(request):
+    """Mehrere Produkte zwischen Lagern verschieben."""
+
+    # Nur Lager anzeigen, auf die der Benutzer Zugriff hat
+    managed_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                          if user_has_warehouse_access(request.user, w, 'manage_stock')]
+
+    if not managed_warehouses:
+        messages.error(request, "Sie haben keine Berechtigung, Produkte zwischen Lagern zu transferieren.")
+        return redirect('warehouse_list')
+
+    if request.method == 'POST':
+        source_warehouse_id = request.POST.get('source_warehouse')
+        destination_warehouse_id = request.POST.get('destination_warehouse')
+        product_ids = request.POST.getlist('product_ids')
+        notes = request.POST.get('notes', '')
+
+        if not (source_warehouse_id and destination_warehouse_id and product_ids):
+            messages.error(request, "Quelllager, Ziellager und mindestens ein Produkt müssen ausgewählt werden.")
+            return redirect('bulk_warehouse_transfer')
+
+        # Verarbeitung der Verschiebung für jedes Produkt
+        try:
+            source_warehouse = Warehouse.objects.get(pk=source_warehouse_id)
+            destination_warehouse = Warehouse.objects.get(pk=destination_warehouse_id)
+
+            # Berechtigungsprüfung
+            if not (user_has_warehouse_access(request.user, source_warehouse, 'manage_stock') and
+                    user_has_warehouse_access(request.user, destination_warehouse, 'manage_stock')):
+                messages.error(request, "Sie haben keine Berechtigung für einen oder beide Lager.")
+                return redirect('bulk_warehouse_transfer')
+
+            # Verarbeitung der ausgewählten Produkte
+            products_transferred = 0
+            errors = []
+
+            for product_id in product_ids:
+                try:
+                    product = Product.objects.get(pk=product_id)
+
+                    # Bestandsprüfung im Quelllager
+                    try:
+                        quantity_field_name = f'quantity_{product_id}'
+                        transfer_quantity = Decimal(request.POST.get(quantity_field_name, 0))
+
+                        source_product_warehouse = ProductWarehouse.objects.get(
+                            product=product, warehouse=source_warehouse)
+
+                        if source_product_warehouse.quantity < transfer_quantity:
+                            errors.append(f"Nicht genügend Bestand für {product.name} im Quelllager.")
+                            continue
+
+                        # Transfer durchführen
+                        with transaction.atomic():
+                            # Abgang im Quelllager
+                            StockMovement.objects.create(
+                                product=product,
+                                quantity=transfer_quantity,
+                                movement_type='out',
+                                reference=f'Bulk-Transfer zu {destination_warehouse.name}',
+                                notes=notes,
+                                created_by=request.user,
+                                warehouse=source_warehouse
+                            )
+
+                            # Quelllager-Bestand aktualisieren
+                            source_product_warehouse.quantity -= transfer_quantity
+                            source_product_warehouse.save()
+
+                            # Zugang im Ziellager
+                            StockMovement.objects.create(
+                                product=product,
+                                quantity=transfer_quantity,
+                                movement_type='in',
+                                reference=f'Bulk-Transfer von {source_warehouse.name}',
+                                notes=notes,
+                                created_by=request.user,
+                                warehouse=destination_warehouse
+                            )
+
+                            # Ziellager-Bestand aktualisieren
+                            dest_warehouse_product, created = ProductWarehouse.objects.get_or_create(
+                                product=product,
+                                warehouse=destination_warehouse,
+                                defaults={'quantity': 0}
+                            )
+
+                            dest_warehouse_product.quantity += transfer_quantity
+                            dest_warehouse_product.save()
+
+                        products_transferred += 1
+
+                    except ProductWarehouse.DoesNotExist:
+                        errors.append(f"Kein Bestand von {product.name} im Quelllager vorhanden.")
+
+                except Product.DoesNotExist:
+                    errors.append(f"Produkt mit ID {product_id} nicht gefunden.")
+
+            # Meldungen anzeigen
+            if products_transferred > 0:
+                messages.success(request, f"{products_transferred} Produkte wurden erfolgreich transferiert.")
+
+            if errors:
+                for error in errors:
+                    messages.warning(request, error)
+
+            return redirect('warehouse_detail', pk=source_warehouse.pk)
+
+        except Exception as e:
+            messages.error(request, f"Fehler beim Transfer: {str(e)}")
+            return redirect('bulk_warehouse_transfer')
+
+    # Produkte im ersten Lager anzeigen (falls vorhanden)
+    products = []
+    source_warehouse_id = request.GET.get('source', '')
+
+    if source_warehouse_id:
+        try:
+            source_warehouse = Warehouse.objects.get(pk=source_warehouse_id)
+            if user_has_warehouse_access(request.user, source_warehouse, 'manage_stock'):
+                product_warehouses = ProductWarehouse.objects.filter(
+                    warehouse=source_warehouse,
+                    quantity__gt=0
+                ).select_related('product')
+
+                products = [(pw.product, pw.quantity) for pw in product_warehouses]
+        except Warehouse.DoesNotExist:
+            pass
+
+    context = {
+        'managed_warehouses': managed_warehouses,
+        'products': products,
+        'source_warehouse_id': source_warehouse_id,
+    }
+
+    return render(request, 'inventory/bulk_warehouse_transfer.html', context)

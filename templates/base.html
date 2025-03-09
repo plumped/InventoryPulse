@@ -66,6 +66,12 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item {% if 'bulk-transfer' in request.path %}active{% endif %}"
+                                   href="{% url 'bulk_warehouse_transfer' %}">
+                                    <i class="bi bi-arrows-move me-2"></i>Lagerverschiebung
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item {% if 'department' in request.path %}active{% endif %}"
                                    href="{% url 'department_management' %}">
                                     <i class="bi bi-people me-2"></i>Abteilungen

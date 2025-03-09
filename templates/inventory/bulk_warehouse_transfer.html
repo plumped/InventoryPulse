@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Massenverschiebung zwischen Lagern - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-3">
+        <h1><i class="bi bi-arrow-left-right"></i> Produktverschiebung zwischen Lagern</h1>
+        <p class="text-muted">Verschieben Sie mehrere Produkte gleichzeitig zwischen verschiedenen Lagern.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Quelllager auswählen</h5>
+            </div>
+            <div class="card-body">
+                <form method="get">
+                    <div class="mb-3">
+                        <label for="source" class="form-label">Quelllager</label>
+                        <select name="source" id="source" class="form-select" required onchange="this.form.submit()">
+                            <option value="">-- Lager auswählen --</option>
+                            {% for warehouse in managed_warehouses %}
+                                <option value="{{ warehouse.id }}" {% if source_warehouse_id == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ warehouse.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <form method="post" id="transfer-form">
+            {% csrf_token %}
+            {% if source_warehouse_id %}
+                <input type="hidden" name="source_warehouse" value="{{ source_warehouse_id }}">
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Ziellager auswählen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="destination_warehouse" class="form-label">Ziellager</label>
+                            <select name="destination_warehouse" id="destination_warehouse" class="form-select" required>
+                                <option value="">-- Lager auswählen --</option>
+                                {% for warehouse in managed_warehouses %}
+                                    {% if warehouse.id|stringformat:"s" != source_warehouse_id %}
+                                        <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Wählen Sie das Ziellager aus, in das die Produkte verschoben werden sollen.</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if products %}
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Produkte auswählen</h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="select-all">
+                                <label class="form-check-label" for="select-all">Alle auswählen</label>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 40px;"></th>
+                                            <th>Produkt</th>
+                                            <th>SKU</th>
+                                            <th>Verfügbar</th>
+                                            <th>Verschieben</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for product, quantity in products %}
+                                            <tr>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input product-checkbox" type="checkbox" name="product_ids" value="{{ product.id }}" id="product_{{ product.id }}">
+                                                    </div>
+                                                </td>
+                                                <td>{{ product.name }}</td>
+                                                <td>{{ product.sku }}</td>
+                                                <td>{{ quantity }} {{ product.unit }}</td>
+                                                <td>
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="number" class="form-control" name="quantity_{{ product.id }}" min="0" max="{{ quantity }}" value="0" step="1">
+                                                        <span class="input-group-text">{{ product.unit }}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">Transferdetails</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Anmerkungen</label>
+                                <textarea name="notes" id="notes" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="card-footer text-end">
+                            <button type="submit" class="btn btn-primary">Produkte verschieben</button>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        Keine Produkte im ausgewählten Quelllager gefunden.
+                    </div>
+                {% endif %}
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Funktion für "Alle auswählen" Checkbox
+        const selectAllCheckbox = document.getElementById('select-all');
+        const productCheckboxes = document.querySelectorAll('.product-checkbox');
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                productCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+            });
+        }
+
+        // Validierung vor dem Absenden
+        const transferForm = document.getElementById('transfer-form');
+        if (transferForm) {
+            transferForm.addEventListener('submit', function(e) {
+                const selectedProducts = document.querySelectorAll('input[name="product_ids"]:checked');
+
+                if (selectedProducts.length === 0) {
+                    e.preventDefault();
+                    alert('Bitte wählen Sie mindestens ein Produkt aus.');
+                    return false;
+                }
+
+                let hasQuantity = false;
+                selectedProducts.forEach(checkbox => {
+                    const productId = checkbox.value;
+                    const quantityInput = document.querySelector(`input[name="quantity_${productId}"]`);
+                    if (quantityInput && parseFloat(quantityInput.value) > 0) {
+                        hasQuantity = true;
+                    }
+                });
+
+                if (!hasQuantity) {
+                    e.preventDefault();
+                    alert('Bitte geben Sie für mindestens ein ausgewähltes Produkt eine Menge größer als 0 ein.');
+                    return false;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

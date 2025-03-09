@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Import-Dashboard - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Import-Dashboard</li>
+            </ol>
+        </nav>
+        <h1>Import-Dashboard</h1>
+    </div>
+    <div>
+        <a href="{% url 'import_log_list' %}" class="btn btn-secondary">
+            <i class="fas fa-history"></i> Import-Logs
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-box fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Produkte importieren</h5>
+                <p class="card-text">Importieren Sie Produkte aus einer CSV-Datei.</p>
+                <a href="{% url 'import_products' %}" class="btn btn-primary">
+                    <i class="fas fa-upload"></i> Import starten
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-tags fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Kategorien importieren</h5>
+                <p class="card-text">Importieren Sie Produktkategorien aus einer CSV-Datei.</p>
+                <a href="{% url 'import_categories' %}" class="btn btn-success">
+                    <i class="fas fa-upload"></i> Import starten
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-truck fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Lieferanten importieren</h5>
+                <p class="card-text">Importieren Sie Lieferanten aus einer CSV-Datei.</p>
+                <a href="{% url 'import_suppliers' %}" class="btn btn-info">
+                    <i class="fas fa-upload"></i> Import starten
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-link fa-3x text-warning"></i>
+                </div>
+                <h5 class="card-title">Produkt-Lieferanten-Zuordnungen</h5>
+                <p class="card-text">Importieren Sie Zuordnungen zwischen Produkten und Lieferanten.</p>
+                <a href="{% url 'import_supplier_products' %}" class="btn btn-warning">
+                    <i class="fas fa-upload"></i> Import starten
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Letzte Importe</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Typ</th>
+                        <th>Dateiname</th>
+                        <th>Datum</th>
+                        <th>Benutzer</th>
+                        <th>Erfolgsrate</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in recent_imports %}
+                    <tr>
+                        <td>
+                            {% if log.import_type == 'product' %}
+                                <span class="badge bg-primary">{{ log.get_import_type_display }}</span>
+                            {% elif log.import_type == 'category' %}
+                                <span class="badge bg-success">{{ log.get_import_type_display }}</span>
+                            {% elif log.import_type == 'supplier' %}
+                                <span class="badge bg-info">{{ log.get_import_type_display }}</span>
+                            {% elif log.import_type == 'supplier_product' %}
+                                <span class="badge bg-warning">{{ log.get_import_type_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.file_name }}</td>
+                        <td>{{ log.date_imported|date:"d.m.Y H:i" }}</td>
+                        <td>{{ log.user.username }}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar {% if log.success_rate > 90 %}bg-success{% elif log.success_rate > 70 %}bg-info{% elif log.success_rate > 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ log.success_rate }}%;"
+                                     aria-valuenow="{{ log.success_rate }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    {{ log.success_rate }}%
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ log.successful_rows }}/{{ log.total_rows }} erfolgreich</small>
+                        </td>
+                        <td>
+                            <a href="{% url 'import_log_detail' log.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Noch keine Importe durchgeführt</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if recent_imports %}
+        <div class="text-end mt-3">
+            <a href="{% url 'import_log_list' %}" class="btn btn-outline-primary">
+                <i class="fas fa-list"></i> Alle Importe anzeigen
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Import-Hinweise</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>CSV-Format</h6>
+                <p>Die CSV-Datei sollte eine Kopfzeile mit den Feldnamen enthalten. Die Spaltentrennzeichen und die Zeichenkodierung können beim Import angepasst werden.</p>
+                <p>Laden Sie die Vorlagen herunter, um das korrekte Format zu sehen:</p>
+                <ul>
+                    <li><a href="/static/files/product_import_template.csv">Produkt-Importvorlage</a></li>
+                    <li><a href="/static/files/category_import_template.csv">Kategorie-Importvorlage</a></li>
+                    <li><a href="/static/files/supplier_import_template.csv">Lieferanten-Importvorlage</a></li>
+                    <li><a href="/static/files/supplier_product_import_template.csv">Produkt-Lieferanten-Importvorlage</a></li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Tipps für erfolgreiche Importe</h6>
+                <ul>
+                    <li>Stellen Sie sicher, dass alle erforderlichen Felder ausgefüllt sind</li>
+                    <li>Verwenden Sie eindeutige Identifikatoren (Artikelnummern, Namen)</li>
+                    <li>Bei Lieferanten-Produkt-Zuordnungen müssen sowohl das Produkt als auch der Lieferant bereits existieren</li>
+                    <li>Überprüfen Sie das Ergebnis des Imports im Detail-Bericht</li>
+                    <li>Bei großen Datenmengen kann der Import einige Zeit in Anspruch nehmen</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

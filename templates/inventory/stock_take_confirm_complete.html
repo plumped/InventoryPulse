@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventur abschließen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_list' %}">Inventuren</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_detail' stock_take.id %}">{{ stock_take.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Inventur abschließen</li>
+            </ol>
+        </nav>
+        <h1>Inventur "{{ stock_take.name }}" abschließen</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Inventur abschließen</h5>
+            </div>
+            <div class="card-body">
+                <p>Sie sind dabei, die Inventur <strong>"{{ stock_take.name }}"</strong> abzuschließen. Dieser Vorgang kann nicht rückgängig gemacht werden.</p>
+
+                {% if uncounted_count > 0 %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Es gibt noch <strong>{{ uncounted_count }}</strong> ungezählte Produkte. Sie können die Inventur dennoch abschließen, indem Sie die Option "Ungezählte Positionen überspringen" auswählen.
+                </div>
+                {% endif %}
+
+                {% if items_with_discrepancy %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Es wurden <strong>{{ items_with_discrepancy.count }}</strong> Produkte mit Abweichungen gefunden. Sie können unten auswählen, ob die Bestandskorrekturen angewendet werden sollen.
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Es wurden keine Abweichungen gefunden. Alle gezählten Bestände stimmen mit den erwarteten Beständen überein.
+                </div>
+                {% endif %}
+
+                <form method="post" class="mt-4">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="apply_adjustments" name="apply_adjustments" value="yes" checked>
+                            <label class="form-check-label" for="apply_adjustments">
+                                <strong>Bestandskorrekturen anwenden</strong> - Die tatsächlich gezählten Mengen werden als neue Lagerbestände übernommen
+                            </label>
+                        </div>
+                    </div>
+
+                    {% if uncounted_count > 0 %}
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="skip_uncounted" name="skip_uncounted" value="yes">
+                            <label class="form-check-label" for="skip_uncounted">
+                                <strong>Ungezählte Positionen überspringen</strong> - Die Inventur wird abgeschlossen, ohne die ungezählten Produkte zu berücksichtigen
+                            </label>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Zurück
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>Inventur abschließen
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Zusammenfassung</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-6 text-center">
+                        <div class="card bg-light p-2">
+                            <h6>Produkte gesamt</h6>
+                            <h3>{{ stock_take.stocktakeitem_set.count }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <div class="card bg-primary text-white p-2">
+                            <h6>Gezählt</h6>
+                            <h3>{{ counted_items }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6 text-center">
+                        <div class="card bg-success text-white p-2">
+                            <h6>Korrekt</h6>
+                            <h3>{{ correct_items }}</h3>
+                        </div>
+                    </div>
+                    <div class="col-6 text-center">
+                        <div class="card {% if items_with_discrepancy.count > 0 %}bg-warning{% else %}bg-success{% endif %} text-white p-2">
+                            <h6>Abweichungen</h6>
+                            <h3>{{ discrepancy_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar {% if stock_take.get_completion_percentage == 100 %}bg-success{% endif %}"
+                         role="progressbar"
+                         style="width: {{ stock_take.get_completion_percentage }}%;"
+                         aria-valuenow="{{ stock_take.get_completion_percentage }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                        {{ stock_take.get_completion_percentage }}% abgeschlossen
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if items_with_discrepancy %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i>Produkte mit Abweichungen</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produkt</th>
+                                <th>Erwartet</th>
+                                <th>Gezählt</th>
+                                <th>Differenz</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items_with_discrepancy %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.expected_quantity }}</td>
+                                <td>{{ item.counted_quantity }}</td>
+                                <td>
+                                    {% with discrepancy=item.get_discrepancy %}
+                                        {% if discrepancy > 0 %}
+                                            <span class="text-success">+{{ discrepancy }}</span>
+                                        {% else %}
+                                            <span class="text-danger">{{ discrepancy }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

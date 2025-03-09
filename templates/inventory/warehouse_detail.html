@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}Lager: {{ warehouse.name }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Lager: {{ warehouse.name }}</h1>
+        <div>
+            <a href="{% url 'warehouse_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur Liste
+            </a>
+            {% if user.is_superuser %}
+            <a href="{% url 'warehouse_update' warehouse.id %}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Bearbeiten
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <!-- Lagerdetails -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Lagerdetails</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ warehouse.name }}</p>
+                    <p><strong>Standort:</strong> {{ warehouse.location }}</p>
+                    <p><strong>Status:</strong>
+                        {% if warehouse.is_active %}
+                            <span class="badge bg-success">Aktiv</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inaktiv</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Beschreibung:</strong> {{ warehouse.description|default:"Keine Beschreibung vorhanden." }}</p>
+                </div>
+            </div>
+
+            <!-- Aktive Inventuren -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Aktive Inventuren</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if active_stock_takes %}
+                    <div class="list-group list-group-flush">
+                        {% for stock_take in active_stock_takes %}
+                        <a href="{% url 'stock_take_detail' stock_take.id %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ stock_take.name }}</h6>
+                                <small>{{ stock_take.start_date|date:"d.m.Y" }}</small>
+                            </div>
+                            <div class="progress mt-2" style="height: 10px;">
+                                <div class="progress-bar bg-primary" role="progressbar"
+                                    style="width: {{ stock_take.get_completion_percentage }}%;"
+                                    aria-valuenow="{{ stock_take.get_completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ stock_take.get_completion_percentage }}%
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="list-group-item text-center">
+                        Keine aktiven Inventuren
+                    </div>
+                    {% endif %}
+                </div>
+                {% if can_manage %}
+                <div class="card-footer">
+                    <a href="{% url 'stock_take_create' %}?warehouse={{ warehouse.id }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-circle"></i> Neue Inventur
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Produktliste -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Produkte im Lager</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Suchleiste & Filter -->
+                    <form method="get" class="mb-3">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control" placeholder="Suchen..." value="{{ search_query }}">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="category" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Alle Kategorien</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if category.id|stringformat:"i" == category_id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                {% if can_manage %}
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                                    <i class="bi bi-plus-circle"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Produkttabelle -->
+                    {% if products %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Produkt</th>
+                                    <th>Kategorie</th>
+                                    <th class="text-end">Bestand</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product_warehouse in products %}
+                                <tr>
+                                    <td>{{ product_warehouse.product.sku }}</td>
+                                    <td>
+                                        <a href="{% url 'product_detail' product_warehouse.product.id %}">
+                                            {{ product_warehouse.product.name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if product_warehouse.product.category %}
+                                            {{ product_warehouse.product.category.name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">{{ product_warehouse.quantity }}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if can_manage %}
+                                            <a href="{% url 'stock_movement_add' %}?product={{ product_warehouse.product.id }}&warehouse={{ warehouse.id }}" class="btn btn-sm btn-outline-success" title="Bestandsbewegung">
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </a>
+                                            <a href="{% url 'product_adjust_stock' product_warehouse.product.id warehouse.id %}" class="btn btn-sm btn-outline-warning" title="Bestand korrigieren">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginierung -->
+                    {% if products.paginator.num_pages > 1 %}
+                    <nav aria-label="Seiten">
+                        <ul class="pagination justify-content-center">
+                            {% if products.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">
+                                    <i class="bi bi-chevron-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    {{ products.number }} von {{ products.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if products.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ products.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}">
+                                    <i class="bi bi-chevron-double-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="alert alert-info">
+                        Keine Produkte im Lager gefunden.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Letzte Bestandsbewegungen -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Letzte Bestandsbewegungen</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_movements %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Produkt</th>
+                                    <th>Typ</th>
+                                    <th class="text-end">Menge</th>
+                                    <th>Von</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for movement in recent_movements %}
+                                <tr>
+                                    <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'product_detail' movement.product.id %}">
+                                            {{ movement.product.name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if movement.movement_type == 'in' %}
+                                        <span class="badge bg-success">Zugang</span>
+                                        {% elif movement.movement_type == 'out' %}
+                                        <span class="badge bg-danger">Abgang</span>
+                                        {% elif movement.movement_type == 'adj' %}
+                                        <span class="badge bg-warning">Korrektur</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ movement.get_movement_type_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">{{ movement.quantity }}</td>
+                                    <td>{{ movement.created_by.username }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="card-body text-center">
+                        Keine Bestandsbewegungen gefunden.
+                    </div>
+                    {% endif %}
+                </div>
+                {% if can_manage %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'stock_movement_list' %}?warehouse={{ warehouse.id }}" class="btn btn-outline-secondary btn-sm">
+                        Alle Bestandsbewegungen anzeigen
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% if can_manage %}
+<!-- Modal: Produkt zum Lager hinzufügen -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Produkte zum Lager hinzufügen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'product_add_to_warehouse' warehouse.id %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Einzelnes Produkt hinzufügen
+                    </a>
+                    <a href="{% url 'bulk_add_products_to_warehouse' warehouse.id %}" class="btn btn-success">
+                        <i class="bi bi-collection"></i> Mehrere Produkte hinzufügen
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

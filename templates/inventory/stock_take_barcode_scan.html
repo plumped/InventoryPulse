@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}Barcode-Scan: {{ stock_take.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_list' %}">Inventuren</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_detail' stock_take.id %}">{{ stock_take.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Barcode-Scan</li>
+            </ol>
+        </nav>
+        <h1>Barcode-Scan: {{ stock_take.name }}</h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+        </a>
+        <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-primary">
+            <i class="fas fa-clipboard-check"></i> Listenansicht
+        </a>
+    </div>
+</div>
+
+<div class="progress mb-4" style="height: 25px;">
+    <div class="progress-bar {% if stock_take.get_completion_percentage == 100 %}bg-success{% endif %}"
+         role="progressbar"
+         style="width: {{ stock_take.get_completion_percentage }}%;"
+         aria-valuenow="{{ stock_take.get_completion_percentage }}"
+         aria-valuemin="0"
+         aria-valuemax="100">
+        {{ stock_take.get_completion_percentage }}% abgeschlossen
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <!-- Barcode-Scanner -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-barcode me-2"></i>Barcode scannen</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Scannen Sie den Barcode eines Produkts oder geben Sie ihn manuell ein, um das Produkt zu identifizieren und zu zählen.
+                </div>
+
+                <div class="mb-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-barcode"></i></span>
+                        <input type="text" id="barcode-input" class="form-control form-control-lg" placeholder="Barcode scannen oder eingeben..." autofocus>
+                        <button class="btn btn-primary" type="button" id="barcode-submit">
+                            <i class="fas fa-search"></i> Suchen
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <div class="mb-2">
+                        <button type="button" id="toggle-camera" class="btn btn-outline-secondary">
+                            <i class="fas fa-camera"></i> Kamera aktivieren
+                        </button>
+                    </div>
+                    <div id="scanner-container" class="d-none mb-3">
+                        <video id="scanner-video" style="width: 100%; max-width: 400px; height: auto;"></video>
+                    </div>
+                </div>
+
+                <div id="scan-result-placeholder" class="text-center text-muted my-4">
+                    <i class="fas fa-barcode fa-3x mb-2"></i>
+                    <p>Scannerergebnis wird hier angezeigt</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <!-- Produkt-Info und Zählformular -->
+        <div id="product-card" class="card mb-4 d-none">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-box me-2"></i>Produktinformation</h5>
+            </div>
+            <div class="card-body">
+                <div id="product-info">
+                    <div class="mb-3 text-center">
+                        <h3 id="product-name">-</h3>
+                        <p class="text-muted" id="product-sku">-</p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-6 text-center">
+                            <div class="card bg-light p-3">
+                                <h6>Erwartete Menge</h6>
+                                <h3 id="expected-quantity">-</h3>
+                            </div>
+                        </div>
+                        <div class="col-6 text-center">
+                            <div class="card bg-light p-3 counted-status">
+                                <h6>Status</h6>
+                                <h5 id="count-status">Nicht gezählt</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="count-form" class="mb-3">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="counted-quantity" class="form-label">Gezählte Menge*</label>
+                            <input type="number" class="form-control form-control-lg" id="counted-quantity" required min="0" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label for="count-notes" class="form-label">Anmerkungen</label>
+                            <textarea class="form-control" id="count-notes" rows="3"></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-2"></i>Zählung speichern
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div id="product-not-found" class="alert alert-danger d-none">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span id="not-found-message">Produkt mit diesem Barcode nicht gefunden.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zuletzt gescannte Produkte -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Zuletzt gescannte Produkte</h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush" id="recent-scans">
+                    <li class="list-group-item text-center text-muted">
+                        Noch keine Produkte gescannt
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        let currentItemId = null;
+
+        // Barcode-Eingabe Handling
+        $('#barcode-submit').click(function() {
+            processBarcode();
+        });
+
+        $('#barcode-input').keypress(function(e) {
+            if (e.which === 13) {  // Enter key
+                e.preventDefault();
+                processBarcode();
+            }
+        });
+
+        function processBarcode() {
+            const barcode = $('#barcode-input').val().trim();
+            if (!barcode) return;
+
+            $('#scan-result-placeholder').html('<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>');
+
+            // AJAX request to search for product by barcode
+            $.ajax({
+                url: "{% url 'stock_take_barcode_scan' stock_take.id %}",
+                type: "POST",
+                data: {
+                    'barcode': barcode,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        // Product found
+                        $('#product-card').removeClass('d-none');
+                        $('#product-not-found').addClass('d-none');
+                        $('#scan-result-placeholder').addClass('d-none');
+
+                        // Update product info
+                        $('#product-name').text(data.product_name);
+                        $('#product-sku').text('Artikelnr.: ' + data.product_sku);
+                        $('#expected-quantity').text(data.expected_quantity);
+
+                        currentItemId = data.item_id;
+
+                        // Update count status
+                        if (data.is_counted) {
+                            $('#count-status').text('Gezählt: ' + data.counted_quantity);
+                            $('.counted-status').removeClass('bg-light').addClass('bg-success text-white');
+                            $('#counted-quantity').val(data.counted_quantity);
+                        } else {
+                            $('#count-status').text('Nicht gezählt');
+                            $('.counted-status').removeClass('bg-success text-white').addClass('bg-light');
+                            $('#counted-quantity').val('');
+                        }
+
+                        // Focus on quantity input
+                        $('#counted-quantity').focus();
+
+                        // Add to recent scans
+                        addToRecentScans(data.product_name, data.item_id, data.is_counted);
+                    } else {
+                        // Product not found
+                        $('#product-card').removeClass('d-none');
+                        $('#product-not-found').removeClass('d-none');
+                        $('#scan-result-placeholder').addClass('d-none');
+                        $('#not-found-message').text(data.message);
+                        currentItemId = null;
+                    }
+                },
+                error: function() {
+                    alert('Fehler bei der Verarbeitung der Anfrage. Bitte versuchen Sie es erneut.');
+                    $('#scan-result-placeholder').html('<i class="fas fa-exclamation-triangle fa-3x mb-2 text-danger"></i><p class="text-danger">Fehler bei der Verarbeitung</p>');
+                }
+            });
+
+            // Clear barcode input for next scan
+            $('#barcode-input').val('').focus();
+        }
+
+        // Count form submission
+        $('#count-form').submit(function(e) {
+            e.preventDefault();
+
+            if (!currentItemId) {
+                alert('Kein Produkt ausgewählt. Bitte scannen Sie zuerst einen Barcode.');
+                return;
+            }
+
+            const countedQuantity = $('#counted-quantity').val();
+            const notes = $('#count-notes').val();
+
+            if (!countedQuantity) {
+                alert('Bitte geben Sie die gezählte Menge ein.');
+                return;
+            }
+
+            // AJAX request to save the count
+            $.ajax({
+                url: `{% url 'stock_take_item_count' stock_take.id 0 %}`.replace('0', currentItemId),
+                type: "POST",
+                data: {
+                    'counted_quantity': countedQuantity,
+                    'notes': notes,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        // Update the UI
+                        $('#count-status').text('Gezählt: ' + countedQuantity);
+                        $('.counted-status').removeClass('bg-light').addClass('bg-success text-white');
+
+                        // Update recent scans
+                        $(`#recent-scan-${currentItemId}`).removeClass('bg-light').addClass('bg-success text-white')
+                            .find('.scan-status').html('<i class="fas fa-check-circle"></i> Gezählt');
+
+                        // Show success message
+                        alert('Zählung erfolgreich gespeichert.');
+
+                        // Clear form and reset for next scan
+                        $('#counted-quantity').val('');
+                        $('#count-notes').val('');
+                        $('#barcode-input').focus();
+
+                        // Reset UI
+                        $('#product-card').addClass('d-none');
+                        $('#scan-result-placeholder').removeClass('d-none').html('<i class="fas fa-check-circle fa-3x mb-2 text-success"></i><p class="text-success">Zählung gespeichert</p>');
+
+                        setTimeout(function() {
+                            $('#scan-result-placeholder').html('<i class="fas fa-barcode fa-3x mb-2"></i><p>Scannerergebnis wird hier angezeigt</p>').removeClass('text-success');
+                        }, 2000);
+
+                        currentItemId = null;
+                    }
+                },
+                error: function() {
+                    alert('Fehler beim Speichern der Zählung. Bitte versuchen Sie es erneut.');
+                }
+            });
+        });
+
+        // Add to recent scans
+        function addToRecentScans(productName, itemId, isCounted) {
+            // Remove empty placeholder if present
+            if ($('#recent-scans li').length === 1 && $('#recent-scans li').hasClass('text-muted')) {
+                $('#recent-scans').empty();
+            }
+
+            // Check if already in list
+            if ($(`#recent-scan-${itemId}`).length > 0) {
+                // Move to top
+                $(`#recent-scan-${itemId}`).prependTo('#recent-scans');
+                return;
+            }
+
+            // Add to top of list
+            const statusClass = isCounted ? 'bg-success text-white' : 'bg-light';
+            const statusText = isCounted ? '<i class="fas fa-check-circle"></i> Gezählt' : '<i class="fas fa-hourglass"></i> Nicht gezählt';
+
+            const item = `
+                <li class="list-group-item ${statusClass}" id="recent-scan-${itemId}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${productName}</strong>
+                        </div>
+                        <span class="scan-status">${statusText}</span>
+                    </div>
+                </li>
+            `;
+
+            $('#recent-scans').prepend(item);
+
+            // Limit to 10 items
+            if ($('#recent-scans li').length > 10) {
+                $('#recent-scans li:last-child').remove();
+            }
+        }
+
+        // Camera functionality
+        let scanner = null;
+
+        $('#toggle-camera').click(function() {
+            const $container = $('#scanner-container');
+
+            if ($container.hasClass('d-none')) {
+                // Start camera
+                $container.removeClass('d-none');
+                $(this).html('<i class="fas fa-camera-slash"></i> Kamera deaktivieren');
+
+                // Initialize scanner
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                        .then(function(stream) {
+                            const video = document.getElementById('scanner-video');
+                            video.srcObject = stream;
+                            video.play();
+
+                            // You would need a barcode scanning library here
+                            // This is a placeholder for actual implementation
+                            // Example with QuaggaJS or other libraries would go here
+                            alert('Kamera aktiviert. Hinweis: Die eigentliche Barcode-Erkennung ist in diesem Demo nicht implementiert und erfordert eine zusätzliche Bibliothek wie QuaggaJS.');
+                        })
+                        .catch(function(error) {
+                            console.error("Kamerazugriff fehlgeschlagen:", error);
+                            alert("Konnte nicht auf die Kamera zugreifen. Bitte überprüfen Sie Ihre Kameraeinstellungen.");
+                            $container.addClass('d-none');
+                            $('#toggle-camera').html('<i class="fas fa-camera"></i> Kamera aktivieren');
+                        });
+                } else {
+                    alert("Ihr Browser unterstützt keine Kamerafunktionalität.");
+                    $container.addClass('d-none');
+                    $('#toggle-camera').html('<i class="fas fa-camera"></i> Kamera aktivieren');
+                }
+            } else {
+                // Stop camera
+                $container.addClass('d-none');
+                $(this).html('<i class="fas fa-camera"></i> Kamera aktivieren');
+
+                if (document.getElementById('scanner-video').srcObject) {
+                    document.getElementById('scanner-video').srcObject.getTracks().forEach(track => track.stop());
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

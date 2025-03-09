@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventur löschen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_list' %}">Inventuren</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_detail' stock_take.id %}">{{ stock_take.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Löschen</li>
+            </ol>
+        </nav>
+        <h1>Inventur löschen</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Achtung: Inventur löschen</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Sind Sie sicher, dass Sie die Inventur <strong>"{{ stock_take.name }}"</strong> löschen möchten?
+                </p>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Hinweis:</strong> Diese Aktion kann nicht rückgängig gemacht werden. Alle mit dieser Inventur verbundenen Informationen gehen unwiderruflich verloren.
+                </div>
+
+                <div class="mb-4">
+                    <h6>Details zur Inventur:</h6>
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <th style="width: 30%">Name:</th>
+                                <td>{{ stock_take.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>{{ stock_take.get_status_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Erstellt am:</th>
+                                <td>{{ stock_take.start_date|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Erstellt von:</th>
+                                <td>{{ stock_take.created_by.username }}</td>
+                            </tr>
+                            <tr>
+                                <th>Anzahl Produkte:</th>
+                                <td>{{ stock_take.stocktakeitem_set.count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <form method="post" class="d-flex justify-content-between">
+                    {% csrf_token %}
+                    <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Abbrechen
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Inventur endgültig löschen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Benutzerprofil - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Benutzerprofil</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Benutzername:</div>
+                    <div class="col-md-8">{{ user.username }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Name:</div>
+                    <div class="col-md-8">
+                        {% if user.first_name or user.last_name %}
+                            {{ user.first_name }} {{ user.last_name }}
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">E-Mail:</div>
+                    <div class="col-md-8">
+                        {% if user.email %}
+                            {{ user.email }}
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Mitarbeitergruppen:</div>
+                    <div class="col-md-8">
+                        {% if user.groups.all %}
+                            {% for group in user.groups.all %}
+                                <span class="badge bg-primary">{{ group.name }}</span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">Keine Gruppen</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Letzter Login:</div>
+                    <div class="col-md-8">
+                        {% if user.last_login %}
+                            {{ user.last_login|date:"d.m.Y H:i" }}
+                        {% else %}
+                            <span class="text-muted">Nie angemeldet</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Account erstellt:</div>
+                    <div class="col-md-8">{{ user.date_joined|date:"d.m.Y H:i" }}</div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="#" class="btn btn-primary">Profil bearbeiten</a>
+                <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">Passwort ändern</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

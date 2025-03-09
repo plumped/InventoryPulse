@@ -1,0 +1,249 @@
+{% load static %}
+{% load permission_tags %}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InventoryPulse{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="bi bi-boxes"></i> InventoryPulse
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                           href="{% url 'dashboard' %}">
+                           <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    {% if user|has_perm:'product:view' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'product' in request.path %}active{% endif %}"
+                           href="{% url 'product_list' %}">
+                           <i class="bi bi-box-seam"></i> Produkte
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if user|has_perm:'product:view' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'category' in request.path %}active{% endif %}"
+                           href="{% url 'category_list' %}">
+                           <i class="bi bi-tags"></i> Kategorien
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Lagerverwaltung Dropdown -->
+                    {% if user|has_perm:'inventory:view' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'warehouse' in request.path or 'department' in request.path %}active{% endif %}"
+                           href="#" id="warehouseDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-building"></i> Lagerverwaltung
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="warehouseDropdown">
+                            <li>
+                                <a class="dropdown-item {% if 'warehouse' in request.path and not 'access' in request.path %}active{% endif %}"
+                                   href="{% url 'warehouse_list' %}">
+                                    <i class="bi bi-building me-2"></i>Lager
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if 'department' in request.path %}active{% endif %}"
+                                   href="{% url 'department_management' %}">
+                                    <i class="bi bi-people me-2"></i>Abteilungen
+                                </a>
+                            </li>
+                            {% if user|has_perm:'inventory:admin' %}
+                            <li>
+                                <a class="dropdown-item {% if 'warehouse-access' in request.path %}active{% endif %}"
+                                   href="{% url 'warehouse_access_management' %}">
+                                    <i class="bi bi-key me-2"></i>Zugriffsrechte
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    <!-- Inventar Dropdown -->
+                    {% if user|has_perm:'inventory:view' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'movement' in request.path or 'stock-take' in request.path %}active{% endif %}"
+                           href="#" id="inventoryDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-clipboard-data"></i> Inventar
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="inventoryDropdown">
+                            <li>
+                                <a class="dropdown-item {% if 'movement' in request.path %}active{% endif %}"
+                                   href="{% url 'stock_movement_list' %}">
+                                    <i class="bi bi-arrow-left-right me-2"></i>Bestandsbewegungen
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if 'stock-take' in request.path %}active{% endif %}"
+                                   href="{% url 'stock_take_list' %}">
+                                    <i class="bi bi-clipboard-check me-2"></i>Inventuren
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    {% if user|has_perm:'supplier:view' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'supplier' in request.path %}active{% endif %}"
+                           href="{% url 'supplier_list' %}">
+                           <i class="bi bi-truck"></i> Lieferanten
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Import Dropdown -->
+                    {% if user|has_perm:'import:view' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'import' in request.path %}active{% endif %}"
+                           href="#" id="importDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-file-earmark-arrow-down"></i> Import
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="importDropdown">
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_dashboard' %}active{% endif %}"
+                                   href="{% url 'import_dashboard' %}">
+                                    <i class="bi bi-speedometer2 me-2"></i>Import-Dashboard
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% if user|has_perm:'import:create' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_products' %}active{% endif %}"
+                                   href="{% url 'import_products' %}">
+                                    <i class="bi bi-box-seam me-2"></i>Produkte importieren
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_categories' %}active{% endif %}"
+                                   href="{% url 'import_categories' %}">
+                                    <i class="bi bi-tags me-2"></i>Kategorien importieren
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouses' %}active{% endif %}"
+                                   href="{% url 'import_warehouses' %}">
+                                    <i class="bi bi-building me-2"></i>Lager importieren
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_departments' %}active{% endif %}"
+                                   href="{% url 'import_departments' %}">
+                                    <i class="bi bi-people me-2"></i>Abteilungen importieren
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouse_products' %}active{% endif %}"
+                                   href="{% url 'import_warehouse_products' %}">
+                                    <i class="bi bi-diagram-3 me-2"></i>Produkt-Lager-Bestände importieren
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_suppliers' %}active{% endif %}"
+                                   href="{% url 'import_suppliers' %}">
+                                    <i class="bi bi-truck me-2"></i>Lieferanten importieren
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_supplier_products' %}active{% endif %}"
+                                   href="{% url 'import_supplier_products' %}">
+                                    <i class="bi bi-link me-2"></i>Produkt-Lieferanten importieren
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_log_list' %}active{% endif %}"
+                                   href="{% url 'import_log_list' %}">
+                                    <i class="bi bi-clock-history me-2"></i>Import-Logs
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profil</a></li>
+                            {% if user.is_staff %}
+                            <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2"></i>Admin</a></li>
+                            {% endif %}
+                            {% if user.is_superuser %}
+                            <li><a class="dropdown-item" href="{% url 'permission_management' %}"><i class="bi bi-shield-lock me-2"></i>Berechtigungsverwaltung</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Abmelden</a></li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Anmelden</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid py-4">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">© {% now "Y" %} InventoryPulse - Smartes Lagerbestandsmanagement</span>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom JavaScript -->
+{#    <script src="{% static 'js/main.js' %}"></script>#}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

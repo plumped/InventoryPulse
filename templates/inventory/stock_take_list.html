@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventuren - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Inventuren</h1>
+    <a href="{% url 'stock_take_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Neue Inventur
+    </a>
+</div>
+
+<!-- Filter und Suche -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="status" class="form-label">Status</label>
+                {{ filter_form.status }}
+            </div>
+            <div class="col-md-3">
+                <label for="date_from" class="form-label">Von Datum</label>
+                {{ filter_form.date_from }}
+            </div>
+            <div class="col-md-3">
+                <label for="date_to" class="form-label">Bis Datum</label>
+                {{ filter_form.date_to }}
+            </div>
+            <div class="col-md-3">
+                <label for="search" class="form-label">Suche</label>
+                {{ filter_form.search }}
+            </div>
+            <div class="col-12 text-end">
+                <button type="submit" class="btn btn-primary">Filtern</button>
+                <a href="{% url 'stock_take_list' %}" class="btn btn-outline-secondary">Filter zurücksetzen</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Inventurliste -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Beginn</th>
+                        <th>Ende</th>
+                        <th>Fortschritt</th>
+                        <th>Abweichungen</th>
+                        <th>Erstellt von</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock_take in stock_takes %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'stock_take_detail' stock_take.id %}">{{ stock_take.name }}</a>
+                        </td>
+                        <td>
+                            {% if stock_take.status == 'draft' %}
+                                <span class="badge bg-secondary">{{ stock_take.get_status_display }}</span>
+                            {% elif stock_take.status == 'in_progress' %}
+                                <span class="badge bg-primary">{{ stock_take.get_status_display }}</span>
+                            {% elif stock_take.status == 'completed' %}
+                                <span class="badge bg-success">{{ stock_take.get_status_display }}</span>
+                            {% elif stock_take.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ stock_take.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ stock_take.start_date|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            {% if stock_take.end_date %}
+                                {{ stock_take.end_date|date:"d.m.Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar {% if stock_take.get_completion_percentage == 100 %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ stock_take.get_completion_percentage }}%;"
+                                     aria-valuenow="{{ stock_take.get_completion_percentage }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    {{ stock_take.get_completion_percentage }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if stock_take.status == 'completed' or stock_take.status == 'in_progress' %}
+                                <span class="badge {% if stock_take.get_discrepancy_count > 0 %}bg-warning{% else %}bg-success{% endif %}">
+                                    {{ stock_take.get_discrepancy_count }}
+                                </span>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ stock_take.created_by.username }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-sm btn-info" title="Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if stock_take.status == 'draft' %}
+                                    <a href="{% url 'stock_take_update' stock_take.id %}" class="btn btn-sm btn-primary" title="Bearbeiten">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'stock_take_start' stock_take.id %}" class="btn btn-sm btn-success" title="Starten">
+                                        <i class="bi bi-play"></i>
+                                    </a>
+                                    <a href="{% url 'stock_take_delete' stock_take.id %}" class="btn btn-sm btn-danger" title="Löschen">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                {% elif stock_take.status == 'in_progress' %}
+                                    <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-sm btn-primary" title="Zählen">
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </a>
+                                    <a href="{% url 'stock_take_barcode_scan' stock_take.id %}" class="btn btn-sm btn-secondary" title="Barcode scannen">
+                                        <i class="fas fa-barcode"></i>
+                                    </a>
+                                    <a href="{% url 'stock_take_complete' stock_take.id %}" class="btn btn-sm btn-success" title="Abschließen">
+                                        <i class="fas fa-check"></i>
+                                    </a>
+                                    <a href="{% url 'stock_take_cancel' stock_take.id %}" class="btn btn-sm btn-danger" title="Abbrechen">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'stock_take_report' stock_take.id %}" class="btn btn-sm btn-secondary" title="Bericht">
+                                        <i class="fas fa-chart-bar"></i>
+                                    </a>
+                                    <a href="{% url 'stock_take_export_csv' stock_take.id %}" class="btn btn-sm btn-success" title="CSV exportieren">
+                                        <i class="fas fa-file-csv"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">Keine Inventuren gefunden</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Paginierung -->
+{% if stock_takes.has_other_pages %}
+<nav aria-label="Inventur-Navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if stock_takes.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ stock_takes.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                <i class="fas fa-angle-left"></i>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link"><i class="fas fa-angle-left"></i></span>
+        </li>
+        {% endif %}
+
+        {% for num in stock_takes.paginator.page_range %}
+            {% if stock_takes.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > stock_takes.number|add:'-3' and num < stock_takes.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    {{ num }}
+                </a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if stock_takes.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ stock_takes.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                <i class="fas fa-angle-right"></i>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?page={{ stock_takes.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link"><i class="fas fa-angle-right"></i></span>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+<!-- Informationsbox -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Über Inventuren</h5>
+    </div>
+    <div class="card-body">
+        <p>Mit der Inventurfunktion können Sie Ihre tatsächlichen Lagerbestände erfassen und mit den im System hinterlegten Beständen abgleichen.</p>
+        <ol>
+            <li><strong>Inventur erstellen:</strong> Legen Sie eine neue Inventur mit Namen und Beschreibung an.</li>
+            <li><strong>Inventur starten:</strong> Starten Sie den Zählvorgang, wenn Sie bereit sind.</li>
+            <li><strong>Artikel zählen:</strong> Erfassen Sie die tatsächlichen Bestände für jeden Artikel.</li>
+            <li><strong>Inventur abschließen:</strong> Schließen Sie die Inventur ab und wenden Sie optional die Bestandskorrekturen an.</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}

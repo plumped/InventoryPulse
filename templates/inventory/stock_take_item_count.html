@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Produkt zählen: {{ item.product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_list' %}">Inventuren</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_detail' stock_take.id %}">{{ stock_take.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Produkt zählen</li>
+            </ol>
+        </nav>
+        <h1>Produkt zählen: {{ item.product.name }}</h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+        </a>
+        <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-primary">
+            <i class="fas fa-clipboard-check"></i> Zur Zählübersicht
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Produkt zählen</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light p-4">
+                            <h5>Produktinformation</h5>
+                            <h3>{{ item.product.name }}</h3>
+                            <div class="mt-2">
+                                <p class="mb-1"><strong>Artikelnummer:</strong> {{ item.product.sku }}</p>
+                                <p class="mb-1"><strong>Kategorie:</strong>
+                                    {% if item.product.category %}
+                                        {{ item.product.category.name }}
+                                    {% else %}
+                                        <span class="text-muted">Keine Kategorie</span>
+                                    {% endif %}
+                                </p>
+                                <p class="mb-1"><strong>Erwartete Menge:</strong>
+                                    <span class="badge bg-primary">{{ item.expected_quantity }} {{ item.product.unit }}</span>
+                                </p>
+                                <p class="mb-0"><strong>Status:</strong>
+                                    {% if item.is_counted %}
+                                        <span class="badge bg-{{ item.get_discrepancy_status }}">
+                                            {% if item.get_discrepancy_status == 'success' %}
+                                                Korrekt
+                                            {% elif item.get_discrepancy_status == 'warning' %}
+                                                Geringe Abweichung
+                                            {% elif item.get_discrepancy_status == 'danger' %}
+                                                Große Abweichung
+                                            {% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Nicht gezählt</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if item.product.barcode %}
+                    <div class="col-md-6">
+                        <div class="card bg-light p-4">
+                            <h5>Barcode</h5>
+                            <div class="text-center mb-2">
+                                <div id="barcode-container"></div>
+                            </div>
+                            <p class="text-center mb-0">{{ item.product.barcode }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <form method="post" id="count-form">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.counted_quantity.id_for_label }}" class="form-label">Tatsächlich gezählte Menge*</label>
+                        <div class="input-group">
+                            <input type="number" name="{{ form.counted_quantity.name }}"
+                                  id="{{ form.counted_quantity.id_for_label }}"
+                                  class="form-control form-control-lg {% if form.counted_quantity.errors %}is-invalid{% endif %}"
+                                  value="{% if item.is_counted %}{{ form.counted_quantity.value|default:item.counted_quantity }}{% else %}{{ form.counted_quantity.value|default:item.expected_quantity }}{% endif %}"
+                                  step="0.01" min="0" required autofocus>
+                            <span class="input-group-text">{{ item.product.unit }}</span>
+                            {% if form.counted_quantity.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.counted_quantity.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-text">
+                            Geben Sie die tatsächlich gezählte Menge ein. Die erwartete Menge beträgt {{ item.expected_quantity }} {{ item.product.unit }}.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen</label>
+                        <textarea name="{{ form.notes.name }}"
+                              id="{{ form.notes.id_for_label }}"
+                              class="form-control {% if form.notes.errors %}is-invalid{% endif %}"
+                              rows="3">{{ form.notes.value|default:item.notes }}</textarea>
+                        {% if form.notes.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            Optionale Anmerkungen zu diesem Produkt, z.B. Grund für Abweichungen oder Zustand der Ware.
+                        </div>
+                    </div>
+
+                    {% if next_item %}
+                    <input type="hidden" name="next_item_id" value="{{ next_item.id }}">
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-2"></i>Abbrechen
+                        </a>
+                        <div>
+                            <button type="submit" name="save" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Speichern
+                            </button>
+                            {% if next_item %}
+                            <button type="submit" name="save_and_next" class="btn btn-primary">
+                                <i class="fas fa-arrow-right me-2"></i>Speichern und Weiter
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Navigation zwischen Produkten -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Navigation</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if next_item %}
+                        Nach dem Speichern können Sie direkt zum nächsten Produkt wechseln.
+                    {% else %}
+                        Dies ist das letzte ungezählte Produkt in der Liste.
+                    {% endif %}
+                </div>
+
+                <div class="progress mb-3" style="height: 25px;">
+                    <div class="progress-bar {% if stock_take.get_completion_percentage == 100 %}bg-success{% endif %}"
+                         role="progressbar"
+                         style="width: {{ stock_take.get_completion_percentage }}%;"
+                         aria-valuenow="{{ stock_take.get_completion_percentage }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                        {{ stock_take.get_completion_percentage }}% abgeschlossen
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-primary">
+                        <i class="fas fa-clipboard-check me-2"></i>Zur Zählübersicht
+                    </a>
+                    {% if next_item %}
+                    <a href="{% url 'stock_take_item_count' stock_take.id next_item.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-right me-2"></i>Zum nächsten Produkt
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tipps -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Hinweise</h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Zählen Sie die tatsächlich vorhandene Menge dieses Produkts.</li>
+                    <li>Wenn die gezählte Menge von der erwarteten abweicht, hinterlassen Sie am besten eine Anmerkung zu möglichen Gründen.</li>
+                    <li>Wenn Sie mehrere Produkte schnell zählen wollen, nutzen Sie die <a href="{% url 'stock_take_count_items' stock_take.id %}">Zählübersicht</a>.</li>
+                    <li>Für Produkte mit Barcode können Sie auch den <a href="{% url 'stock_take_barcode_scan' stock_take.id %}">Barcode-Scanner</a> verwenden.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+{% if item.product.barcode %}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+    $(document).ready(function() {
+        JsBarcode("#barcode-container", "{{ item.product.barcode }}", {
+            format: "CODE128",
+            width: 2,
+            height: 100,
+            displayValue: true
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Produktzuordnung löschen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Lieferanten</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'supplier_detail' supplier_product.supplier.id %}">{{ supplier_product.supplier.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Produktzuordnung löschen</li>
+            </ol>
+        </nav>
+        <h1>Produktzuordnung löschen</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Bestätigung erforderlich</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-4">
+                    Sind Sie sicher, dass Sie die Zuordnung zwischen dem Lieferanten <strong>{{ supplier_product.supplier.name }}</strong> und dem Produkt <strong>{{ supplier_product.product.name }}</strong> löschen möchten?
+                </p>
+
+                <div class="alert alert-warning">
+                    <p><i class="fas fa-info-circle me-2"></i>Diese Aktion kann nicht rückgängig gemacht werden!</p>
+                    <p class="mb-0">Alle damit verbundenen Daten werden gelöscht. Wenn Sie nur vorübergehend die Beziehung deaktivieren möchten, aktualisieren Sie stattdessen die Zuordnung.</p>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'supplier_detail' supplier_product.supplier.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Abbrechen
+                    </a>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Zuordnung löschen
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Details der Zuordnung</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Lieferant:</div>
+                    <div class="col-md-8">{{ supplier_product.supplier.name }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Produkt:</div>
+                    <div class="col-md-8">{{ supplier_product.product.name }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Artikelnr. Lieferant:</div>
+                    <div class="col-md-8">{{ supplier_product.supplier_sku|default:"-" }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Einkaufspreis:</div>
+                    <div class="col-md-8">{{ supplier_product.purchase_price }} €</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Lieferzeit:</div>
+                    <div class="col-md-8">{{ supplier_product.lead_time_days }} Tage</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 fw-bold">Bevorzugt:</div>
+                    <div class="col-md-8">
+                        {% if supplier_product.is_preferred %}
+                            <span class="badge bg-success">Ja</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Nein</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

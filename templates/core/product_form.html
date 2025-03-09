@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Produkt bearbeiten{% else %}Neues Produkt{% endif %} - InventoryPulse
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    {% if form.instance.pk %}{{ form.instance.name }} bearbeiten{% else %}Neues Produkt{% endif %}
+                </li>
+            </ol>
+        </nav>
+        <h1>{% if form.instance.pk %}Produkt bearbeiten{% else %}Neues Produkt{% endif %}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Produktname*</label>
+                            <input type="text" name="{{ form.name.name }}"
+                                   id="{{ form.name.id_for_label }}"
+                                   class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                                   value="{{ form.name.value|default:'' }}" required>
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.sku.id_for_label }}" class="form-label">Artikelnummer*</label>
+                            <input type="text" name="{{ form.sku.name }}"
+                                   id="{{ form.sku.id_for_label }}"
+                                   class="form-control {% if form.sku.errors %}is-invalid{% endif %}"
+                                   value="{{ form.sku.value|default:'' }}" required>
+                            {% if form.sku.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.sku.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.barcode.id_for_label }}" class="form-label">Barcode</label>
+                            <div class="input-group">
+                                <input type="text" name="{{ form.barcode.name }}"
+                                       id="{{ form.barcode.id_for_label }}"
+                                       class="form-control {% if form.barcode.errors %}is-invalid{% endif %}"
+                                       value="{{ form.barcode.value|default:'' }}">
+                                <button class="btn btn-outline-secondary" type="button" id="generateBarcode">
+                                    <i class="fas fa-barcode"></i> Generieren
+                                </button>
+                                {% if form.barcode.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.barcode.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Kategorie</label>
+                            <select name="{{ form.category.name }}"
+                                    id="{{ form.category.id_for_label }}"
+                                    class="form-select {% if form.category.errors %}is-invalid{% endif %}">
+                                <option value="">-- Kategorie wählen --</option>
+                                {% for choice in form.category.field.choices %}
+                                    {% if choice.0 %}
+                                        <option value="{{ choice.0 }}"
+                                                {% if form.category.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                            {{ choice.1 }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.category.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.current_stock.id_for_label }}" class="form-label">Aktueller Bestand*</label>
+                            <input type="number" name="{{ form.current_stock.name }}"
+                                   id="{{ form.current_stock.id_for_label }}"
+                                   class="form-control {% if form.current_stock.errors %}is-invalid{% endif %}"
+                                   value="{{ form.current_stock.value|default:'0' }}" min="0" required>
+                            {% if form.current_stock.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.current_stock.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.minimum_stock.id_for_label }}" class="form-label">Mindestbestand*</label>
+                            <input type="number" name="{{ form.minimum_stock.name }}"
+                                   id="{{ form.minimum_stock.id_for_label }}"
+                                   class="form-control {% if form.minimum_stock.errors %}is-invalid{% endif %}"
+                                   value="{{ form.minimum_stock.value|default:'0' }}" min="0" required>
+                            {% if form.minimum_stock.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.minimum_stock.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.unit.id_for_label }}" class="form-label">Einheit*</label>
+                            <input type="text" name="{{ form.unit.name }}"
+                                   id="{{ form.unit.id_for_label }}"
+                                   class="form-control {% if form.unit.errors %}is-invalid{% endif %}"
+                                   value="{{ form.unit.value|default:'Stück' }}" required>
+                            {% if form.unit.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.unit.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Beschreibung</label>
+                        <textarea name="{{ form.description.name }}"
+                                  id="{{ form.description.id_for_label }}"
+                                  class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                                  rows="5">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'product_list' %}" class="btn btn-secondary">Abbrechen</a>
+                        <button type="submit" class="btn btn-primary">Speichern</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Hinweise</h5>
+            </div>
+            <div class="card-body">
+                <p>Fügen Sie hier Produktdetails hinzu. Felder mit * sind Pflichtfelder.</p>
+                <ul>
+                    <li><strong>Artikelnummer (SKU):</strong> Eine eindeutige Kennung für das Produkt.</li>
+                    <li><strong>Barcode:</strong> Kann manuell eingegeben oder automatisch generiert werden.</li>
+                    <li><strong>Mindestbestand:</strong> Bei Unterschreitung wird eine Warnung angezeigt.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Barcode-Generator
+        $('#generateBarcode').click(function() {
+            // Einfache Barcode-Generierung: aktuelles Datum + zufällige Zahl
+            const date = new Date();
+            const dateStr = date.getFullYear().toString() +
+                            (date.getMonth() + 1).toString().padStart(2, '0') +
+                            date.getDate().toString().padStart(2, '0');
+            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            const barcode = dateStr + random;
+            $('#{{ form.barcode.id_for_label }}').val(barcode);
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

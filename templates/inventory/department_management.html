@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Abteilungsverwaltung{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Abteilungsverwaltung</h1>
+    <a href="{% url 'department_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Neue Abteilung
+    </a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Abteilungen</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if departments %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Abteilungsleiter</th>
+                            <th>Mitglieder</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for department in departments %}
+                            <tr>
+                                <td>{{ department.name }}</td>
+                                <td>{{ department.code }}</td>
+                                <td>
+                                    {% if department.manager %}
+                                        {{ department.manager.get_full_name|default:department.manager.username }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ department.members.count }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'department_members' department.id %}" class="btn btn-sm btn-outline-primary" title="Mitglieder">
+                                            <i class="bi bi-people"></i>
+                                        </a>
+                                        <a href="{% url 'department_update' department.id %}" class="btn btn-sm btn-outline-secondary" title="Bearbeiten">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'department_delete' department.id %}" class="btn btn-sm btn-outline-danger" title="Löschen">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info m-3">
+                Es sind keine Abteilungen vorhanden. <a href="{% url 'department_create' %}">Klicken Sie hier, um eine neue Abteilung zu erstellen.</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'warehouse_list' %}" class="btn btn-outline-secondary me-2">
+        <i class="bi bi-boxes"></i> Zurück zur Lagerverwaltung
+    </a>
+    <a href="{% url 'warehouse_access_management' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-key"></i> Lagerzugriffsrechte verwalten
+    </a>
+</div>
+{% endblock %}

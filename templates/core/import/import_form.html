@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'import_dashboard' %}">Import-Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+            </ol>
+        </nav>
+        <h1>{{ title }}</h1>
+    </div>
+    <div>
+        <a href="{% url 'import_dashboard' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Zurück zum Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-upload me-2"></i>CSV-Datei importieren</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate class="needs-validation">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">{{ form.file.label }}*</label>
+                        <input type="file" name="{{ form.file.name }}"
+                               id="{{ form.file.id_for_label }}"
+                               class="form-control {% if form.file.errors %}is-invalid{% endif %}"
+                               accept=".csv, text/csv" required>
+                        {% if form.file.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.file.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="form-text">{{ form.file.help_text }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="{{ form.delimiter.id_for_label }}" class="form-label">{{ form.delimiter.label }}</label>
+                            <select name="{{ form.delimiter.name }}"
+                                   id="{{ form.delimiter.id_for_label }}"
+                                   class="form-select {% if form.delimiter.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.delimiter.field.choices %}
+                                    <option value="{{ value }}" {% if form.delimiter.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.delimiter.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.delimiter.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="form-text">{{ form.delimiter.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.encoding.id_for_label }}" class="form-label">{{ form.encoding.label }}</label>
+                            <select name="{{ form.encoding.name }}"
+                                   id="{{ form.encoding.id_for_label }}"
+                                   class="form-select {% if form.encoding.errors %}is-invalid{% endif %}">
+                                {% for value, text in form.encoding.field.choices %}
+                                    <option value="{{ value }}" {% if form.encoding.value == value %}selected{% endif %}>{{ text }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.encoding.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.encoding.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="form-text">{{ form.encoding.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox"
+                                       name="{{ form.skip_header.name }}"
+                                       id="{{ form.skip_header.id_for_label }}"
+                                       {% if form.skip_header.value %}checked{% endif %}>
+                                <label class="form-check-label" for="{{ form.skip_header.id_for_label }}">
+                                    {{ form.skip_header.label }}
+                                </label>
+                                <div class="form-text">{{ form.skip_header.help_text }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="{{ form.update_existing.name }}"
+                                   id="{{ form.update_existing.id_for_label }}"
+                                   {% if form.update_existing.value %}checked{% endif %}>
+                            <label class="form-check-label" for="{{ form.update_existing.id_for_label }}">
+                                {{ form.update_existing.label }}
+                            </label>
+                            <div class="form-text">{{ form.update_existing.help_text }}</div>
+                        </div>
+                    </div>
+
+                    {% if 'default_category' in form.fields %}
+                    <div class="mb-3">
+                        <label for="{{ form.default_category.id_for_label }}" class="form-label">{{ form.default_category.label }}</label>
+                        <select name="{{ form.default_category.name }}"
+                               id="{{ form.default_category.id_for_label }}"
+                               class="form-select {% if form.default_category.errors %}is-invalid{% endif %}">
+                            <option value="">-- Keine Standardkategorie --</option>
+                            {% for category in form.default_category.field.queryset %}
+                                <option value="{{ category.id }}" {% if form.default_category.value == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.default_category.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.default_category.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="form-text">{{ form.default_category.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Stellen Sie sicher, dass Ihre CSV-Datei das richtige Format hat. Sie können eine Vorlage
+                        <a href="{{ template_file_url }}" class="alert-link">hier herunterladen</a>.
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'import_dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Abbrechen
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Datei importieren
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informationen zum Import</h5>
+            </div>
+            <div class="card-body">
+                {% if title == 'Produkte importieren' %}
+                <h6>Erforderliche Felder:</h6>
+                <ul>
+                    <li><strong>name</strong> - Name des Produkts</li>
+                    <li><strong>sku</strong> - Artikelnummer (eindeutig)</li>
+                </ul>
+
+                <h6>Optionale Felder:</h6>
+                <ul>
+                    <li><strong>description</strong> - Produktbeschreibung</li>
+                    <li><strong>barcode</strong> - Barcode (wenn vorhanden)</li>
+                    <li><strong>category</strong> - Name der Kategorie</li>
+                    <li><strong>current_stock</strong> - Aktueller Bestand</li>
+                    <li><strong>minimum_stock</strong> - Mindestbestand</li>
+                    <li><strong>unit</strong> - Einheit (z.B. Stück, kg, l)</li>
+                </ul>
+
+                {% elif title == 'Kategorien importieren' %}
+                <h6>Erforderliche Felder:</h6>
+                <ul>
+                    <li><strong>name</strong> - Name der Kategorie (eindeutig)</li>
+                </ul>
+
+                <h6>Optionale Felder:</h6>
+                <ul>
+                    <li><strong>description</strong> - Beschreibung der Kategorie</li>
+                </ul>
+
+                {% elif title == 'Lieferanten importieren' %}
+                <h6>Erforderliche Felder:</h6>
+                <ul>
+                    <li><strong>name</strong> - Name des Lieferanten (eindeutig)</li>
+                </ul>
+
+                <h6>Optionale Felder:</h6>
+                <ul>
+                    <li><strong>contact_person</strong> - Ansprechpartner</li>
+                    <li><strong>email</strong> - E-Mail-Adresse</li>
+                    <li><strong>phone</strong> - Telefonnummer</li>
+                    <li><strong>address</strong> - Adresse</li>
+                </ul>
+
+                {% elif title == 'Produkt-Lieferanten-Zuordnungen importieren' %}
+                <h6>Erforderliche Felder:</h6>
+                <ul>
+                    <li><strong>supplier_name</strong> - Name des Lieferanten (muss existieren)</li>
+                    <li><strong>product_sku</strong> - Artikelnummer des Produkts (muss existieren)</li>
+                </ul>
+
+                <h6>Optionale Felder:</h6>
+                <ul>
+                    <li><strong>supplier_sku</strong> - Artikelnummer des Lieferanten</li>
+                    <li><strong>purchase_price</strong> - Einkaufspreis</li>
+                    <li><strong>lead_time_days</strong> - Lieferzeit in Tagen</li>
+                    <li><strong>is_preferred</strong> - Bevorzugter Lieferant (true/false)</li>
+                    <li><strong>notes</strong> - Anmerkungen</li>
+                </ul>
+                {% endif %}
+
+                <h6 class="mt-4">CSV-Format:</h6>
+                <p>Die CSV-Datei sollte eine Kopfzeile mit den Feldnamen enthalten und die Spalten durch das gewählte Trennzeichen getrennt sein.</p>
+
+                <h6>Beispiel:</h6>
+                <pre class="bg-light p-2 border rounded"><code>name;sku;category
+Produkt 1;P001;Kategorie 1
+Produkt 2;P002;Kategorie 2</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

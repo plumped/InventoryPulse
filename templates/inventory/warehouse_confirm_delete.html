@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Lager löschen{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Lager deaktivieren: {{ warehouse.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Achtung!</h5>
+                        <p>Lager können aus Gründen der Datenkonsistenz nicht vollständig gelöscht werden. Das Lager wird stattdessen deaktiviert.</p>
+                    </div>
+
+                    <p>Sind Sie sicher, dass Sie das Lager <strong>{{ warehouse.name }}</strong> deaktivieren möchten?</p>
+
+                    {% if product_count > 0 or movement_count > 0 or stock_take_count > 0 %}
+                        <div class="alert alert-info">
+                            <p class="mb-0">Dieses Lager hat:</p>
+                            <ul class="mb-0">
+                                {% if product_count > 0 %}
+                                    <li>{{ product_count }} Produkte</li>
+                                {% endif %}
+                                {% if movement_count > 0 %}
+                                    <li>{{ movement_count }} Bestandsbewegungen</li>
+                                {% endif %}
+                                {% if stock_take_count > 0 %}
+                                    <li>{{ stock_take_count }} Inventuren</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="confirm" value="yes">
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'warehouse_detail' warehouse.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Lager deaktivieren
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

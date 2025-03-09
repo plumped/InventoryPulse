@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'warehouse_list' %}">Lager</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'warehouse_access_management' %}">Lagerzugriffsrechte</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+            </ol>
+        </nav>
+        <h1>{{ title }}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.warehouse.id_for_label }}" class="form-label">
+                                    {{ form.warehouse.label }}
+                                    {% if form.warehouse.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                {{ form.warehouse }}
+                                {% if form.warehouse.help_text %}
+                                    <div class="form-text">{{ form.warehouse.help_text }}</div>
+                                {% endif %}
+                                {% if form.warehouse.errors %}
+                                    {% for error in form.warehouse.errors %}
+                                        <div class="invalid-feedback" style="display: block;">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.department.id_for_label }}" class="form-label">
+                                    {{ form.department.label }}
+                                    {% if form.department.field.required %}
+                                        <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                {{ form.department }}
+                                {% if form.department.help_text %}
+                                    <div class="form-text">{{ form.department.help_text }}</div>
+                                {% endif %}
+                                {% if form.department.errors %}
+                                    {% for error in form.department.errors %}
+                                        <div class="invalid-feedback" style="display: block;">
+                                            {{ error }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Zugriffsrechte</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        {{ form.can_view }}
+                                        <label class="form-check-label" for="{{ form.can_view.id_for_label }}">
+                                            Ansehen
+                                        </label>
+                                        {% if form.can_view.errors %}
+                                            {% for error in form.can_view.errors %}
+                                                <div class="invalid-feedback" style="display: block;">
+                                                    {{ error }}
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-text text-muted">
+                                        Benutzer können den Lagerbestand einsehen und Berichte anzeigen.
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        {{ form.can_edit }}
+                                        <label class="form-check-label" for="{{ form.can_edit.id_for_label }}">
+                                            Bearbeiten
+                                        </label>
+                                        {% if form.can_edit.errors %}
+                                            {% for error in form.can_edit.errors %}
+                                                <div class="invalid-feedback" style="display: block;">
+                                                    {{ error }}
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-text text-muted">
+                                        Benutzer können Lagerinformationen bearbeiten und die Lagerkonfiguration ändern.
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        {{ form.can_manage_stock }}
+                                        <label class="form-check-label" for="{{ form.can_manage_stock.id_for_label }}">
+                                            Bestand verwalten
+                                        </label>
+                                        {% if form.can_manage_stock.errors %}
+                                            {% for error in form.can_manage_stock.errors %}
+                                                <div class="invalid-feedback" style="display: block;">
+                                                    {{ error }}
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="form-text text-muted">
+                                        Benutzer können Bestandsbewegungen durchführen, Inventuren erstellen und Korrekturen vornehmen.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'warehouse_access_management' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Zurück
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Speichern
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Hinweise</h5>
+            </div>
+            <div class="card-body">
+                <p>Hier können Sie Zugriffsrechte für Abteilungen auf bestimmte Lager vergeben.</p>
+                <ul>
+                    <li><strong>Lager:</strong> Das Lager, für das der Zugriff gewährt wird</li>
+                    <li><strong>Abteilung:</strong> Die Abteilung, die Zugriff erhält</li>
+                    <li><strong>Rechte:</strong> Verschiedene Zugriffsebenen für die Abteilung</li>
+                </ul>
+                <p class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Für jede Kombination aus Lager und Abteilung kann nur ein Zugriffsrecht existieren.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ supplier.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Lieferanten</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ supplier.name }}</li>
+            </ol>
+        </nav>
+        <h1>{{ supplier.name }}</h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'supplier_update' supplier.id %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Bearbeiten
+        </a>
+        <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Produkt hinzufügen
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Lieferantendetails -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Lieferantendetails</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Kontaktperson:</div>
+                    <div class="col-md-7">
+                        {% if supplier.contact_person %}
+                            {{ supplier.contact_person }}
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">E-Mail:</div>
+                    <div class="col-md-7">
+                        {% if supplier.email %}
+                            <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Telefon:</div>
+                    <div class="col-md-7">
+                        {% if supplier.phone %}
+                            <a href="tel:{{ supplier.phone }}">{{ supplier.phone }}</a>
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-5 fw-bold">Adresse:</div>
+                    <div class="col-md-7">
+                        {% if supplier.address %}
+                            {{ supplier.address|linebreaks }}
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Aktionen</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'supplier_update' supplier.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Lieferant bearbeiten
+                    </a>
+                    <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Produkt hinzufügen
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary">
+                        <i class="fas fa-print me-2"></i>Kontaktdaten drucken
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Produktliste des Lieferanten -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-box me-2"></i>Produkte dieses Lieferanten</h5>
+                <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Produkt hinzufügen
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produkt</th>
+                                <th>Artikelnr. Lieferant</th>
+                                <th>Einkaufspreis</th>
+                                <th>Lieferzeit</th>
+                                <th>Bevorzugt</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sp in supplier_products %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'product_detail' sp.product.id %}">{{ sp.product.name }}</a>
+                                </td>
+                                <td>{{ sp.supplier_sku|default:"-" }}</td>
+                                <td>{{ sp.purchase_price }} €</td>
+                                <td>{{ sp.lead_time_days }} Tage</td>
+                                <td>
+                                    {% if sp.is_preferred %}
+                                        <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                    {% else %}
+                                        <span class="badge bg-secondary"><i class="fas fa-times"></i></span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'supplier_product_update' sp.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'supplier_product_delete' sp.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">Keine Produkte für diesen Lieferanten</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load dict_filters %}
+
+{% block title %}Berechtigungsverwaltung{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Berechtigungsverwaltung</h1>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Benutzer</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush user-list">
+                    {% for user in users %}
+                        <a href="#" class="list-group-item list-group-item-action user-item" data-user-id="{{ user.id }}">
+                            {{ user.username }}
+                            {% if user.is_superuser %}
+                                <span class="badge bg-danger float-end">Admin</span>
+                            {% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Benutzerdetails: <span id="selected-user">Kein Benutzer ausgewählt</span></h5>
+            </div>
+            <div class="card-body">
+                <div id="user-details" class="d-none">
+                    <ul class="nav nav-tabs" id="permissionTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="groups-tab" data-bs-toggle="tab" data-bs-target="#groups" type="button" role="tab" aria-controls="groups" aria-selected="true">Gruppen</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions" type="button" role="tab" aria-controls="permissions" aria-selected="false">Direkte Berechtigungen</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="effective-tab" data-bs-toggle="tab" data-bs-target="#effective" type="button" role="tab" aria-controls="effective" aria-selected="false">Effektive Berechtigungen</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content py-3" id="permissionTabsContent">
+                        <div class="tab-pane fade show active" id="groups" role="tabpanel" aria-labelledby="groups-tab">
+                            <h6>Gruppenzugehörigkeit</h6>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Gruppe</th>
+                                            <th>Beschreibung</th>
+                                            <th>Mitglied</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="groups-table">
+                                        {% for group in groups %}
+                                        <tr data-group-id="{{ group.id }}">
+                                            <td>{{ group.name }}</td>
+                                            <td>Berechtigungsgruppe für {{ group.name }}</td>
+                                            <td>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input group-toggle" type="checkbox" id="group-{{ group.id }}">
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="permissions" role="tabpanel" aria-labelledby="permissions-tab">
+                            <h6>Direkte Berechtigungen</h6>
+                            <div class="accordion" id="permissionAccordion">
+                                {% for area_key, area_name in permission_areas.items %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading-{{ area_key }}">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ area_key }}" aria-expanded="false" aria-controls="collapse-{{ area_key }}">
+                                            {{ area_name }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-{{ area_key }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ area_key }}" data-bs-parent="#permissionAccordion">
+                                        <div class="accordion-body">
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Berechtigung</th>
+                                                            <th>Gewährt</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for perm in permissions|get_item:area_key %}
+                                                        <tr data-perm-id="{{ perm.id }}">
+                                                            <td>{{ perm.name }}</td>
+                                                            <td>
+                                                                <div class="form-check form-switch">
+                                                                    <input class="form-check-input perm-toggle" type="checkbox" id="perm-{{ perm.id }}">
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="effective" role="tabpanel" aria-labelledby="effective-tab">
+                            <h6>Effektive Berechtigungen</h6>
+                            <p class="text-muted">Alle Berechtigungen, die dieser Benutzer tatsächlich hat, einschließlich Gruppenberechtigungen.</p>
+                            <div id="effective-permissions" class="mt-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Lade...</span>
+                                </div>
+                                <p>Berechtigungen werden geladen...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="no-user-selected" class="text-center py-5">
+                    <i class="bi bi-person-badge fs-1 mb-3 text-muted"></i>
+                    <p>Bitte wählen Sie einen Benutzer aus der Liste aus, um dessen Berechtigungen zu verwalten.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        let selectedUserId = null;
+
+        // Benutzer auswählen
+        $('.user-item').click(function(e) {
+            e.preventDefault();
+            $('.user-item').removeClass('active');
+            $(this).addClass('active');
+
+            selectedUserId = $(this).data('user-id');
+            $('#selected-user').text($(this).text().trim());
+
+            $('#no-user-selected').addClass('d-none');
+            $('#user-details').removeClass('d-none');
+
+            loadUserPermissions(selectedUserId);
+        });
+
+        // Gruppenzugehörigkeit umschalten
+        $(document).on('change', '.group-toggle', function() {
+            const groupId = $(this).closest('tr').data('group-id');
+            const isChecked = $(this).prop('checked');
+
+            $.ajax({
+                url: '{% url "permission_management" %}',
+                type: 'POST',
+                data: {
+                    'action': 'assign_group',
+                    'user_id': selectedUserId,
+                    'group_id': groupId,
+                    'assign': isChecked,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    // Aktualisiere UI nach erfolgreicher Änderung
+                    loadUserPermissions(selectedUserId);
+                },
+                error: function(xhr) {
+                    alert('Fehler beim Ändern der Gruppenzugehörigkeit');
+                    // Checkbox zurücksetzen
+                    $(this).prop('checked', !isChecked);
+                }
+            });
+        });
+
+        // Direkte Berechtigung umschalten
+        $(document).on('change', '.perm-toggle', function() {
+            const permId = $(this).closest('tr').data('perm-id');
+            const isChecked = $(this).prop('checked');
+
+            $.ajax({
+                url: '{% url "permission_management" %}',
+                type: 'POST',
+                data: {
+                    'action': 'direct_permission',
+                    'user_id': selectedUserId,
+                    'permission_id': permId,
+                    'assign': isChecked,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    // Aktualisiere UI nach erfolgreicher Änderung
+                    loadUserPermissions(selectedUserId);
+                },
+                error: function(xhr) {
+                    alert('Fehler beim Ändern der direkten Berechtigung');
+                    // Checkbox zurücksetzen
+                    $(this).prop('checked', !isChecked);
+                }
+            });
+        });
+
+        // Benutzerberechtigungen laden
+        function loadUserPermissions(userId) {
+            $.ajax({
+                url: '{% url "get_user_permissions" %}',
+                type: 'GET',
+                data: { 'user_id': userId },
+                dataType: 'json',
+                success: function(data) {
+                    // Gruppenberechtigungen setzen
+                    $('#groups-table tr').each(function() {
+                        const groupId = $(this).data('group-id');
+                        const isInGroup = data.groups.includes(groupId);
+                        $(this).find('.group-toggle').prop('checked', isInGroup);
+                    });
+
+                    // Direkte Berechtigungen setzen
+                    $('[data-perm-id]').each(function() {
+                        const permId = $(this).data('perm-id');
+                        const hasPerm = data.direct_permissions.includes(permId);
+                        $(this).find('.perm-toggle').prop('checked', hasPerm);
+                    });
+
+                    // Effektive Berechtigungen anzeigen
+                    let effectiveHtml = '<ul class="list-group">';
+                    if (data.effective_permissions.length === 0) {
+                        effectiveHtml += '<li class="list-group-item text-muted">Keine Berechtigungen</li>';
+                    } else {
+                        data.effective_permissions.forEach(function(perm) {
+                            effectiveHtml += `<li class="list-group-item">${perm.name} <small class="text-muted">(${perm.source})</small></li>`;
+                        });
+                    }
+                    effectiveHtml += '</ul>';
+                    $('#effective-permissions').html(effectiveHtml);
+                },
+                error: function() {
+                    alert('Fehler beim Laden der Benutzerberechtigungen');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

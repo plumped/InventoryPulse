@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventur starten - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_list' %}">Inventuren</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'stock_take_detail' stock_take.id %}">{{ stock_take.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Inventur starten</li>
+            </ol>
+        </nav>
+        <h1>Inventur "{{ stock_take.name }}" starten</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-play-circle me-2"></i>Inventur starten</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Sie sind dabei, die Inventur <strong>"{{ stock_take.name }}"</strong> zu starten.
+                </p>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Hinweis:</strong> Nach dem Start der Inventur können Sie mit dem Zählen der Produkte beginnen. Die Inventur kann nicht mehr bearbeitet werden, bis sie abgeschlossen oder abgebrochen wird.
+                </div>
+
+                <div class="mb-4">
+                    <h6>Details zur Inventur:</h6>
+                    <table class="table table-sm">
+                        <tbody>
+                            <tr>
+                                <th style="width: 30%">Name:</th>
+                                <td>{{ stock_take.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td>{{ stock_take.get_status_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Erstellt am:</th>
+                                <td>{{ stock_take.start_date|date:"d.m.Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Anzahl Produkte:</th>
+                                <td>{{ stock_take.stocktakeitem_set.count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <form method="post" class="d-flex justify-content-between">
+                    {% csrf_token %}
+                    <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Abbrechen
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-play me-2"></i>Inventur starten
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

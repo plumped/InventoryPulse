@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Produkte zum Lager {{ warehouse.name }} hinzufügen{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">Produkte zu Lager "{{ warehouse.name }}" hinzufügen</h1>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Auswahlmethode</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="input_method" id="manual" value="manual" checked>
+                                <label class="form-check-label" for="manual">
+                                    Manuelle Produktauswahl
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="input_method" id="sku_range" value="sku_range">
+                                <label class="form-check-label" for="sku_range">
+                                    Produktauswahl nach SKU-Bereich
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="input_method" id="category" value="category">
+                                <label class="form-check-label" for="category">
+                                    Produkte nach Kategorie
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Manuelle Produktauswahl -->
+                        <div id="manual_selection" class="selection-method">
+                            <label class="form-label">Produkte auswählen</label>
+                            <select name="product_ids" class="form-select" multiple size="10">
+                                {% for product in all_products %}
+                                    <option value="{{ product.id }}">
+                                        {{ product.name }} ({{ product.sku }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- SKU-Bereich -->
+                        <div id="sku_range_selection" class="selection-method" style="display:none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="start_sku" class="form-label">Von SKU</label>
+                                    <input type="text" class="form-control" id="start_sku" name="start_sku" placeholder="Start-SKU">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="end_sku" class="form-label">Bis SKU</label>
+                                    <input type="text" class="form-control" id="end_sku" name="end_sku" placeholder="End-SKU">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kategorieauswahl -->
+                        <div id="category_selection" class="selection-method" style="display:none;">
+                            <label for="category" class="form-label">Kategorie</label>
+                            <select name="category" id="category" class="form-select">
+                                <option value="">--- Kategorie wählen ---</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Initialer Bestand</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="initial_quantity" class="form-label">Anfangsbestand pro Produkt</label>
+                            <input type="number" class="form-control" id="initial_quantity" name="initial_quantity"
+                                   min="0" step="0.01" value="0">
+                            <small class="form-text text-muted">
+                                Geben Sie einen Wert größer 0 ein, um allen ausgewählten Produkten einen Initialbestand zuzuweisen.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'warehouse_detail' warehouse.id %}" class="btn btn-outline-secondary">
+                        Abbrechen
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        Produkte hinzufügen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputMethods = document.querySelectorAll('input[name="input_method"]');
+    const selectionMethods = document.querySelectorAll('.selection-method');
+
+    inputMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            // Hide all selection methods
+            selectionMethods.forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // Show selected method
+            const selectedMethod = document.getElementById(this.value + '_selection');
+            if (selectedMethod) {
+                selectedMethod.style.display = 'block';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

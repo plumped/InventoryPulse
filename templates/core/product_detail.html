@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+            </ol>
+        </nav>
+        <h1>{{ product.name }}</h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'product_update' product.id %}" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Bearbeiten
+        </a>
+        <a href="{% url 'stock_movement_add' %}?product={{ product.id }}&type=in" class="btn btn-success">
+            <i class="fas fa-plus"></i> Zugang
+        </a>
+        <a href="{% url 'stock_movement_add' %}?product={{ product.id }}&type=out" class="btn btn-danger">
+            <i class="fas fa-minus"></i> Abgang
+        </a>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#barcodeModal">
+            <i class="fas fa-barcode"></i> Barcode
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Produktdetails -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Produktdetails</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Artikelnummer:</div>
+                    <div class="col-md-8">{{ product.sku }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Barcode:</div>
+                    <div class="col-md-8">
+                        {% if product.barcode %}
+                            {{ product.barcode }}
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Kategorie:</div>
+                    <div class="col-md-8">
+                        {% if product.category %}
+                            <span class="badge bg-info">{{ product.category.name }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Keine Kategorie</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Aktueller Bestand:</div>
+                    <div class="col-md-8">
+                        {% if product.current_stock <= product.minimum_stock and product.current_stock > 0 %}
+                            <span class="badge bg-warning">{{ product.current_stock }} {{ product.unit }}</span>
+                        {% elif product.current_stock == 0 %}
+                            <span class="badge bg-danger">{{ product.current_stock }} {{ product.unit }}</span>
+                        {% else %}
+                            <span class="badge bg-success">{{ product.current_stock }} {{ product.unit }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Mindestbestand:</div>
+                    <div class="col-md-8">{{ product.minimum_stock }} {{ product.unit }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Einheit:</div>
+                    <div class="col-md-8">{{ product.unit }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 fw-bold">Beschreibung:</div>
+                    <div class="col-md-8">
+                        {% if product.description %}
+                            {{ product.description|linebreaks }}
+                        {% else %}
+                            <span class="text-muted">Keine Beschreibung</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lieferanteninformationen -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-truck me-2"></i>Lieferanteninformationen</h5>
+                <a href="{% url 'supplier_product_add' %}?product={{ product.id }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Lieferant hinzufügen
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Lieferant</th>
+                                <th>Artikelnr. Lieferant</th>
+                                <th>Einkaufspreis</th>
+                                <th>Lieferzeit</th>
+                                <th>Bevorzugt</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sp in supplier_products %}
+                            <tr>
+                                <td>{{ sp.supplier.name }}</td>
+                                <td>{{ sp.supplier_sku|default:"-" }}</td>
+                                <td>{{ sp.purchase_price }} €</td>
+                                <td>{{ sp.lead_time_days }} Tage</td>
+                                <td>
+                                    {% if sp.is_preferred %}
+                                        <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                    {% else %}
+                                        <span class="badge bg-secondary"><i class="fas fa-times"></i></span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'supplier_product_update' sp.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'supplier_product_delete' sp.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">Keine Lieferanteninformationen vorhanden</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bestandsbewegungen -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Bestandsbewegungen</h5>
+                <div>
+                    <a href="{% url 'stock_movement_add' %}?product={{ product.id }}&type=in" class="btn btn-sm btn-success">
+                        <i class="fas fa-plus"></i> Zugang
+                    </a>
+                    <a href="{% url 'stock_movement_add' %}?product={{ product.id }}&type=out" class="btn btn-sm btn-danger">
+                        <i class="fas fa-minus"></i> Abgang
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Datum</th>
+                                <th>Typ</th>
+                                <th>Menge</th>
+                                <th>Referenz</th>
+                                <th>Benutzer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movement in movements %}
+                            <tr>
+                                <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    {% if movement.movement_type == 'in' %}
+                                        <span class="badge bg-success">Zugang</span>
+                                    {% elif movement.movement_type == 'out' %}
+                                        <span class="badge bg-danger">Abgang</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Korrektur</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ movement.quantity }} {{ product.unit }}</td>
+                                <td>{{ movement.reference|default:"-" }}</td>
+                                <td>{{ movement.created_by.username }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">Keine Bestandsbewegungen vorhanden</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Barcode Modal -->
+<div class="modal fade" id="barcodeModal" tabindex="-1" aria-labelledby="barcodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="barcodeModalLabel">Barcode: {{ product.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                {% if product.barcode %}
+                    <div id="barcode-container" class="mb-3"></div>
+                    <p>{{ product.barcode }}</p>
+                {% else %}
+                    <p class="text-muted">Kein Barcode für dieses Produkt hinterlegt</p>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">Drucken</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+{% if product.barcode %}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script>
+    $(document).ready(function() {
+        JsBarcode("#barcode-container", "{{ product.barcode }}", {
+            format: "CODE128",
+            width: 2,
+            height: 100,
+            displayValue: true
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}
+{% endblock %}

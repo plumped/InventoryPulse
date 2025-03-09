@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Produkt zu {{ warehouse.name }} hinzufügen{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">Produkt zu Lager "{{ warehouse.name }}" hinzufügen</h1>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="product" class="form-label">Produkt auswählen</label>
+                    <select name="product" id="product" class="form-select" required>
+                        <option value="">-- Produkt auswählen --</option>
+                        {% for product in available_products %}
+                            <option value="{{ product.id }}">{{ product.name }} ({{ product.sku }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="quantity" class="form-label">Anfangsbestand</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" min="0" step="0.01" value="0">
+                    <small class="form-text text-muted">
+                        Geben Sie 0 ein, wenn kein Anfangsbestand vorhanden ist.
+                    </small>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'warehouse_detail' warehouse.id %}" class="btn btn-outline-secondary">
+                        Abbrechen
+                    </a>
+                    <button type="submit" class="btn btn-primary">Hinzufügen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

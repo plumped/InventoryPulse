@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lagerbestand: {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Lagerbestand</h2>
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <a href="{% url 'product_detail' product.id %}" class="text-decoration-none">
+                        <strong>{{ product.name }}</strong>
+                    </a>
+                    <small class="text-muted d-block">
+                        SKU: {{ product.sku }}
+                        {% if product.barcode %}
+                            | Barcode: {{ product.barcode }}
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="ms-auto">
+                    <span class="badge {% if product.current_stock <= product.minimum_stock %}bg-danger{% else %}bg-success{% endif %}">
+                        Gesamt: {{ product.current_stock }} {{ product.unit }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'product_transfer' product.id %}" class="btn btn-primary me-2">
+                <i class="fas fa-exchange-alt"></i> Produkt umlagern
+            </a>
+            <a href="{% url 'product_detail' product.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Zurück zum Produkt
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Bestandsübersicht nach Lager</h5>
+                    {% if perms.inventory.change_productwarehouse %}
+                        <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#adjustStockModal">
+                            <i class="fas fa-edit"></i> Bestand anpassen
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if warehouse_stock %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Lager</th>
+                                        <th>Standort</th>
+                                        <th class="text-end">Bestand</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stock in warehouse_stock %}
+                                        <tr>
+                                            <td>{{ stock.warehouse.name }}</td>
+                                            <td>{{ stock.warehouse.location }}</td>
+                                            <td class="text-end">{{ stock.quantity }} {{ product.unit }}</td>
+                                            <td class="text-center">
+                                                {% if stock.quantity <= 0 %}
+                                                    <span class="badge bg-danger">Nicht verfügbar</span>
+                                                {% elif stock.quantity <= product.minimum_stock %}
+                                                    <span class="badge bg-warning">Kritisch</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Verfügbar</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm">
+                                                    {% if perms.inventory.change_productwarehouse %}
+                                                        <button type="button" class="btn btn-primary adjust-stock-btn"
+                                                                data-warehouse-id="{{ stock.warehouse.id }}"
+                                                                data-warehouse-name="{{ stock.warehouse.name }}"
+                                                                data-current-stock="{{ stock.quantity }}"
+                                                                data-bs-toggle="modal" data-bs-target="#adjustStockModal">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                    <a href="{% url 'warehouse_detail' stock.warehouse.id %}" class="btn btn-info">
+                                                        <i class="fas fa-warehouse"></i>
+                                                    </a>
+                                                    <a href="{% url 'stock_movements_product_warehouse' product.id stock.warehouse.id %}" class="btn btn-secondary">
+                                                        <i class="fas fa-history"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-active">
+                                        <th colspan="2">Gesamtbestand</th>
+                                        <th class="text-end">{{ product.current_stock }} {{ product.unit }}</th>
+                                        <th colspan="2"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Dieses Produkt ist in keinem Lager verfügbar.
+                            {% if perms.inventory.add_productwarehouse %}
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#addToWarehouseModal" class="alert-link">
+                                    Bestand in einem Lager hinzufügen
+                                </a>.
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Letzte Bestandsbewegungen</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_movements %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Datum</th>
+                                        <th>Lager</th>
+                                        <th>Typ</th>
+                                        <th class="text-end">Menge</th>
+                                        <th>Referenz</th>
+                                        <th>Erstellt von</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for movement in recent_movements %}
+                                        <tr>
+                                            <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
+                                            <td>{{ movement.warehouse.name }}</td>
+                                            <td>
+                                                <span class="badge {% if movement.movement_type == 'in' %}bg-success{% elif movement.movement_type == 'out' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                    {{ movement.get_movement_type_display }}
+                                                </span>
+                                            </td>
+                                            <td class="text-end">
+                                                {% if movement.movement_type == 'out' %}-{% endif %}
+                                                {{ movement.quantity }} {{ product.unit }}
+                                            </td>
+                                            <td>{{ movement.reference }}</td>
+                                            <td>{{ movement.created_by.username }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-end mt-2">
+                            <a href="{% url 'stock_movements_product' product.id %}" class="btn btn-sm btn-secondary">
+                                Alle Bewegungen anzeigen
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            Keine Bestandsbewegungen für dieses Produkt vorhanden.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal für Bestand anpassen -->
+<div class="modal fade" id="adjustStockModal" tabindex="-1" aria-labelledby="adjustStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="adjustStockForm" method="post" action="{% url 'adjust_product_stock' product.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="warehouse_id" id="warehouseId">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adjustStockModalLabel">Bestand anpassen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6>Produkt: <strong>{{ product.name }}</strong></h6>
+                        <p class="text-muted mb-0">SKU: {{ product.sku }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Lager</label>
+                        <select name="warehouse_id" id="warehouseSelect" class="form-select" required>
+                            <option value="">-- Lager auswählen --</option>
+                            {% for warehouse in warehouses %}
+                                <option value="{{ warehouse.id }}">{{ warehouse.name }} ({{ warehouse.location }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="current_stock" class="form-label">Aktueller Bestand</label>
+                        <input type="text" class="form-control-plaintext" id="currentStock" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="adjustment_type" class="form-label">Anpassungstyp</label>
+                        <select name="adjustment_type" id="adjustmentType" class="form-select" required>
+                            <option value="set">Festen Wert setzen</option>
+                            <option value="add">Hinzufügen</option>
+                            <option value="subtract">Abziehen</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Menge</label>
+                        <input type="number" class="form-control" id="adjustQuantity" name="quantity" min="0" step="0.01" required>
+                        <div class="form-text">Menge in {{ product.unit }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reference" class="form-label">Referenz</label>
+                        <input type="text" class="form-control" id="reference" name="reference" placeholder="z.B. Inventur, Korrektur">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notizen</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Bestand anpassen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal für Bestand einem neuen Lager hinzufügen -->
+<div class="modal fade" id="addToWarehouseModal" tabindex="-1" aria-labelledby="addToWarehouseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addToWarehouseForm" method="post" action="{% url 'add_product_to_warehouse' product.id %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addToWarehouseModalLabel">Produkt zu Lager hinzufügen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6>Produkt: <strong>{{ product.name }}</strong></h6>
+                        <p class="text-muted mb-0">SKU: {{ product.sku }}</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="new_warehouse_id" class="form-label">Lager</label>
+                        <select name="warehouse_id" id="newWarehouseId" class="form-select" required>
+                            <option value="">-- Lager auswählen --</option>
+                            {% for warehouse in warehouses_without_product %}
+                                <option value="{{ warehouse.id }}">{{ warehouse.name }} ({{ warehouse.location }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="initial_quantity" class="form-label">Anfangsbestand</label>
+                        <input type="number" class="form-control" id="initialQuantity" name="quantity" min="0" step="0.01" required>
+                        <div class="form-text">Menge in {{ product.unit }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reference" class="form-label">Referenz</label>
+                        <input type="text" class="form-control" id="newReference" name="reference" value="Anfangsbestand">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notizen</label>
+                        <textarea class="form-control" id="newNotes" name="notes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-success">Hinzufügen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Select2 für Lager-Auswahl
+        $('#warehouseSelect, #newWarehouseId').select2({
+            placeholder: "Lager auswählen",
+            width: '100%',
+            dropdownParent: $('#warehouseSelect').closest('.modal-body')
+        });
+
+        // Bestandsanpassung Modal - vorausfüllen
+        $('.adjust-stock-btn').click(function() {
+            var warehouseId = $(this).data('warehouse-id');
+            var warehouseName = $(this).data('warehouse-name');
+            var currentStock = $(this).data('current-stock');
+
+            $('#warehouseId').val(warehouseId);
+            $('#warehouseSelect').val(warehouseId).trigger('change');
+            $('#currentStock').val(currentStock + ' {{ product.unit }}');
+            $('#adjustQuantity').val('');
+            $('#reference').val('');
+            $('#notes').val('');
+        });
+
+        // Warehouse Select ändern
+        $('#warehouseSelect').change(function() {
+            var warehouseId = $(this).val();
+            if (warehouseId) {
+                // AJAX-Anfrage, um aktuellen Bestand zu holen
+                $.ajax({
+                    url: '{% url "get_product_warehouse_stock" %}',
+                    data: {
+                        'product_id': {{ product.id }},
+                        'warehouse_id': warehouseId
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.success) {
+                            $('#currentStock').val(data.quantity + ' {{ product.unit }}');
+                            $('#warehouseId').val(warehouseId);
+                        }
+                    }
+                });
+            } else {
+                $('#currentStock').val('');
+                $('#warehouseId').val('');
+            }
+        });
+
+        // Validierung für Bestandsanpassung
+        $('#adjustStockForm').submit(function(e) {
+            var quantity = parseFloat($('#adjustQuantity').val());
+            var type = $('#adjustmentType').val();
+
+            if (isNaN(quantity) || quantity < 0) {
+                e.preventDefault();
+                alert('Bitte geben Sie eine gültige Menge ein (>= 0).');
+                return false;
+            }
+
+            if (type === 'subtract') {
+                var currentStock = parseFloat($('#currentStock').val());
+                if (quantity > currentStock) {
+                    if (!confirm('Die Abzugsmenge ist größer als der aktuelle Bestand. Dies führt zu einem negativen Bestand. Fortfahren?')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        });
+    });
+</script>
+{% endblock %}

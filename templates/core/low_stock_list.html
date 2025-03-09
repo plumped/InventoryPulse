@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Kritische Bestände - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Kritische Bestände</li>
+            </ol>
+        </nav>
+        <h1>{{ title|default:"Kritische Bestände" }}</h1>
+    </div>
+    <div class="btn-group" role="group">
+        <a href="{% url 'product_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Alle Produkte
+        </a>
+        <a href="{% url 'stock_movement_add' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Bestandszugang
+        </a>
+    </div>
+</div>
+
+<div class="alert alert-warning mb-4">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <strong>Achtung:</strong> Die folgenden Produkte haben einen kritischen Bestand (aktueller Bestand <= Mindestbestand) und sollten nachbestellt werden.
+</div>
+
+<!-- Produkttabelle -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Artikelnummer</th>
+                        <th>Kategorie</th>
+                        <th>Aktueller Bestand</th>
+                        <th>Mindestbestand</th>
+                        <th>Lieferant</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
+                        </td>
+                        <td>{{ product.sku }}</td>
+                        <td>
+                            {% if product.category %}
+                                <span class="badge bg-info">{{ product.category.name }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Keine Kategorie</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if product.current_stock == 0 %}
+                                <span class="badge bg-danger">{{ product.current_stock }} {{ product.unit }}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ product.current_stock }} {{ product.unit }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ product.minimum_stock }} {{ product.unit }}</td>
+                        <td>
+                            {% for sp in product.supplier_products.all %}
+                                {% if sp.is_preferred %}
+                                    <a href="{% url 'supplier_detail' sp.supplier.id %}">{{ sp.supplier.name }}</a>
+                                    {% if not forloop.last %}, {% endif %}
+                                {% endif %}
+                            {% empty %}
+                                <span class="text-muted">Kein Lieferant</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-info" title="Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'stock_movement_add' %}?product={{ product.id }}&type=in" class="btn btn-sm btn-success" title="Zugang buchen">
+                                    <i class="fas fa-plus"></i>
+                                </a>
+                                <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-primary" title="Bearbeiten">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <p class="my-3 text-success">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i><br>
+                                Keine Produkte mit kritischem Bestand gefunden.
+                            </p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tipps und Hilfe -->
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Tipps zum Bestandsmanagement</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Regelmäßige Überprüfung</h6>
+                <p>Prüfen Sie regelmäßig Ihre kritischen Bestände, um Engpässe zu vermeiden. In der Dashboard-Ansicht sehen Sie einen schnellen Überblick über Produkte mit kritischem Bestand.</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Bestellung beim Lieferanten</h6>
+                <p>Für Produkte, die nachbestellt werden müssen, können Sie direkt zum bevorzugten Lieferanten wechseln und die Bestellung vorbereiten.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

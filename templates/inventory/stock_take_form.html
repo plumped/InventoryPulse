@@ -1,129 +1,190 @@
 {% extends 'base.html' %}
 
-{% block title %}
-    {% if form.instance.pk %}Inventur bearbeiten{% else %}Neue Inventur{% endif %} - InventoryPulse
-{% endblock %}
+{% block title %}Inventur erstellen - InventoryPulse{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{% url 'stock_take_list' %}">Inventuren</a></li>
-                <li class="breadcrumb-item active" aria-current="page">
-                    {% if form.instance.pk %}{{ form.instance.name }} bearbeiten{% else %}Neue Inventur{% endif %}
-                </li>
-            </ol>
-        </nav>
-        <h1>{% if form.instance.pk %}Inventur bearbeiten{% else %}Neue Inventur{% endif %}</h1>
+<div class="row">
+    <div class="col-12 mb-3">
+        <h1>{% if stock_take %}Inventur bearbeiten{% else %}Neue Inventur erstellen{% endif %}</h1>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-lg-8">
+    <div class="col-md-8 mx-auto">
         <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% if stock_take %}Inventur bearbeiten{% else %}Neue Inventur{% endif %}</h5>
+            </div>
             <div class="card-body">
-                <form method="post" novalidate>
+                <!-- Hinweisfeld für Inventurtypen -->
+                <div class="alert alert-info mb-4">
+                    <h6 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Inventurtypen - Übersicht</h6>
+                    <div class="mt-2 small">
+                        <p><strong>Komplettinventur:</strong> Alle Artikel im Lager werden gezählt. Ideal für Jahresabschlüsse oder vollständige Inventuren.</p>
+                        <p><strong>Rollierende Inventur:</strong> Nur bestimmte Artikelgruppen (A-, B- oder C-Artikel) werden regelmäßig gezählt. Ermöglicht eine kontinuierliche Bestandskontrolle über das Jahr verteilt.</p>
+                        <p><strong>Blindzählung:</strong> Zählung ohne Anzeige der erwarteten Mengen. Verhindert Beeinflussung durch bekannte Bestandsdaten und fördert genaue Zählungen.</p>
+                        <p><strong>Stichprobeninventur:</strong> Zufällig ausgewählte Artikel werden gezählt. Geeignet für schnelle Kontrollen und Qualitätsprüfungen.</p>
+                    </div>
+                </div>
+
+                <form method="post">
                     {% csrf_token %}
-
-                    <div class="mb-3">
-                        <label for="{{ form.name.id_for_label }}" class="form-label">Name*</label>
-                        <input type="text" name="{{ form.name.name }}"
-                               id="{{ form.name.id_for_label }}"
-                               class="form-control {% if form.name.errors %}is-invalid{% endif %}"
-                               value="{{ form.name.value|default:'' }}" required>
-                        {% if form.name.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.name.errors %}
-                                    {{ error }}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.warehouse.id_for_label }}" class="form-label">{{ form.warehouse.label }}</label>
+                            <select name="{{ form.warehouse.name }}" id="{{ form.warehouse.id_for_label }}" class="form-select" required>
+                                <option value="">--- Lager auswählen ---</option>
+                                {% for warehouse in warehouses %}
+                                    <option value="{{ warehouse.id }}" {% if form.warehouse.value == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ warehouse.name }}
+                                    </option>
                                 {% endfor %}
+                            </select>
+                            {% if form.warehouse.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.warehouse.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.inventory_type.id_for_label }}" class="form-label">{{ form.inventory_type.label }}</label>
+                            {{ form.inventory_type }}
+                            {% if form.inventory_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.inventory_type.errors }}
+                                </div>
+                            {% endif %}
+                            <!-- Dynamische Hilfe zum ausgewählten Inventurtyp -->
+                            <div id="inventory-type-help" class="form-text mt-2 p-2 border rounded bg-light" style="display: none;"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                {{ form.display_expected_quantity }}
+                                <label class="form-check-label" for="{{ form.display_expected_quantity.id_for_label }}">
+                                    {{ form.display_expected_quantity.label }}
+                                </label>
+                                {% if form.display_expected_quantity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.display_expected_quantity.errors }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">{{ form.display_expected_quantity.help_text }}</div>
                             </div>
-                        {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 rolling-fields" style="display: none;">
+                        <div class="col-md-6">
+                            <label for="{{ form.cycle_count_category.id_for_label }}" class="form-label">{{ form.cycle_count_category.label }}</label>
+                            {{ form.cycle_count_category }}
+                            {% if form.cycle_count_category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cycle_count_category.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.count_frequency.id_for_label }}" class="form-label">{{ form.count_frequency.label }}</label>
+                            {{ form.count_frequency }}
+                            {% if form.count_frequency.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.count_frequency.errors }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.count_frequency.help_text }}</div>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.description.id_for_label }}" class="form-label">Beschreibung</label>
-                        <textarea name="{{ form.description.name }}"
-                                  id="{{ form.description.id_for_label }}"
-                                  class="form-control {% if form.description.errors %}is-invalid{% endif %}"
-                                  rows="3">{{ form.description.value|default:'' }}</textarea>
+                        <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                        {{ form.description }}
                         {% if form.description.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.description.errors %}
-                                    {{ error }}
-                                {% endfor %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.description.errors }}
                             </div>
                         {% endif %}
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen</label>
-                        <textarea name="{{ form.notes.name }}"
-                                  id="{{ form.notes.id_for_label }}"
-                                  class="form-control {% if form.notes.errors %}is-invalid{% endif %}"
-                                  rows="3">{{ form.notes.value|default:'' }}</textarea>
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                        {{ form.notes }}
                         {% if form.notes.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.notes.errors %}
-                                    {{ error }}
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="mb-3">
-                        <label for="{{ form.warehouse.id_for_label }}" class="form-label">Lager*</label>
-                        <select name="{{ form.warehouse.name }}"
-                                id="{{ form.warehouse.id_for_label }}"
-                                class="form-control {% if form.warehouse.errors %}is-invalid{% endif %}"
-                                required>
-                            <option value="">-- Lager auswählen --</option>
-                            {% for warehouse in warehouses %}
-                                <option value="{{ warehouse.id }}"
-                                        {% if form.warehouse.value|stringformat:"s" == warehouse.id|stringformat:"s" %}selected{% endif %}>
-                                    {{ warehouse.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        {% if form.warehouse.errors %}
-                            <div class="invalid-feedback">
-                                {% for error in form.warehouse.errors %}
-                                    {{ error }}
-                                {% endfor %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.notes.errors }}
                             </div>
                         {% endif %}
                     </div>
 
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'stock_take_list' %}" class="btn btn-secondary">Abbrechen</a>
-                        <button type="submit" class="btn btn-primary">Speichern</button>
+                        <button type="submit" class="btn btn-primary">
+                            {% if stock_take %}Speichern{% else %}Inventur erstellen{% endif %}
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-    <div class="col-lg-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Hinweise</h5>
-            </div>
-            <div class="card-body">
-                <p>{% if form.instance.pk %}Bearbeiten Sie die{% else %}Erstellen Sie eine neue{% endif %} Inventur:</p>
-                <ul>
-                    <li><strong>Name:</strong> Geben Sie einen aussagekräftigen Namen ein, z.B. "Vollständige Inventur Q1 2023" oder "Teilinventur Kategorie Werkzeuge".</li>
-                    <li><strong>Beschreibung:</strong> Fügen Sie optional weitere Details hinzu, z.B. den Grund der Inventur oder spezielle Anweisungen.</li>
-                    <li><strong>Anmerkungen:</strong> Hier können Sie weitere Notizen hinterlegen, die beim Abschluss hilfreich sein könnten.</li>
-                </ul>
-
-                {% if not form.instance.pk %}
-                <div class="alert alert-info mt-3">
-                    <i class="fas fa-lightbulb me-2"></i>
-                    <strong>Hinweis:</strong> Nach dem Erstellen der Inventur werden automatisch alle aktiven Produkte hinzugefügt. Die Inventur befindet sich dann im Status "Entwurf" und kann noch bearbeitet werden.
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inventoryTypeSelect = document.getElementById('{{ form.inventory_type.id_for_label }}');
+        const rollingFields = document.querySelector('.rolling-fields');
+        const displayExpectedCheck = document.getElementById('{{ form.display_expected_quantity.id_for_label }}');
+        const inventoryTypeHelp = document.getElementById('inventory-type-help');
+
+        // Beschreibungen für die Inventurtypen
+        const typeDescriptions = {
+            'full': '<strong>Komplettinventur:</strong> Bei dieser Inventur werden alle Artikel im ausgewählten Lager gezählt. Diese Art wird typischerweise für Jahresinventuren oder komplette Bestandsüberprüfungen verwendet.',
+            'rolling': '<strong>Rollierende Inventur:</strong> Nur eine bestimmte Kategorie von Artikeln wird gezählt. Diese Inventurart ermöglicht regelmäßige Zählungen über einen längeren Zeitraum und kann nach A-, B- oder C-Artikeln gefiltert werden.',
+            'blind': '<strong>Blindzählung:</strong> Bei dieser Methode werden die erwarteten Mengen für die Zähler nicht angezeigt. Dies verhindert eine Beeinflussung und fördert eine unvoreingenommene, genaue Zählung.',
+            'sample': '<strong>Stichprobeninventur:</strong> Es wird eine zufällige Auswahl von Artikeln gezählt, die als repräsentativ für den Gesamtbestand angesehen wird. Diese Methode eignet sich für schnelle Qualitätskontrollen.'
+        };
+
+        // Hilfsfunktion zum Aktualisieren der angezeigten Felder
+        const updateFieldVisibility = function() {
+            // Rollierende Inventur-Felder anzeigen/ausblenden
+            if (inventoryTypeSelect.value === 'rolling') {
+                rollingFields.style.display = 'flex';
+            } else {
+                rollingFields.style.display = 'none';
+            }
+
+            // Bei 'blind' sollte die Option zum Anzeigen erwarteter Mengen deaktiviert werden
+            if (inventoryTypeSelect.value === 'blind') {
+                displayExpectedCheck.checked = false;
+                displayExpectedCheck.disabled = true;
+            } else {
+                displayExpectedCheck.disabled = false;
+            }
+
+            // Hilfetext für den ausgewählten Inventurtyp anzeigen
+            if (inventoryTypeSelect.value && typeDescriptions[inventoryTypeSelect.value]) {
+                inventoryTypeHelp.innerHTML = typeDescriptions[inventoryTypeSelect.value];
+                inventoryTypeHelp.style.display = 'block';
+            } else {
+                inventoryTypeHelp.style.display = 'none';
+            }
+        };
+
+        // Initialer Zustand und Event Listener
+        updateFieldVisibility();
+        inventoryTypeSelect.addEventListener('change', updateFieldVisibility);
+    });
+</script>
 {% endblock %}

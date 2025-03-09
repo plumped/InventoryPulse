@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Neue Zykleninventur erstellen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-3">
+        <h1>Neue Zykleninventur erstellen</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Zykleninventur für "{{ stock_take.name }}" erstellen</h5>
+            </div>
+            <div class="card-body">
+                <p>Sie sind dabei, eine neue Zykleninventur basierend auf der Inventur "{{ stock_take.name }}" zu erstellen.</p>
+
+                <div class="alert alert-info">
+                    <h6>Details zur neuen Zykleninventur:</h6>
+                    <ul>
+                        <li><strong>Lager:</strong> {{ stock_take.warehouse.name }}</li>
+                        <li><strong>Typ:</strong> Rollierende Inventur</li>
+                        <li><strong>Kategorie:</strong>
+                            {% if stock_take.cycle_count_category == 'A' %}
+                                A-Artikel (hoher Wert/Umschlag)
+                            {% elif stock_take.cycle_count_category == 'B' %}
+                                B-Artikel (mittlerer Wert/Umschlag)
+                            {% elif stock_take.cycle_count_category == 'C' %}
+                                C-Artikel (niedriger Wert/Umschlag)
+                            {% else %}
+                                Alle Artikel
+                            {% endif %}
+                        </li>
+                        <li><strong>Zählmodus:</strong>
+                            {% if stock_take.display_expected_quantity %}
+                                Mit Anzeige der erwarteten Mengen
+                            {% else %}
+                                Blindzählung (ohne Anzeige der erwarteten Mengen)
+                            {% endif %}
+                        </li>
+                        <li><strong>Zählfrequenz:</strong>
+                            {% if stock_take.count_frequency > 0 %}
+                                {{ stock_take.count_frequency }} Tage
+                            {% else %}
+                                Einmalige Inventur
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+
+                <p>Möchten Sie mit der Erstellung fortfahren?</p>
+
+                <form method="post" class="d-flex justify-content-between">
+                    {% csrf_token %}
+                    <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-secondary">Abbrechen</a>
+                    <button type="submit" class="btn btn-primary">Zykleninventur erstellen</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

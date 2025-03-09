@@ -14,6 +14,9 @@
             </ol>
         </nav>
         <h1>Barcode-Scan: {{ stock_take.name }}</h1>
+        {% if not stock_take.display_expected_quantity %}
+        <div class="badge bg-dark">Blindzählung - erwartete Mengen werden nicht angezeigt</div>
+        {% endif %}
     </div>
     <div class="btn-group" role="group">
         <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-secondary">
@@ -92,6 +95,7 @@
                     </div>
 
                     <div class="row mb-4">
+                        {% if stock_take.display_expected_quantity %}
                         <div class="col-6 text-center">
                             <div class="card bg-light p-3">
                                 <h6>Erwartete Menge</h6>
@@ -99,6 +103,9 @@
                             </div>
                         </div>
                         <div class="col-6 text-center">
+                        {% else %}
+                        <div class="col-12 text-center">
+                        {% endif %}
                             <div class="card bg-light p-3 counted-status">
                                 <h6>Status</h6>
                                 <h5 id="count-status">Nicht gezählt</h5>
@@ -189,7 +196,10 @@
                         // Update product info
                         $('#product-name').text(data.product_name);
                         $('#product-sku').text('Artikelnr.: ' + data.product_sku);
+
+                        {% if stock_take.display_expected_quantity %}
                         $('#expected-quantity').text(data.expected_quantity);
+                        {% endif %}
 
                         currentItemId = data.item_id;
 

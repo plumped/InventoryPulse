@@ -43,108 +43,109 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Name</th>
+                        <th>Lager</th>
+                        <th>Typ</th>
                         <th>Status</th>
-                        <th>Beginn</th>
-                        <th>Ende</th>
                         <th>Fortschritt</th>
-                        <th>Abweichungen</th>
-                        <th>Erstellt von</th>
+                        <th>Startdatum</th>
                         <th>Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for stock_take in stock_takes %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'stock_take_detail' stock_take.id %}">{{ stock_take.name }}</a>
-                        </td>
-                        <td>
-                            {% if stock_take.status == 'draft' %}
-                                <span class="badge bg-secondary">{{ stock_take.get_status_display }}</span>
-                            {% elif stock_take.status == 'in_progress' %}
-                                <span class="badge bg-primary">{{ stock_take.get_status_display }}</span>
-                            {% elif stock_take.status == 'completed' %}
-                                <span class="badge bg-success">{{ stock_take.get_status_display }}</span>
-                            {% elif stock_take.status == 'cancelled' %}
-                                <span class="badge bg-danger">{{ stock_take.get_status_display }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ stock_take.start_date|date:"d.m.Y H:i" }}</td>
-                        <td>
-                            {% if stock_take.end_date %}
-                                {{ stock_take.end_date|date:"d.m.Y H:i" }}
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="progress" style="height: 20px;">
-                                <div class="progress-bar {% if stock_take.get_completion_percentage == 100 %}bg-success{% endif %}"
-                                     role="progressbar"
-                                     style="width: {{ stock_take.get_completion_percentage }}%;"
-                                     aria-valuenow="{{ stock_take.get_completion_percentage }}"
-                                     aria-valuemin="0"
-                                     aria-valuemax="100">
-                                    {{ stock_take.get_completion_percentage }}%
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            {% if stock_take.status == 'completed' or stock_take.status == 'in_progress' %}
-                                <span class="badge {% if stock_take.get_discrepancy_count > 0 %}bg-warning{% else %}bg-success{% endif %}">
-                                    {{ stock_take.get_discrepancy_count }}
-                                </span>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ stock_take.created_by.username }}</td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-sm btn-info" title="Details">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                {% if stock_take.status == 'draft' %}
-                                    <a href="{% url 'stock_take_update' stock_take.id %}" class="btn btn-sm btn-primary" title="Bearbeiten">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <a href="{% url 'stock_take_start' stock_take.id %}" class="btn btn-sm btn-success" title="Starten">
-                                        <i class="bi bi-play"></i>
-                                    </a>
-                                    <a href="{% url 'stock_take_delete' stock_take.id %}" class="btn btn-sm btn-danger" title="Löschen">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                {% elif stock_take.status == 'in_progress' %}
-                                    <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-sm btn-primary" title="Zählen">
-                                        <i class="fas fa-clipboard-check"></i>
-                                    </a>
-                                    <a href="{% url 'stock_take_barcode_scan' stock_take.id %}" class="btn btn-sm btn-secondary" title="Barcode scannen">
-                                        <i class="fas fa-barcode"></i>
-                                    </a>
-                                    <a href="{% url 'stock_take_complete' stock_take.id %}" class="btn btn-sm btn-success" title="Abschließen">
-                                        <i class="fas fa-check"></i>
-                                    </a>
-                                    <a href="{% url 'stock_take_cancel' stock_take.id %}" class="btn btn-sm btn-danger" title="Abbrechen">
-                                        <i class="fas fa-times"></i>
-                                    </a>
-                                {% else %}
-                                    <a href="{% url 'stock_take_report' stock_take.id %}" class="btn btn-sm btn-secondary" title="Bericht">
-                                        <i class="fas fa-chart-bar"></i>
-                                    </a>
-                                    <a href="{% url 'stock_take_export_csv' stock_take.id %}" class="btn btn-sm btn-success" title="CSV exportieren">
-                                        <i class="fas fa-file-csv"></i>
-                                    </a>
+                        <tr>
+                            <td>{{ stock_take.name }}</td>
+                            <td>{{ stock_take.warehouse.name }}</td>
+                            <td>
+                                {% if stock_take.inventory_type == 'full' %}
+                                    <span class="badge bg-info">Komplett</span>
+                                {% elif stock_take.inventory_type == 'rolling' %}
+                                    <span class="badge bg-warning">Rollierend</span>
+                                    {% if stock_take.cycle_count_category %}
+                                        <span class="badge bg-secondary">{{ stock_take.cycle_count_category }}</span>
+                                    {% endif %}
+                                {% elif stock_take.inventory_type == 'blind' %}
+                                    <span class="badge bg-dark">Blind</span>
+                                {% elif stock_take.inventory_type == 'sample' %}
+                                    <span class="badge bg-secondary">Stichprobe</span>
                                 {% endif %}
-                            </div>
-                        </td>
-                    </tr>
+
+                                {% if not stock_take.display_expected_quantity %}
+                                    <i class="bi bi-eye-slash text-muted" title="Blindzählung"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if stock_take.status == 'draft' %}
+                                    <span class="badge bg-secondary">{{ stock_take.get_status_display }}</span>
+                                {% elif stock_take.status == 'in_progress' %}
+                                    <span class="badge bg-primary">{{ stock_take.get_status_display }}</span>
+                                {% elif stock_take.status == 'completed' %}
+                                    <span class="badge bg-success">{{ stock_take.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ stock_take.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar
+                                        {% if stock_take.status == 'completed' %}bg-success{% else %}bg-primary{% endif %}"
+                                         role="progressbar"
+                                         style="width: {{ stock_take.get_completion_percentage }}%;"
+                                         aria-valuenow="{{ stock_take.get_completion_percentage }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <small>{{ stock_take.get_completion_percentage }}%</small>
+                            </td>
+                            <td>{{ stock_take.start_date|date:"d.m.Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+
+                                    {% if stock_take.status == 'draft' %}
+                                        <a href="{% url 'stock_take_update' stock_take.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'stock_take_start' stock_take.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-play-fill"></i>
+                                        </a>
+                                        <a href="{% url 'stock_take_delete' stock_take.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    {% elif stock_take.status == 'in_progress' %}
+                                        <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-check2-square"></i>
+                                        </a>
+                                        <a href="{% url 'stock_take_complete' stock_take.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-check-circle"></i>
+                                        </a>
+                                        <a href="{% url 'stock_take_cancel' stock_take.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle"></i>
+                                        </a>
+                                    {% elif stock_take.status == 'completed' %}
+                                        <a href="{% url 'stock_take_report' stock_take.id %}" class="btn btn-sm btn-outline-info">
+                                            <i class="bi bi-file-earmark-text"></i>
+                                        </a>
+                                        {% if stock_take.inventory_type == 'rolling' and stock_take.count_frequency > 0 %}
+                                            <a href="{% url 'stock_take_create_cycle' stock_take.id %}" class="btn btn-sm btn-outline-secondary"
+                                               title="Neue Zykleninventur erstellen">
+                                                <i class="bi bi-arrow-repeat"></i>
+                                            </a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center">Keine Inventuren gefunden</td>
-                    </tr>
+                        <tr>
+                            <td colspan="7" class="text-center">Keine Inventuren gefunden.</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>

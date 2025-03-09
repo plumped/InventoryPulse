@@ -31,13 +31,25 @@ class StockTakeForm(forms.ModelForm):
 
     class Meta:
         model = StockTake
-        fields = ['name', 'description', 'notes', 'warehouse']
+        fields = [
+            'name', 'description', 'notes', 'warehouse',
+            'inventory_type', 'display_expected_quantity',
+            'cycle_count_category', 'count_frequency'
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['name'].widget.attrs.update({'class': 'form-control'})
         self.fields['description'].widget.attrs.update({'class': 'form-control', 'rows': 3})
         self.fields['notes'].widget.attrs.update({'class': 'form-control', 'rows': 3})
+        self.fields['inventory_type'].widget.attrs.update({'class': 'form-select'})
+        self.fields['display_expected_quantity'].widget.attrs.update({'class': 'form-check-input'})
+        self.fields['cycle_count_category'].widget.attrs.update({'class': 'form-select'})
+        self.fields['count_frequency'].widget.attrs.update({'class': 'form-control'})
+
+        # Dynamisches Anzeigen der Felder je nach Inventurtyp mit JavaScript
+        self.fields['cycle_count_category'].widget.attrs['data-inventory-type'] = 'rolling'
+        self.fields['count_frequency'].widget.attrs['data-inventory-type'] = 'rolling'
 
 
 class StockTakeItemForm(forms.ModelForm):
@@ -67,6 +79,16 @@ class StockTakeFilterForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+    inventory_type = forms.ChoiceField(  # Neues Feld
+        choices=[('', 'Alle Typen')] + [
+            ('full', 'Komplettinventur'),
+            ('rolling', 'Rollierende Inventur'),
+            ('blind', 'Blindzählung'),
+            ('sample', 'Stichprobeninventur'),
+        ],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
     warehouse = forms.ModelChoiceField(
         queryset=Warehouse.objects.filter(is_active=True),
         required=False,
@@ -93,7 +115,7 @@ class StockTakeFilterForm(forms.Form):
         # Lagerauswahl basierend auf Benutzerberechtigungen einschränken
         if user and not user.is_superuser:
             accessible_warehouses = [w.id for w in Warehouse.objects.filter(is_active=True)
-                                     if user_has_warehouse_access(user, w, 'view')]
+                                   if user_has_warehouse_access(user, w, 'view')]
             self.fields['warehouse'].queryset = Warehouse.objects.filter(id__in=accessible_warehouses)
 
 

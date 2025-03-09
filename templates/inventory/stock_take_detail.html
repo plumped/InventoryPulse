@@ -57,62 +57,103 @@
     <div class="col-md-5">
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Inventurdetails</h5>
+                <h5 class="mb-0">Inventurdetails</h5>
             </div>
             <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Status:</div>
-                    <div class="col-md-8">
-                        {% if stock_take.status == 'draft' %}
-                            <span class="badge bg-secondary">{{ stock_take.get_status_display }}</span>
-                        {% elif stock_take.status == 'in_progress' %}
-                            <span class="badge bg-primary">{{ stock_take.get_status_display }}</span>
-                        {% elif stock_take.status == 'completed' %}
-                            <span class="badge bg-success">{{ stock_take.get_status_display }}</span>
-                        {% elif stock_take.status == 'cancelled' %}
-                            <span class="badge bg-danger">{{ stock_take.get_status_display }}</span>
-                        {% endif %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Name:</dt>
+                            <dd class="col-sm-8">{{ stock_take.name }}</dd>
+
+                            <dt class="col-sm-4">Lager:</dt>
+                            <dd class="col-sm-8">{{ stock_take.warehouse.name }}</dd>
+
+                            <dt class="col-sm-4">Status:</dt>
+                            <dd class="col-sm-8">
+                                {% if stock_take.status == 'draft' %}
+                                    <span class="badge bg-secondary">{{ stock_take.get_status_display }}</span>
+                                {% elif stock_take.status == 'in_progress' %}
+                                    <span class="badge bg-primary">{{ stock_take.get_status_display }}</span>
+                                {% elif stock_take.status == 'completed' %}
+                                    <span class="badge bg-success">{{ stock_take.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ stock_take.get_status_display }}</span>
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Startdatum:</dt>
+                            <dd class="col-sm-8">{{ stock_take.start_date|date:"d.m.Y H:i" }}</dd>
+
+                            {% if stock_take.end_date %}
+                            <dt class="col-sm-4">Enddatum:</dt>
+                            <dd class="col-sm-8">{{ stock_take.end_date|date:"d.m.Y H:i" }}</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Inventurtyp:</dt>
+                            <dd class="col-sm-8">
+                                {% if stock_take.inventory_type == 'full' %}
+                                    <span class="badge bg-info">Komplettinventur</span>
+                                {% elif stock_take.inventory_type == 'rolling' %}
+                                    <span class="badge bg-warning">Rollierende Inventur</span>
+                                {% elif stock_take.inventory_type == 'blind' %}
+                                    <span class="badge bg-dark">Blindzählung</span>
+                                {% elif stock_take.inventory_type == 'sample' %}
+                                    <span class="badge bg-secondary">Stichprobeninventur</span>
+                                {% endif %}
+                            </dd>
+
+                            {% if stock_take.inventory_type == 'rolling' %}
+                            <dt class="col-sm-4">Kategorie:</dt>
+                            <dd class="col-sm-8">
+                                {% if stock_take.cycle_count_category == 'A' %}
+                                    A-Artikel (hoher Wert/Umschlag)
+                                {% elif stock_take.cycle_count_category == 'B' %}
+                                    B-Artikel (mittlerer Wert/Umschlag)
+                                {% elif stock_take.cycle_count_category == 'C' %}
+                                    C-Artikel (niedriger Wert/Umschlag)
+                                {% else %}
+                                    Alle Artikel
+                                {% endif %}
+                            </dd>
+
+                            <dt class="col-sm-4">Zählfrequenz:</dt>
+                            <dd class="col-sm-8">
+                                {% if stock_take.count_frequency > 0 %}
+                                    {{ stock_take.count_frequency }} Tage
+                                {% else %}
+                                    Einmalige Inventur
+                                {% endif %}
+                            </dd>
+
+                            {% if stock_take.last_cycle_date %}
+                            <dt class="col-sm-4">Letzte Zählung:</dt>
+                            <dd class="col-sm-8">{{ stock_take.last_cycle_date|date:"d.m.Y" }}</dd>
+                            {% endif %}
+
+                            {% if stock_take.get_next_cycle_date %}
+                            <dt class="col-sm-4">Nächste Zählung:</dt>
+                            <dd class="col-sm-8">{{ stock_take.get_next_cycle_date|date:"d.m.Y" }}</dd>
+                            {% endif %}
+                            {% endif %}
+
+                            <dt class="col-sm-4">Zählmodus:</dt>
+                            <dd class="col-sm-8">
+                                {% if stock_take.display_expected_quantity %}
+                                    Erwartete Mengen werden angezeigt
+                                {% else %}
+                                    Blindzählung (keine erwarteten Mengen)
+                                {% endif %}
+                            </dd>
+                        </dl>
                     </div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Beginn:</div>
-                    <div class="col-md-8">{{ stock_take.start_date|date:"d.m.Y H:i" }}</div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Ende:</div>
-                    <div class="col-md-8">
-                        {% if stock_take.end_date %}
-                            {{ stock_take.end_date|date:"d.m.Y H:i" }}
-                        {% else %}
-                            <span class="text-muted">Noch nicht beendet</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Erstellt von:</div>
-                    <div class="col-md-8">{{ stock_take.created_by.username }}</div>
-                </div>
-                {% if stock_take.completed_by %}
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Abgeschlossen von:</div>
-                    <div class="col-md-8">{{ stock_take.completed_by.username }}</div>
-                </div>
-                {% endif %}
-                {% if stock_take.description %}
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Beschreibung:</div>
-                    <div class="col-md-8">{{ stock_take.description|linebreaks }}</div>
-                </div>
-                {% endif %}
-                {% if stock_take.notes %}
-                <div class="row mb-3">
-                    <div class="col-md-4 fw-bold">Anmerkungen:</div>
-                    <div class="col-md-8">{{ stock_take.notes|linebreaks }}</div>
-                </div>
-                {% endif %}
             </div>
         </div>
-    </div>
 
     <!-- Fortschritt und Statistiken -->
     <div class="col-md-7">

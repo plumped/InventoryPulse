@@ -1,4 +1,5 @@
 from decimal import Decimal
+from random import random
 
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
@@ -240,12 +241,15 @@ def stock_take_list(request):
     filter_form = StockTakeFilterForm(request.GET or None)
     if filter_form.is_valid():
         status = filter_form.cleaned_data.get('status')
+        inventory_type = filter_form.cleaned_data.get('inventory_type')  # Neues Feld
         date_from = filter_form.cleaned_data.get('date_from')
         date_to = filter_form.cleaned_data.get('date_to')
         search = filter_form.cleaned_data.get('search')
 
         if status:
             stock_takes = stock_takes.filter(status=status)
+        if inventory_type:  # Neuer Filter
+            stock_takes = stock_takes.filter(inventory_type=inventory_type)
         if date_from:
             stock_takes = stock_takes.filter(start_date__gte=date_from)
         if date_to:
@@ -270,8 +274,8 @@ def stock_take_list(request):
     context = {
         'stock_takes': stock_takes,
         'filter_form': filter_form,
-        'warehouses': accessible_warehouses,  # Neue Variable
-        'warehouse_id': warehouse_id,  # Neue Variable
+        'warehouses': accessible_warehouses,
+        'warehouse_id': warehouse_id,
     }
 
     return render(request, 'inventory/stock_take_list.html', context)
@@ -298,17 +302,79 @@ def stock_take_create(request):
         if form.is_valid():
             stock_take = form.save(commit=False)
             stock_take.created_by = request.user
+
+            # Für rollierende Inventuren das letzte Zyklendatum setzen
+            if stock_take.inventory_type == 'rolling' and stock_take.count_frequency > 0:
+                stock_take.last_cycle_date = timezone.now().date()
+
             stock_take.save()
 
-            # Alle Produkte im ausgewählten Lager zur Inventur hinzufügen
-            product_warehouses = ProductWarehouse.objects.filter(warehouse=stock_take.warehouse)
+            # Produkte zur Inventur hinzufügen basierend auf dem Inventurtyp
+            if stock_take.inventory_type == 'full':
+                # Alle Produkte im ausgewählten Lager zur Inventur hinzufügen
+                product_warehouses = ProductWarehouse.objects.filter(warehouse=stock_take.warehouse)
 
-            for product_warehouse in product_warehouses:
-                StockTakeItem.objects.create(
-                    stock_take=stock_take,
-                    product=product_warehouse.product,
-                    expected_quantity=product_warehouse.quantity
-                )
+                for product_warehouse in product_warehouses:
+                    StockTakeItem.objects.create(
+                        stock_take=stock_take,
+                        product=product_warehouse.product,
+                        expected_quantity=product_warehouse.quantity
+                    )
+
+            elif stock_take.inventory_type == 'rolling':
+                # Nur Produkte der ausgewählten Kategorie hinzufügen
+                product_warehouses = ProductWarehouse.objects.filter(warehouse=stock_take.warehouse)
+
+                if stock_take.cycle_count_category:
+                    # ABC-Analyse müsste implementiert sein, hier vereinfacht angenommen
+                    # In der Realität würden wir hier eine komplexere Abfrage machen
+                    if stock_take.cycle_count_category == 'A':
+                        # A-Artikel: Höherwertige Produkte (obere 20% nach Wert)
+                        product_warehouses = product_warehouses.order_by('-product__purchase_price')[
+                                             :int(product_warehouses.count() * 0.2)]
+                    elif stock_take.cycle_count_category == 'B':
+                        # B-Artikel: Mittlerer Wert (nächste 30%)
+                        sorted_pws = product_warehouses.order_by('-product__purchase_price')
+                        start_idx = int(product_warehouses.count() * 0.2)
+                        end_idx = int(product_warehouses.count() * 0.5)
+                        product_warehouses = sorted_pws[start_idx:end_idx]
+                    elif stock_take.cycle_count_category == 'C':
+                        # C-Artikel: Geringerer Wert (restliche 50%)
+                        sorted_pws = product_warehouses.order_by('-product__purchase_price')
+                        start_idx = int(product_warehouses.count() * 0.5)
+                        product_warehouses = sorted_pws[start_idx:]
+
+                for product_warehouse in product_warehouses:
+                    StockTakeItem.objects.create(
+                        stock_take=stock_take,
+                        product=product_warehouse.product,
+                        expected_quantity=product_warehouse.quantity
+                    )
+
+            elif stock_take.inventory_type == 'sample':
+                # Zufällige Stichprobe von Produkten
+                product_warehouses = ProductWarehouse.objects.filter(warehouse=stock_take.warehouse)
+                sample_size = min(int(product_warehouses.count() * 0.1), 50)  # 10% oder max 50 Produkte
+
+                # Zufällige Auswahl
+                sample_pws = random.sample(list(product_warehouses), sample_size)
+
+                for product_warehouse in sample_pws:
+                    StockTakeItem.objects.create(
+                        stock_take=stock_take,
+                        product=product_warehouse.product,
+                        expected_quantity=product_warehouse.quantity
+                    )
+            else:
+                # Typ 'blind' - gleich wie 'full', nur ohne Anzeige der erwarteten Mengen
+                product_warehouses = ProductWarehouse.objects.filter(warehouse=stock_take.warehouse)
+
+                for product_warehouse in product_warehouses:
+                    StockTakeItem.objects.create(
+                        stock_take=stock_take,
+                        product=product_warehouse.product,
+                        expected_quantity=product_warehouse.quantity
+                    )
 
             messages.success(request,
                              f'Inventur "{stock_take.name}" für Lager "{stock_take.warehouse.name}" wurde erfolgreich erstellt.')
@@ -667,13 +733,20 @@ def stock_take_item_count(request, pk, item_id):
 
             # Ajax-Anfrage behandeln
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
+                response_data = {
                     'success': True,
                     'item_id': item.id,
                     'counted_quantity': item.counted_quantity,
-                    'discrepancy': item.get_discrepancy(),
-                    'discrepancy_status': item.get_discrepancy_status(),
-                })
+                }
+
+                # Nur bei Nicht-Blindzählungen die Diskrepanz hinzufügen
+                if stock_take.display_expected_quantity:
+                    response_data.update({
+                        'discrepancy': item.get_discrepancy(),
+                        'discrepancy_status': item.get_discrepancy_status(),
+                    })
+
+                return JsonResponse(response_data)
 
             messages.success(request, f'Produkt "{item.product.name}" wurde erfolgreich gezählt.')
             next_item_id = request.POST.get('next_item_id')
@@ -695,6 +768,7 @@ def stock_take_item_count(request, pk, item_id):
         'item': item,
         'form': form,
         'next_item': next_item,
+        'show_expected_quantity': stock_take.display_expected_quantity,
     }
 
     return render(request, 'inventory/stock_take_item_count.html', context)
@@ -2114,3 +2188,75 @@ def bulk_warehouse_transfer(request):
     }
 
     return render(request, 'inventory/bulk_warehouse_transfer.html', context)
+
+
+@login_required
+@permission_required('inventory', 'create')
+def stock_take_create_cycle(request, pk):
+    """Create a new cycle count based on an existing one."""
+    original_stock_take = get_object_or_404(StockTake, pk=pk)
+
+    # Zugriffskontrolle
+    if not user_has_warehouse_access(request.user, original_stock_take.warehouse, 'manage_stock'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, für dieses Lager Inventuren zu erstellen.")
+
+    # Nur für rollierende Inventuren
+    if original_stock_take.inventory_type != 'rolling':
+        messages.error(request, "Nur für rollierende Inventuren können Zykleninventuren erstellt werden.")
+        return redirect('stock_take_detail', pk=original_stock_take.pk)
+
+    if request.method == 'POST':
+        # Neue Zykleninventur erstellen
+        new_stock_take = StockTake.objects.create(
+            name=f"{original_stock_take.name} (Zyklus {timezone.now().strftime('%d.%m.%Y')})",
+            description=original_stock_take.description,
+            warehouse=original_stock_take.warehouse,
+            status='draft',
+            inventory_type='rolling',
+            display_expected_quantity=original_stock_take.display_expected_quantity,
+            cycle_count_category=original_stock_take.cycle_count_category,
+            count_frequency=original_stock_take.count_frequency,
+            last_cycle_date=timezone.now().date(),
+            created_by=request.user
+        )
+
+        # Produkte entsprechend der Kategorie hinzufügen
+        product_warehouses = ProductWarehouse.objects.filter(warehouse=new_stock_take.warehouse)
+
+        if new_stock_take.cycle_count_category:
+            # Vereinfachte ABC-Analyse
+            if new_stock_take.cycle_count_category == 'A':
+                # A-Artikel: Höherwertige Produkte (obere 20% nach Wert)
+                product_warehouses = product_warehouses.order_by('-product__purchase_price')[
+                                     :int(product_warehouses.count() * 0.2)]
+            elif new_stock_take.cycle_count_category == 'B':
+                # B-Artikel: Mittlerer Wert (nächste 30%)
+                sorted_pws = product_warehouses.order_by('-product__purchase_price')
+                start_idx = int(product_warehouses.count() * 0.2)
+                end_idx = int(product_warehouses.count() * 0.5)
+                product_warehouses = sorted_pws[start_idx:end_idx]
+            elif new_stock_take.cycle_count_category == 'C':
+                # C-Artikel: Geringerer Wert (restliche 50%)
+                sorted_pws = product_warehouses.order_by('-product__purchase_price')
+                start_idx = int(product_warehouses.count() * 0.5)
+                product_warehouses = sorted_pws[start_idx:]
+
+        for product_warehouse in product_warehouses:
+            StockTakeItem.objects.create(
+                stock_take=new_stock_take,
+                product=product_warehouse.product,
+                expected_quantity=product_warehouse.quantity
+            )
+
+        # Original aktualisieren
+        original_stock_take.last_cycle_date = timezone.now().date()
+        original_stock_take.save()
+
+        messages.success(request, f"Neue Zykleninventur '{new_stock_take.name}' wurde erfolgreich erstellt.")
+        return redirect('stock_take_detail', pk=new_stock_take.pk)
+
+    context = {
+        'stock_take': original_stock_take,
+    }
+
+    return render(request, 'inventory/stock_take_create_cycle.html', context)

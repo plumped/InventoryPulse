@@ -98,89 +98,93 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover">
-                <thead class="table-light sticky-top">
+                <thead>
                     <tr>
                         <th>Produkt</th>
-                        <th>Artikelnr.</th>
+                        <th>SKU</th>
                         <th>Kategorie</th>
+                        {% if show_expected_quantity %}
                         <th>Erwartet</th>
-                        <th>Tatsächlich</th>
+                        {% endif %}
+                        <th>Gezählt</th>
+                        {% if show_expected_quantity %}
                         <th>Differenz</th>
+                        {% endif %}
                         <th>Status</th>
                         <th>Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in items %}
-                    <tr data-item-id="{{ item.id }}" class="{% if item.is_counted %}counted-row{% else %}not-counted-row{% endif %}">
-                        <td>{{ item.product.name }}</td>
-                        <td>{{ item.product.sku }}</td>
-                        <td>
-                            {% if item.product.category %}
-                                <span class="badge bg-info">{{ item.product.category.name }}</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Keine Kategorie</span>
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td>{{ item.product.sku }}</td>
+                            <td>{{ item.product.category.name|default:"-" }}</td>
+
+                            {% if show_expected_quantity %}
+                            <td>{{ item.expected_quantity }}</td>
                             {% endif %}
-                        </td>
-                        <td>{{ item.expected_quantity }} {{ item.product.unit }}</td>
-                        <td>
-                            <div class="input-group input-group-sm">
-                                <input type="number"
-                                       class="form-control counted-quantity"
-                                       data-item-id="{{ item.id }}"
-                                       {% if item.is_counted %}value="{{ item.counted_quantity }}"{% endif %}
-                                       step="0.01" min="0">
-                                <span class="input-group-text">{{ item.product.unit }}</span>
-                            </div>
-                        </td>
-                        <td class="difference-cell">
-                            {% if item.is_counted %}
-                                {% with discrepancy=item.get_discrepancy %}
-                                    {% if discrepancy == 0 %}
-                                        <span class="text-success">0</span>
-                                    {% elif discrepancy > 0 %}
-                                        <span class="text-success">+{{ discrepancy }}</span>
-                                    {% else %}
-                                        <span class="text-danger">{{ discrepancy }}</span>
-                                    {% endif %}
-                                {% endwith %}
-                            {% else %}
-                                <span class="text-muted">-</span>
+
+                            <td>
+                                {% if item.is_counted %}
+                                    {{ item.counted_quantity }}
+                                {% else %}
+                                    <span class="badge bg-secondary">Nicht gezählt</span>
+                                {% endif %}
+                            </td>
+
+                            {% if show_expected_quantity %}
+                            <td>
+                                {% if item.is_counted %}
+                                    {% with discrepancy=item.get_discrepancy %}
+                                        {% if discrepancy == 0 %}
+                                            <span class="badge bg-success">Korrekt</span>
+                                        {% elif discrepancy > 0 %}
+                                            <span class="badge bg-warning">+{{ discrepancy }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ discrepancy }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
                             {% endif %}
-                        </td>
-                        <td class="status-cell">
-                            {% if not item.is_counted %}
-                                <span class="badge bg-secondary">Nicht gezählt</span>
-                            {% else %}
-                                <span class="badge bg-{{ item.get_discrepancy_status }}">
-                                    {% if item.get_discrepancy_status == 'success' %}
-                                        Korrekt
-                                    {% elif item.get_discrepancy_status == 'warning' %}
-                                        Geringe Abweichung
-                                    {% elif item.get_discrepancy_status == 'danger' %}
-                                        Große Abweichung
-                                    {% endif %}
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-sm btn-success save-item-btn" data-item-id="{{ item.id }}" title="Speichern">
-                                    <i class="fas fa-save"></i>
-                                </button>
-                                <a href="{% url 'stock_take_item_count' stock_take.id item.id %}" class="btn btn-sm btn-primary" title="Detailansicht">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{% url 'product_detail' item.product.id %}" class="btn btn-sm btn-info" title="Produktdetails">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
+
+                            <td>
+                                {% if not item.is_counted %}
+                                    <span class="badge bg-secondary">Ausstehend</span>
+                                {% else %}
+                                    {% with status=item.get_discrepancy_status %}
+                                        {% if status == "success" %}
+                                            <span class="badge bg-success">OK</span>
+                                        {% elif status == "warning" %}
+                                            <span class="badge bg-warning">Abweichung</span>
+                                        {% elif status == "danger" %}
+                                            <span class="badge bg-danger">Große Abweichung</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ status }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if not item.is_counted %}
+                                    <a href="{% url 'stock_take_item_count' stock_take.id item.id %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i> Zählen
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'stock_take_item_count' stock_take.id item.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i> Bearbeiten
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center">Keine Produkte gefunden</td>
-                    </tr>
+                        <tr>
+                            <td colspan="{% if show_expected_quantity %}8{% else %}6{% endif %}" class="text-center">Keine Produkte gefunden.</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>

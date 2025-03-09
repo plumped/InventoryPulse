@@ -21,6 +21,8 @@ urlpatterns = [
     path('stock-takes/<int:pk>/export-csv/', views.stock_take_export_csv, name='stock_take_export_csv'),
     path('stock-takes/<int:pk>/export-pdf/', views.stock_take_export_pdf, name='stock_take_export_pdf'),
     path('stock-takes/<int:pk>/items/<int:item_id>/count/', views.stock_take_item_count, name='stock_take_item_count'),
+    path('stock-takes/<int:pk>/create-cycle/', views.stock_take_create_cycle, name='stock_take_create_cycle'),
+
 
     # Lagerverwaltung
     path('warehouses/', views.warehouse_list, name='warehouse_list'),

@@ -46,9 +46,12 @@
                                         <span class="text-muted">Keine Kategorie</span>
                                     {% endif %}
                                 </p>
-                                <p class="mb-1"><strong>Erwartete Menge:</strong>
-                                    <span class="badge bg-primary">{{ item.expected_quantity }} {{ item.product.unit }}</span>
-                                </p>
+                                {% if show_expected_quantity %}
+                                    <div class="mb-3">
+                                        <label class="form-label">Erwartete Menge</label>
+                                        <input type="text" class="form-control" value="{{ item.expected_quantity }}" readonly>
+                                    </div>
+                                    {% endif %}
                                 <p class="mb-0"><strong>Status:</strong>
                                     {% if item.is_counted %}
                                         <span class="badge bg-{{ item.get_discrepancy_status }}">

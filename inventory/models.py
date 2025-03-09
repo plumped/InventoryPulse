@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -56,6 +57,43 @@ class StockTake(models.Model):
                                      blank=True, verbose_name="Abgeschlossen von")
     notes = models.TextField(blank=True, verbose_name="Anmerkungen")
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    inventory_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('full', 'Komplettinventur'),
+            ('rolling', 'Rollierende Inventur'),
+            ('blind', 'Blindzählung'),
+            ('sample', 'Stichprobeninventur'),
+        ],
+        default='full',
+        verbose_name="Inventurtyp"
+    )
+    display_expected_quantity = models.BooleanField(
+        default=True,
+        verbose_name="Erwartete Mengen anzeigen",
+        help_text="Wenn deaktiviert, werden den Zählern die erwarteten Mengen nicht angezeigt (Blindzählung)"
+    )
+    cycle_count_category = models.CharField(
+        max_length=1,
+        choices=[
+            ('A', 'A-Artikel (hoher Wert/Umschlag)'),
+            ('B', 'B-Artikel (mittlerer Wert/Umschlag)'),
+            ('C', 'C-Artikel (niedriger Wert/Umschlag)'),
+            ('', 'Alle Artikel'),
+        ],
+        blank=True,
+        verbose_name="Artikelkategorie für rollierende Inventur"
+    )
+    count_frequency = models.IntegerField(
+        default=0,
+        verbose_name="Zählfrequenz in Tagen",
+        help_text="0 = einmalige Inventur, >0 = Zyklus in Tagen für rollierende Inventur"
+    )
+    last_cycle_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Datum der letzten Zykleninventur"
+    )
 
     def __str__(self):
         return f"{self.name} ({self.get_status_display()})"
@@ -78,6 +116,16 @@ class StockTake(models.Model):
             return 100  # Avoid division by zero
         counted = self.stocktakeitem_set.filter(is_counted=True).count()
         return int((counted / total) * 100)
+
+    def is_blind_count(self):
+        """Überprüft, ob es sich um eine Blindzählung handelt."""
+        return not self.display_expected_quantity
+
+    def get_next_cycle_date(self):
+        """Berechnet das Datum der nächsten Zykleninventur."""
+        if not self.count_frequency or not self.last_cycle_date:
+            return None
+        return self.last_cycle_date + datetime.timedelta(days=self.count_frequency)
 
     class Meta:
         ordering = ['-start_date']

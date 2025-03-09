@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if serial %}Seriennummer bearbeiten{% else %}Neue Seriennummer{% endif %}: {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_serials' product.id %}">Seriennummern</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if serial %}Bearbeiten{% else %}Neu{% endif %}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-2">{% if serial %}Seriennummer bearbeiten{% else %}Neue Seriennummer{% endif %}: {{ product.name }}</h1>
+        <p class="text-muted">
+            <span class="badge bg-primary">SKU: {{ product.sku }}</span>
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% if serial %}Seriennummer bearbeiten{% else %}Neue Seriennummer erstellen{% endif %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Fehler:</strong> Bitte korrigieren Sie die markierten Felder.
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.serial_number.id_for_label }}" class="form-label">Seriennummer*</label>
+                            <input type="text" name="{{ form.serial_number.name }}"
+                                   id="{{ form.serial_number.id_for_label }}"
+                                   class="form-control {% if form.serial_number.errors %}is-invalid{% endif %}"
+                                   value="{{ form.serial_number.value|default:'' }}" required>
+                            {% if form.serial_number.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.serial_number.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Eindeutige Seriennummer für dieses Produkt</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status*</label>
+                            <select name="{{ form.status.name }}"
+                                    id="{{ form.status.id_for_label }}"
+                                    class="form-select {% if form.status.errors %}is-invalid{% endif %}" required>
+                                {% for choice in form.status.field.choices %}
+                                <option value="{{ choice.0 }}" {% if form.status.value == choice.0 %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.status.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.warehouse.id_for_label }}" class="form-label">Lager</label>
+                            <select name="{{ form.warehouse.name }}"
+                                    id="{{ form.warehouse.id_for_label }}"
+                                    class="form-select {% if form.warehouse.errors %}is-invalid{% endif %}">
+                                <option value="">Lager auswählen...</option>
+                                {% for choice in form.warehouse.field.choices %}
+                                {% if choice.0 %} <!-- Überspringe leere Option -->
+                                <option value="{{ choice.0 }}" {% if form.warehouse.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.warehouse.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.warehouse.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if product.has_variants %}
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.variant.id_for_label }}" class="form-label">Produktvariante</label>
+                            <select name="{{ form.variant.name }}"
+                                    id="{{ form.variant.id_for_label }}"
+                                    class="form-select {% if form.variant.errors %}is-invalid{% endif %}">
+                                <option value="">Keine Variante</option>
+                                {% for choice in form.variant.field.choices %}
+                                {% if choice.0 %} <!-- Überspringe leere Option -->
+                                <option value="{{ choice.0 }}" {% if form.variant.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.variant.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.variant.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.purchase_date.id_for_label }}" class="form-label">Einkaufsdatum</label>
+                            <input type="date" name="{{ form.purchase_date.name }}"
+                                   id="{{ form.purchase_date.id_for_label }}"
+                                   class="form-control {% if form.purchase_date.errors %}is-invalid{% endif %}"
+                                   value="{{ form.purchase_date.value|date:'Y-m-d'|default:'' }}">
+                            {% if form.purchase_date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.purchase_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.expiry_date.id_for_label }}" class="form-label">Verfallsdatum</label>
+                            <input type="date" name="{{ form.expiry_date.name }}"
+                                   id="{{ form.expiry_date.id_for_label }}"
+                                   class="form-control {% if form.expiry_date.errors %}is-invalid{% endif %}"
+                                   value="{{ form.expiry_date.value|date:'Y-m-d'|default:'' }}">
+                            {% if form.expiry_date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.expiry_date.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Lassen Sie dieses Feld leer, wenn das Produkt kein Verfallsdatum hat</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen</label>
+                        <textarea name="{{ form.notes.name }}"
+                                  id="{{ form.notes.id_for_label }}"
+                                  class="form-control {% if form.notes.errors %}is-invalid{% endif %}"
+                                  rows="3">{{ form.notes.value|default:'' }}</textarea>
+                        {% if form.notes.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.notes.errors }}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Optionale zusätzliche Informationen zu dieser Seriennummer</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'product_serials' product.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Zurück
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {% if serial %}Änderungen speichern{% else %}Seriennummer erstellen{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Hinweise</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        Die <strong>Seriennummer</strong> sollte eindeutig und alphanumerisch sein.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-tag text-success me-2"></i>
+                        Der <strong>Status</strong> zeigt an, ob das Produkt auf Lager, verkauft oder defekt ist.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-building text-info me-2"></i>
+                        Das <strong>Lager</strong> gibt an, wo sich das Produkt aktuell befindet.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-calendar-date text-warning me-2"></i>
+                        Das <strong>Verfallsdatum</strong> wird für die Verfallsüberwachung verwendet.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Massenimport</h5>
+            </div>
+            <div class="card-body">
+                <p>Benötigen Sie mehrere Seriennummern auf einmal?</p>
+                <a href="{% url 'product_serial_bulk_add' product.id %}" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-upload"></i> Mehrere Seriennummern erstellen
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

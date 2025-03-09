@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if batch %}Charge bearbeiten{% else %}Neue Charge{% endif %}: {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_batches' product.id %}">Chargen</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if batch %}Charge bearbeiten{% else %}Neue Charge{% endif %}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-2">{% if batch %}Charge bearbeiten{% else %}Neue Charge{% endif %}: {{ product.name }}</h1>
+        <p class="text-muted">
+            <span class="badge bg-primary">SKU: {{ product.sku }}</span>
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% if batch %}Charge bearbeiten{% else %}Neue Charge erstellen{% endif %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Fehler:</strong> Bitte korrigieren Sie die markierten Felder.
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.batch_number.id_for_label }}" class="form-label">Chargennummer*</label>
+                            <input type="text" name="{{ form.batch_number.name }}"
+                                   id="{{ form.batch_number.id_for_label }}"
+                                   class="form-control {% if form.batch_number.errors %}is-invalid{% endif %}"
+                                   value="{{ form.batch_number.value|default:'' }}" required>
+                            {% if form.batch_number.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.batch_number.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Eindeutige Chargennummer/Lotnummer</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">Menge*</label>
+                            <input type="number" name="{{ form.quantity.name }}"
+                                   id="{{ form.quantity.id_for_label }}"
+                                   class="form-control {% if form.quantity.errors %}is-invalid{% endif %}"
+                                   value="{{ form.quantity.value|default:'0' }}" min="0" step="0.01" required>
+                            {% if form.quantity.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.quantity.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Menge in {{ product.unit }}</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.production_date.id_for_label }}" class="form-label">Produktionsdatum</label>
+                            <input type="date" name="{{ form.production_date.name }}"
+                                   id="{{ form.production_date.id_for_label }}"
+                                   class="form-control {% if form.production_date.errors %}is-invalid{% endif %}"
+                                   value="{{ form.production_date.value|date:'Y-m-d'|default:'' }}">
+                            {% if form.production_date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.production_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.expiry_date.id_for_label }}" class="form-label">Verfallsdatum</label>
+                            <input type="date" name="{{ form.expiry_date.name }}"
+                                   id="{{ form.expiry_date.id_for_label }}"
+                                   class="form-control {% if form.expiry_date.errors %}is-invalid{% endif %}"
+                                   value="{{ form.expiry_date.value|date:'Y-m-d'|default:'' }}">
+                            {% if form.expiry_date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.expiry_date.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Lassen Sie dieses Feld leer, wenn das Produkt kein Verfallsdatum hat</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Lieferant</label>
+                            <select name="{{ form.supplier.name }}"
+                                    id="{{ form.supplier.id_for_label }}"
+                                    class="form-select {% if form.supplier.errors %}is-invalid{% endif %}">
+                                <option value="">Lieferant auswählen...</option>
+                                {% for choice in form.supplier.field.choices %}
+                                {% if choice.0 %} <!-- Überspringe leere Option -->
+                                <option value="{{ choice.0 }}" {% if form.supplier.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.supplier.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.supplier.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.warehouse.id_for_label }}" class="form-label">Lager</label>
+                            <select name="{{ form.warehouse.name }}"
+                                    id="{{ form.warehouse.id_for_label }}"
+                                    class="form-select {% if form.warehouse.errors %}is-invalid{% endif %}">
+                                <option value="">Lager auswählen...</option>
+                                {% for choice in form.warehouse.field.choices %}
+                                {% if choice.0 %} <!-- Überspringe leere Option -->
+                                <option value="{{ choice.0 }}" {% if form.warehouse.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.warehouse.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.warehouse.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if product.has_variants %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.variant.id_for_label }}" class="form-label">Produktvariante</label>
+                            <select name="{{ form.variant.name }}"
+                                    id="{{ form.variant.id_for_label }}"
+                                    class="form-select {% if form.variant.errors %}is-invalid{% endif %}">
+                                <option value="">Keine Variante</option>
+                                {% for choice in form.variant.field.choices %}
+                                {% if choice.0 %} <!-- Überspringe leere Option -->
+                                <option value="{{ choice.0 }}" {% if form.variant.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.variant.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.variant.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen</label>
+                        <textarea name="{{ form.notes.name }}"
+                                  id="{{ form.notes.id_for_label }}"
+                                  class="form-control {% if form.notes.errors %}is-invalid{% endif %}"
+                                  rows="3">{{ form.notes.value|default:'' }}</textarea>
+                        {% if form.notes.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.notes.errors }}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Optionale zusätzliche Informationen zu dieser Charge</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'product_batches' product.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Zurück
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {% if batch %}Änderungen speichern{% else %}Charge erstellen{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Hinweise</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        Die <strong>Chargennummer</strong> sollte die Charge eindeutig identifizieren.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-calendar text-warning me-2"></i>
+                        Das <strong>Verfallsdatum</strong> wird für die Verfallsüberwachung verwendet.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-calculator text-success me-2"></i>
+                        Die <strong>Menge</strong> sollte in der Einheit {{ product.unit }} angegeben werden.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-building text-info me-2"></i>
+                        <strong>Lager</strong> und <strong>Lieferant</strong> helfen bei der Nachverfolgung der Charge.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        {% if product.has_expiry_tracking %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Hinweis:</strong> Für dieses Produkt ist die Verfallsüberwachung aktiviert.
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Hinweis:</strong> Die Verfallsüberwachung ist für dieses Produkt noch nicht aktiviert.
+            Beim Speichern einer Charge mit Verfallsdatum wird diese Funktion automatisch aktiviert.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

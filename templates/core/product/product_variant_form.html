@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if variant %}Variante bearbeiten{% else %}Neue Variante{% endif %}: {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_variants' product.id %}">Varianten</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if variant %}Variante bearbeiten{% else %}Neue Variante{% endif %}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-2">{% if variant %}Variante bearbeiten{% else %}Neue Variante{% endif %}: {{ product.name }}</h1>
+        <p class="text-muted">
+            <span class="badge bg-primary">SKU: {{ product.sku }}</span>
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% if variant %}Variante bearbeiten{% else %}Neue Variante erstellen{% endif %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Fehler:</strong> Bitte korrigieren Sie die markierten Felder.
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                            <input type="text" name="{{ form.name.name }}"
+                                   id="{{ form.name.id_for_label }}"
+                                   class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                                   value="{{ form.name.value|default:'' }}" required>
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.name.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Der vollständige Name der Variante, z.B. "T-Shirt Rot XL"</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.sku.id_for_label }}" class="form-label">SKU</label>
+                            <input type="text" name="{{ form.sku.name }}"
+                                   id="{{ form.sku.id_for_label }}"
+                                   class="form-control {% if form.sku.errors %}is-invalid{% endif %}"
+                                   value="{{ form.sku.value|default:'' }}" required>
+                            {% if form.sku.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.sku.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Eindeutige Artikelnummer für diese Variante</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.variant_type.id_for_label }}" class="form-label">Variantentyp</label>
+                            <select name="{{ form.variant_type.name }}"
+                                    id="{{ form.variant_type.id_for_label }}"
+                                    class="form-select {% if form.variant_type.errors %}is-invalid{% endif %}" required>
+                                {% for choice in form.variant_type.field.choices %}
+                                <option value="{{ choice.0 }}" {% if form.variant_type.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.variant_type.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.variant_type.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Art der Variante, z.B. "Farbe", "Größe"</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.value.id_for_label }}" class="form-label">Wert</label>
+                            <input type="text" name="{{ form.value.name }}"
+                                   id="{{ form.value.id_for_label }}"
+                                   class="form-control {% if form.value.errors %}is-invalid{% endif %}"
+                                   value="{{ form.value.value|default:'' }}" required>
+                            {% if form.value.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.value.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Der konkrete Wert der Variante, z.B. "Rot", "XL"</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.price_adjustment.id_for_label }}" class="form-label">Preisanpassung (€)</label>
+                            <input type="number" name="{{ form.price_adjustment.name }}"
+                                   id="{{ form.price_adjustment.id_for_label }}"
+                                   class="form-control {% if form.price_adjustment.errors %}is-invalid{% endif %}"
+                                   value="{{ form.price_adjustment.value|default:'0.00' }}" step="0.01">
+                            {% if form.price_adjustment.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.price_adjustment.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Preisunterschied zum Basisprodukt</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.current_stock.id_for_label }}" class="form-label">Aktueller Bestand</label>
+                            <input type="number" name="{{ form.current_stock.name }}"
+                                   id="{{ form.current_stock.id_for_label }}"
+                                   class="form-control {% if form.current_stock.errors %}is-invalid{% endif %}"
+                                   value="{{ form.current_stock.value|default:'0' }}" step="0.01" min="0">
+                            {% if form.current_stock.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.current_stock.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Verfügbare Menge dieser Variante</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.barcode.id_for_label }}" class="form-label">Barcode (optional)</label>
+                            <input type="text" name="{{ form.barcode.name }}"
+                                   id="{{ form.barcode.id_for_label }}"
+                                   class="form-control {% if form.barcode.errors %}is-invalid{% endif %}"
+                                   value="{{ form.barcode.value|default:'' }}">
+                            {% if form.barcode.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.barcode.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">EAN, UPC oder anderer Barcode für diese Variante</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                <input type="checkbox" name="{{ form.is_active.name }}"
+                                       id="{{ form.is_active.id_for_label }}"
+                                       class="form-check-input {% if form.is_active.errors %}is-invalid{% endif %}"
+                                       {% if form.is_active.value %}checked{% endif %}>
+                                <label for="{{ form.is_active.id_for_label }}" class="form-check-label">Aktiv</label>
+                                {% if form.is_active.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.is_active.errors }}
+                                </div>
+                                {% endif %}
+                                <small class="d-block form-text text-muted">Deaktivieren Sie diese Option, um die Variante vorübergehend zu verbergen</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'product_variants' product.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Zurück
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {% if variant %}Änderungen speichern{% else %}Variante erstellen{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Hinweise</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        Der <strong>Name</strong> sollte die Variante eindeutig identifizieren.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-key text-warning me-2"></i>
+                        Die <strong>SKU</strong> muss für alle Produkte und Varianten einzigartig sein.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-tags text-success me-2"></i>
+                        <strong>Variantentyp</strong> und <strong>Wert</strong> werden für die Kategorisierung verwendet.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-currency-euro text-info me-2"></i>
+                        Die <strong>Preisanpassung</strong> kann positiv oder negativ sein.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        {% if not variant_types_exist %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Hinweis:</strong> Es sind noch keine Variantentypen angelegt.
+            <hr>
+            <a href="{% url 'variant_type_add' %}" class="btn btn-sm btn-primary mt-2">
+                <i class="bi bi-plus-circle"></i> Variantentyp erstellen
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

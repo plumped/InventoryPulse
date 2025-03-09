@@ -1,0 +1,396 @@
+{% extends 'base.html' %}
+
+{% block title %}Verfallsdaten-Management - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-2">Verfallsdaten-Management</h1>
+        <p class="text-muted">
+            Zentrale Verwaltung aller Produkte mit Verfallsdaten
+        </p>
+    </div>
+</div>
+
+<!-- Filter und Statistik-Bereich -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Verfallsdaten filtern</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="filter" class="form-label">Status</label>
+                        <select name="filter" id="filter" class="form-select">
+                            <option value="all" {% if expiry_filter == 'all' %}selected{% endif %}>Alle anzeigen</option>
+                            <option value="expired" {% if expiry_filter == 'expired' %}selected{% endif %}>Abgelaufen</option>
+                            <option value="expiring_soon" {% if expiry_filter == 'expiring_soon' %}selected{% endif %}>Läuft bald ab</option>
+                            <option value="valid" {% if expiry_filter == 'valid' %}selected{% endif %}>Gültig</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="days_threshold" class="form-label">Tage-Schwellenwert</label>
+                        <input type="number" name="days_threshold" id="days_threshold" class="form-control"
+                               min="1" max="365" value="{{ days_threshold }}">
+                        <small class="form-text text-muted">Für "Läuft bald ab"</small>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="category" class="form-label">Kategorie</label>
+                        <select name="category" id="category" class="form-select">
+                            <option value="">Alle Kategorien</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Suche</label>
+                        <input type="text" name="search" id="search" class="form-control"
+                               placeholder="Produkt oder Nummer..." value="{{ search_query }}">
+                    </div>
+
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter"></i> Filtern
+                        </button>
+                        <a href="{% url 'expiry_management' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Zurücksetzen
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Verfallsstatistik</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <h6 class="text-center">Seriennummern</h6>
+                        <div class="progress mb-2" style="height: 20px;">
+                            <div class="progress-bar bg-danger" role="progressbar"
+                                 style="width: {% widthratio serial_stats.expired serial_stats.total 100 %}%;"
+                                 title="Abgelaufen">
+                                {{ serial_stats.expired }}
+                            </div>
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                 style="width: {% widthratio serial_stats.expiring_soon serial_stats.total 100 %}%;"
+                                 title="Läuft bald ab">
+                                {{ serial_stats.expiring_soon }}
+                            </div>
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width: {% widthratio serial_stats.valid serial_stats.total 100 %}%;"
+                                 title="Gültig">
+                                {{ serial_stats.valid }}
+                            </div>
+                        </div>
+                        <div class="small text-center">Gesamt: {{ serial_stats.total }}</div>
+                    </div>
+
+                    <div class="col-6">
+                        <h6 class="text-center">Chargen</h6>
+                        <div class="progress mb-2" style="height: 20px;">
+                            <div class="progress-bar bg-danger" role="progressbar"
+                                 style="width: {% widthratio batch_stats.expired batch_stats.total 100 %}%;"
+                                 title="Abgelaufen">
+                                {{ batch_stats.expired }}
+                            </div>
+                            <div class="progress-bar bg-warning" role="progressbar"
+                                 style="width: {% widthratio batch_stats.expiring_soon batch_stats.total 100 %}%;"
+                                 title="Läuft bald ab">
+                                {{ batch_stats.expiring_soon }}
+                            </div>
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width: {% widthratio batch_stats.valid batch_stats.total 100 %}%;"
+                                 title="Gültig">
+                                {{ batch_stats.valid }}
+                            </div>
+                        </div>
+                        <div class="small text-center">Gesamt: {{ batch_stats.total }}</div>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between align-items-center small mb-2">
+                        <span><i class="bi bi-square-fill text-danger"></i> Abgelaufen</span>
+                        <span>{{ serial_stats.expired|add:batch_stats.expired }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center small mb-2">
+                        <span><i class="bi bi-square-fill text-warning"></i> Läuft in {{ days_threshold }} Tagen ab</span>
+                        <span>{{ serial_stats.expiring_soon|add:batch_stats.expiring_soon }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <span><i class="bi bi-square-fill text-success"></i> Gültig</span>
+                        <span>{{ serial_stats.valid|add:batch_stats.valid }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Nav Tabs für Seriennummern und Chargen -->
+<ul class="nav nav-tabs mb-3" id="expiryTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="serials-tab" data-bs-toggle="tab" data-bs-target="#serials-content"
+                type="button" role="tab" aria-controls="serials-content" aria-selected="true">
+            Seriennummern <span class="badge bg-secondary">{{ serials.paginator.count }}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="batches-tab" data-bs-toggle="tab" data-bs-target="#batches-content"
+                type="button" role="tab" aria-controls="batches-content" aria-selected="false">
+            Chargen <span class="badge bg-secondary">{{ batches.paginator.count }}</span>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="expiryTabContent">
+    <!-- Seriennummern Tab -->
+    <div class="tab-pane fade show active" id="serials-content" role="tabpanel" aria-labelledby="serials-tab">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Seriennummern mit Verfallsdaten</h5>
+            </div>
+            <div class="card-body">
+                {% if serials %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produkt</th>
+                                <th>Seriennummer</th>
+                                <th>Status</th>
+                                <th>Verfallsdatum</th>
+                                <th>Verbleibend</th>
+                                <th>Lager</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for serial in serials %}
+                            <tr class="{% if serial.is_expired %}table-danger{% elif serial.days_until_expiry < days_threshold %}table-warning{% endif %}">
+                                <td>
+                                    <a href="{% url 'product_detail' serial.product.id %}">
+                                        {{ serial.product.name }}
+                                    </a>
+                                </td>
+                                <td>{{ serial.serial_number }}</td>
+                                <td>
+                                    {% if serial.status == 'in_stock' %}
+                                    <span class="badge bg-success">Auf Lager</span>
+                                    {% elif serial.status == 'sold' %}
+                                    <span class="badge bg-primary">Verkauft</span>
+                                    {% elif serial.status == 'reserved' %}
+                                    <span class="badge bg-warning">Reserviert</span>
+                                    {% elif serial.status == 'defective' %}
+                                    <span class="badge bg-danger">Defekt</span>
+                                    {% elif serial.status == 'returned' %}
+                                    <span class="badge bg-info">Zurückgegeben</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ serial.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ serial.expiry_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    {% if serial.is_expired %}
+                                    <span class="text-danger">Abgelaufen</span>
+                                    {% else %}
+                                    <span class="{% if serial.days_until_expiry < days_threshold %}text-warning{% else %}text-success{% endif %}">
+                                        {{ serial.days_until_expiry }} Tage
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ serial.warehouse.name|default:"-" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'product_detail' serial.product.id %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if perms.product.edit %}
+                                        <a href="{% url 'product_serial_update' serial.product.id serial.id %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginierung für Seriennummern -->
+                {% if serials.has_other_pages %}
+                <nav aria-label="Seriennummern-Navigation" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        {% if serials.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?serials_page={{ serials.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'serials_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Vorherige">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-hidden="true">&laquo;</span>
+                        </li>
+                        {% endif %}
+
+                        {% for i in serials.paginator.page_range %}
+                            {% if serials.number == i %}
+                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                            {% elif i > serials.number|add:'-3' and i < serials.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?serials_page={{ i }}{% for key, value in request.GET.items %}{% if key != 'serials_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if serials.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?serials_page={{ serials.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'serials_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Nächste">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-hidden="true">&raquo;</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i> Keine Seriennummern mit Verfallsdaten gefunden, die den Filterkriterien entsprechen.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Chargen Tab -->
+    <div class="tab-pane fade" id="batches-content" role="tabpanel" aria-labelledby="batches-tab">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Chargen mit Verfallsdaten</h5>
+            </div>
+            <div class="card-body">
+                {% if batches %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Produkt</th>
+                                <th>Chargennummer</th>
+                                <th>Menge</th>
+                                <th>Verfallsdatum</th>
+                                <th>Verbleibend</th>
+                                <th>Lager</th>
+                                <th>Lieferant</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in batches %}
+                            <tr class="{% if batch.is_expired %}table-danger{% elif batch.days_until_expiry < days_threshold %}table-warning{% endif %}">
+                                <td>
+                                    <a href="{% url 'product_detail' batch.product.id %}">
+                                        {{ batch.product.name }}
+                                    </a>
+                                </td>
+                                <td>{{ batch.batch_number }}</td>
+                                <td>{{ batch.quantity }} {{ batch.product.unit }}</td>
+                                <td>{{ batch.expiry_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    {% if batch.is_expired %}
+                                    <span class="text-danger">Abgelaufen</span>
+                                    {% else %}
+                                    <span class="{% if batch.days_until_expiry < days_threshold %}text-warning{% else %}text-success{% endif %}">
+                                        {{ batch.days_until_expiry }} Tage
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ batch.warehouse.name|default:"-" }}</td>
+                                <td>{{ batch.supplier.name|default:"-" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'product_detail' batch.product.id %}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if perms.product.edit %}
+                                        <a href="{% url 'product_batch_update' batch.product.id batch.id %}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginierung für Chargen -->
+                {% if batches.has_other_pages %}
+                <nav aria-label="Chargen-Navigation" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        {% if batches.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?batches_page={{ batches.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'batches_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Vorherige">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-hidden="true">&laquo;</span>
+                        </li>
+                        {% endif %}
+
+                        {% for i in batches.paginator.page_range %}
+                            {% if batches.number == i %}
+                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                            {% elif i > batches.number|add:'-3' and i < batches.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?batches_page={{ i }}{% for key, value in request.GET.items %}{% if key != 'batches_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                            </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if batches.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?batches_page={{ batches.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'batches_page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Nächste">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-hidden="true">&raquo;</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i> Keine Chargen mit Verfallsdaten gefunden, die den Filterkriterien entsprechen.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

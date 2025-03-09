@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+
+{% block title %}Chargen: {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Chargen</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-2">Chargen: {{ product.name }}</h1>
+        <p class="text-muted">
+            <span class="badge bg-primary">SKU: {{ product.sku }}</span>
+            <span class="badge bg-secondary">{{ batches.paginator.count }} Charge(n)</span>
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if perms.product.create %}
+        <a href="{% url 'product_batch_add' product.id %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Charge hinzufügen
+        </a>
+        {% endif %}
+        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Zurück
+        </a>
+    </div>
+</div>
+
+{% if not product.has_batch_tracking %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Hinweis:</strong> Für dieses Produkt ist die Chargenverfolgung noch nicht aktiviert. Beim Hinzufügen der ersten Charge wird die Funktion automatisch aktiviert.
+</div>
+{% endif %}
+
+<!-- Filter und Statistik-Bereich -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Chargen filtern</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="expiry" class="form-label">Verfallsstatus</label>
+                        <select name="expiry" id="expiry" class="form-select">
+                            <option value="" {% if not expiry_filter %}selected{% endif %}>Alle anzeigen</option>
+                            <option value="expired" {% if expiry_filter == 'expired' %}selected{% endif %}>Abgelaufen</option>
+                            <option value="expiring_soon" {% if expiry_filter == 'expiring_soon' %}selected{% endif %}>Läuft bald ab</option>
+                            <option value="valid" {% if expiry_filter == 'valid' %}selected{% endif %}>Gültig</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="warehouse" class="form-label">Lager</label>
+                        <select name="warehouse" id="warehouse" class="form-select">
+                            <option value="">Alle Lager</option>
+                            {% for wh in warehouses %}
+                            <option value="{{ wh.id }}" {% if warehouse_filter == wh.id|stringformat:"s" %}selected{% endif %}>
+                                {{ wh.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {% if variants %}
+                    <div class="col-md-3">
+                        <label for="variant" class="form-label">Variante</label>
+                        <select name="variant" id="variant" class="form-select">
+                            <option value="">Alle Varianten</option>
+                            {% for var in variants %}
+                            <option value="{{ var.id }}" {% if variant_filter == var.id|stringformat:"s" %}selected{% endif %}>
+                                {{ var.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Suche</label>
+                        <input type="text" name="search" id="search" class="form-control"
+                               placeholder="Chargennummer..." value="{{ search_query }}">
+                    </div>
+
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter"></i> Filtern
+                        </button>
+                        <a href="{% url 'product_batches' product.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Zurücksetzen
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Chargen-Statistik</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="ps-3">Abgelaufen</td>
+                                <td class="text-end pe-3">
+                                    <span class="badge bg-danger">
+                                        {{ expired_count }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="ps-3">Läuft bald ab (< 30 Tage)</td>
+                                <td class="text-end pe-3">
+                                    <span class="badge bg-warning">
+                                        {{ expiring_soon_count }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="ps-3">Gültig</td>
+                                <td class="text-end pe-3">
+                                    <span class="badge bg-success">
+                                        {{ valid_count }}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="fw-bold ps-3">Gesamt</td>
+                                <td class="text-end fw-bold pe-3">{{ batches.paginator.count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chargenliste -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Chargenverwaltung</h5>
+    </div>
+    <div class="card-body">
+        {% if batches %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Chargennummer</th>
+                        <th>Menge</th>
+                        <th>Produktionsdatum</th>
+                        <th>Verfallsdatum</th>
+                        <th>Lager</th>
+                        <th>Lieferant</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for batch in batches %}
+                    <tr class="{% if batch.is_expired %}table-danger{% elif batch.days_until_expiry < 30 %}table-warning{% endif %}">
+                        <td>{{ batch.batch_number }}</td>
+                        <td>{{ batch.quantity }} {{ product.unit }}</td>
+                        <td>{{ batch.production_date|date:"d.m.Y"|default:"-" }}</td>
+                        <td>
+                            {% if batch.expiry_date %}
+                            <span class="{% if batch.is_expired %}text-danger{% elif batch.days_until_expiry < 30 %}text-warning{% endif %}">
+                                {{ batch.expiry_date|date:"d.m.Y" }}
+                                {% if not batch.is_expired %}
+                                <small>({{ batch.days_until_expiry }} Tage)</small>
+                                {% endif %}
+                            </span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ batch.warehouse.name|default:"-" }}</td>
+                        <td>{{ batch.supplier.name|default:"-" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if perms.product.edit %}
+                                <a href="{% url 'product_batch_update' product.id batch.id %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                {% if perms.product.delete %}
+                                <a href="{% url 'product_batch_delete' product.id batch.id %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginierung -->
+        {% if batches.has_other_pages %}
+        <nav aria-label="Chargen-Navigation">
+            <ul class="pagination justify-content-center">
+                {% if batches.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ batches.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Vorherige">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&laquo;</span>
+                </li>
+                {% endif %}
+
+                {% for i in batches.paginator.page_range %}
+                    {% if batches.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% elif i > batches.number|add:'-3' and i < batches.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if batches.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ batches.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Nächste">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i> Keine Chargen gefunden, die den Filterkriterien entsprechen.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if product.has_expiry_tracking %}
+<div class="card mt-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Verfallsübersicht</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Verfallsstatus -->
+            <div class="col-md-6 mb-3">
+                <h6>Status der Chargen</h6>
+                <div class="progress mb-3" style="height: 25px;">
+                    <div class="progress-bar bg-danger" role="progressbar"
+                         style="width: {% widthratio expired_count batches.paginator.count 100 %}%;"
+                         aria-valuenow="{{ expired_count }}" aria-valuemin="0" aria-valuemax="{{ batches.paginator.count }}">
+                        {% if expired_count > 0 %}{{ expired_count }} Abgelaufen{% endif %}
+                    </div>
+                    <div class="progress-bar bg-warning" role="progressbar"
+                         style="width: {% widthratio expiring_soon_count batches.paginator.count 100 %}%;"
+                         aria-valuenow="{{ expiring_soon_count }}" aria-valuemin="0" aria-valuemax="{{ batches.paginator.count }}">
+                        {% if expiring_soon_count > 0 %}{{ expiring_soon_count }} Demnächst{% endif %}
+                    </div>
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: {% widthratio valid_count batches.paginator.count 100 %}%;"
+                         aria-valuenow="{{ valid_count }}" aria-valuemin="0" aria-valuemax="{{ batches.paginator.count }}">
+                        {% if valid_count > 0 %}{{ valid_count }} Gültig{% endif %}
+                    </div>
+                </div>
+
+                <!-- Legende -->
+                <div class="row small mt-2">
+                    <div class="col-md-4">
+                        <i class="bi bi-square-fill text-danger"></i> Abgelaufen
+                    </div>
+                    <div class="col-md-4">
+                        <i class="bi bi-square-fill text-warning"></i> < 30 Tage
+                    </div>
+                    <div class="col-md-4">
+                        <i class="bi bi-square-fill text-success"></i> Gültig
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aktionen für abgelaufene Chargen -->
+            <div class="col-md-6">
+                {% if expired_count > 0 %}
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">Achtung: Abgelaufene Chargen!</h6>
+                    <p class="mb-0">Es gibt {{ expired_count }} abgelaufene Charge(n) für dieses Produkt.</p>
+                    <hr>
+                    <a href="?expiry=expired" class="btn btn-sm btn-outline-danger">Abgelaufene Chargen anzeigen</a>
+                </div>
+                {% elif expiring_soon_count > 0 %}
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading">Chargen laufen bald ab</h6>
+                    <p class="mb-0">{{ expiring_soon_count }} Charge(n) laufen in den nächsten 30 Tagen ab.</p>
+                    <hr>
+                    <a href="?expiry=expiring_soon" class="btn btn-sm btn-outline-warning">Bald ablaufende Chargen anzeigen</a>
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <h6 class="alert-heading">Alle Chargen sind gültig</h6>
+                    <p class="mb-0">Keine Chargen sind abgelaufen oder laufen in den nächsten 30 Tagen ab.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if perms.product.create %}
+<div class="mt-4">
+    <a href="{% url 'expiry_management' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-calendar-check"></i> Zur zentralen Verfallsdatenverwaltung
+    </a>
+</div>
+{% endif %}
+
+{% block extra_js %}
+<script>
+    // Tooltip-Initialisierung
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

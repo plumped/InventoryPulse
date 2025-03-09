@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ variant.name }} ({{ product.name }}){% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Navigationspfad -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_detail' pk=product.pk %}">{{ product.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_variants' pk=product.pk %}">Varianten</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ variant.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Hauptüberschrift -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-boxes text-primary me-2"></i>
+            {{ variant.name }}
+            <small class="text-muted">(Variante von {{ product.name }})</small>
+        </h1>
+        <div class="btn-group">
+            {% if perms.product.edit %}
+            <a href="{% url 'product_variant_update' pk=product.pk variant_id=variant.pk %}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Bearbeiten
+            </a>
+            {% endif %}
+            {% if perms.product.delete %}
+            <a href="{% url 'product_variant_delete' pk=product.pk variant_id=variant.pk %}" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Löschen
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Hauptdaten -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Variante:</div>
+                        <div class="col-md-8"><strong>{{ variant.name }}</strong></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Variantentyp:</div>
+                        <div class="col-md-8">{{ variant.variant_type.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">SKU:</div>
+                        <div class="col-md-8">{{ variant.sku|default:"—" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Barcode:</div>
+                        <div class="col-md-8">{{ variant.barcode|default:"—" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Preis:</div>
+                        <div class="col-md-8">{{ variant.price|default:"—" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Aktueller Bestand:</div>
+                        <div class="col-md-8">
+                            <span class="badge {% if variant.current_stock <= 0 %}bg-danger{% elif variant.current_stock <= variant.minimum_stock %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ variant.current_stock }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Mindestbestand:</div>
+                        <div class="col-md-8">{{ variant.minimum_stock }}</div>
+                    </div>
+                    {% if variant.description %}
+                    <div class="row">
+                        <div class="col-md-4 text-muted">Beschreibung:</div>
+                        <div class="col-md-8">{{ variant.description|linebreaks }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Zusätzliche Informationen -->
+        <div class="col-md-6">
+            <!-- Bestandsverteilung -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Bestandsverteilung</h5>
+                </div>
+                <div class="card-body">
+                    {% if warehouse_stocks %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Lager</th>
+                                    <th>Bestand</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in warehouse_stocks %}
+                                <tr>
+                                    <td>{{ stock.warehouse.name }}</td>
+                                    <td>{{ stock.quantity }}</td>
+                                    <td>
+                                        {% if stock.quantity <= 0 %}
+                                        <span class="badge bg-danger">Nicht verfügbar</span>
+                                        {% elif stock.quantity <= variant.minimum_stock %}
+                                        <span class="badge bg-warning">Niedrig</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Verfügbar</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3 text-muted">
+                        <i class="bi bi-exclamation-circle" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Keine Lagerbestandsdaten verfügbar</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Seriennummern -->
+            <div class="card mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Seriennummern</h5>
+                    <span class="badge bg-secondary">{{ serial_numbers.count|default:"0" }}</span>
+                </div>
+                <div class="card-body">
+                    {% if serial_numbers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Seriennummer</th>
+                                    <th>Status</th>
+                                    <th>Lager</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for serial in serial_numbers|slice:":5" %}
+                                <tr>
+                                    <td>{{ serial.serial_number }}</td>
+                                    <td>
+                                        <span class="badge {% if serial.status == 'in_stock' %}bg-success{% elif serial.status == 'defective' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                            {{ serial.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ serial.warehouse.name|default:"—" }}</td>
+                                    <td>
+                                        <a href="{% url 'serialnumber_detail' serial_id=serial.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        {% if serial_numbers.count > 5 %}
+                        <div class="text-center mt-2">
+                            <a href="{% url 'product_serials' pk=product.pk %}?variant={{ variant.id }}" class="btn btn-outline-primary btn-sm">
+                                Alle {{ serial_numbers.count }} Seriennummern anzeigen
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3 text-muted">
+                        <i class="bi bi-upc-scan" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Keine Seriennummern vorhanden</p>
+
+                        {% if perms.product.create %}
+                        <a href="{% url 'product_serial_add' pk=product.pk %}?variant={{ variant.id }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-plus-circle"></i> Seriennummer hinzufügen
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Chargen -->
+            <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Chargen / Batches</h5>
+                    <span class="badge bg-secondary">{{ batches.count|default:"0" }}</span>
+                </div>
+                <div class="card-body">
+                    {% if batches %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Chargennummer</th>
+                                    <th>Menge</th>
+                                    <th>Ablaufdatum</th>
+                                    <th>Lager</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for batch in batches|slice:":5" %}
+                                <tr>
+                                    <td>{{ batch.batch_number }}</td>
+                                    <td>{{ batch.quantity }}</td>
+                                    <td>
+                                        {% if batch.expiry_date %}
+                                        {{ batch.expiry_date|date:"d.m.Y" }}
+                                        {% if batch.expiry_date < today %}
+                                        <span class="badge bg-danger ms-1">Abgelaufen</span>
+                                        {% elif batch.expiry_date < expiry_soon_date %}
+                                        <span class="badge bg-warning ms-1">Bald</span>
+                                        {% endif %}
+                                        {% else %}
+                                        —
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ batch.warehouse.name|default:"—" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        {% if batches.count > 5 %}
+                        <div class="text-center mt-2">
+                            <a href="{% url 'product_batches' pk=product.pk %}?variant={{ variant.id }}" class="btn btn-outline-primary btn-sm">
+                                Alle {{ batches.count }} Chargen anzeigen
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3 text-muted">
+                        <i class="bi bi-collection" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Keine Chargen vorhanden</p>
+
+                        {% if perms.product.create %}
+                        <a href="{% url 'product_batch_add' pk=product.pk %}?variant={{ variant.id }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-plus-circle"></i> Charge hinzufügen
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

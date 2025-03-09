@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Seriennummern importieren{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-file-earmark-arrow-down text-primary me-2"></i>
+        {{ title }}
+    </h1>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">CSV-Datei hochladen</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">CSV-Datei</label>
+                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                            <div class="form-text">Die CSV-Datei sollte UTF-8-kodiert sein und als Trennzeichen Kommas verwenden.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="update_existing" name="update_existing" value="True">
+                                <label class="form-check-label" for="update_existing">
+                                    Bestehende Seriennummern aktualisieren
+                                </label>
+                                <div class="form-text">Wenn aktiviert, werden vorhandene Seriennummern aktualisiert, anstatt übersprungen zu werden.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="default_status" class="form-label">Standard-Status</label>
+                            <select class="form-select" id="default_status" name="default_status">
+                                {% for code, name in status_choices %}
+                                <option value="{{ code }}" {% if code == 'in_stock' %}selected{% endif %}>{{ name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Wird verwendet, wenn in der CSV-Datei kein Status angegeben ist.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="default_warehouse" class="form-label">Standard-Lager</label>
+                            <select class="form-select" id="default_warehouse" name="default_warehouse">
+                                <option value="">Kein Standard-Lager</option>
+                                {% for warehouse in warehouses %}
+                                <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Wird verwendet, wenn in der CSV-Datei kein Lager angegeben ist.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload"></i> Importieren
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Anleitung</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ description }}</p>
+
+                    <h6 class="mt-3">Erforderliches Format:</h6>
+                    <div class="alert alert-secondary">
+                        <code>{{ expected_format }}</code>
+                    </div>
+
+                    <h6>Beispiel:</h6>
+                    <div class="alert alert-info">
+                        <code>{{ example }}</code>
+                    </div>
+
+                    <h6 class="mt-3">Felder:</h6>
+                    <ul class="list-group mb-3">
+                        {% for column in required_columns %}
+                        <li class="list-group-item">
+                            <strong>{{ column }}</strong>
+                            <span class="badge bg-danger">Erforderlich</span>
+                        </li>
+                        {% endfor %}
+
+                        {% for column in optional_columns %}
+                        <li class="list-group-item">
+                            <strong>{{ column }}</strong>
+                            <span class="badge bg-secondary">Optional</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Hinweis:</strong> Stellen Sie sicher, dass die Produktnummern (SKUs) in Ihrem System existieren.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Vorlagedatei</h5>
+                </div>
+                <div class="card-body">
+                    <p>Laden Sie eine Vorlagedatei herunter, um den Import zu erleichtern:</p>
+                    <div class="d-grid">
+                        <a href="{% static 'files/serialnumber_import_template.csv' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-download"></i> Vorlage herunterladen
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -33,27 +33,75 @@
                         </a>
                     </li>
                     {% if user|has_perm:'product:view' %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'product' in request.path %}active{% endif %}"
-                           href="{% url 'product_list' %}">
-                           <i class="bi bi-box-seam"></i> Produkte
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'product' in request.path or 'serialnumber' in request.path or 'category' in request.path %}active{% endif %}"
+                           href="#" id="productDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-box-seam"></i> Produkte
                         </a>
-                    </li>
-                    {% endif %}
+                        <ul class="dropdown-menu" aria-labelledby="productDropdown">
+                            <li>
+                                <a class="dropdown-item {% if 'product' in request.path and not 'serialnumber' in request.path and not 'category' in request.path %}active{% endif %}"
+                                   href="{% url 'product_list' %}">
+                                    <i class="bi bi-box-seam me-2"></i>Produktübersicht
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if 'category' in request.path %}active{% endif %}"
+                                   href="{% url 'category_list' %}">
+                                    <i class="bi bi-tags me-2"></i>Kategorien
+                                </a>
+                            </li>
 
-                    {% if user|has_perm:'product:view' %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'category' in request.path %}active{% endif %}"
-                           href="{% url 'category_list' %}">
-                           <i class="bi bi-tags"></i> Kategorien
-                        </a>
+                            {% if user|has_perm:'serialnumber:view' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_list' %}active{% endif %}"
+                                   href="{% url 'serialnumber_list' %}">
+                                    <i class="bi bi-upc-scan me-2"></i>Seriennummern-Übersicht
+                                </a>
+                            </li>
+                            {% if user|has_perm:'serialnumber:add' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_add' %}active{% endif %}"
+                                   href="{% url 'serialnumber_add' %}">
+                                    <i class="bi bi-plus-circle me-2"></i>Seriennummer hinzufügen
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user|has_perm:'serialnumber:transfer' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_transfer' %}active{% endif %}"
+                                   href="{% url 'serialnumber_transfer' %}">
+                                    <i class="bi bi-arrow-left-right me-2"></i>Seriennummer transferieren
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user|has_perm:'serialnumber:import' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_import' %}active{% endif %}"
+                                   href="{% url 'serialnumber_import' %}">
+                                    <i class="bi bi-file-earmark-arrow-down me-2"></i>Seriennummern importieren
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user|has_perm:'serialnumber:export' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_export' %}active{% endif %}"
+                                   href="{% url 'serialnumber_export' %}">
+                                    <i class="bi bi-file-earmark-arrow-up me-2"></i>Seriennummern exportieren
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% endif %}
+                        </ul>
                     </li>
                     {% endif %}
 
                     <!-- Lagerverwaltung Dropdown -->
                     {% if user|has_perm:'inventory:view' %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'warehouse' in request.path or 'department' in request.path %}active{% endif %}"
+                        <a class="nav-link dropdown-toggle {% if 'warehouse' in request.path or 'department' in request.path or 'movement' in request.path or 'stock-take' in request.path %}active{% endif %}"
                            href="#" id="warehouseDropdown" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-building"></i> Lagerverwaltung
@@ -85,19 +133,10 @@
                                 </a>
                             </li>
                             {% endif %}
-                        </ul>
-                    </li>
-                    {% endif %}
 
-                    <!-- Inventar Dropdown -->
-                    {% if user|has_perm:'inventory:view' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'movement' in request.path or 'stock-take' in request.path %}active{% endif %}"
-                           href="#" id="inventoryDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-clipboard-data"></i> Inventar
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="inventoryDropdown">
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="dropdown-header">Bestandsverwaltung</li>
+
                             <li>
                                 <a class="dropdown-item {% if 'movement' in request.path %}active{% endif %}"
                                    href="{% url 'stock_movement_list' %}">

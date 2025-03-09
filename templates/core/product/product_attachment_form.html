@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Produktanhang {% if attachment %}bearbeiten{% else %}hinzufügen{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Navigationspfad -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_detail' pk=product.pk %}">{{ product.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'product_attachments' pk=product.pk %}">Anhänge</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% if attachment %}Bearbeiten{% else %}Hinzufügen{% endif %}</li>
+        </ol>
+    </nav>
+
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+        <h1>
+            <i class="bi bi-paperclip text-primary me-2"></i>
+            Produktanhang {% if attachment %}bearbeiten{% else %}hinzufügen{% endif %}
+        </h1>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Anhangdetails</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h5><i class="bi bi-exclamation-triangle-fill me-2"></i>Bei der Verarbeitung des Formulars sind Fehler aufgetreten:</h5>
+                            {{ form.non_field_errors }}
+                            <ul>
+                                {% for field in form %}
+                                    {% if field.errors %}
+                                        {% for error in field.errors %}
+                                            <li><strong>{{ field.label }}</strong>: {{ error }}</li>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                            {{ form.title }}
+                            {% if form.title.help_text %}
+                            <div class="form-text">{{ form.title.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.help_text %}
+                            <div class="form-text">{{ form.description.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.file.id_for_label }}" class="form-label">{{ form.file.label }}</label>
+                            {{ form.file }}
+                            {% if form.file.help_text %}
+                            <div class="form-text">{{ form.file.help_text }}</div>
+                            {% endif %}
+
+                            {% if attachment and attachment.file %}
+                            <div class="mt-2">
+                                <p>
+                                    <strong>Aktuelle Datei:</strong>
+                                    <a href="{% url 'product_attachment_download' pk=product.pk attachment_id=attachment.pk %}">
+                                        {{ attachment.file.name|slice:"9:" }}
+                                    </a>
+                                    <span class="text-muted">({{ attachment.file.size|filesizeformat }})</span>
+                                </p>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="keep_file" id="keep_file" checked>
+                                    <label class="form-check-label" for="keep_file">
+                                        Bestehende Datei behalten (falls kein neuer Upload erfolgt)
+                                    </label>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'product_attachments' pk=product.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Zurück
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Speichern
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Produktinformation</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if product.primary_photo %}
+                        <img src="{{ product.primary_photo.image.url }}" alt="{{ product.name }}" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: contain;">
+                        {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-box-seam text-muted" style="font-size: 1.5rem;"></i>
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <h6 class="mb-0">{{ product.name }}</h6>
+                            <small class="text-muted">SKU: {{ product.sku }}</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Kategorie:</strong> {{ product.category.name|default:"Keine Kategorie" }}
+                    </div>
+
+                    <div>
+                        <a href="{% url 'product_detail' pk=product.pk %}" class="btn btn-outline-primary btn-sm w-100">
+                            <i class="bi bi-eye me-1"></i> Produktdetails anzeigen
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Hinweise zu Anhängen</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Unterstützte Dateiformate: PDF, DOC, DOCX, XLS, XLSX, CSV, TXT, ZIP, RAR, JPG, PNG, GIF</li>
+                        <li>Maximale Dateigröße: 10 MB</li>
+                        <li>Verwenden Sie aussagekräftige Titel für bessere Auffindbarkeit</li>
+                        <li>Die Beschreibung sollte den Inhalt und Zweck der Datei erklären</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Styling für das Datei-Input-Feld */
+    input[type="file"] {
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        padding: 0.375rem 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Zeige den Dateinamen im Datei-Input-Feld an
+        $('#{{ form.file.id_for_label }}').on('change', function() {
+            var fileName = $(this).val().split('\\').pop();
+            if (fileName) {
+                $(this).next('.custom-file-label').html(fileName);
+            }
+        });
+    });
+</script>
+{% endblock %}

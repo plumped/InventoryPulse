@@ -1,11 +1,15 @@
 import csv
+import os
+import uuid
+from datetime import date
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db import models
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
 
 from inventory.models import Warehouse
 
@@ -34,6 +38,10 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     warehouses = models.ManyToManyField(Warehouse, through='ProductWarehouse')
+    has_variants = models.BooleanField(default=False)
+    has_serial_numbers = models.BooleanField(default=False)
+    has_batch_tracking = models.BooleanField(default=False)
+    has_expiry_tracking = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -347,3 +355,172 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"Profil von {self.user.username}"
+
+
+# ProductPhoto - für Produktfotos
+class ProductPhoto(models.Model):
+    """Model for product photos."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='product_photos/')
+    is_primary = models.BooleanField(default=False)
+    caption = models.CharField(max_length=255, blank=True)
+    upload_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Foto für {self.product.name}"
+
+    def save(self, *args, **kwargs):
+        # Wenn dieses Foto als primär markiert wird, alle anderen Fotos dieses Produkts auf nicht-primär setzen
+        if self.is_primary:
+            ProductPhoto.objects.filter(product=self.product, is_primary=True).update(is_primary=False)
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-is_primary', '-upload_date']
+
+
+# ProductAttachment - für Dokumente und andere Anhänge
+def attachment_path(instance, filename):
+    # Datei wird hochgeladen zu MEDIA_ROOT/product_attachments/product_<id>/<filename>
+    return os.path.join('product_attachments', f'product_{instance.product.id}', filename)
+
+
+class ProductAttachment(models.Model):
+    """Model for product attachments (documents, manuals, etc.)."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to=attachment_path)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    file_type = models.CharField(max_length=100, blank=True)  # PDF, DOCX, etc.
+    upload_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        # Automatisch den Dateityp anhand der Dateierweiterung bestimmen
+        if self.file and not self.file_type:
+            extension = os.path.splitext(self.file.name)[1].lower()[1:]
+            self.file_type = extension
+        super().save(*args, **kwargs)
+
+    class Meta:
+        ordering = ['-upload_date']
+
+
+# ProductVariantType - definiert Variationstypen wie "Farbe", "Größe", etc.
+class ProductVariantType(models.Model):
+    """Model for types of product variants (e.g., color, size)."""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+
+
+# ProductVariant - für Produktvarianten
+class ProductVariant(models.Model):
+    """Model for product variants (e.g., 'XL', 'Red')."""
+    parent_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
+    sku = models.CharField(max_length=50, unique=True)  # Eigene SKU für jede Variante
+    name = models.CharField(max_length=255)  # Name der konkreten Variante z.B. "T-Shirt Rot XL"
+    variant_type = models.ForeignKey(ProductVariantType, on_delete=models.CASCADE)
+    value = models.CharField(max_length=100)  # Der Wert für den Typ, z.B. "Rot" für Farbe
+    price_adjustment = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Preisanpassung (+/-)
+    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    barcode = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        unique_together = ('parent_product', 'variant_type', 'value')
+        ordering = ['parent_product', 'variant_type', 'value']
+
+
+# SerialNumber - für Seriennummern
+class SerialNumber(models.Model):
+    """Model for tracking serial numbers."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='serial_numbers')
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='serial_numbers',
+                                null=True, blank=True)  # Optional, falls die Seriennummer zu einer Variante gehört
+    serial_number = models.CharField(max_length=100, unique=True)
+    status_choices = [
+        ('in_stock', 'Auf Lager'),
+        ('sold', 'Verkauft'),
+        ('reserved', 'Reserviert'),
+        ('defective', 'Defekt'),
+        ('returned', 'Zurückgegeben'),
+    ]
+    status = models.CharField(max_length=20, choices=status_choices, default='in_stock')
+    purchase_date = models.DateField(null=True, blank=True)  # Einkaufsdatum
+    expiry_date = models.DateField(null=True, blank=True)  # Verfallsdatum
+    notes = models.TextField(blank=True)
+    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.serial_number
+
+    @property
+    def is_expired(self):
+        """Check if the product is expired."""
+        if self.expiry_date:
+            return self.expiry_date < date.today()
+        return False
+
+    @property
+    def days_until_expiry(self):
+        """Calculate days until expiry."""
+        if self.expiry_date:
+            delta = self.expiry_date - date.today()
+            return delta.days
+        return None
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+# Batch/Lot - für Chargennummern
+class BatchNumber(models.Model):
+    """Model for tracking batch or lot numbers."""
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='batches')
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name='batches',
+                                null=True, blank=True)  # Optional, falls die Charge zu einer Variante gehört
+    batch_number = models.CharField(max_length=100)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Menge in dieser Charge
+    production_date = models.DateField(null=True, blank=True)
+    expiry_date = models.DateField(null=True, blank=True)
+    supplier = models.ForeignKey('suppliers.Supplier', on_delete=models.SET_NULL, null=True, blank=True)
+    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.batch_number}"
+
+    @property
+    def is_expired(self):
+        """Check if the batch is expired."""
+        if self.expiry_date:
+            return self.expiry_date < date.today()
+        return False
+
+    @property
+    def days_until_expiry(self):
+        """Calculate days until expiry."""
+        if self.expiry_date:
+            delta = self.expiry_date - date.today()
+            return delta.days
+        return None
+
+    class Meta:
+        unique_together = ('product', 'batch_number')
+        ordering = ['-created_at']

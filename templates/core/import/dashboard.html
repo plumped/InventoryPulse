@@ -15,7 +15,7 @@
     </div>
     <div>
         <a href="{% url 'import_log_list' %}" class="btn btn-secondary">
-            <i class="fas fa-history"></i> Import-Logs
+            <i class="bi bi-clock-history"></i> Import-Logs
         </a>
     </div>
 </div>
@@ -25,12 +25,12 @@
         <div class="card h-100">
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <i class="fas fa-box fa-3x text-primary"></i>
+                    <i class="bi bi-box-seam text-primary" style="font-size: 3rem;"></i>
                 </div>
                 <h5 class="card-title">Produkte importieren</h5>
                 <p class="card-text">Importieren Sie Produkte aus einer CSV-Datei.</p>
                 <a href="{% url 'import_products' %}" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Import starten
+                    <i class="bi bi-upload"></i> Import starten
                 </a>
             </div>
         </div>
@@ -40,12 +40,12 @@
         <div class="card h-100">
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <i class="fas fa-tags fa-3x text-success"></i>
+                    <i class="bi bi-tags text-success" style="font-size: 3rem;"></i>
                 </div>
                 <h5 class="card-title">Kategorien importieren</h5>
                 <p class="card-text">Importieren Sie Produktkategorien aus einer CSV-Datei.</p>
                 <a href="{% url 'import_categories' %}" class="btn btn-success">
-                    <i class="fas fa-upload"></i> Import starten
+                    <i class="bi bi-upload"></i> Import starten
                 </a>
             </div>
         </div>
@@ -55,12 +55,12 @@
         <div class="card h-100">
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <i class="fas fa-truck fa-3x text-info"></i>
+                    <i class="bi bi-truck text-info" style="font-size: 3rem;"></i>
                 </div>
                 <h5 class="card-title">Lieferanten importieren</h5>
                 <p class="card-text">Importieren Sie Lieferanten aus einer CSV-Datei.</p>
                 <a href="{% url 'import_suppliers' %}" class="btn btn-info">
-                    <i class="fas fa-upload"></i> Import starten
+                    <i class="bi bi-upload"></i> Import starten
                 </a>
             </div>
         </div>
@@ -70,12 +70,74 @@
         <div class="card h-100">
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <i class="fas fa-link fa-3x text-warning"></i>
+                    <i class="bi bi-link text-warning" style="font-size: 3rem;"></i>
                 </div>
                 <h5 class="card-title">Produkt-Lieferanten-Zuordnungen</h5>
                 <p class="card-text">Importieren Sie Zuordnungen zwischen Produkten und Lieferanten.</p>
                 <a href="{% url 'import_supplier_products' %}" class="btn btn-warning">
-                    <i class="fas fa-upload"></i> Import starten
+                    <i class="bi bi-upload"></i> Import starten
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-building text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Lager importieren</h5>
+                <p class="card-text">Importieren Sie Lager aus einer CSV-Datei.</p>
+                <a href="{% url 'import_warehouses' %}" class="btn btn-primary">
+                    <i class="bi bi-upload"></i> Import starten
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-people text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Abteilungen importieren</h5>
+                <p class="card-text">Importieren Sie Abteilungen aus einer CSV-Datei.</p>
+                <a href="{% url 'import_departments' %}" class="btn btn-success">
+                    <i class="bi bi-upload"></i> Import starten
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-diagram-3 text-info" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Lagerbestände importieren</h5>
+                <p class="card-text">Importieren Sie Produkt-Lager-Bestände aus einer CSV-Datei.</p>
+                <a href="{% url 'import_warehouse_products' %}" class="btn btn-info">
+                    <i class="bi bi-upload"></i> Import starten
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="bi bi-upc-scan text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">Seriennummern importieren</h5>
+                <p class="card-text">Importieren Sie Seriennummern für Produkte aus einer CSV-Datei.</p>
+                <a href="{% url 'import_serialnumbers' %}" class="btn btn-warning">
+                    <i class="bi bi-upload"></i> Import starten
                 </a>
             </div>
         </div>
@@ -84,7 +146,7 @@
 
 <div class="card">
     <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Letzte Importe</h5>
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Letzte Importe</h5>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -111,6 +173,16 @@
                                 <span class="badge bg-info">{{ log.get_import_type_display }}</span>
                             {% elif log.import_type == 'supplier_product' %}
                                 <span class="badge bg-warning">{{ log.get_import_type_display }}</span>
+                            {% elif log.import_type == 'warehouses' %}
+                                <span class="badge bg-primary">{{ log.get_import_type_display }}</span>
+                            {% elif log.import_type == 'departments' %}
+                                <span class="badge bg-success">{{ log.get_import_type_display }}</span>
+                            {% elif log.import_type == 'warehouse_products' %}
+                                <span class="badge bg-info">{{ log.get_import_type_display }}</span>
+                            {% elif log.import_type == 'serialnumbers' %}
+                                <span class="badge bg-warning">{{ log.get_import_type_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ log.get_import_type_display }}</span>
                             {% endif %}
                         </td>
                         <td>{{ log.file_name }}</td>
@@ -131,7 +203,7 @@
                         </td>
                         <td>
                             <a href="{% url 'import_log_detail' log.id %}" class="btn btn-sm btn-primary">
-                                <i class="fas fa-eye"></i> Details
+                                <i class="bi bi-eye"></i> Details
                             </a>
                         </td>
                     </tr>
@@ -147,7 +219,7 @@
         {% if recent_imports %}
         <div class="text-end mt-3">
             <a href="{% url 'import_log_list' %}" class="btn btn-outline-primary">
-                <i class="fas fa-list"></i> Alle Importe anzeigen
+                <i class="bi bi-list"></i> Alle Importe anzeigen
             </a>
         </div>
         {% endif %}
@@ -156,7 +228,7 @@
 
 <div class="card mt-4">
     <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Import-Hinweise</h5>
+        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Import-Hinweise</h5>
     </div>
     <div class="card-body">
         <div class="row">
@@ -169,6 +241,10 @@
                     <li><a href="/static/files/category_import_template.csv">Kategorie-Importvorlage</a></li>
                     <li><a href="/static/files/supplier_import_template.csv">Lieferanten-Importvorlage</a></li>
                     <li><a href="/static/files/supplier_product_import_template.csv">Produkt-Lieferanten-Importvorlage</a></li>
+                    <li><a href="/static/files/warehouse_import_template.csv">Lager-Importvorlage</a></li>
+                    <li><a href="/static/files/department_import_template.csv">Abteilungen-Importvorlage</a></li>
+                    <li><a href="/static/files/warehouse_products_import_template.csv">Lagerbestand-Importvorlage</a></li>
+                    <li><a href="/static/files/serialnumber_import_template.csv">Seriennummern-Importvorlage</a></li>
                 </ul>
             </div>
             <div class="col-md-6">
@@ -177,6 +253,8 @@
                     <li>Stellen Sie sicher, dass alle erforderlichen Felder ausgefüllt sind</li>
                     <li>Verwenden Sie eindeutige Identifikatoren (Artikelnummern, Namen)</li>
                     <li>Bei Lieferanten-Produkt-Zuordnungen müssen sowohl das Produkt als auch der Lieferant bereits existieren</li>
+                    <li>Bei Seriennummern sollten die zugehörigen Produkte bereits im System vorhanden sein</li>
+                    <li>Bei Lagerbeständen müssen sowohl Produkte als auch Lager bereits existieren</li>
                     <li>Überprüfen Sie das Ergebnis des Imports im Detail-Bericht</li>
                     <li>Bei großen Datenmengen kann der Import einige Zeit in Anspruch nehmen</li>
                 </ul>

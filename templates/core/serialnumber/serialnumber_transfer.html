@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Seriennummer transferieren{% endblock %}
+
+{% block extra_css %}
+<style>
+    .warehouse-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .warehouse-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+    }
+    .warehouse-card.selected {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    .warehouse-card.selected .card-header {
+        background-color: #0d6efd;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-arrow-left-right text-primary me-2"></i>
+        Seriennummer transferieren
+    </h1>
+
+    <div class="row">
+        <!-- Scanbereich -->
+        <div class="col-md-5">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Seriennummer scannen oder eingeben</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="transfer-form">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="serial_number" class="form-label">Seriennummer</label>
+                            <div class="input-group mb-3">
+                                <input type="text" class="form-control" id="serial_number" name="serial_number"
+                                       placeholder="Seriennummer eingeben oder scannen" required
+                                       value="{{ initial_serial }}" autofocus>
+                                <button class="btn btn-primary" type="button" id="scan-btn">
+                                    <i class="bi bi-upc-scan"></i> Scannen
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="target_warehouse" class="form-label">Ziellager auswählen</label>
+                            <select class="form-select" id="target_warehouse" name="target_warehouse" required>
+                                <option value="">Bitte wählen...</option>
+                                {% for warehouse in warehouses %}
+                                <option value="{{ warehouse.id }}">{{ warehouse.name }} ({{ warehouse.location }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notizen (optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"
+                                      placeholder="Grund für den Transfer"></textarea>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-arrow-left-right"></i> Transferieren
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Hilfe und Anleitung -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Hilfe & Anleitung</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2">Scannen Sie die Seriennummer oder geben Sie sie manuell ein.</li>
+                        <li class="mb-2">Wählen Sie das Ziellager aus der Liste aus.</li>
+                        <li class="mb-2">Geben Sie optional Notizen zum Transfer ein.</li>
+                        <li>Klicken Sie auf "Transferieren", um den Vorgang abzuschließen.</li>
+                    </ol>
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="bi bi-info-circle-fill me-2"></i> Seriennummern können nur zwischen Lagern transferiert werden,
+                        für die Sie Zugriffsrechte haben.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lagerübersicht -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Verfügbare Lager</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for warehouse in warehouses %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card warehouse-card h-100" data-warehouse-id="{{ warehouse.id }}">
+                                <div class="card-header">
+                                    {{ warehouse.name }}
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ warehouse.location }}</h6>
+                                    <p class="card-text small">
+                                        {% if warehouse.description %}
+                                        {{ warehouse.description|truncatechars:100 }}
+                                        {% else %}
+                                        <span class="text-muted">Keine Beschreibung verfügbar</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <small class="text-muted">
+                                        <i class="bi bi-box-seam me-1"></i> {{ warehouse.product_count|default:'0' }} Produkte
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                Keine aktiven Lager verfügbar. Bitte erstellen Sie zuerst ein Lager.
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Lager-Karten klickbar machen
+        $('.warehouse-card').click(function() {
+            const warehouseId = $(this).data('warehouse-id');
+
+            // Dropdown-Wert setzen
+            $('#target_warehouse').val(warehouseId);
+
+            // Karten-Styling aktualisieren
+            $('.warehouse-card').removeClass('selected');
+            $(this).addClass('selected');
+        });
+
+        // Wenn eine Seriennummer im Formular ist, Infos laden
+        const serialNumber = $('#serial_number').val();
+        if (serialNumber) {
+            loadSerialInfo(serialNumber);
+        }
+
+        // Bei Änderung der Seriennummer Infos nachladen
+        $('#serial_number').on('change', function() {
+            const serialNumber = $(this).val();
+            if (serialNumber) {
+                loadSerialInfo(serialNumber);
+            }
+        });
+
+        // Funktion zum Laden der Seriennummer-Infos
+        function loadSerialInfo(serialNumber) {
+            // Hier würde ein AJAX-Call stehen, um Infos zur Seriennummer zu laden
+            // und die aktuelle Lagerinformation anzuzeigen
+
+            // Beispiel:
+            // $.get('/api/serialnumber/' + serialNumber, function(data) {
+            //    // Hier Infos anzeigen
+            // });
+        }
+
+        // Dummy-Funktion für den Scan-Button (in der Praxis würde hier
+        // die Barcode-Scanner-Integration stehen)
+        $('#scan-btn').click(function() {
+            alert('In einer Produktivumgebung würde hier die Barcode-Scanner-Funktion aktiviert werden.');
+            $('#serial_number').focus();
+        });
+    });
+</script>
+{% endblock %}

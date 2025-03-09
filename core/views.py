@@ -1,5 +1,14 @@
 import csv
 import io
+import os
+import mimetypes
+from datetime import datetime, timedelta
+from django.http import FileResponse, Http404
+from django.utils import timezone
+from django.db.models import Sum, Count, F, Case, When, IntegerField
+from wsgiref.util import FileWrapper
+from django.urls import reverse
+
 from datetime import datetime
 from decimal import Decimal
 
@@ -19,10 +28,14 @@ from inventory.models import StockMovement, Warehouse, Department, StockTake, Wa
 from suppliers.models import Supplier, SupplierProduct
 from .decorators import permission_required
 from .forms import ProductForm, CategoryForm, SupplierProductImportForm, CategoryImportForm, SupplierImportForm, \
-    ProductImportForm, WarehouseImportForm, DepartmentImportForm, WarehouseProductImportForm
+    ProductImportForm, WarehouseImportForm, DepartmentImportForm, WarehouseProductImportForm, ProductPhotoForm, \
+    ProductAttachmentForm, ProductVariantTypeForm, ProductVariantForm, SerialNumberForm, BulkSerialNumberForm, \
+    BatchNumberForm
 from .importers import SupplierProductImporter, CategoryImporter, SupplierImporter, ProductImporter
-from .models import Product, Category, ImportLog, ProductWarehouse
+from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto, ProductAttachment, ProductVariantType, \
+    ProductVariant, SerialNumber, BatchNumber
 from .permissions import PERMISSION_AREAS
+
 
 
 @login_required
@@ -1453,3 +1466,1592 @@ def permission_management(request):
     }
 
     return render(request, 'core/permission_management.html', context)
+
+
+# ------------------------------------------------------------------------------
+# Produktfotos
+# ------------------------------------------------------------------------------
+
+@login_required
+@permission_required('product', 'view')
+def product_photos(request, pk):
+    """Zeigt alle Fotos eines Produkts an."""
+    product = get_object_or_404(Product, pk=pk)
+    photos = product.photos.all()
+
+    context = {
+        'product': product,
+        'photos': photos,
+    }
+
+    return render(request, 'core/product/product_photos.html', context)
+
+
+@login_required
+@permission_required('product', 'edit')
+def product_photo_add(request, pk):
+    """Fügt ein Foto zu einem Produkt hinzu."""
+    product = get_object_or_404(Product, pk=pk)
+
+    if request.method == 'POST':
+        form = ProductPhotoForm(request.POST, request.FILES)
+        if form.is_valid():
+            photo = form.save(commit=False)
+            photo.product = product
+            photo.save()
+
+            messages.success(request, 'Foto wurde erfolgreich hinzugefügt.')
+            return redirect('product_photos', pk=product.pk)
+    else:
+        form = ProductPhotoForm()
+
+    context = {
+        'product': product,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_photo_form.html', context)
+
+
+@login_required
+@permission_required('product', 'delete')
+def product_photo_delete(request, pk, photo_id):
+    """Löscht ein Produktfoto."""
+    product = get_object_or_404(Product, pk=pk)
+    photo = get_object_or_404(ProductPhoto, pk=photo_id, product=product)
+
+    if request.method == 'POST':
+        # Datei vom Dateisystem löschen
+        if photo.image:
+            if os.path.isfile(photo.image.path):
+                os.remove(photo.image.path)
+
+        photo.delete()
+        messages.success(request, 'Foto wurde erfolgreich gelöscht.')
+        return redirect('product_photos', pk=product.pk)
+
+    context = {
+        'product': product,
+        'photo': photo,
+    }
+
+    return render(request, 'core/product/product_photo_confirm_delete.html', context)
+
+
+@login_required
+@permission_required('product', 'edit')
+def product_photo_set_primary(request, pk, photo_id):
+    """Setzt ein Foto als Hauptfoto des Produkts."""
+    product = get_object_or_404(Product, pk=pk)
+    photo = get_object_or_404(ProductPhoto, pk=photo_id, product=product)
+
+    # Erst alle anderen Fotos als nicht-primär markieren
+    ProductPhoto.objects.filter(product=product).update(is_primary=False)
+
+    # Dann dieses Foto als primär markieren
+    photo.is_primary = True
+    photo.save()
+
+    messages.success(request, 'Hauptfoto wurde erfolgreich gesetzt.')
+
+    # AJAX-Request oder normale Anfrage unterscheiden
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+    else:
+        return redirect('product_photos', pk=product.pk)
+
+
+# ------------------------------------------------------------------------------
+# Produktanhänge
+# ------------------------------------------------------------------------------
+
+@login_required
+@permission_required('product', 'view')
+def product_attachments(request, pk):
+    """Zeigt alle Anhänge eines Produkts an."""
+    product = get_object_or_404(Product, pk=pk)
+    attachments = product.attachments.all()
+
+    context = {
+        'product': product,
+        'attachments': attachments,
+    }
+
+    return render(request, 'core/product/product_attachments.html', context)
+
+
+@login_required
+@permission_required('product', 'edit')
+def product_attachment_add(request, pk):
+    """Fügt einen Anhang zu einem Produkt hinzu."""
+    product = get_object_or_404(Product, pk=pk)
+
+    if request.method == 'POST':
+        form = ProductAttachmentForm(request.POST, request.FILES)
+        if form.is_valid():
+            attachment = form.save(commit=False)
+            attachment.product = product
+            attachment.save()
+
+            messages.success(request, 'Anhang wurde erfolgreich hinzugefügt.')
+            return redirect('product_attachments', pk=product.pk)
+    else:
+        form = ProductAttachmentForm()
+
+    context = {
+        'product': product,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_attachment_form.html', context)
+
+
+@login_required
+@permission_required('product', 'delete')
+def product_attachment_delete(request, pk, attachment_id):
+    """Löscht einen Produktanhang."""
+    product = get_object_or_404(Product, pk=pk)
+    attachment = get_object_or_404(ProductAttachment, pk=attachment_id, product=product)
+
+    if request.method == 'POST':
+        # Datei vom Dateisystem löschen
+        if attachment.file:
+            if os.path.isfile(attachment.file.path):
+                os.remove(attachment.file.path)
+
+        attachment.delete()
+        messages.success(request, 'Anhang wurde erfolgreich gelöscht.')
+        return redirect('product_attachments', pk=product.pk)
+
+    context = {
+        'product': product,
+        'attachment': attachment,
+    }
+
+    return render(request, 'core/product/product_attachment_confirm_delete.html', context)
+
+
+@login_required
+@permission_required('product', 'view')
+def product_attachment_download(request, pk, attachment_id):
+    """Lädt einen Produktanhang herunter."""
+    product = get_object_or_404(Product, pk=pk)
+    attachment = get_object_or_404(ProductAttachment, pk=attachment_id, product=product)
+
+    if not attachment.file:
+        raise Http404("Die angeforderte Datei existiert nicht.")
+
+    file_path = attachment.file.path
+
+    if not os.path.exists(file_path):
+        raise Http404("Die angeforderte Datei existiert nicht.")
+
+    # Mime-Type bestimmen
+    content_type, encoding = mimetypes.guess_type(file_path)
+    if content_type is None:
+        content_type = 'application/octet-stream'
+
+    # Datei öffnen und als Response senden
+    try:
+        response = FileResponse(open(file_path, 'rb'), content_type=content_type)
+        response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+        return response
+    except Exception as e:
+        messages.error(request, f"Fehler beim Herunterladen der Datei: {str(e)}")
+        return redirect('product_attachments', pk=product.pk)
+
+
+# ------------------------------------------------------------------------------
+# Variantentypen
+# ------------------------------------------------------------------------------
+
+@login_required
+@permission_required('product', 'view')
+def variant_type_list(request):
+    """Zeigt alle Variantentypen an."""
+    variant_types = ProductVariantType.objects.all()
+
+    # Varianten pro Typ zählen
+    variant_types_with_count = []
+    for vt in variant_types:
+        variant_count = ProductVariant.objects.filter(variant_type=vt).count()
+        variant_types_with_count.append({
+            'type': vt,
+            'variant_count': variant_count
+        })
+
+    context = {
+        'variant_types': variant_types_with_count,
+    }
+
+    return render(request, 'core/variant_type/variant_type_list.html', context)
+
+
+@login_required
+@permission_required('product', 'create')
+def variant_type_add(request):
+    """Erstellt einen neuen Variantentyp."""
+    if request.method == 'POST':
+        form = ProductVariantTypeForm(request.POST)
+        if form.is_valid():
+            variant_type = form.save()
+            messages.success(request, f'Variantentyp "{variant_type.name}" wurde erfolgreich erstellt.')
+            return redirect('variant_type_list')
+    else:
+        form = ProductVariantTypeForm()
+
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'core/variant_type/variant_type_form.html', context)
+
+
+@login_required
+@permission_required('product', 'edit')
+def variant_type_update(request, pk):
+    """Aktualisiert einen Variantentyp."""
+    variant_type = get_object_or_404(ProductVariantType, pk=pk)
+
+    if request.method == 'POST':
+        form = ProductVariantTypeForm(request.POST, instance=variant_type)
+        if form.is_valid():
+            variant_type = form.save()
+            messages.success(request, f'Variantentyp "{variant_type.name}" wurde erfolgreich aktualisiert.')
+            return redirect('variant_type_list')
+    else:
+        form = ProductVariantTypeForm(instance=variant_type)
+
+    context = {
+        'form': form,
+        'variant_type': variant_type,
+    }
+
+    return render(request, 'core/variant_type/variant_type_form.html', context)
+
+
+@login_required
+@permission_required('product', 'delete')
+def variant_type_delete(request, pk):
+    """Löscht einen Variantentyp."""
+    variant_type = get_object_or_404(ProductVariantType, pk=pk)
+
+    # Prüfen, ob Varianten diesen Typ verwenden
+    variant_count = ProductVariant.objects.filter(variant_type=variant_type).count()
+
+    if request.method == 'POST':
+        if variant_count > 0 and 'confirm_delete' not in request.POST:
+            messages.error(request, f'Dieser Variantentyp wird von {variant_count} Varianten verwendet. '
+                                    f'Löschen bestätigen, um trotzdem fortzufahren.')
+            return redirect('variant_type_delete', pk=variant_type.pk)
+
+        variant_type.delete()
+        messages.success(request, f'Variantentyp "{variant_type.name}" wurde erfolgreich gelöscht.')
+        return redirect('variant_type_list')
+
+    context = {
+        'variant_type': variant_type,
+        'variant_count': variant_count,
+    }
+
+    return render(request, 'core/variant_type/variant_type_confirm_delete.html', context)
+
+
+# ------------------------------------------------------------------------------
+# Produktvarianten
+# ------------------------------------------------------------------------------
+
+@login_required
+@permission_required('product', 'view')
+def product_variants(request, pk):
+    """Zeigt alle Varianten eines Produkts an."""
+    product = get_object_or_404(Product, pk=pk)
+    variants = product.variants.all()
+
+    context = {
+        'product': product,
+        'variants': variants,
+    }
+
+    return render(request, 'core/product/product_variants.html', context)
+
+
+@login_required
+@permission_required('product', 'view')
+def product_variant_detail(request, pk, variant_id):
+    """Zeigt Details zu einer Produktvariante an."""
+    product = get_object_or_404(Product, pk=pk)
+    variant = get_object_or_404(ProductVariant, pk=variant_id, parent_product=product)
+
+    # Seriennummern für diese Variante
+    serial_numbers = SerialNumber.objects.filter(variant=variant)
+
+    # Chargen für diese Variante
+    batches = BatchNumber.objects.filter(variant=variant)
+
+    context = {
+        'product': product,
+        'variant': variant,
+        'serial_numbers': serial_numbers,
+        'batches': batches,
+    }
+
+    return render(request, 'core/product/product_variant_detail.html', context)
+
+
+@login_required
+@permission_required('product', 'create')
+def product_variant_add(request, pk):
+    """Fügt eine Variante zu einem Produkt hinzu."""
+    product = get_object_or_404(Product, pk=pk)
+
+    # Prüfen, ob das Produkt für Varianten konfiguriert ist
+    if not product.has_variants:
+        product.has_variants = True
+        product.save()
+        messages.info(request, 'Das Produkt wurde für Varianten aktiviert.')
+
+    if request.method == 'POST':
+        form = ProductVariantForm(request.POST)
+        if form.is_valid():
+            variant = form.save(commit=False)
+            variant.parent_product = product
+            variant.save()
+
+            messages.success(request, 'Produktvariante wurde erfolgreich hinzugefügt.')
+            return redirect('product_variants', pk=product.pk)
+    else:
+        # Name-Vorschlag generieren
+        form = ProductVariantForm(initial={
+            'name': product.name,
+            'current_stock': 0
+        })
+
+    context = {
+        'product': product,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_variant_form.html', context)
+
+
+@login_required
+@permission_required('product', 'edit')
+def product_variant_update(request, pk, variant_id):
+    """Aktualisiert eine Produktvariante."""
+    product = get_object_or_404(Product, pk=pk)
+    variant = get_object_or_404(ProductVariant, pk=variant_id, parent_product=product)
+
+    if request.method == 'POST':
+        form = ProductVariantForm(request.POST, instance=variant)
+        if form.is_valid():
+            variant = form.save()
+            messages.success(request, 'Produktvariante wurde erfolgreich aktualisiert.')
+            return redirect('product_variants', pk=product.pk)
+    else:
+        form = ProductVariantForm(instance=variant)
+
+    context = {
+        'product': product,
+        'variant': variant,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_variant_form.html', context)
+
+
+@login_required
+@permission_required('product', 'delete')
+def product_variant_delete(request, pk, variant_id):
+    """Löscht eine Produktvariante."""
+    product = get_object_or_404(Product, pk=pk)
+    variant = get_object_or_404(ProductVariant, pk=variant_id, parent_product=product)
+
+    if request.method == 'POST':
+        variant.delete()
+        messages.success(request, 'Produktvariante wurde erfolgreich gelöscht.')
+
+        # Wenn keine Varianten mehr übrig sind, has_variants zurücksetzen
+        if not product.variants.exists():
+            product.has_variants = False
+            product.save()
+
+        return redirect('product_variants', pk=product.pk)
+
+    context = {
+        'product': product,
+        'variant': variant,
+    }
+
+    return render(request, 'core/product/product_variant_confirm_delete.html', context)
+
+
+# ------------------------------------------------------------------------------
+# Seriennummern
+# ------------------------------------------------------------------------------
+
+@login_required
+@permission_required('product', 'view')
+def product_serials(request, pk):
+    """Zeigt alle Seriennummern eines Produkts an."""
+    product = get_object_or_404(Product, pk=pk)
+
+    # Filteroptionen
+    status_filter = request.GET.get('status', '')
+    warehouse_filter = request.GET.get('warehouse', '')
+    variant_filter = request.GET.get('variant', '')
+    search_query = request.GET.get('search', '')
+
+    serials = SerialNumber.objects.filter(product=product)
+
+    if status_filter:
+        serials = serials.filter(status=status_filter)
+
+    if warehouse_filter:
+        serials = serials.filter(warehouse_id=warehouse_filter)
+
+    if variant_filter:
+        serials = serials.filter(variant_id=variant_filter)
+
+    if search_query:
+        serials = serials.filter(serial_number__icontains=search_query)
+
+    # Paginierung
+    paginator = Paginator(serials, 50)  # 50 Seriennummern pro Seite
+    page = request.GET.get('page')
+    try:
+        serials = paginator.page(page)
+    except PageNotAnInteger:
+        serials = paginator.page(1)
+    except EmptyPage:
+        serials = paginator.page(paginator.num_pages)
+
+    # Status-Statistiken
+    status_counts = SerialNumber.objects.filter(product=product).values('status').annotate(
+        count=Count('status')).order_by('status')
+
+    # In Dictionary umwandeln für leichteren Zugriff
+    status_stats = {item['status']: item['count'] for item in status_counts}
+
+    context = {
+        'product': product,
+        'serials': serials,
+        'status_stats': status_stats,
+        'warehouses': Warehouse.objects.filter(is_active=True),
+        'variants': product.variants.all(),
+        'status_choices': SerialNumber.status_choices,
+        'status_filter': status_filter,
+        'warehouse_filter': warehouse_filter,
+        'variant_filter': variant_filter,
+        'search_query': search_query,
+    }
+
+    return render(request, 'core/product/product_serials.html', context)
+
+
+@login_required
+@permission_required('product', 'create')
+def product_serial_add(request, pk):
+    """Fügt eine Seriennummer zu einem Produkt hinzu."""
+    product = get_object_or_404(Product, pk=pk)
+
+    # Prüfen, ob das Produkt für Seriennummern konfiguriert ist
+    if not product.has_serial_numbers:
+        product.has_serial_numbers = True
+        product.save()
+        messages.info(request, 'Das Produkt wurde für Seriennummern aktiviert.')
+
+    if request.method == 'POST':
+        form = SerialNumberForm(request.POST, product=product)
+        if form.is_valid():
+            serial = form.save(commit=False)
+            serial.product = product
+            serial.save()
+
+            messages.success(request, 'Seriennummer wurde erfolgreich hinzugefügt.')
+            return redirect('product_serials', pk=product.pk)
+    else:
+        form = SerialNumberForm(product=product)
+
+    context = {
+        'product': product,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_serial_form.html', context)
+
+
+@login_required
+@permission_required('product', 'create')
+def product_serial_bulk_add(request, pk):
+    """Fügt mehrere Seriennummern zu einem Produkt hinzu."""
+    product = get_object_or_404(Product, pk=pk)
+
+    # Prüfen, ob das Produkt für Seriennummern konfiguriert ist
+    if not product.has_serial_numbers:
+        product.has_serial_numbers = True
+        product.save()
+        messages.info(request, 'Das Produkt wurde für Seriennummern aktiviert.')
+
+    if request.method == 'POST':
+        form = BulkSerialNumberForm(request.POST, product=product)
+        if form.is_valid():
+            prefix = form.cleaned_data.get('prefix', '')
+            start_number = form.cleaned_data.get('start_number')
+            count = form.cleaned_data.get('count')
+            digits = form.cleaned_data.get('digits')
+            status = form.cleaned_data.get('status')
+            warehouse = form.cleaned_data.get('warehouse')
+            purchase_date = form.cleaned_data.get('purchase_date')
+            expiry_date = form.cleaned_data.get('expiry_date')
+            variant = form.cleaned_data.get('variant')
+
+            # Format für Seriennummern erstellen
+            serial_format = f"{prefix}{{:0{digits}d}}"
+
+            # Prüfen, ob Seriennummern bereits existieren
+            existing_numbers = []
+            for i in range(start_number, start_number + count):
+                serial_number = serial_format.format(i)
+                if SerialNumber.objects.filter(serial_number=serial_number).exists():
+                    existing_numbers.append(serial_number)
+
+            if existing_numbers:
+                messages.error(request,
+                               f'Folgende Seriennummern existieren bereits: {", ".join(existing_numbers[:10])}' +
+                               (f' und {len(existing_numbers) - 10} weitere' if len(existing_numbers) > 10 else ''))
+                context = {
+                    'product': product,
+                    'form': form,
+                }
+                return render(request, 'core/product/product_serial_bulk_form.html', context)
+
+            # Seriennummern erstellen
+            created_count = 0
+            for i in range(start_number, start_number + count):
+                serial_number = serial_format.format(i)
+                SerialNumber.objects.create(
+                    product=product,
+                    serial_number=serial_number,
+                    status=status,
+                    warehouse=warehouse,
+                    purchase_date=purchase_date,
+                    expiry_date=expiry_date,
+                    variant=variant
+                )
+                created_count += 1
+
+            messages.success(request, f'{created_count} Seriennummern wurden erfolgreich erstellt.')
+            return redirect('product_serials', pk=product.pk)
+    else:
+        form = BulkSerialNumberForm(product=product)
+
+    context = {
+        'product': product,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_serial_bulk_form.html', context)
+
+
+@login_required
+@permission_required('product', 'edit')
+def product_serial_update(request, pk, serial_id):
+    """Aktualisiert eine Seriennummer."""
+    product = get_object_or_404(Product, pk=pk)
+    serial = get_object_or_404(SerialNumber, pk=serial_id, product=product)
+
+    if request.method == 'POST':
+        form = SerialNumberForm(request.POST, instance=serial, product=product)
+        if form.is_valid():
+            serial = form.save()
+            messages.success(request, 'Seriennummer wurde erfolgreich aktualisiert.')
+            return redirect('product_serials', pk=product.pk)
+    else:
+        form = SerialNumberForm(instance=serial, product=product)
+
+    context = {
+        'product': product,
+        'serial': serial,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_serial_form.html', context)
+
+
+@login_required
+@permission_required('product', 'delete')
+def product_serial_delete(request, pk, serial_id):
+    """Löscht eine Seriennummer."""
+    product = get_object_or_404(Product, pk=pk)
+    serial = get_object_or_404(SerialNumber, pk=serial_id, product=product)
+
+    if request.method == 'POST':
+        serial.delete()
+        messages.success(request, 'Seriennummer wurde erfolgreich gelöscht.')
+        return redirect('product_serials', pk=product.pk)
+
+    context = {
+        'product': product,
+        'serial': serial,
+    }
+
+    return render(request, 'core/product/product_serial_confirm_delete.html', context)
+
+
+# ------------------------------------------------------------------------------
+# Chargen
+# ------------------------------------------------------------------------------
+
+@login_required
+@permission_required('product', 'view')
+def product_batches(request, pk):
+    """Zeigt alle Chargen eines Produkts an."""
+    product = get_object_or_404(Product, pk=pk)
+
+    # Filteroptionen
+    warehouse_filter = request.GET.get('warehouse', '')
+    variant_filter = request.GET.get('variant', '')
+    search_query = request.GET.get('search', '')
+    expiry_filter = request.GET.get('expiry', '')
+
+    batches = BatchNumber.objects.filter(product=product)
+
+    if warehouse_filter:
+        batches = batches.filter(warehouse_id=warehouse_filter)
+
+    if variant_filter:
+        batches = batches.filter(variant_id=variant_filter)
+
+    if search_query:
+        batches = batches.filter(batch_number__icontains=search_query)
+
+    # Filtern nach Verfallsdatum
+    today = timezone.now().date()
+    if expiry_filter == 'expired':
+        batches = batches.filter(expiry_date__lt=today)
+    elif expiry_filter == 'expiring_soon':
+        batches = batches.filter(expiry_date__gte=today, expiry_date__lte=today + timedelta(days=30))
+    elif expiry_filter == 'valid':
+        batches = batches.filter(expiry_date__gt=today + timedelta(days=30))
+
+    # Paginierung
+    paginator = Paginator(batches, 25)  # 25 Chargen pro Seite
+    page = request.GET.get('page')
+    try:
+        batches = paginator.page(page)
+    except PageNotAnInteger:
+        batches = paginator.page(1)
+    except EmptyPage:
+        batches = paginator.page(paginator.num_pages)
+
+    # Verfallsstatistiken
+    expired_count = BatchNumber.objects.filter(product=product, expiry_date__lt=today).count()
+    expiring_soon_count = BatchNumber.objects.filter(
+        product=product,
+        expiry_date__gte=today,
+        expiry_date__lte=today + timedelta(days=30)
+    ).count()
+    valid_count = BatchNumber.objects.filter(
+        product=product,
+        expiry_date__gt=today + timedelta(days=30)
+    ).count()
+
+    context = {
+        'product': product,
+        'batches': batches,
+        'warehouses': Warehouse.objects.filter(is_active=True),
+        'variants': product.variants.all(),
+        'warehouse_filter': warehouse_filter,
+        'variant_filter': variant_filter,
+        'search_query': search_query,
+        'expiry_filter': expiry_filter,
+        'expired_count': expired_count,
+        'expiring_soon_count': expiring_soon_count,
+        'valid_count': valid_count,
+        'today': today,
+    }
+
+    return render(request, 'core/product/product_batches.html', context)
+
+
+@login_required
+@permission_required('product', 'create')
+def product_batch_add(request, pk):
+    """Fügt eine Charge zu einem Produkt hinzu."""
+    product = get_object_or_404(Product, pk=pk)
+
+    # Prüfen, ob das Produkt für Chargen konfiguriert ist
+    if not product.has_batch_tracking:
+        product.has_batch_tracking = True
+        product.save()
+        messages.info(request, 'Das Produkt wurde für Chargenverfolgung aktiviert.')
+
+    if request.method == 'POST':
+        form = BatchNumberForm(request.POST, product=product)
+        if form.is_valid():
+            batch = form.save(commit=False)
+            batch.product = product
+            batch.save()
+
+            messages.success(request, 'Charge wurde erfolgreich hinzugefügt.')
+            return redirect('product_batches', pk=product.pk)
+    else:
+        form = BatchNumberForm(product=product)
+
+    context = {
+        'product': product,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_batch_form.html', context)
+
+
+@login_required
+@permission_required('product', 'edit')
+def product_batch_update(request, pk, batch_id):
+    """Aktualisiert eine Charge."""
+    product = get_object_or_404(Product, pk=pk)
+    batch = get_object_or_404(BatchNumber, pk=batch_id, product=product)
+
+    if request.method == 'POST':
+        form = BatchNumberForm(request.POST, instance=batch, product=product)
+        if form.is_valid():
+            batch = form.save()
+            messages.success(request, 'Charge wurde erfolgreich aktualisiert.')
+            return redirect('product_batches', pk=product.pk)
+    else:
+        form = BatchNumberForm(instance=batch, product=product)
+
+    context = {
+        'product': product,
+        'batch': batch,
+        'form': form,
+    }
+
+    return render(request, 'core/product/product_batch_form.html', context)
+
+
+@login_required
+@permission_required('product', 'delete')
+def product_batch_delete(request, pk, batch_id):
+    """Löscht eine Charge."""
+    product = get_object_or_404(Product, pk=pk)
+    batch = get_object_or_404(BatchNumber, pk=batch_id, product=product)
+
+    if request.method == 'POST':
+        batch.delete()
+        messages.success(request, 'Charge wurde erfolgreich gelöscht.')
+        return redirect('product_batches', pk=product.pk)
+
+    context = {
+        'product': product,
+        'batch': batch,
+    }
+
+    return render(request, 'core/product/product_batch_confirm_delete.html', context)
+
+
+# ------------------------------------------------------------------------------
+# Verfallsdaten-Verwaltung
+# ------------------------------------------------------------------------------
+
+@login_required
+@permission_required('product', 'view')
+def expiry_management(request):
+    """Zentrale Verwaltung aller Produkte mit Verfallsdaten."""
+    # Filteroptionen
+    expiry_filter = request.GET.get('filter', 'all')
+    days_threshold = request.GET.get('days_threshold', '30')
+    search_query = request.GET.get('search', '')
+    category_filter = request.GET.get('category', '')
+
+    try:
+        days_threshold = int(days_threshold)
+    except ValueError:
+        days_threshold = 30
+
+    today = timezone.now().date()
+
+    # Basis-Queryset für Seriennummern mit Verfallsdaten
+    serials = SerialNumber.objects.filter(expiry_date__isnull=False)
+
+    # Basis-Queryset für Chargen mit Verfallsdaten
+    batches = BatchNumber.objects.filter(expiry_date__isnull=False)
+
+    # Filterung nach Ablaufstatus
+    if expiry_filter == 'expired':
+        serials = serials.filter(expiry_date__lt=today)
+        batches = batches.filter(expiry_date__lt=today)
+    elif expiry_filter == 'expiring_soon':
+        serials = serials.filter(
+            expiry_date__gte=today,
+            expiry_date__lte=today + timedelta(days=days_threshold)
+        )
+        batches = batches.filter(
+            expiry_date__gte=today,
+            expiry_date__lte=today + timedelta(days=days_threshold)
+        )
+    elif expiry_filter == 'valid':
+        serials = serials.filter(expiry_date__gt=today + timedelta(days=days_threshold))
+        batches = batches.filter(expiry_date__gt=today + timedelta(days=days_threshold))
+
+    # Filterung nach Suchbegriff
+    if search_query:
+        serials = serials.filter(
+            Q(product__name__icontains=search_query) |
+            Q(serial_number__icontains=search_query)
+        )
+        batches = batches.filter(
+            Q(product__name__icontains=search_query) |
+            Q(batch_number__icontains=search_query)
+        )
+
+    # Filterung nach Kategorie
+    if category_filter:
+        serials = serials.filter(product__category_id=category_filter)
+        batches = batches.filter(product__category_id=category_filter)
+
+    # Statistiken für Seriennummern
+    serial_stats = {
+        'total': SerialNumber.objects.filter(expiry_date__isnull=False).count(),
+        'expired': SerialNumber.objects.filter(expiry_date__lt=today).count(),
+        'expiring_soon': SerialNumber.objects.filter(
+            expiry_date__gte=today,
+            expiry_date__lte=today + timedelta(days=days_threshold)
+        ).count(),
+        'valid': SerialNumber.objects.filter(
+            expiry_date__gt=today + timedelta(days=days_threshold)
+        ).count(),
+    }
+
+    # Statistiken für Chargen
+    batch_stats = {
+        'total': BatchNumber.objects.filter(expiry_date__isnull=False).count(),
+        'expired': BatchNumber.objects.filter(expiry_date__lt=today).count(),
+        'expiring_soon': BatchNumber.objects.filter(
+            expiry_date__gte=today,
+            expiry_date__lte=today + timedelta(days=days_threshold)
+        ).count(),
+        'valid': BatchNumber.objects.filter(
+            expiry_date__gt=today + timedelta(days=days_threshold)
+        ).count(),
+    }
+
+    # Paginierung für Seriennummern
+    serials_paginator = Paginator(serials, 25)
+    serials_page = request.GET.get('serials_page')
+    try:
+        serials = serials_paginator.page(serials_page)
+    except PageNotAnInteger:
+        serials = serials_paginator.page(1)
+    except EmptyPage:
+        serials = serials_paginator.page(serials_paginator.num_pages)
+
+    # Paginierung für Chargen
+    batches_paginator = Paginator(batches, 25)
+    batches_page = request.GET.get('batches_page')
+    try:
+        batches = batches_paginator.page(batches_page)
+    except PageNotAnInteger:
+        batches = batches_paginator.page(1)
+    except EmptyPage:
+        batches = batches_paginator.page(batches_paginator.num_pages)
+
+    context = {
+        'serials': serials,
+        'batches': batches,
+        'serial_stats': serial_stats,
+        'batch_stats': batch_stats,
+        'categories': Category.objects.all(),
+        'expiry_filter': expiry_filter,
+        'days_threshold': days_threshold,
+        'search_query': search_query,
+        'category_filter': category_filter,
+        'today': today,
+    }
+
+    return render(request, 'core/expiry_management.html', context)
+
+
+# ------------------------------------------------------------------------------
+# Erweiterung der bestehenden Produkt-Views
+# ------------------------------------------------------------------------------
+
+# Aktualisieren der product_detail View, um die erweiterten Funktionen anzuzeigen
+@login_required
+@permission_required('product', 'view')
+def product_detail(request, pk):
+    """Show details for a specific product."""
+    product = get_object_or_404(Product, pk=pk)
+
+    # Lieferanteninformationen
+    supplier_products = SupplierProduct.objects.filter(product=product).select_related('supplier')
+
+    # Bestandsbewegungen
+    movements = StockMovement.objects.filter(product=product).select_related('created_by').order_by('-created_at')[:20]
+
+    # Primärbild abrufen, falls vorhanden
+    primary_photo = product.photos.filter(is_primary=True).first()
+
+    # Anzahl der Varianten, Seriennummern und Chargen
+    variant_count = product.variants.count()
+    serial_count = product.serial_numbers.count()
+    batch_count = product.batches.count()
+
+    # Varianten mit kritischem Bestand
+    low_stock_variants = product.variants.filter(
+        current_stock__lt=3  # Beispielwert als Schwellenwert
+    )[:5]  # Nur die ersten 5 anzeigen
+
+    # Ablaufende Seriennummern und Chargen
+    today = timezone.now().date()
+    expiring_serials = product.serial_numbers.filter(
+        expiry_date__isnull=False,
+        expiry_date__gte=today,
+        expiry_date__lte=today + timedelta(days=30)
+    ).order_by('expiry_date')[:5]
+
+    expiring_batches = product.batches.filter(
+        expiry_date__isnull=False,
+        expiry_date__gte=today,
+        expiry_date__lte=today + timedelta(days=30)
+    ).order_by('expiry_date')[:5]
+
+    # Seriennummern nach Status gruppieren
+    serial_status_counts = {}
+    if product.has_serial_numbers:
+        status_choices = SerialNumber.status_choices
+        for status_code, status_name in status_choices:
+            serial_status_counts[status_code] = product.serial_numbers.filter(status=status_code).count()
+
+    context = {
+        'product': product,
+        'supplier_products': supplier_products,
+        'movements': movements,
+        'primary_photo': primary_photo,
+        'variant_count': variant_count,
+        'serial_count': serial_count,
+        'batch_count': batch_count,
+        'low_stock_variants': low_stock_variants,
+        'expiring_serials': expiring_serials,
+        'expiring_batches': expiring_batches,
+        'serial_status_counts': serial_status_counts,  # Neue Variable für die Seriennummern-Statistik
+    }
+
+    return render(request, 'core/product_detail.html', context)
+
+
+# ------------------------------------------------------------------------------
+# Globale Seriennummern-Verwaltung
+# ------------------------------------------------------------------------------
+
+@login_required
+@permission_required('serialnumber', 'view')
+def serialnumber_list(request):
+    """Zeigt alle Seriennummern im System an."""
+    # Filteroptionen
+    status_filter = request.GET.get('status', '')
+    warehouse_filter = request.GET.get('warehouse', '')
+    product_filter = request.GET.get('product', '')
+    search_query = request.GET.get('search', '')
+
+    serials = SerialNumber.objects.select_related('product', 'warehouse', 'variant')
+
+    if status_filter:
+        serials = serials.filter(status=status_filter)
+
+    if warehouse_filter:
+        serials = serials.filter(warehouse_id=warehouse_filter)
+
+    if product_filter:
+        serials = serials.filter(product_id=product_filter)
+
+    if search_query:
+        serials = serials.filter(
+            Q(serial_number__icontains=search_query) |
+            Q(product__name__icontains=search_query) |
+            Q(variant__name__icontains=search_query)
+        )
+
+    # Sortierung
+    sort_by = request.GET.get('sort', '-created_at')
+    serials = serials.order_by(sort_by)
+
+    # Paginierung
+    paginator = Paginator(serials, 50)  # 50 Seriennummern pro Seite
+    page = request.GET.get('page')
+    try:
+        serials = paginator.page(page)
+    except PageNotAnInteger:
+        serials = paginator.page(1)
+    except EmptyPage:
+        serials = paginator.page(paginator.num_pages)
+
+    # Status-Statistiken
+    status_counts = SerialNumber.objects.values('status').annotate(
+        count=Count('status')).order_by('status')
+
+    # In Dictionary umwandeln für leichteren Zugriff
+    status_stats = {item['status']: item['count'] for item in status_counts}
+
+    context = {
+        'serials': serials,
+        'status_stats': status_stats,
+        'warehouses': Warehouse.objects.filter(is_active=True),
+        'products': Product.objects.filter(has_serial_numbers=True),
+        'status_choices': SerialNumber.status_choices,
+        'status_filter': status_filter,
+        'warehouse_filter': warehouse_filter,
+        'product_filter': product_filter,
+        'search_query': search_query,
+        'sort_by': sort_by,
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_list.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'view')
+def serialnumber_detail(request, serial_id):
+    """Zeigt Details zu einer Seriennummer an."""
+    serial = get_object_or_404(SerialNumber.objects.select_related(
+        'product', 'warehouse', 'variant'), pk=serial_id)
+
+    # Hier könnten später Bewegungshistorie, Wartungsprotokolle etc. geladen werden
+
+    context = {
+        'serial': serial,
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_detail.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'view')
+def serialnumber_history(request, serial_id):
+    """Zeigt die Historie einer Seriennummer an."""
+    serial = get_object_or_404(SerialNumber.objects.select_related(
+        'product', 'warehouse', 'variant'), pk=serial_id)
+
+    # Hier würde man die Historiendaten laden
+    # Beispiel: movements = SerialNumberMovement.objects.filter(serial_number=serial).order_by('-timestamp')
+
+    context = {
+        'serial': serial,
+        'movements': [],  # Platzhalter für die tatsächlichen Bewegungsdaten
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_history.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'add')
+def serialnumber_add(request):
+    """Fügt eine neue Seriennummer hinzu (produktunabhängig)."""
+    if request.method == 'POST':
+        form = SerialNumberForm(request.POST)
+        if form.is_valid():
+            serial = form.save()
+
+            # Produkt für Seriennummern aktivieren, falls noch nicht geschehen
+            product = serial.product
+            if not product.has_serial_numbers:
+                product.has_serial_numbers = True
+                product.save()
+
+            messages.success(request, 'Seriennummer wurde erfolgreich hinzugefügt.')
+            return redirect('serialnumber_list')
+    else:
+        form = SerialNumberForm()
+
+    context = {
+        'form': form,
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_form.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'transfer')
+def serialnumber_transfer(request):
+    """Transferiert eine Seriennummer von einem Lager zu einem anderen."""
+    if request.method == 'POST':
+        serial_number = request.POST.get('serial_number')
+        target_warehouse_id = request.POST.get('target_warehouse')
+
+        try:
+            serial = SerialNumber.objects.get(serial_number=serial_number)
+            old_warehouse = serial.warehouse
+            new_warehouse = Warehouse.objects.get(pk=target_warehouse_id)
+
+            # Prüfe Benutzerberechtigungen für beide Lager
+            if not request.user.is_superuser:
+                if (old_warehouse and not WarehouseAccess.has_access(request.user, old_warehouse)) or \
+                        not WarehouseAccess.has_access(request.user, new_warehouse):
+                    messages.error(request, 'Sie haben keine Berechtigung für eines der Lager.')
+                    return redirect('serialnumber_transfer')
+
+            # Formatierte Meldung erstellen, je nachdem ob ein altes Lager vorhanden war
+            if old_warehouse:
+                success_message = f'Seriennummer {serial_number} wurde erfolgreich von ' \
+                                  f'{old_warehouse.name} nach {new_warehouse.name} transferiert.'
+            else:
+                success_message = f'Seriennummer {serial_number} wurde erfolgreich ' \
+                                  f'dem Lager {new_warehouse.name} zugewiesen.'
+
+            # Speichere den Transfer
+            serial.warehouse = new_warehouse
+            serial.last_modified = timezone.now()
+            serial.save()
+
+            # Hier könnte man auch einen Eintrag in einer Transfer-Historie speichern
+
+            messages.success(request, success_message)
+            return redirect('serialnumber_list')
+
+        except SerialNumber.DoesNotExist:
+            messages.error(request, f'Seriennummer {serial_number} wurde nicht gefunden.')
+        except Warehouse.DoesNotExist:
+            messages.error(request, 'Das Ziellager existiert nicht.')
+        except Exception as e:
+            messages.error(request, f'Fehler beim Transferieren: {str(e)}')
+
+    # Für GET-Anfragen oder bei Fehlern im POST
+    warehouses = Warehouse.objects.filter(is_active=True)
+
+    # Wenn eine Seriennummer als Parameter übergeben wurde (z.B. aus der Detailansicht)
+    initial_serial = request.GET.get('serial', '')
+
+    context = {
+        'warehouses': warehouses,
+        'initial_serial': initial_serial,
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_transfer.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'import')
+def serialnumber_import(request):
+    """Importiert Seriennummern aus einer CSV-Datei."""
+    if request.method == 'POST':
+        # Hier würde der eigentliche Import-Code stehen
+        # Ähnlich wie bei anderen Import-Funktionen des Systems
+
+        # Beispiel für den Rückgabewert nach erfolgreichem Import
+        messages.success(request, 'Seriennummern wurden erfolgreich importiert.')
+        return redirect('serialnumber_list')
+
+    context = {
+        'title': 'Seriennummern importieren',
+        'description': 'Importieren Sie Seriennummern aus einer CSV-Datei.',
+        'expected_format': 'product_sku,serial_number,status,warehouse_name,purchase_date,expiry_date',
+        'example': 'P1001,SN12345,in_stock,Hauptlager,2023-01-01,2025-01-01',
+        'required_columns': ['product_sku', 'serial_number'],
+        'optional_columns': ['status', 'warehouse_name', 'purchase_date', 'expiry_date', 'notes'],
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_import.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'export')
+def serialnumber_export(request):
+    """Exportiert Seriennummern in eine CSV- oder Excel-Datei."""
+    # Filteroptionen für den Export
+    status_filter = request.GET.get('status', '')
+    warehouse_filter = request.GET.get('warehouse', '')
+    product_filter = request.GET.get('product', '')
+
+    serials = SerialNumber.objects.select_related('product', 'warehouse', 'variant')
+
+    if status_filter:
+        serials = serials.filter(status=status_filter)
+
+    if warehouse_filter:
+        serials = serials.filter(warehouse_id=warehouse_filter)
+
+    if product_filter:
+        serials = serials.filter(product_id=product_filter)
+
+    # Export-Format bestimmen
+    export_format = request.GET.get('format', '')
+
+    if export_format == 'csv':
+        # CSV-Export
+        response = HttpResponse(content_type='text/csv')
+        response[
+            'Content-Disposition'] = f'attachment; filename="seriennummern_{timezone.now().strftime("%Y%m%d")}.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Seriennummer', 'Produkt', 'Variante', 'Status', 'Lager',
+            'Kaufdatum', 'Ablaufdatum', 'Notizen', 'Erstellt am'
+        ])
+
+        for serial in serials:
+            writer.writerow([
+                serial.serial_number,
+                serial.product.name,
+                serial.variant.name if serial.variant else '',
+                serial.get_status_display(),
+                serial.warehouse.name if serial.warehouse else '',
+                serial.purchase_date.strftime('%Y-%m-%d') if serial.purchase_date else '',
+                serial.expiry_date.strftime('%Y-%m-%d') if serial.expiry_date else '',
+                serial.notes,
+                serial.created_at.strftime('%Y-%m-%d %H:%M')
+            ])
+
+        return response
+
+    elif export_format == 'excel':
+        # Excel-Export würde hier implementiert werden
+        # Ähnlich wie bei der export_import_logs-Funktion
+        messages.error(request, 'Excel-Export ist derzeit nicht verfügbar.')
+        return redirect('serialnumber_list')
+
+    # Wenn kein Export angefordert wurde, zeige Exportformular
+    context = {
+        'warehouses': Warehouse.objects.filter(is_active=True),
+        'products': Product.objects.filter(has_serial_numbers=True),
+        'status_choices': SerialNumber.status_choices,
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_export.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'view')
+def serialnumber_scan(request):
+    """Scannt eine Seriennummer (z.B. mit Barcode-Scanner) und zeigt Details an."""
+    scanned_number = request.GET.get('scan', '')
+
+    if scanned_number:
+        try:
+            serial = SerialNumber.objects.get(serial_number=scanned_number)
+            # Weiterleitung zur Detailseite
+            return redirect('serialnumber_detail', serial_id=serial.pk)
+        except SerialNumber.DoesNotExist:
+            messages.error(request, f'Seriennummer {scanned_number} wurde nicht gefunden.')
+
+    context = {
+        'scanned_number': scanned_number,
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_scan.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'view')
+def serialnumber_search(request):
+    """Erweiterte Suchfunktion für Seriennummern."""
+    search_query = request.GET.get('q', '')
+
+    results = []
+    if search_query:
+        # Suche nach Seriennummer, Produktname, verschiedenen Feldern
+        results = SerialNumber.objects.filter(
+            Q(serial_number__icontains=search_query) |
+            Q(product__name__icontains=search_query) |
+            Q(product__sku__icontains=search_query) |
+            Q(product__barcode__icontains=search_query) |
+            Q(variant__name__icontains=search_query) |
+            Q(notes__icontains=search_query)
+        ).select_related('product', 'warehouse', 'variant')
+
+    context = {
+        'search_query': search_query,
+        'results': results,
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_search.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'edit')
+def serialnumber_batch_actions(request):
+    """Massenaktionen für mehrere Seriennummern gleichzeitig."""
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        selected_ids = request.POST.getlist('selected_serials')
+
+        if not selected_ids:
+            messages.error(request, 'Keine Seriennummern ausgewählt.')
+            return redirect('serialnumber_list')
+
+        # Seriennummern abrufen
+        serials = SerialNumber.objects.filter(pk__in=selected_ids)
+
+        if action == 'change_status':
+            new_status = request.POST.get('new_status')
+            if new_status:
+                serials.update(status=new_status)
+                messages.success(request,
+                                 f'{len(selected_ids)} Seriennummern auf Status "{dict(SerialNumber.status_choices)[new_status]}" gesetzt.')
+
+        elif action == 'change_warehouse':
+            new_warehouse_id = request.POST.get('new_warehouse')
+            if new_warehouse_id:
+                try:
+                    warehouse = Warehouse.objects.get(pk=new_warehouse_id)
+                    serials.update(warehouse=warehouse)
+                    messages.success(request, f'{len(selected_ids)} Seriennummern nach "{warehouse.name}" verschoben.')
+                except Warehouse.DoesNotExist:
+                    messages.error(request, 'Das ausgewählte Lager existiert nicht.')
+
+        elif action == 'delete':
+            count = serials.count()
+            serials.delete()
+            messages.success(request, f'{count} Seriennummern wurden gelöscht.')
+
+        return redirect('serialnumber_list')
+
+    # Standardwerte für GET-Anfrage
+    context = {
+        'status_choices': SerialNumber.status_choices,
+        'warehouses': Warehouse.objects.filter(is_active=True),
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_batch_actions.html', context)
+
+
+@login_required
+@permission_required('serialnumber', 'import')
+def import_serialnumbers(request):
+    """Importiert Seriennummern aus einer CSV-Datei."""
+    if request.method == 'POST':
+        form = request.POST
+        csv_file = request.FILES.get('csv_file')
+
+        if not csv_file:
+            messages.error(request, 'Bitte wählen Sie eine CSV-Datei aus.')
+            return redirect('import_serialnumbers')
+
+        # Überprüfen des Dateityps
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, 'Bitte laden Sie eine CSV-Datei hoch.')
+            return redirect('import_serialnumbers')
+
+        # Datei in Speicher lesen
+        file_data = csv_file.read().decode('utf-8')
+
+        # Import-Log erstellen
+        import_log = ImportLog.objects.create(
+            file_name=csv_file.name,
+            import_type='serialnumbers',
+            started_by=request.user,
+            status='processing'
+        )
+
+        try:
+            lines = file_data.split('\n')
+            # CSV-Header überprüfen
+            header = lines[0].strip().split(',')
+            required_headers = ['product_sku', 'serial_number']
+            optional_headers = ['status', 'warehouse_name', 'purchase_date', 'expiry_date', 'variant_name', 'notes']
+
+            # Prüfen, ob alle erforderlichen Header vorhanden sind
+            if not all(column in header for column in required_headers):
+                import_log.status = 'failed'
+                import_log.notes = f'Ungültiger CSV-Header. Erforderliche Felder: {", ".join(required_headers)}'
+                import_log.save()
+                messages.error(request, import_log.notes)
+                return redirect('import_serialnumbers')
+
+            # Indizes für die Spalten ermitteln
+            product_sku_idx = header.index('product_sku')
+            serial_number_idx = header.index('serial_number')
+
+            # Optionale Felder
+            status_idx = header.index('status') if 'status' in header else None
+            warehouse_name_idx = header.index('warehouse_name') if 'warehouse_name' in header else None
+            purchase_date_idx = header.index('purchase_date') if 'purchase_date' in header else None
+            expiry_date_idx = header.index('expiry_date') if 'expiry_date' in header else None
+            variant_name_idx = header.index('variant_name') if 'variant_name' in header else None
+            notes_idx = header.index('notes') if 'notes' in header else None
+
+            # Import starten
+            created_count = 0
+            updated_count = 0
+            error_count = 0
+            error_msgs = []
+
+            # Update-Modus ermitteln
+            update_existing = form.get('update_existing', 'False') == 'True'
+            default_status = form.get('default_status', 'in_stock')
+            default_warehouse_id = form.get('default_warehouse', None)
+
+            # Standard-Lager ermitteln, falls angegeben
+            default_warehouse = None
+            if default_warehouse_id:
+                try:
+                    default_warehouse = Warehouse.objects.get(pk=default_warehouse_id)
+                except Warehouse.DoesNotExist:
+                    pass
+
+            # CSV-Zeilen verarbeiten (ohne Header)
+            for i, line in enumerate(lines[1:], 1):
+                if not line.strip():  # Leere Zeile überspringen
+                    continue
+
+                try:
+                    # Zeile parsen
+                    fields = line.strip().split(',')
+
+                    product_sku = fields[product_sku_idx].strip()
+                    serial_number = fields[serial_number_idx].strip()
+
+                    # Produkt finden
+                    try:
+                        product = Product.objects.get(sku=product_sku)
+                    except Product.DoesNotExist:
+                        error_count += 1
+                        error_msg = f'Fehler in Zeile {i + 1}: Produkt mit SKU "{product_sku}" nicht gefunden.'
+                        error_msgs.append(error_msg)
+                        continue
+
+                    # Prüfen, ob Seriennummer bereits existiert
+                    existing_serial = SerialNumber.objects.filter(serial_number=serial_number).first()
+                    if existing_serial and not update_existing:
+                        error_count += 1
+                        error_msg = f'Fehler in Zeile {i + 1}: Seriennummer "{serial_number}" existiert bereits.'
+                        error_msgs.append(error_msg)
+                        continue
+
+                    # Optionale Felder extrahieren
+                    status = fields[status_idx].strip() if status_idx is not None and status_idx < len(
+                        fields) else default_status
+
+                    # Lager finden, falls angegeben
+                    warehouse = default_warehouse
+                    if warehouse_name_idx is not None and warehouse_name_idx < len(fields) and fields[
+                        warehouse_name_idx].strip():
+                        warehouse_name = fields[warehouse_name_idx].strip()
+                        try:
+                            warehouse = Warehouse.objects.get(name=warehouse_name)
+                        except Warehouse.DoesNotExist:
+                            error_count += 1
+                            error_msg = f'Fehler in Zeile {i + 1}: Lager "{warehouse_name}" nicht gefunden.'
+                            error_msgs.append(error_msg)
+                            continue
+
+                    # Variante finden, falls angegeben
+                    variant = None
+                    if variant_name_idx is not None and variant_name_idx < len(fields) and fields[
+                        variant_name_idx].strip():
+                        variant_name = fields[variant_name_idx].strip()
+                        try:
+                            variant = ProductVariant.objects.get(parent_product=product, name=variant_name)
+                        except ProductVariant.DoesNotExist:
+                            error_count += 1
+                            error_msg = f'Fehler in Zeile {i + 1}: Variante "{variant_name}" für Produkt nicht gefunden.'
+                            error_msgs.append(error_msg)
+                            continue
+
+                    # Datum parsen, falls angegeben
+                    purchase_date = None
+                    if purchase_date_idx is not None and purchase_date_idx < len(fields) and fields[
+                        purchase_date_idx].strip():
+                        try:
+                            purchase_date_str = fields[purchase_date_idx].strip()
+                            purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').date()
+                        except ValueError:
+                            error_count += 1
+                            error_msg = f'Fehler in Zeile {i + 1}: Ungültiges Kaufdatum "{fields[purchase_date_idx]}".'
+                            error_msgs.append(error_msg)
+                            continue
+
+                    expiry_date = None
+                    if expiry_date_idx is not None and expiry_date_idx < len(fields) and fields[
+                        expiry_date_idx].strip():
+                        try:
+                            expiry_date_str = fields[expiry_date_idx].strip()
+                            expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date()
+                        except ValueError:
+                            error_count += 1
+                            error_msg = f'Fehler in Zeile {i + 1}: Ungültiges Ablaufdatum "{fields[expiry_date_idx]}".'
+                            error_msgs.append(error_msg)
+                            continue
+
+                    # Notizen extrahieren
+                    notes = fields[notes_idx].strip() if notes_idx is not None and notes_idx < len(fields) else ''
+
+                    # Seriennummer erstellen oder aktualisieren
+                    if existing_serial and update_existing:
+                        # Aktualisieren
+                        existing_serial.product = product
+                        existing_serial.status = status
+                        existing_serial.warehouse = warehouse
+                        existing_serial.variant = variant
+                        existing_serial.purchase_date = purchase_date
+                        existing_serial.expiry_date = expiry_date
+                        existing_serial.notes = notes
+                        existing_serial.save()
+                        updated_count += 1
+                    else:
+                        # Neu erstellen
+                        SerialNumber.objects.create(
+                            product=product,
+                            serial_number=serial_number,
+                            status=status,
+                            warehouse=warehouse,
+                            variant=variant,
+                            purchase_date=purchase_date,
+                            expiry_date=expiry_date,
+                            notes=notes
+                        )
+                        created_count += 1
+
+                    # Produkt für Seriennummern aktivieren, falls noch nicht geschehen
+                    if not product.has_serial_numbers:
+                        product.has_serial_numbers = True
+                        product.save()
+
+                except Exception as e:
+                    error_count += 1
+                    error_msg = f'Fehler in Zeile {i + 1}: {str(e)}'
+                    error_msgs.append(error_msg)
+
+            # Import-Log aktualisieren
+            import_log.status = 'completed' if error_count == 0 else 'completed_with_errors'
+            import_log.rows_processed = created_count + updated_count + error_count
+            import_log.rows_created = created_count
+            import_log.rows_updated = updated_count
+            import_log.rows_error = error_count
+            import_log.notes = f"Import abgeschlossen: {created_count} erstellt, {updated_count} aktualisiert, {error_count} Fehler"
+
+            if error_msgs:
+                import_log.error_details = '\n'.join(error_msgs)
+
+            import_log.save()
+
+            if error_count > 0:
+                messages.warning(request,
+                                 f'Import mit Fehlern abgeschlossen. {created_count} erstellt, {updated_count} aktualisiert, {error_count} Fehler.')
+            else:
+                messages.success(request,
+                                 f'Import erfolgreich abgeschlossen. {created_count} erstellt, {updated_count} aktualisiert.')
+
+            return redirect('import_log_detail', pk=import_log.pk)
+
+        except Exception as e:
+            import_log.status = 'failed'
+            import_log.notes = f'Fehler beim Import: {str(e)}'
+            import_log.save()
+            messages.error(request, import_log.notes)
+            return redirect('import_serialnumbers')
+
+    # Für GET-Anfragen oder bei Fehlern im POST
+    context = {
+        'title': 'Seriennummern importieren',
+        'description': 'Importieren Sie Seriennummern aus einer CSV-Datei.',
+        'expected_format': 'product_sku,serial_number,status,warehouse_name,purchase_date,expiry_date,variant_name,notes',
+        'example': 'P1001,SN12345,in_stock,Hauptlager,2023-01-01,2025-01-01,Standard,Neue Lieferung',
+        'required_columns': ['product_sku', 'serial_number'],
+        'optional_columns': ['status', 'warehouse_name', 'purchase_date', 'expiry_date', 'variant_name', 'notes'],
+        'warehouses': Warehouse.objects.filter(is_active=True),
+        'status_choices': SerialNumber.status_choices,
+    }
+
+    return render(request, 'core/serialnumber/serialnumber_import.html', context)

@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+{% load get_item %}
+{% load static %}
+
+
+{% block title %}Seriennummern-Übersicht{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .status-in_stock { background-color: #28a745; }
+    .status-sold { background-color: #007bff; }
+    .status-in_use { background-color: #6610f2; }
+    .status-defective { background-color: #dc3545; }
+    .status-returned { background-color: #fd7e14; }
+    .status-disposed { background-color: #6c757d; }
+    .status-reserved { background-color: #17a2b8; }
+    .status-repair { background-color: #ffc107; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-upc-scan text-primary me-2"></i>
+        Seriennummern-Verwaltung
+    </h1>
+
+    <!-- Filter und Suchbereich -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Suche und Filter</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="" class="row g-3">
+                <!-- Suchfeld -->
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Suche</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search" name="search"
+                               placeholder="Seriennummer, Produkt..." value="{{ search_query }}">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status-Filter -->
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Alle Status</option>
+                        {% for code, name in status_choices %}
+                        <option value="{{ code }}" {% if status_filter == code %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Lager-Filter -->
+                <div class="col-md-3">
+                    <label for="warehouse" class="form-label">Lager</label>
+                    <select class="form-select" id="warehouse" name="warehouse">
+                        <option value="">Alle Lager</option>
+                        {% for warehouse in warehouses %}
+                        <option value="{{ warehouse.id }}" {% if warehouse_filter == warehouse.id|stringformat:"i" %}selected{% endif %}>{{ warehouse.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Produkt-Filter -->
+                <div class="col-md-4">
+                    <label for="product" class="form-label">Produkt</label>
+                    <select class="form-select" id="product" name="product">
+                        <option value="">Alle Produkte</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}" {% if product_filter == product.id|stringformat:"i" %}selected{% endif %}>{{ product.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Sortierung -->
+                <div class="col-md-3">
+                    <label for="sort" class="form-label">Sortieren nach</label>
+                    <select class="form-select" id="sort" name="sort">
+                        <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Neueste zuerst</option>
+                        <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Älteste zuerst</option>
+                        <option value="serial_number" {% if sort_by == 'serial_number' %}selected{% endif %}>Seriennummer (A-Z)</option>
+                        <option value="-serial_number" {% if sort_by == '-serial_number' %}selected{% endif %}>Seriennummer (Z-A)</option>
+                        <option value="product__name" {% if sort_by == 'product__name' %}selected{% endif %}>Produkt (A-Z)</option>
+                    </select>
+                </div>
+
+                <!-- Filterbuttons -->
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="btn-group w-100">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter"></i> Filtern
+                        </button>
+                        <a href="{% url 'serialnumber_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Zurücksetzen
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistik und Aktionsbereich -->
+    <div class="row mb-4">
+        <!-- Statistiken -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Statistik</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        {% for code, name in status_choices %}
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="p-3 rounded shadow-sm">
+                                <div class="status-indicator status-{{ code }} mx-auto mb-2"></div>
+                                <h6>{{ name }}</h6>
+                                <h3>{{ status_stats|get_item:code|default:'0' }}</h3>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aktionen -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Aktionen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if perms.serialnumber.add %}
+                        <a href="{% url 'serialnumber_add' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Neue Seriennummer
+                        </a>
+                        {% endif %}
+
+                        {% if perms.serialnumber.transfer %}
+                        <a href="{% url 'serialnumber_transfer' %}" class="btn btn-success">
+                            <i class="bi bi-arrow-left-right"></i> Seriennummer transferieren
+                        </a>
+                        {% endif %}
+
+                        <a href="{% url 'serialnumber_scan' %}" class="btn btn-info">
+                            <i class="bi bi-qr-code-scan"></i> Seriennummer scannen
+                        </a>
+
+                        {% if perms.serialnumber.export %}
+                        <a href="{% url 'serialnumber_export' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-file-earmark-arrow-up"></i> Exportieren
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seriennummern-Tabelle -->
+    <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Seriennummern</h5>
+            <span class="badge bg-primary">{{ serials.paginator.count }} Einträge</span>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'serialnumber_batch_actions' %}" id="serials-form">
+                {% csrf_token %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 30px;">
+                                    <input type="checkbox" id="select-all" class="form-check-input">
+                                </th>
+                                <th>Seriennummer</th>
+                                <th>Produkt</th>
+                                <th>Variante</th>
+                                <th>Status</th>
+                                <th>Lager</th>
+                                <th>Kaufdatum</th>
+                                <th>Ablaufdatum</th>
+                                <th style="width: 100px;">Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for serial in serials %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="selected_serials" value="{{ serial.id }}" class="form-check-input serial-checkbox">
+                                </td>
+                                <td>
+                                    <a href="{% url 'serialnumber_detail' serial_id=serial.id %}">{{ serial.serial_number }}</a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'product_detail' pk=serial.product.id %}">{{ serial.product.name }}</a>
+                                </td>
+                                <td>
+                                    {% if serial.variant %}
+                                    {{ serial.variant.name }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-indicator status-{{ serial.status }}"></span>
+                                    {{ serial.get_status_display }}
+                                </td>
+                                <td>
+                                    {% if serial.warehouse %}
+                                    {{ serial.warehouse.name }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if serial.purchase_date %}
+                                    {{ serial.purchase_date|date:"d.m.Y" }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if serial.expiry_date %}
+                                    {{ serial.expiry_date|date:"d.m.Y" }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'serialnumber_detail' serial_id=serial.id %}" class="btn btn-outline-primary" title="Details">
+                                            <i class="bi bi-info-circle"></i>
+                                        </a>
+                                        {% if perms.serialnumber.edit %}
+                                        <a href="{% url 'product_serial_update' pk=serial.product.id serial_id=serial.id %}" class="btn btn-outline-secondary" title="Bearbeiten">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if perms.serialnumber.view %}
+                                        <a href="{% url 'serialnumber_history' serial_id=serial.id %}" class="btn btn-outline-info" title="Historie">
+                                            <i class="bi bi-clock-history"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="bi bi-search" style="font-size: 2rem;"></i>
+                                        <p class="mt-2">Keine Seriennummern gefunden.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Batch-Aktionen -->
+                <div class="mt-3 d-flex justify-content-between align-items-center" id="batch-actions" style="display: none !important;">
+                    <div class="d-flex align-items-center">
+                        <select name="action" class="form-select me-2" style="width: auto;">
+                            <option value="">Aktion auswählen</option>
+                            <option value="change_status">Status ändern</option>
+                            <option value="change_warehouse">Lager ändern</option>
+                            <option value="delete">Löschen</option>
+                        </select>
+
+                        <!-- Status-Selector (wird per JS ein-/ausgeblendet) -->
+                        <select name="new_status" class="form-select me-2 action-field" data-action="change_status" style="width: auto; display: none;">
+                            {% for code, name in status_choices %}
+                            <option value="{{ code }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- Warehouse-Selector (wird per JS ein-/ausgeblendet) -->
+                        <select name="new_warehouse" class="form-select me-2 action-field" data-action="change_warehouse" style="width: auto; display: none;">
+                            {% for warehouse in warehouses %}
+                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit" class="btn btn-primary">Ausführen</button>
+                    </div>
+                    <div>
+                        <span class="selected-count badge bg-secondary">0</span> ausgewählt
+                    </div>
+                </div>
+            </form>
+
+            <!-- Pagination -->
+            {% if serials.paginator.num_pages > 1 %}
+            <nav aria-label="Seriennummern Pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if serials.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Erste">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ serials.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Vorherige">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Erste">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Vorherige">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for i in serials.paginator.page_range %}
+                        {% if serials.number == i %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                        {% elif i > serials.number|add:"-5" and i < serials.number|add:"5" %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ i }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if serials.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ serials.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Nächste">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ serials.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if product_filter %}&product={{ product_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Letzte">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Nächste">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Letzte">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Select All Checkboxes
+        $('#select-all').change(function() {
+            $('.serial-checkbox').prop('checked', $(this).prop('checked'));
+            updateSelectedCount();
+            toggleBatchActions();
+        });
+
+        // Individual Checkbox Change
+        $('.serial-checkbox').change(function() {
+            updateSelectedCount();
+            toggleBatchActions();
+        });
+
+        // Action Select Change
+        $('select[name="action"]').change(function() {
+            var selectedAction = $(this).val();
+            // Hide all action fields
+            $('.action-field').hide();
+            // Show fields for the selected action
+            $('.action-field[data-action="' + selectedAction + '"]').show();
+        });
+
+        // Update Counter
+        function updateSelectedCount() {
+            var count = $('.serial-checkbox:checked').length;
+            $('.selected-count').text(count);
+        }
+
+        // Toggle Batch Actions Visibility
+        function toggleBatchActions() {
+            if ($('.serial-checkbox:checked').length > 0) {
+                $('#batch-actions').show();
+            } else {
+                $('#batch-actions').hide();
+            }
+        }
+
+        // Filter Dropdowns - Auto-Submit
+        $('select[name="status"], select[name="warehouse"], select[name="product"], select[name="sort"]').change(function() {
+            $(this).closest('form').submit();
+        });
+    });
+</script>
+{% endblock %}

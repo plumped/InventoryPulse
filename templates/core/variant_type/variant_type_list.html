@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Variantentypen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Variantentypen</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-2">Variantentypen</h1>
+        <p class="text-muted">
+            Verwaltung von Produktvariantentypen (z.B. Farbe, Größe, etc.)
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if perms.product.create %}
+        <a href="{% url 'variant_type_add' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Neuer Variantentyp
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Variantentypen</h5>
+    </div>
+    <div class="card-body">
+        {% if variant_types %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Beschreibung</th>
+                        <th>Varianten</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in variant_types %}
+                    <tr>
+                        <td>{{ item.type.name }}</td>
+                        <td>{{ item.type.description|truncatechars:50|default:"-" }}</td>
+                        <td><span class="badge bg-primary">{{ item.variant_count }}</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if perms.product.edit %}
+                                <a href="{% url 'variant_type_update' item.type.id %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                {% if perms.product.delete %}
+                                <a href="{% url 'variant_type_delete' item.type.id %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i> Es wurden noch keine Variantentypen angelegt.
+        </div>
+        {% if perms.product.create %}
+        <div class="text-center my-4">
+            <a href="{% url 'variant_type_add' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Ersten Variantentyp anlegen
+            </a>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Informationen zu Variantentypen</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Was sind Variantentypen?</h6>
+                    <p>
+                        Variantentypen definieren die Eigenschaften, in denen sich Produktvarianten unterscheiden können.
+                        Beispiele sind Farbe, Größe, Material oder Ausführung.
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Beispiele für häufige Variantentypen:</h6>
+                    <ul>
+                        <li><strong>Farbe</strong> - Rot, Blau, Grün, Schwarz, etc.</li>
+                        <li><strong>Größe</strong> - S, M, L, XL, etc.</li>
+                        <li><strong>Material</strong> - Holz, Metall, Kunststoff, etc.</li>
+                        <li><strong>Ausführung</strong> - Standard, Premium, Deluxe, etc.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

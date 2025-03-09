@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Seriennummer löschen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_serials' product.id %}">Seriennummern</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Löschen</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-2">Seriennummer löschen</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Seriennummer löschen?</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Sind Sie sicher, dass Sie die Seriennummer <strong>"{{ serial.serial_number }}"</strong> für das Produkt <strong>"{{ product.name }}"</strong> löschen möchten?
+                </p>
+
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Hinweis:</strong> Diese Aktion kann nicht rückgängig gemacht werden!
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Produkt:</strong> {{ product.name }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Seriennummer:</strong> {{ serial.serial_number }}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Status:</strong>
+                        {% if serial.status == 'in_stock' %}
+                        <span class="badge bg-success">Auf Lager</span>
+                        {% elif serial.status == 'sold' %}
+                        <span class="badge bg-primary">Verkauft</span>
+                        {% elif serial.status == 'reserved' %}
+                        <span class="badge bg-warning">Reserviert</span>
+                        {% elif serial.status == 'defective' %}
+                        <span class="badge bg-danger">Defekt</span>
+                        {% elif serial.status == 'returned' %}
+                        <span class="badge bg-info">Zurückgegeben</span>
+                        {% else %}
+                        <span class="badge bg-secondary">{{ serial.get_status_display }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Lager:</strong> {{ serial.warehouse.name|default:"-" }}
+                    </div>
+                </div>
+
+                {% if serial.variant %}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Variante:</strong> {{ serial.variant.name }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'product_serials' product.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Zurück
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Seriennummer löschen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

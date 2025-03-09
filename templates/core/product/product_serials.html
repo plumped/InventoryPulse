@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load dict_filters %}
+
+{% block title %}Seriennummern: {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Seriennummern</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-2">Seriennummern: {{ product.name }}</h1>
+        <p class="text-muted">
+            <span class="badge bg-primary">SKU: {{ product.sku }}</span>
+            <span class="badge bg-secondary">{{ serial_count|default:"0" }} Seriennummer(n)</span>
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if perms.product.create %}
+        <div class="btn-group">
+            <a href="{% url 'product_serial_add' product.id %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Hinzufügen
+            </a>
+            <a href="{% url 'product_serial_bulk_add' product.id %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle-fill"></i> Massenimport
+            </a>
+        </div>
+        {% endif %}
+        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Zurück
+        </a>
+    </div>
+</div>
+
+{% if not product.has_serial_numbers %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Hinweis:</strong> Für dieses Produkt ist die Seriennummernverfolgung noch nicht aktiviert. Beim Hinzufügen der ersten Seriennummer wird die Funktion automatisch aktiviert.
+</div>
+{% endif %}
+
+<!-- Filter und Statistik-Bereich -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Seriennummern filtern</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">Alle Status</option>
+                            {% for status_choice in status_choices %}
+                            <option value="{{ status_choice.0 }}" {% if status_filter == status_choice.0 %}selected{% endif %}>
+                                {{ status_choice.1 }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="warehouse" class="form-label">Lager</label>
+                        <select name="warehouse" id="warehouse" class="form-select">
+                            <option value="">Alle Lager</option>
+                            {% for wh in warehouses %}
+                            <option value="{{ wh.id }}" {% if warehouse_filter == wh.id|stringformat:"s" %}selected{% endif %}>
+                                {{ wh.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {% if variants %}
+                    <div class="col-md-3">
+                        <label for="variant" class="form-label">Variante</label>
+                        <select name="variant" id="variant" class="form-select">
+                            <option value="">Alle Varianten</option>
+                            {% for var in variants %}
+                            <option value="{{ var.id }}" {% if variant_filter == var.id|stringformat:"s" %}selected{% endif %}>
+                                {{ var.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="col-md-3">
+                        <label for="search" class="form-label">Suche</label>
+                        <input type="text" name="search" id="search" class="form-control"
+                               placeholder="Seriennummer..." value="{{ search_query }}">
+                    </div>
+
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter"></i> Filtern
+                        </button>
+                        <a href="{% url 'product_serials' product.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Zurücksetzen
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Seriennummern-Statistik</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            {% for status_choice in status_choices %}
+                            <tr>
+                                <td class="ps-3">{{ status_choice.1 }}</td>
+                                <td class="text-end pe-3">
+                                    <span class="badge bg-primary">
+                                        {{ status_stats|get:status_choice.0|default:"0" }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-light">
+                                <td class="fw-bold ps-3">Gesamt</td>
+                                <td class="text-end fw-bold pe-3">{{ serial_count|default:"0" }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Seriennummernliste -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Seriennummern</h5>
+    </div>
+    <div class="card-body">
+        {% if serials %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Seriennummer</th>
+                        <th>Status</th>
+                        <th>Lager</th>
+                        {% if product.has_variants %}<th>Variante</th>{% endif %}
+                        {% if product.has_expiry_tracking %}<th>Ablaufdatum</th>{% endif %}
+                        <th>Zusatzinfo</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for serial in serials %}
+                    <tr>
+                        <td>{{ serial.serial_number }}</td>
+                        <td>
+                            {% if serial.status == 'in_stock' %}
+                            <span class="badge bg-success">Auf Lager</span>
+                            {% elif serial.status == 'sold' %}
+                            <span class="badge bg-primary">Verkauft</span>
+                            {% elif serial.status == 'reserved' %}
+                            <span class="badge bg-warning">Reserviert</span>
+                            {% elif serial.status == 'defective' %}
+                            <span class="badge bg-danger">Defekt</span>
+                            {% elif serial.status == 'returned' %}
+                            <span class="badge bg-info">Zurückgegeben</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ serial.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ serial.warehouse.name|default:"-" }}</td>
+                        {% if product.has_variants %}
+                        <td>{{ serial.variant.value|default:"-" }}</td>
+                        {% endif %}
+                        {% if product.has_expiry_tracking %}
+                        <td>
+                            {% if serial.expiry_date %}
+                            <span class="{% if serial.is_expired %}text-danger{% elif serial.days_until_expiry < 30 %}text-warning{% endif %}">
+                                {{ serial.expiry_date|date:"d.m.Y" }}
+                                {% if not serial.is_expired and serial.days_until_expiry < 30 %}
+                                <small>({{ serial.days_until_expiry }} Tage)</small>
+                                {% endif %}
+                            </span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td>
+                            {% if serial.notes %}
+                            <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{ serial.notes }}">
+                                <i class="bi bi-info-circle"></i>
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if perms.product.edit %}
+                                <a href="{% url 'product_serial_update' product.id serial.id %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                {% if perms.product.delete %}
+                                <a href="{% url 'product_serial_delete' product.id serial.id %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginierung -->
+        {% if serials.has_other_pages %}
+        <nav aria-label="Seriennummern-Navigation">
+            <ul class="pagination justify-content-center">
+                {% if serials.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ serials.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Vorherige">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&laquo;</span>
+                </li>
+                {% endif %}
+
+                {% for i in serials.paginator.page_range %}
+                    {% if serials.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% elif i > serials.number|add:'-3' and i < serials.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if serials.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ serials.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Nächste">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i> Keine Seriennummern gefunden, die den Filterkriterien entsprechen.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Tooltip-Initialisierung
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

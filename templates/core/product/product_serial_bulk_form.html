@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block title %}Massenimport Seriennummern: {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_serials' product.id %}">Seriennummern</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Massenimport</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-2">Seriennummern-Massenimport: {{ product.name }}</h1>
+        <p class="text-muted">
+            <span class="badge bg-primary">SKU: {{ product.sku }}</span>
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Mehrere Seriennummern generieren</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Fehler:</strong> Bitte korrigieren Sie die markierten Felder.
+                    </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.prefix.id_for_label }}" class="form-label">Präfix (optional)</label>
+                            <input type="text" name="{{ form.prefix.name }}"
+                                   id="{{ form.prefix.id_for_label }}"
+                                   class="form-control {% if form.prefix.errors %}is-invalid{% endif %}"
+                                   value="{{ form.prefix.value|default:'' }}">
+                            {% if form.prefix.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.prefix.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optionales Präfix für alle Seriennummern, z.B. "SN-"</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.start_number.id_for_label }}" class="form-label">Startnummer*</label>
+                            <input type="number" name="{{ form.start_number.name }}"
+                                   id="{{ form.start_number.id_for_label }}"
+                                   class="form-control {% if form.start_number.errors %}is-invalid{% endif %}"
+                                   value="{{ form.start_number.value|default:'1' }}" min="1" required>
+                            {% if form.start_number.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.start_number.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Erste Nummer in der Sequenz</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.count.id_for_label }}" class="form-label">Anzahl*</label>
+                            <input type="number" name="{{ form.count.name }}"
+                                   id="{{ form.count.id_for_label }}"
+                                   class="form-control {% if form.count.errors %}is-invalid{% endif %}"
+                                   value="{{ form.count.value|default:'10' }}" min="1" max="1000" required>
+                            {% if form.count.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.count.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Anzahl der zu erstellenden Seriennummern (max. 1000)</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.digits.id_for_label }}" class="form-label">Stellen*</label>
+                            <input type="number" name="{{ form.digits.name }}"
+                                   id="{{ form.digits.id_for_label }}"
+                                   class="form-control {% if form.digits.errors %}is-invalid{% endif %}"
+                                   value="{{ form.digits.value|default:'6' }}" min="1" max="10" required>
+                            {% if form.digits.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.digits.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Anzahl der Stellen für die Nummerierung (mit führenden Nullen)</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">Status*</label>
+                            <select name="{{ form.status.name }}"
+                                    id="{{ form.status.id_for_label }}"
+                                    class="form-select {% if form.status.errors %}is-invalid{% endif %}" required>
+                                {% for choice in form.status.field.choices %}
+                                <option value="{{ choice.0 }}" {% if form.status.value == choice.0 %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.status.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.status.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.warehouse.id_for_label }}" class="form-label">Lager</label>
+                            <select name="{{ form.warehouse.name }}"
+                                    id="{{ form.warehouse.id_for_label }}"
+                                    class="form-select {% if form.warehouse.errors %}is-invalid{% endif %}">
+                                <option value="">Lager auswählen...</option>
+                                {% for choice in form.warehouse.field.choices %}
+                                {% if choice.0 %} <!-- Überspringe leere Option -->
+                                <option value="{{ choice.0 }}" {% if form.warehouse.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.warehouse.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.warehouse.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.purchase_date.id_for_label }}" class="form-label">Einkaufsdatum</label>
+                            <input type="date" name="{{ form.purchase_date.name }}"
+                                   id="{{ form.purchase_date.id_for_label }}"
+                                   class="form-control {% if form.purchase_date.errors %}is-invalid{% endif %}"
+                                   value="{{ form.purchase_date.value|date:'Y-m-d'|default:'' }}">
+                            {% if form.purchase_date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.purchase_date.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.expiry_date.id_for_label }}" class="form-label">Verfallsdatum</label>
+                            <input type="date" name="{{ form.expiry_date.name }}"
+                                   id="{{ form.expiry_date.id_for_label }}"
+                                   class="form-control {% if form.expiry_date.errors %}is-invalid{% endif %}"
+                                   value="{{ form.expiry_date.value|date:'Y-m-d'|default:'' }}">
+                            {% if form.expiry_date.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.expiry_date.errors }}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Lassen Sie dieses Feld leer, wenn die Produkte kein Verfallsdatum haben</small>
+                        </div>
+                    </div>
+
+                    {% if product.has_variants %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.variant.id_for_label }}" class="form-label">Produktvariante</label>
+                            <select name="{{ form.variant.name }}"
+                                    id="{{ form.variant.id_for_label }}"
+                                    class="form-select {% if form.variant.errors %}is-invalid{% endif %}">
+                                <option value="">Keine Variante</option>
+                                {% for choice in form.variant.field.choices %}
+                                {% if choice.0 %} <!-- Überspringe leere Option -->
+                                <option value="{{ choice.0 }}" {% if form.variant.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                    {{ choice.1 }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.variant.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.variant.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'product_serials' product.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Zurück
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Seriennummern erstellen
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Vorschau</h5>
+            </div>
+            <div class="card-body" id="preview-area">
+                <div class="alert alert-info">
+                    <p class="mb-1">So werden Ihre Seriennummern aussehen:</p>
+                    <div id="preview-samples" class="mt-2 mb-1 fw-bold">
+                        <div>SN-000001</div>
+                        <div>SN-000002</div>
+                        <div>SN-000003</div>
+                        <div class="text-muted">...</div>
+                    </div>
+                    <p class="small mb-0">Passen Sie die Parameter links an, um die Vorschau zu aktualisieren.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Hinweise</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        <strong>Präfix:</strong> Optionaler Vorsatz für alle Seriennummern, z.B. "SN-", "PROD-" usw.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-123 text-success me-2"></i>
+                        <strong>Startnummer:</strong> Die erste Nummer in der Sequenz.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-arrow-up-short text-info me-2"></i>
+                        <strong>Stellen:</strong> Bestimmt die Länge der Nummern (mit führenden Nullen).
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                        Alle erzeugten Seriennummern erhalten die gleichen Eigenschaften (Status, Lager, Daten).
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Seriennummernvorschau aktualisieren
+    document.addEventListener('DOMContentLoaded', function() {
+        function updatePreview() {
+            const prefix = document.getElementById('{{ form.prefix.id_for_label }}').value || '';
+            const start = parseInt(document.getElementById('{{ form.start_number.id_for_label }}').value || 1);
+            const digits = parseInt(document.getElementById('{{ form.digits.id_for_label }}').value || 6);
+
+            const previewArea = document.getElementById('preview-samples');
+            let previewHtml = '';
+
+            // Zeige bis zu 5 Beispiele
+            for (let i = 0; i < 3; i++) {
+                const num = start + i;
+                const paddedNum = num.toString().padStart(digits, '0');
+                previewHtml += `<div>${prefix}${paddedNum}</div>`;
+            }
+            previewHtml += '<div class="text-muted">...</div>';
+
+            previewArea.innerHTML = previewHtml;
+        }
+
+        // Initial Preview
+        updatePreview();
+
+        // Update Preview on Input Change
+        document.getElementById('{{ form.prefix.id_for_label }}').addEventListener('input', updatePreview);
+        document.getElementById('{{ form.start_number.id_for_label }}').addEventListener('input', updatePreview);
+        document.getElementById('{{ form.digits.id_for_label }}').addEventListener('input', updatePreview);
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

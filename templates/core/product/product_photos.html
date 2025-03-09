@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Fotos: {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .photo-card {
+        height: 250px;
+        margin-bottom: 1.5rem;
+    }
+    .photo-img {
+        height: 180px;
+        object-fit: contain;
+        background-color: #f8f9fa;
+        padding: 10px;
+    }
+    .primary-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Fotos</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-2">Fotos: {{ product.name }}</h1>
+        <p class="text-muted">
+            <span class="badge bg-primary">SKU: {{ product.sku }}</span>
+            <span class="badge bg-secondary">{{ photos|length }} Foto(s)</span>
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if perms.product.edit %}
+        <a href="{% url 'product_photo_add' product.id %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Foto hinzufügen
+        </a>
+        {% endif %}
+        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Zurück
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    {% if photos %}
+        {% for photo in photos %}
+        <div class="col-md-4 col-sm-6">
+            <div class="card photo-card">
+                {% if photo.is_primary %}
+                <span class="badge bg-success primary-badge">Hauptfoto</span>
+                {% endif %}
+                <img src="{{ photo.image.url }}" class="card-img-top photo-img" alt="{{ photo.caption|default:product.name }}">
+                <div class="card-body p-3">
+                    <p class="card-text small mb-2">
+                        {% if photo.caption %}{{ photo.caption }}{% else %}{{ product.name }}{% endif %}
+                    </p>
+                    <div class="btn-group btn-group-sm">
+                        {% if not photo.is_primary and perms.product.edit %}
+                        <a href="{% url 'product_photo_set_primary' product.id photo.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-star"></i> Als Hauptfoto setzen
+                        </a>
+                        {% endif %}
+                        {% if perms.product.delete %}
+                        <a href="{% url 'product_photo_delete' product.id photo.id %}" class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i> Löschen
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i> Diesem Produkt wurden noch keine Fotos hinzugefügt.
+        </div>
+        {% if perms.product.edit %}
+        <div class="text-center my-4">
+            <a href="{% url 'product_photo_add' product.id %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Erstes Foto hinzufügen
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

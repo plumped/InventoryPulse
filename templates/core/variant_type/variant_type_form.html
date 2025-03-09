@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if variant_type %}Variantentyp bearbeiten{% else %}Neuer Variantentyp{% endif %} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'variant_type_list' %}">Variantentypen</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if variant_type %}Bearbeiten{% else %}Neu{% endif %}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-2">{% if variant_type %}Variantentyp bearbeiten{% else %}Neuen Variantentyp anlegen{% endif %}</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Variantentyp-Informationen</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Fehler:</strong> Bitte korrigieren Sie die markierten Felder.
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Name*</label>
+                        <input type="text" name="{{ form.name.name }}"
+                               id="{{ form.name.id_for_label }}"
+                               class="form-control {% if form.name.errors %}is-invalid{% endif %}"
+                               value="{{ form.name.value|default:'' }}" required>
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.name.errors }}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Name des Variantentyps, z.B. "Farbe", "Größe", "Material"</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Beschreibung</label>
+                        <textarea name="{{ form.description.name }}"
+                                  id="{{ form.description.id_for_label }}"
+                                  class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                                  rows="3">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback">
+                            {{ form.description.errors }}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">Optionale Beschreibung des Variantentyps</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'variant_type_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Zurück
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {% if variant_type %}Änderungen speichern{% else %}Variantentyp erstellen{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Hinweise</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        Variantentypen definieren die Art der Variationen für Ihre Produkte.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-list-check text-success me-2"></i>
+                        Beispiele: Farbe, Größe, Material, Ausführung, etc.
+                    </li>
+                    <li class="list-group-item">
+                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                        Der Name sollte kurz und eindeutig sein, da er in Dropdown-Menüs verwendet wird.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

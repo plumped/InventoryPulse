@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Varianten: {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Varianten</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="mb-2">Varianten: {{ product.name }}</h1>
+        <p class="text-muted">
+            <span class="badge bg-primary">SKU: {{ product.sku }}</span>
+            <span class="badge bg-secondary">{{ variants|length }} Variante(n)</span>
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        {% if perms.product.create %}
+        <a href="{% url 'product_variant_add' product.id %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Variante hinzufügen
+        </a>
+        {% endif %}
+        <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Zurück
+        </a>
+    </div>
+</div>
+
+{% if not product.has_variants %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Hinweis:</strong> Für dieses Produkt ist die Variantenfunktion noch nicht aktiviert. Beim Hinzufügen der ersten Variante wird die Funktion automatisch aktiviert.
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Produktvarianten</h5>
+    </div>
+    <div class="card-body">
+        {% if variants %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>SKU</th>
+                        <th>Typ</th>
+                        <th>Wert</th>
+                        <th>Preisanpassung</th>
+                        <th>Bestand</th>
+                        <th>Status</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for variant in variants %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'product_variant_detail' product.id variant.id %}">
+                                {{ variant.name }}
+                            </a>
+                        </td>
+                        <td>{{ variant.sku }}</td>
+                        <td>{{ variant.variant_type.name }}</td>
+                        <td>{{ variant.value }}</td>
+                        <td>
+                            {% if variant.price_adjustment > 0 %}
+                            <span class="text-success">+{{ variant.price_adjustment }}€</span>
+                            {% elif variant.price_adjustment < 0 %}
+                            <span class="text-danger">{{ variant.price_adjustment }}€</span>
+                            {% else %}
+                            <span class="text-muted">±0€</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if variant.current_stock == 0 %}bg-danger{% elif variant.current_stock < 3 %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ variant.current_stock }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if variant.is_active %}
+                            <span class="badge bg-success">Aktiv</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inaktiv</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'product_variant_detail' product.id variant.id %}" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {% if perms.product.edit %}
+                                <a href="{% url 'product_variant_update' product.id variant.id %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% endif %}
+                                {% if perms.product.delete %}
+                                <a href="{% url 'product_variant_delete' product.id variant.id %}" class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i> Diesem Produkt wurden noch keine Varianten hinzugefügt.
+        </div>
+        {% if perms.product.create %}
+        <div class="text-center my-4">
+            <a href="{% url 'product_variant_add' product.id %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Erste Variante hinzufügen
+            </a>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% if variants %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Varianten-Übersicht</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Varianten nach Typ -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Varianten nach Typ</h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <tbody>
+                                    {% for type_info in variant_types %}
+                                    <tr>
+                                        <td>{{ type_info.type.name }}</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">
+                                                {{ type_info.count }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bestandsübersicht -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Bestandsübersicht</h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td>Gesamtbestand</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">
+                                                {{ total_stock }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Varianten ohne Bestand</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-danger">
+                                                {{ zero_stock_count }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Varianten mit kritischem Bestand</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-warning">
+                                                {{ low_stock_count }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Inaktive Varianten</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-secondary">
+                                                {{ inactive_count }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if perms.product.view %}
+<div class="mt-4">
+    <a href="{% url 'variant_type_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-gear"></i> Variantentypen verwalten
+    </a>
+</div>
+{% endif %}
+{% endblock %}

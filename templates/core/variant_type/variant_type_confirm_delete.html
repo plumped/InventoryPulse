@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Variantentyp löschen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'variant_type_list' %}">Variantentypen</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Löschen</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-2">Variantentyp löschen</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Variantentyp löschen?</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Sind Sie sicher, dass Sie den Variantentyp <strong>"{{ variant_type.name }}"</strong> löschen möchten?
+                </p>
+
+                {% if variant_count > 0 %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Achtung:</strong> Dieser Variantentyp wird von {{ variant_count }} Produktvariante(n) verwendet!
+                    Beim Löschen werden auch alle zugehörigen Varianten gelöscht.
+                </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% if variant_count > 0 %}
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="confirm_delete" name="confirm_delete" required>
+                            <label class="form-check-label" for="confirm_delete">
+                                Ich bestätige, dass ich den Variantentyp und alle zugehörigen Varianten löschen möchte.
+                            </label>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'variant_type_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Zurück
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Variantentyp löschen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

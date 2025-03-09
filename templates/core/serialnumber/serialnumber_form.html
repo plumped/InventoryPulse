@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if serial %}Seriennummer bearbeiten{% else %}Neue Seriennummer{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'serialnumber_list' %}">Seriennummern</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% if serial %}Bearbeiten{% else %}Neu{% endif %}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-upc-scan text-primary me-2"></i>
+            {% if serial %}Seriennummer bearbeiten{% else %}Neue Seriennummer{% endif %}
+        </h1>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Seriennummer-Daten</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Fehlermeldungen -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <h5><i class="bi bi-exclamation-triangle"></i> Bitte korrigieren Sie die folgenden Fehler:</h5>
+                                {{ form.non_field_errors }}
+                                <ul>
+                                    {% for field in form %}
+                                        {% if field.errors %}
+                                            {% for error in field.errors %}
+                                                <li><strong>{{ field.label }}</strong>: {{ error }}</li>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <div class="row mb-3">
+                            <!-- Produkt -->
+                            <div class="col-md-6">
+                                <label for="{{ form.product.id_for_label }}" class="form-label">{{ form.product.label }}</label>
+                                {{ form.product }}
+                                {% if form.product.help_text %}
+                                    <div class="form-text">{{ form.product.help_text }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Seriennummer -->
+                            <div class="col-md-6">
+                                <label for="{{ form.serial_number.id_for_label }}" class="form-label">{{ form.serial_number.label }}</label>
+                                {{ form.serial_number }}
+                                {% if form.serial_number.help_text %}
+                                    <div class="form-text">{{ form.serial_number.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <!-- Status -->
+                            <div class="col-md-4">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                                {{ form.status }}
+                                {% if form.status.help_text %}
+                                    <div class="form-text">{{ form.status.help_text }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Lager -->
+                            <div class="col-md-4">
+                                <label for="{{ form.warehouse.id_for_label }}" class="form-label">{{ form.warehouse.label }}</label>
+                                {{ form.warehouse }}
+                                {% if form.warehouse.help_text %}
+                                    <div class="form-text">{{ form.warehouse.help_text }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Variante -->
+                            <div class="col-md-4">
+                                <label for="{{ form.variant.id_for_label }}" class="form-label">{{ form.variant.label }}</label>
+                                {{ form.variant }}
+                                {% if form.variant.help_text %}
+                                    <div class="form-text">{{ form.variant.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <!-- Kaufdatum -->
+                            <div class="col-md-6">
+                                <label for="{{ form.purchase_date.id_for_label }}" class="form-label">{{ form.purchase_date.label }}</label>
+                                {{ form.purchase_date }}
+                                {% if form.purchase_date.help_text %}
+                                    <div class="form-text">{{ form.purchase_date.help_text }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Ablaufdatum -->
+                            <div class="col-md-6">
+                                <label for="{{ form.expiry_date.id_for_label }}" class="form-label">{{ form.expiry_date.label }}</label>
+                                {{ form.expiry_date }}
+                                {% if form.expiry_date.help_text %}
+                                    <div class="form-text">{{ form.expiry_date.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Notizen -->
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.help_text %}
+                                <div class="form-text">{{ form.notes.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'serialnumber_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Zurück
+                            </a>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> {% if serial %}Änderungen speichern{% else %}Seriennummer erstellen{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Hilfe -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Hilfe</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Seriennummer:</strong> Die eindeutige Identifikationsnummer des Geräts. Diese muss einzigartig in Ihrem System sein.</p>
+
+                    <p><strong>Status:</strong> Der aktuelle Zustand der Seriennummer:</p>
+                    <ul class="list-unstyled mb-3">
+                        <li><span class="status-indicator status-in_stock"></span> Auf Lager - Artikel ist verfügbar</li>
+                        <li><span class="status-indicator status-in_use"></span> In Benutzung - Artikel wird aktiv verwendet</li>
+                        <li><span class="status-indicator status-defective"></span> Defekt - Artikel ist beschädigt oder funktioniert nicht</li>
+                    </ul>
+
+                    <p><strong>Warehouse:</strong> Standort, an dem sich der Artikel befindet.</p>
+
+                    <p><strong>Variante:</strong> Spezifische Ausführung eines Produkts, falls anwendbar.</p>
+                </div>
+            </div>
+
+            {% if serial %}
+            <!-- Aktionen für bestehende Seriennummern -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Aktionen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'serialnumber_history' serial_id=serial.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-clock-history"></i> Verlauf anzeigen
+                        </a>
+
+                        {% if perms.serialnumber.transfer %}
+                        <a href="{% url 'serialnumber_transfer' %}?serial={{ serial.serial_number }}" class="btn btn-outline-success">
+                            <i class="bi bi-arrow-left-right"></i> Transferieren
+                        </a>
+                        {% endif %}
+
+                        {% if perms.serialnumber.delete %}
+                        <a href="{% url 'product_serial_delete' pk=serial.product.id serial_id=serial.id %}" class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i> Löschen
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Tipps für neue Seriennummern -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Tipps</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Wenn Sie viele Seriennummern auf einmal erstellen möchten, nutzen Sie die <a href="{% url 'serialnumber_import' %}">Import-Funktion</a> oder die <a href="{% url 'product_serial_bulk_add' pk=1 %}">Massenerfassung</a>.
+                    </div>
+
+                    <p class="mb-0">Seriennummern können auch über die Produktdetailseite erstellt werden, wenn Sie bereits wissen, zu welchem Produkt sie gehören.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-indicator {
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .status-in_stock { background-color: #28a745; }
+    .status-sold { background-color: #007bff; }
+    .status-in_use { background-color: #6610f2; }
+    .status-defective { background-color: #dc3545; }
+    .status-returned { background-color: #fd7e14; }
+    .status-disposed { background-color: #6c757d; }
+    .status-reserved { background-color: #17a2b8; }
+    .status-repair { background-color: #ffc107; }
+
+    /* Form-Styling */
+    form .form-control, form .form-select {
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+    }
+    form .form-control:focus, form .form-select:focus {
+        background-color: #fff;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Produkt-Änderung aktualisiert verfügbare Varianten
+        $('#{{ form.product.id_for_label }}').change(function() {
+            var productId = $(this).val();
+
+            if (productId) {
+                // AJAX-Anfrage, um Varianten zu laden
+                // In einer tatsächlichen Implementierung würde hier eine Anfrage an den Server gesendet
+                console.log('Varianten für Produkt ' + productId + ' laden...');
+            }
+        });
+
+        // Datepicker für Datumsfelder (wenn jQuery UI oder flatpickr verfügbar)
+        if ($.fn.datepicker) {
+            $('#{{ form.purchase_date.id_for_label }}, #{{ form.expiry_date.id_for_label }}').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core',
     'inventory',
-    'suppliers'
+    'suppliers',
+    'purchases',
 ]
 
 MIDDLEWARE = [
@@ -127,3 +128,11 @@ LOGIN_URL = 'login'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Company information for PO printing/emails
+COMPANY_NAME = "Ihre Firma GmbH"
+COMPANY_ADDRESS = "Musterstraße 123, 12345 Berlin"
+COMPANY_PHONE = "+49 30 123456789"
+COMPANY_EMAIL = "info@ihrefirma.de"
+COMPANY_WEBSITE = "www.ihrefirma.de"
+COMPANY_TAX_ID = "USt-ID: DE123456789"

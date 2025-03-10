@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load permission_tags %}
+
+{% block title %}Bestellvorschläge - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h1 class="h3"><i class="bi bi-lightbulb"></i> Bestellvorschläge</h1>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group">
+                {% if user|has_perm:'purchase:create' %}
+                <a href="{% url 'generate_purchase_recommendations' %}" class="btn btn-primary">
+                    <i class="bi bi-arrow-repeat"></i> Vorschläge neu generieren
+                </a>
+                {% endif %}
+                {% if recommendations %}
+                <a href="#" class="btn btn-success" id="createOrderBtn">
+                    <i class="bi bi-cart-plus"></i> Bestellung erstellen
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <button class="btn btn-link text-decoration-none" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                    <i class="bi bi-funnel"></i> Filter & Suche
+                </button>
+            </h5>
+        </div>
+        <div class="collapse {% if form.is_bound %}show{% endif %}" id="filterCollapse">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <!-- Status Filter -->
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+                        {{ form.status }}
+                    </div>
+
+                    <!-- Supplier Filter -->
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.supplier.id_for_label }}" class="form-label">Lieferant</label>
+                        {{ form.supplier }}
+                    </div>
+
+                    <!-- Search -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.search.id_for_label }}" class="form-label">Suche</label>
+                        {{ form.search }}
+                    </div>
+
+                    <!-- Submit & Reset -->
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Suchen
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations List -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">Bestellvorschläge</h5>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-primary">{{ recommendations.paginator.count }} Vorschläge</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <form action="{% url 'purchase_order_create_from_recommendations' %}" method="get" id="recommendationsForm">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th>Produkt</th>
+                                <th>Lieferant</th>
+                                <th>Aktueller Bestand</th>
+                                <th>Mindestbestand</th>
+                                <th>Empfohlene Menge</th>
+                                <th>Status</th>
+                                <th>Erstellt am</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recommendation in recommendations %}
+                            <tr>
+                                <td>
+                                    <div class="form-check">
+                                        <input class="form-check-input recommendation-checkbox" type="checkbox"
+                                               name="recommendations" value="{{ recommendation.id }}"
+                                               {% if recommendation.status != 'new' and recommendation.status != 'in_process' %}disabled{% endif %}>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ recommendation.product.name }}</div>
+                                    <small class="text-muted">{{ recommendation.product.sku }}</small>
+                                </td>
+                                <td>
+                                    {% if recommendation.supplier_product %}
+                                        {{ recommendation.supplier_product.supplier.name }}
+                                    {% else %}
+                                        <span class="text-warning">Kein Lieferant</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ recommendation.current_stock }} {{ recommendation.product.unit }}</td>
+                                <td>{{ recommendation.min_stock }} {{ recommendation.product.unit }}</td>
+                                <td>{{ recommendation.recommended_quantity }} {{ recommendation.product.unit }}</td>
+                                <td>
+                                    {% if recommendation.status == 'new' %}
+                                        <span class="badge bg-info">{{ recommendation.get_status_display }}</span>
+                                    {% elif recommendation.status == 'in_process' %}
+                                        <span class="badge bg-primary">{{ recommendation.get_status_display }}</span>
+                                    {% elif recommendation.status == 'ordered' %}
+                                        <span class="badge bg-success">{{ recommendation.get_status_display }}</span>
+                                    {% elif recommendation.status == 'ignored' %}
+                                        <span class="badge bg-secondary">{{ recommendation.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ recommendation.recommended_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'product_detail' pk=recommendation.product.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Produkt
+                                        </a>
+                                        {% if recommendation.purchase_order %}
+                                        <a href="{% url 'purchase_order_detail' pk=recommendation.purchase_order.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-cart"></i> Bestellung
+                                        </a>
+                                        {% endif %}
+                                        {% if recommendation.status == 'new' and user|has_perm:'purchase:edit' %}
+                                        <button type="button" class="btn btn-sm btn-outline-secondary status-btn"
+                                                data-recommendation-id="{{ recommendation.id }}" data-status="ignored">
+                                            <i class="bi bi-eye-slash"></i> Ignorieren
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="bi bi-lightbulb h1 d-block mb-3"></i>
+                                        <p>Keine Bestellvorschläge gefunden.</p>
+                                        {% if user|has_perm:'purchase:create' %}
+                                        <a href="{% url 'generate_purchase_recommendations' %}" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-arrow-repeat"></i> Vorschläge generieren
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        </div>
+
+        <!-- Pagination -->
+        {% if recommendations.has_other_pages %}
+        <div class="card-footer bg-white">
+            {% include 'pagination.html' with page=recommendations %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select all checkbox functionality
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.recommendation-checkbox:not(:disabled)');
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+            });
+        }
+
+        // Check if at least one checkbox is selected when creating order
+        const createOrderBtn = document.getElementById('createOrderBtn');
+        const recommendationsForm = document.getElementById('recommendationsForm');
+
+        if (createOrderBtn && recommendationsForm) {
+            createOrderBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const checkedBoxes = document.querySelectorAll('.recommendation-checkbox:checked');
+
+                if (checkedBoxes.length === 0) {
+                    alert('Bitte wählen Sie mindestens einen Vorschlag aus.');
+                    return;
+                }
+
+                recommendationsForm.submit();
+            });
+        }
+
+        // Status update buttons
+        const statusButtons = document.querySelectorAll('.status-btn');
+
+        statusButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const recommendationId = this.getAttribute('data-recommendation-id');
+                const newStatus = this.getAttribute('data-status');
+
+                if (recommendationId && newStatus) {
+                    // Send AJAX request to update status
+                    fetch(`/purchases/recommendations/${recommendationId}/update-status/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': getCookie('csrftoken'),
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: `status=${newStatus}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload the page to reflect changes
+                            window.location.reload();
+                        } else {
+                            alert('Fehler beim Aktualisieren des Status: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+                    });
+                }
+            });
+        });
+
+        // Helper function to get CSRF token from cookies
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+{% endblock %}

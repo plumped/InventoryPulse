@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% load permission_tags %}
+
+{% block title %}Wareneingang erfassen - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .is-defective-row {
+        background-color: rgba(var(--bs-danger-rgb), 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' pk=purchase_order.pk %}">{{ purchase_order.order_number }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Wareneingang erfassen</li>
+                </ol>
+            </nav>
+            <h1 class="h3">
+                <i class="bi bi-box"></i> Wareneingang erfassen
+                <small class="text-muted">für Bestellung {{ purchase_order.order_number }}</small>
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Wareneingangsdaten</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="goodsReceiptForm" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label for="{{ form.receipt_date.id_for_label }}" class="form-label">Eingangsdatum*</label>
+                                {{ form.receipt_date }}
+                                {% if form.receipt_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.receipt_date.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="{{ form.delivery_note_number.id_for_label }}" class="form-label">Lieferschein-Nr.</label>
+                                {{ form.delivery_note_number }}
+                                {% if form.delivery_note_number.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.delivery_note_number.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="{{ form.carrier.id_for_label }}" class="form-label">Spediteur/Transporteur</label>
+                                {{ form.carrier }}
+                                {% if form.carrier.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.carrier.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="{{ form.package_count.id_for_label }}" class="form-label">Anzahl Packstücke</label>
+                                {{ form.package_count }}
+                                {% if form.package_count.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.package_count.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.warehouse.id_for_label }}" class="form-label">Ziellager*</label>
+                                {{ form.warehouse }}
+                                <div class="form-text">{{ form.warehouse.help_text }}</div>
+                                {% if form.warehouse.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.warehouse.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <h5 class="mt-4 mb-3">Empfangene Artikel</h5>
+
+                        {{ formset.management_form }}
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Artikel</th>
+                                        <th>Bestellt</th>
+                                        <th>Bereits erhalten</th>
+                                        <th>Offen</th>
+                                        <th>Erhaltene Menge*</th>
+                                        <th>Defekt?</th>
+                                        <th>Anmerkungen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for form in formset %}
+                                    {{ form.id }}
+                                    <tr class="item-row {% if form.instance.is_defective %}is-defective-row{% endif %}" data-form-index="{{ forloop.counter0 }}">
+                                        <td>
+                                            {{ form.purchase_order_item }}
+                                            <div id="product-info-{{ forloop.counter0 }}">
+                                                {% if form.instance.pk %}
+                                                    <div class="fw-bold">{{ form.instance.purchase_order_item.product.name }}</div>
+                                                    <small class="text-muted">{{ form.instance.purchase_order_item.product.sku }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span id="ordered-qty-{{ forloop.counter0 }}">
+                                                {% if form.instance.pk %}
+                                                    {{ form.instance.purchase_order_item.quantity }} {{ form.instance.purchase_order_item.product.unit }}
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span id="received-qty-{{ forloop.counter0 }}">
+                                                {% if form.instance.pk %}
+                                                    {{ form.instance.purchase_order_item.received_quantity }} {{ form.instance.purchase_order_item.product.unit }}
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span id="open-qty-{{ forloop.counter0 }}">
+                                                {% if form.instance.pk %}
+                                                    {{ form.instance.purchase_order_item.quantity|sub:form.instance.purchase_order_item.received_quantity }} {{ form.instance.purchase_order_item.product.unit }}
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {{ form.received_quantity }}
+                                            {% if form.received_quantity.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.received_quantity.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ form.is_defective }}
+                                            {% if form.is_defective.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.is_defective.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ form.notes }}
+                                            {% if form.notes.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.notes.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <a href="{% url 'purchase_order_detail' pk=purchase_order.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+
+                            <div>
+                                <button type="submit" name="complete" value="1" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Speichern und abschließen
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Als Entwurf speichern
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle defective checkbox to highlight row
+        const defectiveCheckboxes = document.querySelectorAll('[id$="-is_defective"]');
+        defectiveCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const row = this.closest('tr');
+                if (this.checked) {
+                    row.classList.add('is-defective-row');
+                } else {
+                    row.classList.remove('is-defective-row');
+                }
+            });
+        });
+
+        // Load product info when a purchase order item is selected
+        const purchaseOrderItemSelects = document.querySelectorAll('[id$="-purchase_order_item"]');
+        purchaseOrderItemSelects.forEach(select => {
+            select.addEventListener('change', function() {
+                const row = this.closest('tr');
+                const index = row.dataset.formIndex;
+
+                if (this.value) {
+                    // You would make an AJAX request here to get product info
+                    // This is a simplified example without actual AJAX
+                    const selectedOption = this.options[this.selectedIndex];
+                    const productName = selectedOption.text.split(' - ')[0];
+                    const orderedQty = selectedOption.getAttribute('data-ordered-qty');
+                    const receivedQty = selectedOption.getAttribute('data-received-qty');
+                    const openQty = orderedQty - receivedQty;
+                    const unit = selectedOption.getAttribute('data-unit');
+
+                    document.getElementById(`product-info-${index}`).innerHTML = `
+                        <div class="fw-bold">${productName}</div>
+                        <small class="text-muted">${selectedOption.getAttribute('data-sku')}</small>
+                    `;
+                    document.getElementById(`ordered-qty-${index}`).textContent = `${orderedQty} ${unit}`;
+                    document.getElementById(`received-qty-${index}`).textContent = `${receivedQty} ${unit}`;
+                    document.getElementById(`open-qty-${index}`).textContent = `${openQty} ${unit}`;
+
+                    // Set the received quantity input to the open quantity by default
+                    const qtyInput = row.querySelector('[id$="-received_quantity"]');
+                    qtyInput.value = openQty;
+                } else {
+                    document.getElementById(`product-info-${index}`).innerHTML = '';
+                    document.getElementById(`ordered-qty-${index}`).textContent = '';
+                    document.getElementById(`received-qty-${index}`).textContent = '';
+                    document.getElementById(`open-qty-${index}`).textContent = '';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

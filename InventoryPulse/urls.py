@@ -102,7 +102,7 @@ urlpatterns = [
     # Include other app URLs
     path('inventory/', include('inventory.urls')),
     path('suppliers/', include('suppliers.urls')),
-
+    path('purchases/', include('purchases.urls')),
     # User profile
     path('profile/', core_views.profile, name='profile'),
 

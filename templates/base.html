@@ -162,6 +162,57 @@
                     </li>
                     {% endif %}
 
+                    <!-- NEUER BEREICH: Bestellwesen Dropdown -->
+                    {% if user|has_perm:'purchase:view' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'purchases' in request.path %}active{% endif %}"
+                           href="#" id="purchaseDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-cart"></i> Bestellwesen
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="purchaseDropdown">
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_list' %}active{% endif %}"
+                                   href="{% url 'purchase_order_list' %}">
+                                    <i class="bi bi-cart-check me-2"></i>Bestellungen
+                                </a>
+                            </li>
+
+                            {% if user|has_perm:'purchase:create' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_create' %}active{% endif %}"
+                                   href="{% url 'purchase_order_create' %}">
+                                    <i class="bi bi-plus-circle me-2"></i>Neue Bestellung
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <li>
+                                <a class="dropdown-item {% if 'goods_receipt' in request.path %}active{% endif %}"
+                                   href="{% url 'goods_receipt_list' %}">
+                                    <i class="bi bi-box me-2"></i>Wareneingänge
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="dropdown-header">Tools & Vorlagen</li>
+
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_recommendation_list' %}active{% endif %}"
+                                   href="{% url 'purchase_recommendation_list' %}">
+                                    <i class="bi bi-lightbulb me-2"></i>Bestellvorschläge
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_template_list' %}active{% endif %}"
+                                   href="{% url 'purchase_order_template_list' %}">
+                                    <i class="bi bi-file-earmark-text me-2"></i>Bestellvorlagen
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
                     <!-- Import Dropdown -->
                     {% if user|has_perm:'import:view' %}
                     <li class="nav-item dropdown">

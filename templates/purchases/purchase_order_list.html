@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load permission_tags %}
+
+{% block title %}Bestellungen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h1 class="h3"><i class="bi bi-cart"></i> Bestellungen</h1>
+        </div>
+        <div class="col-md-6 text-md-end">
+            {% if user|has_perm:'purchase:create' %}
+            <div class="btn-group">
+                <a href="{% url 'purchase_order_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Neue Bestellung
+                </a>
+                <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{% url 'purchase_order_create' %}">
+                        <i class="bi bi-plus-circle"></i> Neue Bestellung
+                    </a></li>
+                    <li><a class="dropdown-item" href="{% url 'purchase_order_template_list' %}">
+                        <i class="bi bi-file-earmark-text"></i> Aus Vorlage erstellen
+                    </a></li>
+                    <li><a class="dropdown-item" href="{% url 'purchase_recommendation_list' %}">
+                        <i class="bi bi-lightbulb"></i> Aus Empfehlungen erstellen
+                    </a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                <button class="btn btn-link text-decoration-none" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                    <i class="bi bi-funnel"></i> Filter & Suche
+                </button>
+            </h5>
+        </div>
+        <div class="collapse" id="filterCollapse">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <!-- Status Filter -->
+                    <div class="col-md-3 mb-3">
+                        <label for="status" class="form-label">Status</label>
+                        <select name="status" id="status" class="form-select">
+                            <option value="">Alle Status</option>
+                            {% for status_code, status_name in status_choices %}
+                                <option value="{{ status_code }}" {% if status == status_code %}selected{% endif %}>
+                                    {{ status_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Supplier Filter -->
+                    <div class="col-md-3 mb-3">
+                        <label for="supplier" class="form-label">Lieferant</label>
+                        <select name="supplier" id="supplier" class="form-select">
+                            <option value="">Alle Lieferanten</option>
+                            {% for supplier_obj in suppliers %}
+                                <option value="{{ supplier_obj.id }}" {% if supplier_id == supplier_obj.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ supplier_obj.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="col-md-3 mb-3">
+                        <label for="date_from" class="form-label">Von Datum</label>
+                        <input type="date" name="date_from" id="date_from" class="form-control" value="{{ date_from }}">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label for="date_to" class="form-label">Bis Datum</label>
+                        <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to }}">
+                    </div>
+
+                    <!-- Search -->
+                    <div class="col-md-9 mb-3">
+                        <label for="search" class="form-label">Suche</label>
+                        <input type="text" name="search" id="search" class="form-control" placeholder="Bestellnummer, Lieferant, Referenz..." value="{{ search_query }}">
+                    </div>
+
+                    <!-- Submit & Reset -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid gap-2 d-md-flex">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="bi bi-search"></i> Suchen
+                            </button>
+                            <a href="{% url 'purchase_order_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Zurücksetzen
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order List -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">Bestellungen</h5>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-primary">{{ orders.paginator.count }} Bestellungen</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Bestellnummer</th>
+                            <th>Lieferant</th>
+                            <th>Status</th>
+                            <th>Datum</th>
+                            <th>Erwartete Lieferung</th>
+                            <th>Gesamtbetrag</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'purchase_order_detail' pk=order.pk %}" class="text-decoration-none">
+                                    {{ order.order_number }}
+                                </a>
+                            </td>
+                            <td>{{ order.supplier.name }}</td>
+                            <td>
+                                {% if order.status == 'draft' %}
+                                    <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'sent' %}
+                                    <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'partially_received' %}
+                                    <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'received' %}
+                                    <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'cancelled' %}
+                                    <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{% if order.order_date %}{{ order.order_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                            <td>{% if order.expected_delivery_date %}{{ order.expected_delivery_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                            <td>{{ order.total }} €</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'purchase_order_detail' pk=order.pk %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                                    <a href="{% url 'purchase_order_update' pk=order.pk %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if user|has_perm:'purchase:view' %}
+                                    <a href="{% url 'purchase_order_print' pk=order.pk %}" class="btn btn-sm btn-outline-info" target="_blank">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="bi bi-cart-x h1 d-block mb-3"></i>
+                                    <p>Keine Bestellungen gefunden.</p>
+                                    {% if user|has_perm:'purchase:create' %}
+                                    <a href="{% url 'purchase_order_create' %}" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-plus-circle"></i> Neue Bestellung
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if orders.has_other_pages %}
+        <div class="card-footer bg-white">
+            {% include 'pagination.html' with page=orders %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // If there are GET params in the URL, show the filter collapse
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('status') || urlParams.has('supplier') ||
+            urlParams.has('date_from') || urlParams.has('date_to') ||
+            urlParams.has('search')) {
+            document.getElementById('filterCollapse').classList.add('show');
+        }
+    });
+</script>
+{% endblock %}

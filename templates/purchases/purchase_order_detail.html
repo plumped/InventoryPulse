@@ -1,0 +1,409 @@
+{% extends 'base.html' %}
+{% load permission_tags %}
+
+{% block title %}Bestellung {{ order.order_number }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ order.order_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">
+                <i class="bi bi-cart"></i> Bestellung {{ order.order_number }}
+                {% if order.status == 'draft' %}
+                    <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                {% elif order.status == 'sent' %}
+                    <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                {% elif order.status == 'partially_received' %}
+                    <span class="badge bg-info">{{ order.get_status_display }}</span>
+                {% elif order.status == 'received' %}
+                    <span class="badge bg-success">{{ order.get_status_display }}</span>
+                {% elif order.status == 'cancelled' %}
+                    <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                {% endif %}
+            </h1>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group">
+                {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                <a href="{% url 'purchase_order_update' pk=order.pk %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Bearbeiten
+                </a>
+                <a href="{% url 'purchase_order_mark_sent' pk=order.pk %}" class="btn btn-success">
+                    <i class="bi bi-check-circle"></i> Als bestellt markieren
+                </a>
+                {% elif user|has_perm:'purchase:edit' and order.status == 'sent' or order.status == 'partially_received' %}
+                <a href="{% url 'goods_receipt_create' order_id=order.pk %}" class="btn btn-primary">
+                    <i class="bi bi-box"></i> Wareneingang erfassen
+                </a>
+                <a href="{% url 'purchase_order_cancel' pk=order.pk %}" class="btn btn-danger">
+                    <i class="bi bi-x-circle"></i> Stornieren
+                </a>
+                {% endif %}
+
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-three-dots"></i> Aktionen
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    {% if user|has_perm:'purchase:view' %}
+                    <li><a class="dropdown-item" href="{% url 'purchase_order_print' pk=order.pk %}" target="_blank">
+                        <i class="bi bi-printer"></i> Drucken
+                    </a></li>
+                    {% endif %}
+                    {% if user|has_perm:'purchase:edit' %}
+                    <li><a class="dropdown-item" href="{% url 'purchase_order_email' pk=order.pk %}">
+                        <i class="bi bi-envelope"></i> Per E-Mail senden
+                    </a></li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+                    {% if order.status == 'draft' and user|has_perm:'purchase:delete' %}
+                    <li><a class="dropdown-item text-danger" href="{% url 'purchase_order_delete' pk=order.pk %}">
+                        <i class="bi bi-trash"></i> Löschen
+                    </a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Order Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Artikelliste</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Artikel</th>
+                                    <th>Menge</th>
+                                    <th>Erhalten</th>
+                                    <th>Preis</th>
+                                    <th>Gesamtpreis</th>
+                                    {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                                    <th>Aktionen</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">{{ item.product.name }}</div>
+                                        {% if item.supplier_sku %}<small class="text-muted">Art-Nr: {{ item.supplier_sku }}</small>{% endif %}
+                                    </td>
+                                    <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                                    <td>
+                                        {% if item.received_quantity > 0 %}
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-success" role="progressbar"
+                                                     style="width: {{ item.received_percentage }}%;"
+                                                     aria-valuenow="{{ item.received_percentage }}"
+                                                     aria-valuemin="0" aria-valuemax="100">
+                                                     {{ item.received_quantity }} / {{ item.quantity }}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            0 {{ item.product.unit }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.unit_price }} €</td>
+                                    <td>{{ item.line_total }} €</td>
+                                    {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'purchase_order_item_update' order_id=order.pk item_id=item.pk %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'purchase_order_item_delete' order_id=order.pk item_id=item.pk %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="{% if order.status == 'draft' and user|has_perm:'purchase:edit' %}6{% else %}5{% endif %}" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="bi bi-cart-x h1 d-block mb-3"></i>
+                                            <p>Keine Artikel in dieser Bestellung.</p>
+                                            {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                                            <a href="{% url 'purchase_order_item_add' order_id=order.pk %}" class="btn btn-primary btn-sm">
+                                                <i class="bi bi-plus-circle"></i> Artikel hinzufügen
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="{% if order.status == 'draft' and user|has_perm:'purchase:edit' %}4{% else %}3{% endif %}" class="text-end fw-bold">Zwischensumme:</td>
+                                    <td>{{ order.subtotal }} €</td>
+                                    {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                                    <td></td>
+                                    {% endif %}
+                                </tr>
+                                {% if order.tax > 0 %}
+                                <tr>
+                                    <td colspan="{% if order.status == 'draft' and user|has_perm:'purchase:edit' %}4{% else %}3{% endif %}" class="text-end fw-bold">MwSt:</td>
+                                    <td>{{ order.tax }} €</td>
+                                    {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                                    <td></td>
+                                    {% endif %}
+                                </tr>
+                                {% endif %}
+                                {% if order.shipping_cost > 0 %}
+                                <tr>
+                                    <td colspan="{% if order.status == 'draft' and user|has_perm:'purchase:edit' %}4{% else %}3{% endif %}" class="text-end fw-bold">Versandkosten:</td>
+                                    <td>{{ order.shipping_cost }} €</td>
+                                    {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                                    <td></td>
+                                    {% endif %}
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td colspan="{% if order.status == 'draft' and user|has_perm:'purchase:edit' %}4{% else %}3{% endif %}" class="text-end fw-bold">Gesamtbetrag:</td>
+                                    <td class="fw-bold fs-5">{{ order.total }} €</td>
+                                    {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                                    <td></td>
+                                    {% endif %}
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                {% if order.status == 'draft' and user|has_perm:'purchase:edit' %}
+                <div class="card-footer bg-white">
+                    <a href="{% url 'purchase_order_item_add' order_id=order.pk %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Artikel hinzufügen
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Goods Receipts -->
+            {% if receipts %}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Wareneingänge</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Eingangsnummer</th>
+                                    <th>Status</th>
+                                    <th>Datum</th>
+                                    <th>Lieferschein-Nr.</th>
+                                    <th>Erfasst von</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for receipt in receipts %}
+                                <tr>
+                                    <td>{{ receipt.receipt_number }}</td>
+                                    <td>
+                                        {% if receipt.status == 'draft' %}
+                                            <span class="badge bg-secondary">{{ receipt.get_status_display }}</span>
+                                        {% elif receipt.status == 'completed' %}
+                                            <span class="badge bg-success">{{ receipt.get_status_display }}</span>
+                                        {% elif receipt.status == 'cancelled' %}
+                                            <span class="badge bg-danger">{{ receipt.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ receipt.receipt_date|date:"d.m.Y" }}</td>
+                                    <td>{{ receipt.delivery_note_number|default:"-" }}</td>
+                                    <td>{{ receipt.created_by.username }}</td>
+                                    <td>
+                                        <a href="{% url 'goods_receipt_detail' pk=receipt.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Order Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Bestelldetails</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="small text-muted">Lieferant</div>
+                        <div class="fw-bold">{{ order.supplier.name }}</div>
+                        <div class="small">
+                            {% if order.supplier.contact_person %}Ansprechpartner: {{ order.supplier.contact_person }}<br>{% endif %}
+                            {% if order.supplier.email %}E-Mail: {{ order.supplier.email }}<br>{% endif %}
+                            {% if order.supplier.phone %}Telefon: {{ order.supplier.phone }}{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="small text-muted">Bestelldaten</div>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td>Bestellnummer</td>
+                                    <td class="text-end">{{ order.order_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Status</td>
+                                    <td class="text-end">{{ order.get_status_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Bestelldatum</td>
+                                    <td class="text-end">{% if order.order_date %}{{ order.order_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                </tr>
+                                <tr>
+                                    <td>Erwartete Lieferung</td>
+                                    <td class="text-end">{% if order.expected_delivery_date %}{{ order.expected_delivery_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                </tr>
+                                <tr>
+                                    <td>Tatsächliche Lieferung</td>
+                                    <td class="text-end">{% if order.delivery_date %}{{ order.delivery_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+                                </tr>
+                                <tr>
+                                    <td>Erstellt von</td>
+                                    <td class="text-end">{{ order.created_by.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Erstellt am</td>
+                                    <td class="text-end">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                                {% if order.reference %}
+                                <tr>
+                                    <td>Referenz</td>
+                                    <td class="text-end">{{ order.reference }}</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if order.shipping_address %}
+                    <div class="mb-3">
+                        <div class="small text-muted">Lieferadresse</div>
+                        <div class="p-2 border rounded">{{ order.shipping_address|linebreaks }}</div>
+                    </div>
+                    {% endif %}
+
+                    {% if order.notes %}
+                    <div class="mb-3">
+                        <div class="small text-muted">Notizen</div>
+                        <div class="p-2 border rounded">{{ order.notes|linebreaks }}</div>
+                    </div>
+                    {% endif %}
+
+                    {% if order.internal_notes and user.is_staff %}
+                    <div class="mb-3">
+                        <div class="small text-muted">Interne Notizen</div>
+                        <div class="p-2 border rounded bg-light">{{ order.internal_notes|linebreaks }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Order History -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Bestellhistorie</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item p-0 py-2 border-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-success rounded-circle p-2"><i class="bi bi-plus"></i></span>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="fw-bold">Bestellung erstellt</div>
+                                    <div class="small text-muted">{{ order.created_at|date:"d.m.Y H:i" }} von {{ order.created_by.username }}</div>
+                                </div>
+                            </div>
+                        </li>
+                        {% if order.order_date and order.status != 'draft' %}
+                        <li class="list-group-item p-0 py-2 border-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-primary rounded-circle p-2"><i class="bi bi-send"></i></span>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="fw-bold">Bestellung gesendet</div>
+                                    <div class="small text-muted">{{ order.order_date|date:"d.m.Y" }}</div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% if receipts %}
+                            {% for receipt in receipts %}
+                                {% if receipt.status == 'completed' %}
+                                <li class="list-group-item p-0 py-2 border-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <span class="badge bg-info rounded-circle p-2"><i class="bi bi-box"></i></span>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <div class="fw-bold">Wareneingang erfasst</div>
+                                            <div class="small">{{ receipt.receipt_number }}</div>
+                                            <div class="small text-muted">{{ receipt.receipt_date|date:"d.m.Y" }} von {{ receipt.created_by.username }}</div>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        {% if order.status == 'received' %}
+                        <li class="list-group-item p-0 py-2 border-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-success rounded-circle p-2"><i class="bi bi-check-circle"></i></span>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="fw-bold">Bestellung vollständig erhalten</div>
+                                    <div class="small text-muted">{{ order.delivery_date|date:"d.m.Y" }}</div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% if order.status == 'cancelled' %}
+                        <li class="list-group-item p-0 py-2 border-0">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <span class="badge bg-danger rounded-circle p-2"><i class="bi bi-x-circle"></i></span>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="fw-bold">Bestellung storniert</div>
+                                    <div class="small text-muted">{{ order.updated_at|date:"d.m.Y H:i" }}</div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

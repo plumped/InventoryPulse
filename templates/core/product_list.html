@@ -100,14 +100,6 @@
                                 <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-primary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="{% url 'stock_movement_add' %}?product={{ product.id }}&type=in"
-                                   class="btn btn-sm btn-success">
-                                    <i class="bi bi-plus"></i>
-                                </a>
-                                <a href="{% url 'stock_movement_add' %}?product={{ product.id }}&type=out"
-                                   class="btn btn-sm btn-danger">
-                                    <i>-</i>
-                                </a>
                             </div>
                         </td>
                     </tr>

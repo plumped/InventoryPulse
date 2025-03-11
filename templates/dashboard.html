@@ -152,8 +152,8 @@
                 <h5 class="mb-0">Schnellaktionen</h5>
             </div>
             <div class="card-body d-flex flex-column gap-2">
-                <a href="{% url 'stock_movement_add' %}" class="btn btn-outline-primary">
-                    <i class="bi bi-arrow-left-right"></i> Bestandsbewegung
+                <a href="{% url 'bulk_warehouse_transfer' %}?source={{ warehouse.id }}" class="btn btn-outline-success">
+                    <i class="bi bi-arrow-left-right"></i> Lagerverschiebung
                 </a>
                 <a href="{% url 'stock_take_create' %}" class="btn btn-outline-success">
                     <i class="bi bi-clipboard-check"></i> Neue Inventur
@@ -246,10 +246,6 @@
                                 <td>
                                     <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-info">
                                         <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{% url 'stock_movement_add' %}?product={{ product_warehouse.product.id }}&type=in&warehouse={{ product_warehouse.warehouse.id }}"
-                                       class="btn btn-sm btn-success">
-                                        <i class="bi bi-plus"></i>
                                     </a>
                                 </td>
                             </tr>

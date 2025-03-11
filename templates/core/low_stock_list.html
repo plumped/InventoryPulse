@@ -18,8 +18,8 @@
         <a href="{% url 'product_list' %}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> Alle Produkte
         </a>
-        <a href="{% url 'stock_movement_add' %}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Bestandszugang
+        <a href="{% url 'bulk_warehouse_transfer' %}?source={{ warehouse.id }}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-arrow-left-right"></i>
         </a>
     </div>
 </div>
@@ -81,9 +81,6 @@
                             <div class="btn-group" role="group">
                                 <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-info" title="Details">
                                     <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{% url 'stock_movement_add' %}?product={{ product.id }}&type=in" class="btn btn-sm btn-success" title="Zugang buchen">
-                                    <i class="fas fa-plus"></i>
                                 </a>
                                 <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-primary" title="Bearbeiten">
                                     <i class="fas fa-edit"></i>

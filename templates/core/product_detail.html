@@ -274,11 +274,6 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Letzte Bestandsbewegungen</h5>
-                        {% if perms.inventory.create %}
-                        <a href="{% url 'stock_movement_add' %}?product={{ product.id }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-plus-circle"></i> Neue Bewegung
-                        </a>
-                        {% endif %}
                     </div>
                     <div class="card-body">
                         {% if movements %}

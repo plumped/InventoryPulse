@@ -4,8 +4,7 @@ from . import views
 urlpatterns = [
     # Bestandsbewegungen
     path('movements/', views.stock_movement_list, name='stock_movement_list'),
-    path('movements/add/', views.stock_movement_add, name='stock_movement_add'),
-
+    
     # Inventur
     path('stock-takes/', views.stock_take_list, name='stock_take_list'),
     path('stock-takes/create/', views.stock_take_create, name='stock_take_create'),
@@ -49,9 +48,6 @@ urlpatterns = [
 
     # Produktbestandsverwaltung
     path('products/<int:product_id>/warehouses/', views.product_warehouses, name='product_warehouses'),
-    path('products/<int:product_id>/transfer/', views.product_transfer, name='product_transfer'),
-    path('products/<int:product_id>/adjust-stock/<int:warehouse_id>/', views.product_adjust_stock,
-         name='product_adjust_stock'),
     path('products/add-to-warehouse/<int:warehouse_id>/', views.product_add_to_warehouse, name='product_add_to_warehouse'),
     path('warehouses/<int:warehouse_id>/bulk-add-products/', views.bulk_add_products_to_warehouse, name='bulk_add_products_to_warehouse'),
     path('warehouses/bulk-transfer/', views.bulk_warehouse_transfer, name='bulk_warehouse_transfer'),

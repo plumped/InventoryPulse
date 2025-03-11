@@ -163,14 +163,6 @@
                                             <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-outline-primary">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            {% if can_manage %}
-                                            <a href="{% url 'stock_movement_add' %}?product={{ product_warehouse.product.id }}&warehouse={{ warehouse.id }}" class="btn btn-sm btn-outline-success" title="Bestandsbewegung">
-                                                <i class="bi bi-arrow-left-right"></i>
-                                            </a>
-                                            <a href="{% url 'product_adjust_stock' product_warehouse.product.id warehouse.id %}" class="btn btn-sm btn-outline-warning" title="Bestand korrigieren">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a>
-                                            {% endif %}
                                         </div>
                                     </td>
                                 </tr>

@@ -91,31 +91,31 @@
                     <dd class="col-sm-7">{{ product.unit }}</dd>
 
                     <dt class="col-sm-5">Varianten:</dt>
-                    <dd class="col-sm-7">
-                        {% if product.has_variants %}
-                        <span class="badge bg-success">Ja ({{ variant_count }})</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Nein</span>
-                        {% endif %}
-                    </dd>
+                        <dd class="col-sm-7">
+                            {% if product.has_variants and variant_count > 0 %}
+                            <span class="badge bg-success">Ja ({{ variant_count }})</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Nein</span>
+                            {% endif %}
+                        </dd>
 
-                    <dt class="col-sm-5">Seriennummern:</dt>
-                    <dd class="col-sm-7">
-                        {% if product.has_serial_numbers %}
-                        <span class="badge bg-success">Ja ({{ serial_count }})</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Nein</span>
-                        {% endif %}
-                    </dd>
+                        <dt class="col-sm-5">Seriennummern:</dt>
+                        <dd class="col-sm-7">
+                            {% if product.has_serial_numbers and serial_count > 0 %}
+                            <span class="badge bg-success">Ja ({{ serial_count }})</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Nein</span>
+                            {% endif %}
+                        </dd>
 
-                    <dt class="col-sm-5">Chargenverfolgung:</dt>
-                    <dd class="col-sm-7">
-                        {% if product.has_batch_tracking %}
-                        <span class="badge bg-success">Ja ({{ batch_count }})</span>
-                        {% else %}
-                        <span class="badge bg-secondary">Nein</span>
-                        {% endif %}
-                    </dd>
+                        <dt class="col-sm-5">Chargenverfolgung:</dt>
+                        <dd class="col-sm-7">
+                            {% if product.has_batch_tracking and batch_count > 0 %}
+                            <span class="badge bg-success">Ja ({{ batch_count }})</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Nein</span>
+                            {% endif %}
+                        </dd>
                 </dl>
             </div>
 

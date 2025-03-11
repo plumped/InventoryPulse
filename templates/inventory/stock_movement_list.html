@@ -9,6 +9,17 @@
     <div class="card-body">
         <form method="get" class="row g-3">
             <div class="col-md-3">
+                <label for="warehouse" class="form-label">Lager</label>
+                <select name="warehouse" id="warehouse" class="form-select">
+                    <option value="">Alle Lager</option>
+                    {% for warehouse in warehouses %}
+                        <option value="{{ warehouse.id }}" {% if warehouse_id == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                            {{ warehouse.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
                 <label for="product" class="form-label">Produkt</label>
                 <select name="product" id="product" class="form-select">
                     <option value="">Alle Produkte</option>
@@ -28,7 +39,7 @@
                     <option value="adj" {% if movement_type == "adj" %}selected{% endif %}>Korrektur</option>
                 </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label for="search" class="form-label">Suche (Referenz/Notiz)</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -61,6 +72,7 @@
                     <tr>
                         <th>Datum/Zeit</th>
                         <th>Produkt</th>
+                        <th>Lager</th>
                         <th>Typ</th>
                         <th>Menge</th>
                         <th>Referenz</th>
@@ -74,6 +86,9 @@
                         <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
                         <td>
                             <a href="{% url 'product_detail' movement.product.id %}">{{ movement.product.name }}</a>
+                        </td>
+                        <td>
+                            <a href="{% url 'warehouse_detail' movement.warehouse.id %}">{{ movement.warehouse.name }}</a>
                         </td>
                         <td>
                             {% if movement.movement_type == 'in' %}
@@ -95,7 +110,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center">Keine Bestandsbewegungen gefunden</td>
+                        <td colspan="8" class="text-center">Keine Bestandsbewegungen gefunden</td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -89,6 +89,7 @@ def stock_movement_list(request):
         'movements': movements,
         'products': products,
         'warehouses': accessible_warehouses,  # Neue Variable
+        'warehouse_id': warehouse_id,         # Neue Variable
         'product_id': product_id,
         'movement_type': movement_type,
         'search_query': search_query,

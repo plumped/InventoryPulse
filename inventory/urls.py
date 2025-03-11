@@ -49,6 +49,8 @@ urlpatterns = [
     # Produktbestandsverwaltung
     path('products/<int:product_id>/warehouses/', views.product_warehouses, name='product_warehouses'),
     path('products/add-to-warehouse/<int:warehouse_id>/', views.product_add_to_warehouse, name='product_add_to_warehouse'),
+    path('products/<int:product_id>/adjust-stock/', views.stock_adjustment, name='stock_adjustment'),
+    path('products/<int:product_id>/adjust-stock/<int:warehouse_id>/', views.stock_adjustment, name='stock_adjustment_with_warehouse'),
     path('warehouses/<int:warehouse_id>/bulk-add-products/', views.bulk_add_products_to_warehouse, name='bulk_add_products_to_warehouse'),
     path('warehouses/bulk-transfer/', views.bulk_warehouse_transfer, name='bulk_warehouse_transfer'),
 

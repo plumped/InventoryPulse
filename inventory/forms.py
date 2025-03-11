@@ -160,3 +160,67 @@ class WarehouseAccessForm(forms.ModelForm):
     class Meta:
         model = WarehouseAccess
         fields = ['warehouse', 'department', 'can_view', 'can_edit', 'can_manage_stock']
+
+
+class StockAdjustmentForm(forms.Form):
+    """Formular für die Korrektur von Beständen."""
+
+    warehouse = forms.ModelChoiceField(
+        queryset=Warehouse.objects.none(),
+        label="Lager",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    current_quantity = forms.DecimalField(
+        label="Aktueller Bestand",
+        disabled=True,
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
+    new_quantity = forms.DecimalField(
+        label="Neuer Bestand",
+        min_value=0,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+    )
+
+    reason = forms.ChoiceField(
+        label="Grund",
+        choices=[
+            ('Zählfehler', 'Zählfehler'),
+            ('Beschädigung', 'Beschädigung'),
+            ('Diebstahl', 'Diebstahl'),
+            ('Systemfehler', 'Systemfehler'),
+            ('Sonstiges', 'Sonstiges')
+        ],
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
+    notes = forms.CharField(
+        label="Notizen",
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})
+    )
+
+    def __init__(self, *args, **kwargs):
+        accessible_warehouses = kwargs.pop('accessible_warehouses', [])
+        product_warehouses = kwargs.pop('product_warehouses', [])
+        super().__init__(*args, **kwargs)
+
+        # Nur Lager anzeigen, die den Artikel haben UND auf die der Benutzer Zugriff hat
+        product_warehouses = kwargs.pop('product_warehouses', [])
+
+        if product_warehouses:
+            # Nur Lager anzeigen, die bereits Bestand des Produkts haben
+            warehouse_ids = [pw.warehouse_id for pw in product_warehouses]
+            self.fields['warehouse'].queryset = Warehouse.objects.filter(
+                id__in=warehouse_ids,
+                is_active=True
+            )
+        else:
+            # Fallback, falls keine Produktlager übergeben wurden
+            self.fields['warehouse'].queryset = Warehouse.objects.filter(
+                id__in=[w.id for w in accessible_warehouses],
+                is_active=True
+            )

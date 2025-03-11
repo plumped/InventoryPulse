@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestandskorrektur - {{ product.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_list' %}">Produkte</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Bestandskorrektur</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Bestandskorrektur für {{ product.name }}</h1>
+            <p class="text-muted">SKU: {{ product.sku }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Bestand korrigieren</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="stockAdjustmentForm">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.warehouse.id_for_label }}" class="form-label">{{ form.warehouse.label }}</label>
+                                {{ form.warehouse }}
+                                {% if form.warehouse.errors %}
+                                <div class="invalid-feedback d-block">{{ form.warehouse.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="current_stock_display" class="form-label">Aktueller Bestand</label>
+                                <div class="input-group">
+                                    <input type="text" id="current_stock_display" class="form-control" readonly>
+                                    <span class="input-group-text">{{ product.unit }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.new_quantity.id_for_label }}" class="form-label">{{ form.new_quantity.label }}</label>
+                                <div class="input-group">
+                                    {{ form.new_quantity }}
+                                    <span class="input-group-text">{{ product.unit }}</span>
+                                </div>
+                                {% if form.new_quantity.errors %}
+                                <div class="invalid-feedback d-block">{{ form.new_quantity.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.reason.id_for_label }}" class="form-label">{{ form.reason.label }}</label>
+                                {{ form.reason }}
+                                {% if form.reason.errors %}
+                                <div class="invalid-feedback d-block">{{ form.reason.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Bitte geben Sie detaillierte Informationen zur Bestandskorrektur an.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'product_detail' product.id %}" class="btn btn-outline-secondary">Abbrechen</a>
+                            <button type="submit" class="btn btn-primary">Bestand korrigieren</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Produktinformation</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Name:</dt>
+                        <dd class="col-sm-7">{{ product.name }}</dd>
+
+                        <dt class="col-sm-5">SKU:</dt>
+                        <dd class="col-sm-7">{{ product.sku }}</dd>
+
+                        <dt class="col-sm-5">Kategorie:</dt>
+                        <dd class="col-sm-7">{{ product.category.name|default:"Keine Kategorie" }}</dd>
+
+                        <dt class="col-sm-5">Einheit:</dt>
+                        <dd class="col-sm-7">{{ product.unit }}</dd>
+
+                        <dt class="col-sm-5">Min. Bestand:</dt>
+                        <dd class="col-sm-7">{{ product.minimum_stock }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Aktuelle Lagerbestände</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for pw in product_warehouses %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ pw.warehouse.name }}</strong>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ pw.quantity }} {{ product.unit }}</span>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">
+                            Keine Lagerbestände vorhanden
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aktuelle Bestände für jedes Lager als JSON-Objekt
+        const currentStocks = JSON.parse('{{ current_stocks|safe }}');
+
+        // Referenzen zu den Formularfeldern
+        const warehouseSelect = document.getElementById('{{ form.warehouse.id_for_label }}');
+        const currentStockDisplay = document.getElementById('current_stock_display');
+        const newQuantityInput = document.getElementById('{{ form.new_quantity.id_for_label }}');
+
+        // Funktion zum Aktualisieren des angezeigten Bestands
+        function updateCurrentStock() {
+            const selectedWarehouseId = warehouseSelect.value;
+            const currentStock = currentStocks[selectedWarehouseId] || 0;
+
+            // Formatieren mit 2 Dezimalstellen wenn nötig
+            const formattedStock = Number.isInteger(currentStock) ?
+                currentStock.toString() :
+                currentStock.toFixed(2);
+
+            // Aktuellen Bestand anzeigen
+            currentStockDisplay.value = formattedStock;
+
+            // Neuen Bestand vorausfüllen, wenn er noch nicht manuell geändert wurde
+            if (newQuantityInput.value === '' || newQuantityInput.getAttribute('data-autofilled') === 'true') {
+                newQuantityInput.value = formattedStock;
+                newQuantityInput.setAttribute('data-autofilled', 'true');
+            }
+        }
+
+        // Event-Listener für Änderungen am Lager-Dropdown
+        warehouseSelect.addEventListener('change', updateCurrentStock);
+
+        // Beim manuellen Ändern des neuen Bestands das Autofill-Flag entfernen
+        newQuantityInput.addEventListener('input', function() {
+            this.removeAttribute('data-autofilled');
+        });
+
+        // Initial den aktuellen Bestand füllen
+        updateCurrentStock();
+    });
+</script>
+{% endblock %}

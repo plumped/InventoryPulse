@@ -17,7 +17,8 @@ from django import forms
 from core import models
 from core.models import Product, Category, ProductWarehouse
 from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department, WarehouseAccess
-from .forms import StockMovementForm, StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, WarehouseForm
+from .forms import StockMovementForm, StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
+    WarehouseForm, StockAdjustmentForm
 from .utils import user_has_warehouse_access
 from core.decorators import permission_required
 from core.permissions import has_permission
@@ -1953,3 +1954,129 @@ def stock_take_create_cycle(request, pk):
     }
 
     return render(request, 'inventory/stock_take_create_cycle.html', context)
+
+
+@login_required
+@permission_required('inventory', 'edit')
+def stock_adjustment(request, product_id, warehouse_id=None):
+    """
+    Ermöglicht die direkte Korrektur von Produktbeständen in einem Lager.
+    """
+    product = get_object_or_404(Product, pk=product_id)
+
+    # Lager abrufen, auf die der Benutzer Zugriff hat
+    accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                             if user_has_warehouse_access(request.user, w, 'manage_stock')]
+
+    if not accessible_warehouses:
+        messages.error(request, "Sie haben keine Berechtigung, Bestände in Lagern zu verwalten.")
+        return redirect('product_detail', pk=product_id)
+
+    # Wenn ein bestimmtes Lager angegeben wurde, prüfen und vorauswählen
+    warehouse = None
+    if warehouse_id:
+        try:
+            warehouse = Warehouse.objects.get(pk=warehouse_id, is_active=True)
+            if not user_has_warehouse_access(request.user, warehouse, 'manage_stock'):
+                messages.error(request, f"Sie haben keine Berechtigung für das Lager {warehouse.name}.")
+                warehouse = None
+        except Warehouse.DoesNotExist:
+            warehouse = None
+
+    # Bestehende Produktbestände in den zugänglichen Lagern abrufen
+    product_warehouses = ProductWarehouse.objects.filter(
+        product=product,
+        warehouse__in=accessible_warehouses
+    ).select_related('warehouse')
+
+    # Dictionary mit Lager-IDs als Schlüssel und aktuellen Beständen als Werte erstellen
+    current_stocks = {str(pw.warehouse.id): float(pw.quantity) for pw in product_warehouses}
+
+    # Für JavaScript als JSON serialisieren
+    import json
+    current_stocks_json = json.dumps(current_stocks)
+
+    # Bei nur einem Lager dieses als Vorauswahl verwenden
+    initial_warehouse = None
+    if len(product_warehouses) == 1:
+        initial_warehouse = product_warehouses[0].warehouse.id
+
+    if request.method == 'POST':
+        form = StockAdjustmentForm(
+            request.POST,
+            accessible_warehouses=accessible_warehouses,
+            product_warehouses=product_warehouses
+        )
+        if form.is_valid():
+            adjustment_warehouse = form.cleaned_data['warehouse']
+            new_quantity = form.cleaned_data['new_quantity']
+            reason = form.cleaned_data['reason']
+            notes = form.cleaned_data['notes']
+
+            # Prüfen, ob der Benutzer Zugriff auf das gewählte Lager hat
+            if adjustment_warehouse not in accessible_warehouses:
+                messages.error(request, f"Sie haben keine Berechtigung für das Lager {adjustment_warehouse.name}.")
+                return redirect('product_detail', pk=product_id)
+
+            # Aktuellen Bestand ermitteln
+            try:
+                current_quantity = ProductWarehouse.objects.get(
+                    product=product, warehouse=adjustment_warehouse
+                ).quantity
+            except ProductWarehouse.DoesNotExist:
+                current_quantity = Decimal('0')
+
+            # Bestandsbewegung erstellen
+            with transaction.atomic():
+                # Bestandsbewegung für die Korrektur erstellen
+                StockMovement.objects.create(
+                    product=product,
+                    warehouse=adjustment_warehouse,
+                    quantity=new_quantity,
+                    movement_type='adj',
+                    reference=f'Bestandskorrektur: {reason}',
+                    notes=notes,
+                    created_by=request.user
+                )
+
+                # Produktbestand im Lager aktualisieren
+                product_warehouse, created = ProductWarehouse.objects.get_or_create(
+                    product=product,
+                    warehouse=adjustment_warehouse,
+                    defaults={'quantity': 0}
+                )
+
+                product_warehouse.quantity = new_quantity
+                product_warehouse.save()
+
+            messages.success(
+                request,
+                f'Bestand für {product.name} im Lager {adjustment_warehouse.name} '
+                f'wurde von {current_quantity} auf {new_quantity} korrigiert.'
+            )
+
+            return redirect('product_detail', pk=product_id)
+    else:
+        # Initial-Daten für das Formular
+        initial_data = {}
+
+        # Priorisierung: 1. Explizit angegebenes Lager, 2. Einziges verfügbares Lager
+        if warehouse:
+            initial_data['warehouse'] = warehouse.id
+        elif initial_warehouse:
+            initial_data['warehouse'] = initial_warehouse
+
+        form = StockAdjustmentForm(
+            accessible_warehouses=accessible_warehouses,
+            product_warehouses=product_warehouses,
+            initial=initial_data
+        )
+
+    context = {
+        'product': product,
+        'form': form,
+        'product_warehouses': product_warehouses,
+        'current_stocks': current_stocks_json,
+    }
+
+    return render(request, 'inventory/stock_adjustment.html', context)

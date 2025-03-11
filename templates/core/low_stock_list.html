@@ -60,10 +60,10 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if product.current_stock == 0 %}
-                                <span class="badge bg-danger">{{ product.current_stock }} {{ product.unit }}</span>
+                            {% if product.accessible_stock == 0 %}
+                                <span class="badge bg-danger">{{ product.accessible_stock }} {{ product.unit }}</span>
                             {% else %}
-                                <span class="badge bg-warning">{{ product.current_stock }} {{ product.unit }}</span>
+                                <span class="badge bg-warning">{{ product.accessible_stock }} {{ product.unit }}</span>
                             {% endif %}
                         </td>
                         <td>{{ product.minimum_stock }} {{ product.unit }}</td>

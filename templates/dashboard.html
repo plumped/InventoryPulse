@@ -240,9 +240,13 @@
                                 <td>{{ product_warehouse.product.name }}</td>
                                 <td>{{ product_warehouse.warehouse.name }}</td>
                                 <td>
-                                    <span class="badge bg-danger">{{ product_warehouse.quantity }}</span>
+                                    {% if product_warehouse.quantity < product_warehouse.product.minimum_stock %}
+                                        <span class="badge bg-danger">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
+                                    {% endif %}
                                 </td>
-                                <td>{{ product_warehouse.product.minimum_stock }}</td>
+                                <td>{{ product_warehouse.product.minimum_stock }} {{ product_warehouse.product.unit }}</td>
                                 <td>
                                     <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-info">
                                         <i class="bi bi-eye"></i>

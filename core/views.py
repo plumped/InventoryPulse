@@ -1,15 +1,9 @@
 import csv
 import io
-import os
 import mimetypes
-from datetime import datetime, timedelta
-from django.http import FileResponse, Http404
-from django.utils import timezone
-from django.db.models import Count, F, Case, When, IntegerField, Sum
-from wsgiref.util import FileWrapper
-from django.urls import reverse
-
+import os
 from datetime import datetime
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
@@ -18,12 +12,14 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User, Group, Permission
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import models
-from django.db.models import Q, F
+from django.db.models import Count, Q, Sum, OuterRef, Subquery, F, Value, DecimalField
+from django.db.models.functions import Coalesce
+from django.http import FileResponse, Http404
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.templatetags.static import static
-
+from django.utils import timezone
 from inventory.models import StockMovement, Warehouse, Department, StockTake, WarehouseAccess
 from suppliers.models import Supplier, SupplierProduct
 from .decorators import permission_required
@@ -35,7 +31,6 @@ from .importers import SupplierProductImporter, CategoryImporter, SupplierImport
 from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto, ProductAttachment, ProductVariantType, \
     ProductVariant, SerialNumber, BatchNumber
 from .permissions import PERMISSION_AREAS
-
 
 
 @login_required
@@ -54,19 +49,19 @@ def dashboard(request):
             department__in=user_departments
         ).values_list('warehouse', flat=True)
         accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
-    
+
     # Produkte mit niedrigem Bestand basierend auf zugänglichen Lagern
-    # Hier verwenden wir eine komplexere Abfrage mit Subquery und Annotation
-    from django.db.models import OuterRef, Subquery
-    
     low_stock_products = Product.objects.annotate(
-        accessible_stock=Subquery(
-            ProductWarehouse.objects.filter(
-                product=OuterRef('pk'),
-                warehouse__in=accessible_warehouses
-            ).values('product')
-            .annotate(total=Sum('quantity'))
-            .values('total')[:1]
+        accessible_stock=Coalesce(
+            Subquery(
+                ProductWarehouse.objects.filter(
+                    product=OuterRef('pk'),
+                    warehouse__in=accessible_warehouses  # Korrekte Variable verwenden
+                ).values('product')
+                .annotate(total=Sum('quantity'))
+                .values('total')[:1]
+            ),
+            Value(0, output_field=DecimalField(max_digits=10, decimal_places=2))  # DecimalField statt FloatField
         )
     ).filter(
         accessible_stock__lt=F('minimum_stock')
@@ -84,10 +79,48 @@ def dashboard(request):
         '-created_at')[:10]
 
     # Kritische Bestände nach Lager
-    low_stock_items = ProductWarehouse.objects.select_related('product', 'warehouse').filter(
-        quantity__lt=F('product__minimum_stock'),
-        warehouse__in=accessible_warehouses
-    )[:10]
+    low_stock_products_detail = []
+    for product in low_stock_products[:10]:  # Limit auf 10 Produkte
+        # Finde das Lager mit dem größten Bestand für dieses Produkt
+        main_warehouse = ProductWarehouse.objects.filter(
+            product=product,
+            warehouse__in=accessible_warehouses
+        ).order_by('-quantity').first()
+
+        if main_warehouse:
+            # Erstelle ein Dummy-Objekt mit den benötigten Eigenschaften
+            class ProductWarehouseInfo:
+                def __init__(self, product, warehouse, quantity):
+                    self.product = product
+                    self.warehouse = warehouse
+                    self.quantity = quantity
+
+            # Verwende das Dummy-Objekt statt main_warehouse direkt
+            product_warehouse_info = ProductWarehouseInfo(
+                product=product,
+                warehouse=main_warehouse.warehouse,
+                quantity=main_warehouse.quantity
+            )
+
+            low_stock_products_detail.append(product_warehouse_info)
+        else:
+            # Wenn kein Lager gefunden wurde, erstelle einen Eintrag mit Menge 0
+            class ProductWarehouseInfo:
+                def __init__(self, product, warehouse, quantity):
+                    self.product = product
+                    self.warehouse = None
+                    self.quantity = quantity
+
+            product_warehouse_info = ProductWarehouseInfo(
+                product=product,
+                warehouse=None,
+                quantity=0
+            )
+
+            low_stock_products_detail.append(product_warehouse_info)
+
+    # Ersetze low_stock_items durch unsere neue Liste
+    low_stock_items = low_stock_products_detail
 
     # Aktive Inventuren
     active_stock_takes = StockTake.objects.select_related('warehouse').filter(status='in_progress')[:5]
@@ -214,24 +247,24 @@ def low_stock_list(request):
             department__in=user_departments
         ).values_list('warehouse', flat=True)
         accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
-    
+
     # Produkte mit Kategorie abrufen
     products_list = Product.objects.select_related('category').all()
-    
+
     # Für jedes Produkt die Summe der Bestände in zugänglichen Lagern berechnen
     low_stock_products = []
-    
+
     for product in products_list:
         warehouse_total = ProductWarehouse.objects.filter(
-            product=product, 
+            product=product,
             warehouse__in=accessible_warehouses
         ).aggregate(total=Sum('quantity'))['total'] or 0
-        
+
         product.accessible_stock = warehouse_total
-        
-        if warehouse_total <= product.minimum_stock:
+
+        if warehouse_total < product.minimum_stock:
             low_stock_products.append(product)
-    
+
     # Nach Namen sortieren
     low_stock_products.sort(key=lambda p: p.name)
 

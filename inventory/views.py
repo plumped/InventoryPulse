@@ -18,7 +18,6 @@ from core import models
 from core.models import Product, Category, ProductWarehouse
 from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department, WarehouseAccess
 from .forms import StockMovementForm, StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, WarehouseForm
-from .services import update_product_stock
 from .utils import user_has_warehouse_access
 from core.decorators import permission_required
 from core.permissions import has_permission

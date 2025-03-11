@@ -7,11 +7,18 @@ from .models import Product, Category, ProductVariant, SerialNumber, BatchNumber
 
 class ProductForm(forms.ModelForm):
     """Form for creating and updating products."""
+    initial_stock = forms.DecimalField(
+        label="Anfangsbestand",
+        required=False,
+        initial=0,
+        min_value=0,
+        help_text="Nur bei Neuanlage: Anfänglicher Lagerbestand"
+    )
 
     class Meta:
         model = Product
         fields = ['name', 'sku', 'barcode', 'description', 'category',
-                  'current_stock', 'minimum_stock', 'unit',
+                  'minimum_stock', 'unit',
                   'has_variants', 'has_serial_numbers', 'has_batch_tracking', 'has_expiry_tracking']
 
         widgets = {
@@ -242,22 +249,28 @@ class ProductVariantTypeForm(forms.ModelForm):
 
 class ProductVariantForm(forms.ModelForm):
     """Form for creating and updating product variants."""
+    initial_stock = forms.DecimalField(
+        label="Anfangsbestand",
+        required=False,
+        initial=0,
+        min_value=0,
+        help_text="Nur bei Neuanlage: Anfänglicher Lagerbestand"
+    )
 
     class Meta:
         model = ProductVariant
         fields = ['sku', 'name', 'variant_type', 'value', 'price_adjustment',
-                  'current_stock', 'barcode', 'is_active']
+                  'barcode', 'is_active']
         widgets = {
             'sku': forms.TextInput(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'variant_type': forms.Select(attrs={'class': 'form-select'}),
             'value': forms.TextInput(attrs={'class': 'form-control'}),
             'price_adjustment': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
-            'current_stock': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'barcode': forms.TextInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-
+    
     def clean_sku(self):
         """Ensure SKU is unique."""
         sku = self.cleaned_data.get('sku')

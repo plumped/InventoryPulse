@@ -5,7 +5,7 @@ import mimetypes
 from datetime import datetime, timedelta
 from django.http import FileResponse, Http404
 from django.utils import timezone
-from django.db.models import Sum, Count, F, Case, When, IntegerField
+from django.db.models import Count, F, Case, When, IntegerField, Sum
 from wsgiref.util import FileWrapper
 from django.urls import reverse
 
@@ -44,10 +44,38 @@ def dashboard(request):
     total_products = Product.objects.count()
     total_categories = Category.objects.count()
     total_suppliers = Supplier.objects.count()
-    low_stock_count = Product.objects.filter(current_stock__lt=F('minimum_stock')).count()
+    
+    # Lager, auf die der Benutzer Zugriff hat
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        user_departments = request.user.profile.departments.all()
+        warehouse_access = WarehouseAccess.objects.filter(
+            department__in=user_departments
+        ).values_list('warehouse', flat=True)
+        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+    
+    # Produkte mit niedrigem Bestand basierend auf zugänglichen Lagern
+    # Hier verwenden wir eine komplexere Abfrage mit Subquery und Annotation
+    from django.db.models import OuterRef, Subquery
+    
+    low_stock_products = Product.objects.annotate(
+        accessible_stock=Subquery(
+            ProductWarehouse.objects.filter(
+                product=OuterRef('pk'),
+                warehouse__in=accessible_warehouses
+            ).values('product')
+            .annotate(total=Sum('quantity'))
+            .values('total')[:1]
+        )
+    ).filter(
+        accessible_stock__lt=F('minimum_stock')
+    )
+    
+    low_stock_count = low_stock_products.count()
 
     # Neue Daten für Lager und Abteilungen
-    total_warehouses = Warehouse.objects.filter(is_active=True).count()
+    total_warehouses = accessible_warehouses.count()
     total_departments = Department.objects.count()
     active_stock_takes_count = StockTake.objects.filter(status='in_progress').count()
 
@@ -58,14 +86,14 @@ def dashboard(request):
     # Kritische Bestände nach Lager
     low_stock_items = ProductWarehouse.objects.select_related('product', 'warehouse').filter(
         quantity__lt=F('product__minimum_stock'),
-        warehouse__is_active=True
+        warehouse__in=accessible_warehouses
     )[:10]
 
     # Aktive Inventuren
     active_stock_takes = StockTake.objects.select_related('warehouse').filter(status='in_progress')[:5]
 
     # Lagerübersicht mit Produktanzahl
-    warehouses = Warehouse.objects.filter(is_active=True)
+    warehouses = accessible_warehouses
     for warehouse in warehouses:
         warehouse.product_count = ProductWarehouse.objects.filter(warehouse=warehouse, quantity__gt=0).count()
 
@@ -89,8 +117,19 @@ def dashboard(request):
 @login_required
 @permission_required('product', 'view')
 def product_list(request):
-    """List all products with filtering and search."""
+    """List all products with filtering and search, showing stock totals for accessible warehouses."""
+    # Abrufen aller Produkte mit zugehörigen Kategorien
     products_list = Product.objects.select_related('category').all()
+
+    # Abrufen aller Lager, auf die der Benutzer Zugriff hat
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        user_departments = request.user.profile.departments.all()
+        warehouse_access = WarehouseAccess.objects.filter(
+            department__in=user_departments
+        ).values_list('warehouse', flat=True)
+        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
 
     # Suche
     search_query = request.GET.get('search', '')
@@ -106,15 +145,9 @@ def product_list(request):
     if category_id:
         products_list = products_list.filter(category_id=category_id)
 
-    # Bestandsstatus-Filter
+    # Bestandsstatus-Filter - jetzt basierend auf den Beständen in zugänglichen Lagern
     stock_status = request.GET.get('stock_status', '')
-    if stock_status == 'low':
-        products_list = products_list.filter(current_stock__lte=F('minimum_stock'), current_stock__gt=0)
-    elif stock_status == 'ok':
-        products_list = products_list.filter(current_stock__gt=F('minimum_stock'))
-    elif stock_status == 'out':
-        products_list = products_list.filter(current_stock=0)
-
+    
     # Sortierung
     products_list = products_list.order_by('name')
 
@@ -127,6 +160,32 @@ def product_list(request):
         products = paginator.page(1)
     except EmptyPage:
         products = paginator.page(paginator.num_pages)
+
+    # Für jedes Produkt die Summe der Bestände in zugänglichen Lagern berechnen
+    for product in products:
+        warehouse_total = ProductWarehouse.objects.filter(
+            product=product, 
+            warehouse__in=accessible_warehouses
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        
+        product.accessible_stock = warehouse_total
+        
+        # Bestandsstatus-Filter anwenden
+        if stock_status == 'low':
+            if warehouse_total <= product.minimum_stock and warehouse_total > 0:
+                pass  # Produkt behalten
+            else:
+                products.object_list = [p for p in products.object_list if p.id != product.id]
+        elif stock_status == 'ok':
+            if warehouse_total > product.minimum_stock:
+                pass  # Produkt behalten
+            else:
+                products.object_list = [p for p in products.object_list if p.id != product.id]
+        elif stock_status == 'out':
+            if warehouse_total == 0:
+                pass  # Produkt behalten
+            else:
+                products.object_list = [p for p in products.object_list if p.id != product.id]
 
     # Alle Kategorien für den Filter
     categories = Category.objects.all().order_by('name')
@@ -145,10 +204,36 @@ def product_list(request):
 @login_required
 @permission_required('product', 'view')
 def low_stock_list(request):
-    """Show products with low stock (current_stock <= minimum_stock)."""
-    low_stock_products = Product.objects.select_related('category').filter(
-        current_stock__lte=F('minimum_stock')
-    ).order_by('name')
+    """Show products with low stock (accessible_stock <= minimum_stock)."""
+    # Lager, auf die der Benutzer Zugriff hat
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        user_departments = request.user.profile.departments.all()
+        warehouse_access = WarehouseAccess.objects.filter(
+            department__in=user_departments
+        ).values_list('warehouse', flat=True)
+        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+    
+    # Produkte mit Kategorie abrufen
+    products_list = Product.objects.select_related('category').all()
+    
+    # Für jedes Produkt die Summe der Bestände in zugänglichen Lagern berechnen
+    low_stock_products = []
+    
+    for product in products_list:
+        warehouse_total = ProductWarehouse.objects.filter(
+            product=product, 
+            warehouse__in=accessible_warehouses
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+        
+        product.accessible_stock = warehouse_total
+        
+        if warehouse_total <= product.minimum_stock:
+            low_stock_products.append(product)
+    
+    # Nach Namen sortieren
+    low_stock_products.sort(key=lambda p: p.name)
 
     context = {
         'products': low_stock_products,
@@ -189,15 +274,35 @@ def product_create(request):
             product = form.save()
 
             # Bestandsbewegung für Anfangsbestand erstellen, wenn > 0
-            initial_stock = form.cleaned_data.get('current_stock')
+            initial_stock = form.cleaned_data.get('initial_stock', 0)
             if initial_stock > 0:
-                StockMovement.objects.create(
-                    product=product,
-                    quantity=initial_stock,
-                    movement_type='in',
-                    reference='Anfangsbestand',
-                    created_by=request.user
-                )
+                # Standardlager abrufen oder erstellen
+                try:
+                    warehouse = Warehouse.objects.filter(is_active=True).first()
+                    if not warehouse:
+                        warehouse = Warehouse.objects.create(
+                            name='Hauptlager',
+                            code='MAIN'
+                        )
+                    
+                    # Produktlager-Eintrag erstellen
+                    ProductWarehouse.objects.create(
+                        product=product,
+                        warehouse=warehouse,
+                        quantity=initial_stock
+                    )
+                    
+                    # Bestandsbewegung erstellen
+                    StockMovement.objects.create(
+                        product=product,
+                        warehouse=warehouse,
+                        quantity=initial_stock,
+                        movement_type='in',
+                        reference='Anfangsbestand',
+                        created_by=request.user
+                    )
+                except Exception as e:
+                    messages.error(request, f'Fehler bei der Erstellung des Anfangsbestands: {str(e)}')
 
             messages.success(request, f'Produkt "{product.name}" wurde erfolgreich erstellt.')
             return redirect('product_detail', pk=product.pk)
@@ -216,50 +321,29 @@ def product_create(request):
 def product_update(request, pk):
     """Update an existing product."""
     product = get_object_or_404(Product, pk=pk)
-    old_stock = product.current_stock
+    
+    # Lager abrufen, auf die der Benutzer Zugriff hat
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        user_departments = request.user.profile.departments.all()
+        warehouse_access = WarehouseAccess.objects.filter(
+            department__in=user_departments
+        ).values_list('warehouse', flat=True)
+        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+    
+    # Aktuellen Bestand berechnen
+    total_accessible_stock = ProductWarehouse.objects.filter(
+        product=product,
+        warehouse__in=accessible_warehouses
+    ).aggregate(total=Sum('quantity'))['total'] or 0
 
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
-            new_stock = form.cleaned_data.get('current_stock')
-
-            # Create stock movement for stock change if stock has changed
-            if new_stock != old_stock:
-                # Try to get a warehouse associated with the product
-                try:
-                    # First, try to get a warehouse from ProductWarehouse
-                    product_warehouse = ProductWarehouse.objects.filter(product=product).first()
-
-                    # If no ProductWarehouse exists, get the first warehouse
-                    if not product_warehouse:
-                        warehouse = Warehouse.objects.first()
-                    else:
-                        warehouse = product_warehouse.warehouse
-
-                    # If still no warehouse, create a default one
-                    if not warehouse:
-                        warehouse = Warehouse.objects.create(
-                            name='Hauptlager',
-                            code='MAIN'
-                        )
-
-                    # Create StockMovement
-                    StockMovement.objects.create(
-                        product=product,
-                        warehouse=warehouse,
-                        quantity=abs(new_stock - old_stock),  # Use absolute value
-                        movement_type='adj',  # Adjustment
-                        reference='Manuelle Korrektur',
-                        notes=f'Bestandskorrektur von {old_stock} auf {new_stock}',
-                        created_by=request.user
-                    )
-
-                except Exception as e:
-                    # Log the error or handle it appropriately
-                    messages.error(request, f'Fehler bei der Erstellung der Lagerbewegung: {str(e)}')
-
-            # Save the product
+            # Das Produkt ohne Bestandsänderung speichern
             product = form.save()
+            
             messages.success(request, f'Produkt "{product.name}" wurde erfolgreich aktualisiert.')
             return redirect('product_detail', pk=product.pk)
     else:
@@ -267,6 +351,7 @@ def product_update(request, pk):
 
     context = {
         'form': form,
+        'total_accessible_stock': total_accessible_stock
     }
 
     return render(request, 'core/product_form.html', context)
@@ -1817,6 +1902,51 @@ def product_variant_add(request, pk):
             variant = form.save(commit=False)
             variant.parent_product = product
             variant.save()
+            
+            # Bestandsbewegung für Anfangsbestand erstellen, wenn > 0
+            initial_stock = form.cleaned_data.get('initial_stock', 0)
+            if initial_stock > 0:
+                # Standardlager abrufen oder erstellen
+                try:
+                    warehouse = Warehouse.objects.filter(is_active=True).first()
+                    if not warehouse:
+                        warehouse = Warehouse.objects.create(
+                            name='Hauptlager',
+                            code='MAIN'
+                        )
+                    
+                    # Versuchen, ein VariantWarehouse-Modell zu verwenden, falls vorhanden
+                    try:
+                        from inventory.models import VariantWarehouse
+                        
+                        # Varianten-Lager-Eintrag erstellen
+                        VariantWarehouse.objects.create(
+                            variant=variant,
+                            warehouse=warehouse,
+                            quantity=initial_stock
+                        )
+                        
+                        # Optional: Bestandsbewegung erstellen, falls dein System dies unterstützt
+                        try:
+                            from inventory.models import VariantStockMovement
+                            VariantStockMovement.objects.create(
+                                variant=variant,
+                                warehouse=warehouse,
+                                quantity=initial_stock,
+                                movement_type='in',
+                                reference='Anfangsbestand',
+                                created_by=request.user
+                            )
+                        except (ImportError, AttributeError):
+                            # Keine Bewegung erstellen, wenn kein VariantStockMovement existiert
+                            pass
+                            
+                    except (ImportError, AttributeError):
+                        # Wenn kein VariantWarehouse-Modell existiert, speichern wir den Bestand nicht
+                        messages.warning(request, 'Bestandserfassung für Varianten ist nicht konfiguriert.')
+                        
+                except Exception as e:
+                    messages.error(request, f'Fehler bei der Erstellung des Anfangsbestands: {str(e)}')
 
             messages.success(request, 'Produktvariante wurde erfolgreich hinzugefügt.')
             return redirect('product_variants', pk=product.pk)
@@ -1824,7 +1954,7 @@ def product_variant_add(request, pk):
         # Name-Vorschlag generieren
         form = ProductVariantForm(initial={
             'name': product.name,
-            'current_stock': 0
+            'initial_stock': 0
         })
 
     context = {
@@ -1841,11 +1971,35 @@ def product_variant_update(request, pk, variant_id):
     """Aktualisiert eine Produktvariante."""
     product = get_object_or_404(Product, pk=pk)
     variant = get_object_or_404(ProductVariant, pk=variant_id, parent_product=product)
+    
+    # Lager abrufen, auf die der Benutzer Zugriff hat
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        user_departments = request.user.profile.departments.all()
+        warehouse_access = WarehouseAccess.objects.filter(
+            department__in=user_departments
+        ).values_list('warehouse', flat=True)
+        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+    
+    # Aktuellen Bestand berechnen
+    try:
+        from inventory.models import VariantWarehouse
+        
+        total_accessible_stock = VariantWarehouse.objects.filter(
+            variant=variant,
+            warehouse__in=accessible_warehouses
+        ).aggregate(total=Sum('quantity'))['total'] or 0
+    except (ImportError, AttributeError):
+        # Wenn kein VariantWarehouse-Modell existiert
+        total_accessible_stock = 0
 
     if request.method == 'POST':
         form = ProductVariantForm(request.POST, instance=variant)
         if form.is_valid():
+            # Variante ohne Bestandsänderung speichern
             variant = form.save()
+            
             messages.success(request, 'Produktvariante wurde erfolgreich aktualisiert.')
             return redirect('product_variants', pk=product.pk)
     else:
@@ -1855,6 +2009,7 @@ def product_variant_update(request, pk, variant_id):
         'product': product,
         'variant': variant,
         'form': form,
+        'total_accessible_stock': total_accessible_stock
     }
 
     return render(request, 'core/product/product_variant_form.html', context)
@@ -2389,7 +2544,7 @@ def product_detail(request, pk):
     supplier_products = SupplierProduct.objects.filter(product=product).select_related('supplier')
 
     # Bestandsbewegungen
-    movements = StockMovement.objects.filter(product=product).select_related('created_by').order_by('-created_at')[:20]
+    movements = StockMovement.objects.filter(product=product).select_related('created_by', 'warehouse').order_by('-created_at')[:20]
 
     # Primärbild abrufen, falls vorhanden
     primary_photo = product.photos.filter(is_primary=True).first()
@@ -2399,10 +2554,50 @@ def product_detail(request, pk):
     serial_count = product.serial_numbers.count()
     batch_count = product.batches.count()
 
+    # Lager, auf die der Benutzer Zugriff hat
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        user_departments = request.user.profile.departments.all()
+        warehouse_access = WarehouseAccess.objects.filter(
+            department__in=user_departments
+        ).values_list('warehouse', flat=True)
+        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+
     # Varianten mit kritischem Bestand
-    low_stock_variants = product.variants.filter(
-        current_stock__lt=3  # Beispielwert als Schwellenwert
-    )[:5]  # Nur die ersten 5 anzeigen
+    # Hier holen wir zuerst alle Varianten
+    all_variants = product.variants.all()
+    
+    # Spezieller Schwellwert für "kritischen Bestand"
+    low_stock_threshold = 3
+    
+    # Varianten mit kritischem Bestand
+    low_stock_variants = []
+    
+    # Für jede Variante prüfen, ob der Gesamtbestand niedrig ist
+    for variant in all_variants:
+        # Versuchen, das total_stock über VariantWarehouse zu berechnen
+        try:
+            from django.db.models import Sum
+            from inventory.models import VariantWarehouse
+            
+            total_stock = VariantWarehouse.objects.filter(
+                variant=variant,
+                warehouse__in=accessible_warehouses
+            ).aggregate(total=Sum('quantity'))['total'] or 0
+            
+            # Wenn es niedrig ist, zur Liste hinzufügen
+            if total_stock < low_stock_threshold and total_stock > 0:
+                # Wir fügen das berechnete total_stock als Attribut hinzu
+                variant.total_stock = total_stock
+                low_stock_variants.append(variant)
+                
+                # Nur max. 5 Varianten in die Liste
+                if len(low_stock_variants) >= 5:
+                    break
+        except (ImportError, AttributeError):
+            # Wenn es keine VariantWarehouse-Tabelle gibt, leere Liste verwenden
+            pass
 
     # Ablaufende Seriennummern und Chargen
     today = timezone.now().date()
@@ -2424,6 +2619,16 @@ def product_detail(request, pk):
         status_choices = SerialNumber.status_choices
         for status_code, status_name in status_choices:
             serial_status_counts[status_code] = product.serial_numbers.filter(status=status_code).count()
+    
+    # NEU: Lagerbestandsinformationen
+    # Bestand in allen zugänglichen Lagern für dieses Produkt
+    warehouse_stocks = ProductWarehouse.objects.filter(
+        product=product,
+        warehouse__in=accessible_warehouses
+    ).select_related('warehouse').order_by('warehouse__name')
+    
+    # Gesamtbestand über alle zugänglichen Lager
+    total_accessible_stock = warehouse_stocks.aggregate(total=models.Sum('quantity'))['total'] or 0
 
     context = {
         'product': product,
@@ -2436,7 +2641,10 @@ def product_detail(request, pk):
         'low_stock_variants': low_stock_variants,
         'expiring_serials': expiring_serials,
         'expiring_batches': expiring_batches,
-        'serial_status_counts': serial_status_counts,  # Neue Variable für die Seriennummern-Statistik
+        'serial_status_counts': serial_status_counts,
+        'warehouse_stocks': warehouse_stocks,
+        'total_accessible_stock': total_accessible_stock,
+        'accessible_warehouses': accessible_warehouses,
     }
 
     return render(request, 'core/product_detail.html', context)

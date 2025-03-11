@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load dict_filters %}
+{% load permission_tags %}
 
 {% block title %}{{ product.name }} - Produktdetails{% endblock %}
 
@@ -79,7 +80,7 @@
                     <dt class="col-sm-5">Aktueller Bestand:</dt>
                     <dd class="col-sm-7">
                         <span class="badge {% if product.current_stock <= product.minimum_stock %}bg-danger{% else %}bg-success{% endif %}">
-                            {{ product.current_stock }} {{ product.unit }}
+                            {{ total_accessible_stock }} {{ product.unit }}
                         </span>
                     </dd>
 
@@ -145,6 +146,11 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="extras-tab" data-bs-toggle="tab" data-bs-target="#extras" type="button" role="tab" aria-controls="extras" aria-selected="false">Erweitert</button>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="warehouses-tab" data-bs-toggle="tab" href="#warehouses" role="tab" aria-controls="warehouses" aria-selected="false">
+                    <i class="fas fa-warehouse me-2"></i>Lagerbestände
+                </a>
             </li>
         </ul>
         <div class="tab-content" id="productTabContent">
@@ -359,7 +365,7 @@
                                     <tr>
                                         <td>
                                             <a href="{% url 'product_variant_detail' product.id variant.id %}">
-{{ variant.name }}
+                                                {{ variant.name }}
                                             </a>
                                         </td>
                                         <td>{{ variant.sku }}</td>
@@ -605,6 +611,97 @@
                         </a>
                         {% endif %}
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="warehouses" role="tabpanel" aria-labelledby="warehouses-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Lagerbestände</h5>
+                        {% if user|has_perm:'inventory:edit' %}
+                        <a href="{% url 'bulk_warehouse_transfer' %}?product={{ product.id }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-exchange-alt me-1"></i>Bestand umlagern
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="alert-heading">Gesamtbestand</h5>
+                                        <p class="mb-0">
+                                            Summe über alle zugänglichen Lager: 
+                                            <strong>{{ total_accessible_stock }} {{ product.unit }}</strong>
+                                            {% if total_accessible_stock <= product.minimum_stock and total_accessible_stock > 0 %}
+                                                <span class="badge bg-warning ms-2">Kritischer Bestand</span>
+                                            {% elif total_accessible_stock == 0 %}
+                                                <span class="badge bg-danger ms-2">Kein Bestand</span>
+                                            {% else %}
+                                                <span class="badge bg-success ms-2">Ausreichender Bestand</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Lager</th>
+                                        <th>Standort</th>
+                                        <th>Bestand</th>
+                                        <th>Status</th>
+                                        <th>Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for stock in warehouse_stocks %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'warehouse_detail' stock.warehouse.id %}">
+                                                {{ stock.warehouse.name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ stock.warehouse.location }}</td>
+                                        <td>{{ stock.quantity }} {{ product.unit }}</td>
+                                        <td>
+                                            {% if stock.quantity <= product.minimum_stock and stock.quantity > 0 %}
+                                                <span class="badge bg-warning">Kritisch</span>
+                                            {% elif stock.quantity == 0 %}
+                                                <span class="badge bg-danger">Nicht verfügbar</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Verfügbar</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'warehouse_detail' stock.warehouse.id %}" class="btn btn-sm btn-outline-info">
+                                                    <i class="bi bi-boxes"></i>
+                                                </a>
+                                                {% if user|has_perm:'inventory:edit' %}
+                                                <a href="{% url 'bulk_warehouse_transfer' %}?product={{ product.id }}&source={{ stock.warehouse.id }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-arrow-left-right"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            Dieses Produkt ist in keinem Ihrer zugänglichen Lager verfügbar.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

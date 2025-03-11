@@ -32,7 +32,6 @@ class Product(models.Model):
     barcode = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    current_stock = models.IntegerField(default=0)
     minimum_stock = models.IntegerField(default=0)
     unit = models.CharField(max_length=20, default="Stück")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -45,6 +44,12 @@ class Product(models.Model):
 
     def __str__(self):
         return self.name
+    
+    @property
+    def total_stock(self):
+        """Berechnet den Gesamtbestand über alle Lager."""
+        from django.db.models import Sum
+        return self.productwarehouse_set.aggregate(Sum('quantity'))['quantity__sum'] or 0
 
 
 class ProductWarehouse(models.Model):
@@ -421,7 +426,6 @@ class ProductVariantType(models.Model):
         ordering = ['name']
 
 
-# ProductVariant - für Produktvarianten
 class ProductVariant(models.Model):
     """Model for product variants (e.g., 'XL', 'Red')."""
     parent_product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
@@ -430,7 +434,6 @@ class ProductVariant(models.Model):
     variant_type = models.ForeignKey(ProductVariantType, on_delete=models.CASCADE)
     value = models.CharField(max_length=100)  # Der Wert für den Typ, z.B. "Rot" für Farbe
     price_adjustment = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Preisanpassung (+/-)
-    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     barcode = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -442,6 +445,19 @@ class ProductVariant(models.Model):
     class Meta:
         unique_together = ('parent_product', 'variant_type', 'value')
         ordering = ['parent_product', 'variant_type', 'value']
+    
+    @property
+    def total_stock(self):
+        """Berechnet den Gesamtbestand über alle Lager."""
+        from django.db.models import Sum
+        from inventory.models import VariantWarehouse
+        
+        # Prüfen, ob ein VariantWarehouse-Model existiert
+        try:
+            return VariantWarehouse.objects.filter(variant=self).aggregate(Sum('quantity'))['quantity__sum'] or 0
+        except:
+            # Fallback, falls kein VariantWarehouse existiert
+            return 0
 
 
 # SerialNumber - für Seriennummern

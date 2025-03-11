@@ -21,6 +21,7 @@ from django.shortcuts import render, redirect
 from django.templatetags.static import static
 from django.utils import timezone
 from inventory.models import StockMovement, Warehouse, Department, StockTake, WarehouseAccess
+from order.models import PurchaseOrder, OrderSuggestion
 from suppliers.models import Supplier, SupplierProduct
 from .decorators import permission_required
 from .forms import ProductForm, CategoryForm, SupplierProductImportForm, CategoryImportForm, SupplierImportForm, \
@@ -130,6 +131,14 @@ def dashboard(request):
     for warehouse in warehouses:
         warehouse.product_count = ProductWarehouse.objects.filter(warehouse=warehouse, quantity__gt=0).count()
 
+    pending_count = PurchaseOrder.objects.filter(status='pending').count()
+    sent_count = PurchaseOrder.objects.filter(status='sent').count()
+    partial_count = PurchaseOrder.objects.filter(status='partially_received').count()
+    suggestion_count = OrderSuggestion.objects.count()
+
+    # Letzte Bestellungen
+    recent_orders = PurchaseOrder.objects.select_related('supplier').order_by('-order_date')[:5]
+
     context = {
         'total_products': total_products,
         'total_categories': total_categories,
@@ -141,7 +150,12 @@ def dashboard(request):
         'recent_movements': recent_movements,
         'low_stock_items': low_stock_items,
         'active_stock_takes': active_stock_takes,
-        'warehouses': warehouses[:5],  # Nur die ersten 5 Lager anzeigen
+        'warehouses': warehouses[:5],
+        'pending_count': pending_count,
+        'sent_count': sent_count,
+        'partial_count': partial_count,
+        'suggestion_count': suggestion_count,
+        'recent_orders': recent_orders,
     }
 
     return render(request, 'dashboard.html', context)

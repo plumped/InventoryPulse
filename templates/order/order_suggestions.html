@@ -1,0 +1,173 @@
+<!-- templates/order/order_suggestions.html -->
+{% extends 'base.html' %}
+
+{% block title %}Bestellvorschläge - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Bestellvorschläge</h1>
+            <div>
+                <button id="refreshSuggestions" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-arrow-clockwise"></i> Aktualisieren
+                </button>
+                <a href="{% url 'create_orders_from_suggestions' %}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> Bestellungen erstellen
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Bestellvorschläge nach Lieferant</h5>
+            <div>
+                <button id="selectAll" class="btn btn-sm btn-outline-secondary me-2">Alle auswählen</button>
+                <button id="selectNone" class="btn btn-sm btn-outline-secondary">Keine auswählen</button>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if grouped_suggestions %}
+                <form id="suggestionForm" method="post" action="{% url 'create_orders_from_suggestions' %}">
+                    {% csrf_token %}
+
+                    <div class="accordion" id="suggestionsAccordion">
+                        {% for supplier, suggestions in grouped_suggestions.items %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ supplier.id }}">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapse{{ supplier.id }}" aria-expanded="true"
+                                            aria-controls="collapse{{ supplier.id }}">
+                                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                            <span>{{ supplier.name }}</span>
+                                            <span class="badge bg-primary">{{ suggestions|length }} Artikel</span>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ supplier.id }}" class="accordion-collapse collapse show"
+                                     aria-labelledby="heading{{ supplier.id }}" data-bs-parent="#suggestionsAccordion">
+                                    <div class="accordion-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="width: 40px;" class="text-center">
+                                                            <input type="checkbox" class="supplier-select-all"
+                                                                   data-supplier="{{ supplier.id }}">
+                                                        </th>
+                                                        <th>Produkt</th>
+                                                        <th>SKU</th>
+                                                        <th>Akt. Bestand</th>
+                                                        <th>Min. Bestand</th>
+                                                        <th>Vorschlag</th>
+                                                        <th>Einheit</th>
+                                                        <th>Bestellmenge</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for suggestion in suggestions %}
+                                                        <tr>
+                                                            <td class="text-center">
+                                                                <input type="checkbox" name="selected_suggestions"
+                                                                       value="{{ suggestion.id }}" class="suggestion-checkbox"
+                                                                       data-supplier="{{ supplier.id }}">
+                                                            </td>
+                                                            <td>
+                                                                <a href="{% url 'product_detail' suggestion.product.id %}">
+                                                                    {{ suggestion.product.name }}
+                                                                </a>
+                                                            </td>
+                                                            <td>{{ suggestion.product.sku }}</td>
+                                                            <td>
+                                                                <span class="badge bg-danger">
+                                                                    {{ suggestion.current_stock }}
+                                                                </span>
+                                                            </td>
+                                                            <td>{{ suggestion.minimum_stock }}</td>
+                                                            <td>{{ suggestion.suggested_order_quantity }}</td>
+                                                            <td>{{ suggestion.product.unit }}</td>
+                                                            <td>
+                                                                <input type="number" class="form-control form-control-sm"
+                                                                       name="quantity_{{ suggestion.id }}"
+                                                                       value="{{ suggestion.suggested_order_quantity }}"
+                                                                       min="0" step="1">
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-cart-plus"></i> Ausgewählte bestellen
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i> Aktuell gibt es keine Bestellvorschläge.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Alle Checkboxen auswählen
+        $('#selectAll').click(function() {
+            $('.suggestion-checkbox').prop('checked', true);
+            $('.supplier-select-all').prop('checked', true);
+        });
+
+        // Keine Checkboxen auswählen
+        $('#selectNone').click(function() {
+            $('.suggestion-checkbox').prop('checked', false);
+            $('.supplier-select-all').prop('checked', false);
+        });
+
+        // Lieferanten-spezifische Checkboxen
+        $('.supplier-select-all').change(function() {
+            const supplierId = $(this).data('supplier');
+            const isChecked = $(this).prop('checked');
+
+            $(`.suggestion-checkbox[data-supplier="${supplierId}"]`).prop('checked', isChecked);
+        });
+
+        // Aktualisieren der Vorschläge
+        $('#refreshSuggestions').click(function() {
+            const $button = $(this);
+            $button.prop('disabled', true).html('<i class="spinner-border spinner-border-sm"></i> Aktualisiere...');
+
+            $.ajax({
+                url: '{% url "refresh_order_suggestions" %}',
+                method: 'POST',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if(response.success) {
+                        location.reload();
+                    } else {
+                        alert('Fehler beim Aktualisieren der Vorschläge: ' + response.message);
+                        $button.prop('disabled', false).html('<i class="bi bi-arrow-clockwise"></i> Aktualisieren');
+                    }
+                },
+                error: function() {
+                    alert('Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.');
+                    $button.prop('disabled', false).html('<i class="bi bi-arrow-clockwise"></i> Aktualisieren');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

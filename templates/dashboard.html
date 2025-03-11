@@ -1,376 +1,551 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block title %}Dashboard - InventoryPulse{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">Dashboard</h1>
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Dashboard</h1>
+        </div>
     </div>
-</div>
 
-<div class="row mb-4">
-    <!-- Produktstatistik -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-primary text-white h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h5 class="card-title">Produkte</h5>
-                        <h2 class="mb-0">{{ total_products }}</h2>
+    <div class="row mb-4">
+        <!-- Produktstatistik -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title">Produkte</h5>
+                            <h2 class="mb-0">{{ total_products }}</h2>
+                        </div>
+                        <i class="bi bi-box-seam fs-1"></i>
                     </div>
-                    <i class="bi bi-box-seam fs-1"></i>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'product_list' %}">Details anzeigen</a>
+                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
                 </div>
             </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="{% url 'product_list' %}">Details anzeigen</a>
-                <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-            </div>
         </div>
-    </div>
 
-    <!-- Kategorie-Statistik -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-success text-white h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h5 class="card-title">Kategorien</h5>
-                        <h2 class="mb-0">{{ total_categories }}</h2>
+        <!-- Kategorie-Statistik -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title">Kategorien</h5>
+                            <h2 class="mb-0">{{ total_categories }}</h2>
+                        </div>
+                        <i class="bi bi-tags fs-1"></i>
                     </div>
-                    <i class="bi bi-tags fs-1"></i>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'category_list' %}">Details anzeigen</a>
+                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
                 </div>
             </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="{% url 'category_list' %}">Details anzeigen</a>
-                <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-            </div>
         </div>
-    </div>
 
-    <!-- Lager-Statistik -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-info text-white h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h5 class="card-title">Lager</h5>
-                        <h2 class="mb-0">{{ total_warehouses }}</h2>
+        <!-- Lager-Statistik -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title">Lager</h5>
+                            <h2 class="mb-0">{{ total_warehouses }}</h2>
+                        </div>
+                        <i class="bi bi-building fs-1"></i>
                     </div>
-                    <i class="bi bi-building fs-1"></i>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'warehouse_list' %}">Details anzeigen</a>
+                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
                 </div>
             </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="{% url 'warehouse_list' %}">Details anzeigen</a>
-                <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-            </div>
         </div>
-    </div>
 
-    <!-- Kritische Produkte -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-danger text-white h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h5 class="card-title">Kritische Bestände</h5>
-                        <h2 class="mb-0">{{ low_stock_count }}</h2>
+        <!-- Kritische Produkte -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title">Kritische Bestände</h5>
+                            <h2 class="mb-0">{{ low_stock_count }}</h2>
+                        </div>
+                        <i class="bi bi-exclamation-triangle fs-1"></i>
                     </div>
-                    <i class="bi bi-exclamation-triangle fs-1"></i>
                 </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="{% url 'low_stock_list' %}">Details anzeigen</a>
-                <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'low_stock_list' %}">Details anzeigen</a>
+                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row mb-4">
-    <!-- Lieferanten-Statistik -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-secondary text-white h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h5 class="card-title">Lieferanten</h5>
-                        <h2 class="mb-0">{{ total_suppliers }}</h2>
+    <div class="row mb-4">
+        <!-- Lieferanten-Statistik -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-secondary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title">Lieferanten</h5>
+                            <h2 class="mb-0">{{ total_suppliers }}</h2>
+                        </div>
+                        <i class="bi bi-truck fs-1"></i>
                     </div>
-                    <i class="bi bi-truck fs-1"></i>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'supplier_list' %}">Details anzeigen</a>
+                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
                 </div>
             </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="{% url 'supplier_list' %}">Details anzeigen</a>
-                <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-            </div>
         </div>
-    </div>
 
-    <!-- Abteilungen-Statistik -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-warning text-dark h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h5 class="card-title">Abteilungen</h5>
-                        <h2 class="mb-0">{{ total_departments }}</h2>
+        <!-- Abteilungen-Statistik -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-warning text-dark h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title">Abteilungen</h5>
+                            <h2 class="mb-0">{{ total_departments }}</h2>
+                        </div>
+                        <i class="bi bi-people fs-1"></i>
                     </div>
-                    <i class="bi bi-people fs-1"></i>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-dark stretched-link" href="{% url 'department_management' %}">Details anzeigen</a>
+                    <div class="small text-dark"><i class="bi bi-chevron-right"></i></div>
                 </div>
             </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-dark stretched-link" href="{% url 'department_management' %}">Details anzeigen</a>
-                <div class="small text-dark"><i class="bi bi-chevron-right"></i></div>
-            </div>
         </div>
-    </div>
 
-    <!-- Laufende Inventuren -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card bg-primary text-white h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h5 class="card-title">Laufende Inventuren</h5>
-                        <h2 class="mb-0">{{ active_stock_takes_count }}</h2>
+        <!-- Laufende Inventuren -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h5 class="card-title">Laufende Inventuren</h5>
+                            <h2 class="mb-0">{{ active_stock_takes_count }}</h2>
+                        </div>
+                        <i class="bi bi-clipboard-check fs-1"></i>
                     </div>
-                    <i class="bi bi-clipboard-check fs-1"></i>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a class="small text-white stretched-link" href="{% url 'stock_take_list' %}">Details anzeigen</a>
+                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
                 </div>
             </div>
-            <div class="card-footer d-flex align-items-center justify-content-between">
-                <a class="small text-white stretched-link" href="{% url 'stock_take_list' %}">Details anzeigen</a>
-                <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-            </div>
         </div>
-    </div>
 
-    <!-- Aktionen -->
-    <div class="col-md-3 col-sm-6 mb-3">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="mb-0">Schnellaktionen</h5>
-            </div>
-            <div class="card-body d-flex flex-column gap-2">
-                <a href="{% url 'bulk_warehouse_transfer' %}?source={{ warehouse.id }}" class="btn btn-outline-success">
-                    <i class="bi bi-arrow-left-right"></i> Lagerverschiebung
-                </a>
-                <a href="{% url 'stock_take_create' %}" class="btn btn-outline-success">
-                    <i class="bi bi-clipboard-check"></i> Neue Inventur
-                </a>
-                <a href="{% url 'product_create' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-plus-circle"></i> Neues Produkt
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <!-- Letzte Bestandsbewegungen -->
-    <div class="col-lg-6">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Letzte Bestandsbewegungen</h5>
-                <a href="{% url 'stock_movement_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Produkt</th>
-                                <th>Lager</th>
-                                <th>Typ</th>
-                                <th>Menge</th>
-                                <th>Datum</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for movement in recent_movements %}
-                            <tr>
-                                <td>{{ movement.product.name }}</td>
-                                <td>{{ movement.warehouse.name }}</td>
-                                <td>
-                                    {% if movement.movement_type == 'in' %}
-                                        <span class="badge bg-success">Zugang</span>
-                                    {% elif movement.movement_type == 'out' %}
-                                        <span class="badge bg-danger">Abgang</span>
-                                    {% else %}
-                                        <span class="badge bg-warning">Korrektur</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ movement.quantity }}</td>
-                                <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">Keine Bestandsbewegungen vorhanden</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <!-- Aktionen -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Schnellaktionen</h5>
+                </div>
+                <div class="card-body d-flex flex-column gap-2">
+                    <a href="{% url 'bulk_warehouse_transfer' %}?source={{ warehouse.id }}" class="btn btn-outline-success">
+                        <i class="bi bi-arrow-left-right"></i> Lagerverschiebung
+                    </a>
+                    <a href="{% url 'stock_take_create' %}" class="btn btn-outline-success">
+                        <i class="bi bi-clipboard-check"></i> Neue Inventur
+                    </a>
+                    <a href="{% url 'product_create' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-plus-circle"></i> Neues Produkt
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Kritische Produkte Liste -->
-    <div class="col-lg-6">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-exclamation-circle me-2"></i>Kritische Bestände</h5>
-                <a href="{% url 'low_stock_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Produkt</th>
-                                <th>Lager</th>
-                                <th>Aktueller Bestand</th>
-                                <th>Mindestbestand</th>
-                                <th>Aktionen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for product_warehouse in low_stock_items %}
-                            <tr>
-                                <td>{{ product_warehouse.product.name }}</td>
-                                <td>{{ product_warehouse.warehouse.name }}</td>
-                                <td>
-                                    {% if product_warehouse.quantity < product_warehouse.product.minimum_stock %}
-                                        <span class="badge bg-danger">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
-                                    {% else %}
-                                        <span class="badge bg-warning">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ product_warehouse.product.minimum_stock }} {{ product_warehouse.product.unit }}</td>
-                                <td>
-                                    <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-info">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">Keine kritischen Bestände vorhanden</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+    <div class="row">
+        <!-- Letzte Bestandsbewegungen -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Letzte Bestandsbewegungen</h5>
+                    <a href="{% url 'stock_movement_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produkt</th>
+                                    <th>Lager</th>
+                                    <th>Typ</th>
+                                    <th>Menge</th>
+                                    <th>Datum</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for movement in recent_movements %}
+                                <tr>
+                                    <td>{{ movement.product.name }}</td>
+                                    <td>{{ movement.warehouse.name }}</td>
+                                    <td>
+                                        {% if movement.movement_type == 'in' %}
+                                            <span class="badge bg-success">Zugang</span>
+                                        {% elif movement.movement_type == 'out' %}
+                                            <span class="badge bg-danger">Abgang</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Korrektur</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ movement.quantity }}</td>
+                                    <td>{{ movement.created_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Keine Bestandsbewegungen vorhanden</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <!-- Aktive Inventuren -->
-    <div class="col-lg-6">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Aktive Inventuren</h5>
-                <a href="{% url 'stock_take_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Lager</th>
-                                <th>Start</th>
-                                <th>Fortschritt</th>
-                                <th>Aktionen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for stock_take in active_stock_takes %}
-                            <tr>
-                                <td>{{ stock_take.name }}</td>
-                                <td>{{ stock_take.warehouse.name }}</td>
-                                <td>{{ stock_take.start_date|date:"d.m.Y" }}</td>
-                                <td>
-                                    <div class="progress" style="height: 10px;">
-                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ stock_take.get_completion_percentage }}%;"
-                                             aria-valuenow="{{ stock_take.get_completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
-                                             {{ stock_take.get_completion_percentage }}%
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-sm btn-outline-primary">
+        <!-- Kritische Produkte Liste -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-circle me-2"></i>Kritische Bestände</h5>
+                    <a href="{% url 'low_stock_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produkt</th>
+                                    <th>Lager</th>
+                                    <th>Aktueller Bestand</th>
+                                    <th>Mindestbestand</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product_warehouse in low_stock_items %}
+                                <tr>
+                                    <td>{{ product_warehouse.product.name }}</td>
+                                    <td>{{ product_warehouse.warehouse.name }}</td>
+                                    <td>
+                                        {% if product_warehouse.quantity < product_warehouse.product.minimum_stock %}
+                                            <span class="badge bg-danger">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ product_warehouse.product.minimum_stock }} {{ product_warehouse.product.unit }}</td>
+                                    <td>
+                                        <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-info">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-sm btn-outline-success">
-                                            <i class="bi bi-check2-square"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">Keine aktiven Inventuren vorhanden</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Keine kritischen Bestände vorhanden</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Lagerübersicht -->
-    <div class="col-lg-6">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-building me-2"></i>Lagerübersicht</h5>
-                <a href="{% url 'warehouse_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
+    <div class="row">
+        <!-- Aktive Inventuren -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Aktive Inventuren</h5>
+                    <a href="{% url 'stock_take_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Lager</th>
+                                    <th>Start</th>
+                                    <th>Fortschritt</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock_take in active_stock_takes %}
+                                <tr>
+                                    <td>{{ stock_take.name }}</td>
+                                    <td>{{ stock_take.warehouse.name }}</td>
+                                    <td>{{ stock_take.start_date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ stock_take.get_completion_percentage }}%;"
+                                                 aria-valuenow="{{ stock_take.get_completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                 {{ stock_take.get_completion_percentage }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-check2-square"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Keine aktiven Inventuren vorhanden</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Standort</th>
-                                <th>Produkte</th>
-                                <th>Status</th>
-                                <th>Aktionen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for warehouse in warehouses %}
-                            <tr>
-                                <td>{{ warehouse.name }}</td>
-                                <td>{{ warehouse.location }}</td>
-                                <td>{{ warehouse.product_count }}</td>
-                                <td>
-                                    {% if warehouse.is_active %}
-                                        <span class="badge bg-success">Aktiv</span>
-                                    {% else %}
-                                        <span class="badge bg-danger">Inaktiv</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'warehouse_detail' warehouse.id %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">Keine Lager vorhanden</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        </div>
+
+        <!-- Lagerübersicht -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-building me-2"></i>Lagerübersicht</h5>
+                    <a href="{% url 'warehouse_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Standort</th>
+                                    <th>Produkte</th>
+                                    <th>Status</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for warehouse in warehouses %}
+                                <tr>
+                                    <td>{{ warehouse.name }}</td>
+                                    <td>{{ warehouse.location }}</td>
+                                    <td>{{ warehouse.product_count }}</td>
+                                    <td>
+                                        {% if warehouse.is_active %}
+                                            <span class="badge bg-success">Aktiv</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inaktiv</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'warehouse_detail' warehouse.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Keine Lager vorhanden</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Bestellungs-Widget als neue Zeile -->
+    <div class="row">
+        <div class="col-12">
+            <!-- Bestellungs-Widget -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Bestellübersicht</h5>
+                    <a href="{% url 'purchase_order_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
+                </div>
+                <div class="card-body">
+                    <!-- Bestellstatus-Kacheln -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                            <div class="card bg-warning text-dark h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">Genehmigung ausstehend</h6>
+                                            <h2 class="mb-0">{{ pending_count }}</h2>
+                                        </div>
+                                        <div class="ms-3">
+                                            <i class="bi bi-hourglass fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer p-2">
+                                    <a href="{% url 'purchase_order_list' %}?status=pending" class="stretched-link text-reset text-decoration-none small">
+                                        <span class="fw-bold">Genehmigungen anzeigen</span>
+                                        <i class="bi bi-chevron-right float-end"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                            <div class="card bg-primary text-white h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">Bestellte Artikel</h6>
+                                            <h2 class="mb-0">{{ sent_count }}</h2>
+                                        </div>
+                                        <div class="ms-3">
+                                            <i class="bi bi-truck fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer p-2">
+                                    <a href="{% url 'purchase_order_list' %}?status=sent" class="stretched-link text-reset text-decoration-none small">
+                                        <span class="fw-bold">Bestellte Artikel anzeigen</span>
+                                        <i class="bi bi-chevron-right float-end"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
+                            <div class="card bg-info text-dark h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">Teillieferungen</h6>
+                                            <h2 class="mb-0">{{ partial_count }}</h2>
+                                        </div>
+                                        <div class="ms-3">
+                                            <i class="bi bi-box fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer p-2">
+                                    <a href="{% url 'purchase_order_list' %}?status=partially_received" class="stretched-link text-reset text-decoration-none small">
+                                        <span class="fw-bold">Teillieferungen anzeigen</span>
+                                        <i class="bi bi-chevron-right float-end"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="card bg-success text-white h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">Bestellvorschläge</h6>
+                                            <h2 class="mb-0">{{ suggestion_count }}</h2>
+                                        </div>
+                                        <div class="ms-3">
+                                            <i class="bi bi-lightbulb fs-3"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer p-2">
+                                    <a href="{% url 'order_suggestions' %}" class="stretched-link text-reset text-decoration-none small">
+                                        <span class="fw-bold">Bestellvorschläge anzeigen</span>
+                                        <i class="bi bi-chevron-right float-end"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Letzte Bestellungen -->
+                    <h6 class="mb-3">Letzte Bestellungen</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Bestellnr.</th>
+                                    <th>Lieferant</th>
+                                    <th>Datum</th>
+                                    <th>Status</th>
+                                    <th>Wert</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a>
+                                    </td>
+                                    <td>{{ order.supplier.name }}</td>
+                                    <td>{{ order.order_date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        {% if order.status == 'draft' %}
+                                        <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'pending' %}
+                                        <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'approved' %}
+                                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'sent' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'partially_received' %}
+                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'received' %}
+                                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.total|floatformat:2 }} €</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if order.status == 'sent' or order.status == 'partially_received' %}
+                                            <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-outline-primary">
+                                                <i class="bi bi-box-seam"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-3">
+                                        <span class="text-muted">Keine Bestellungen vorhanden</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <a href="{% url 'order_suggestions' %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-lightbulb me-1"></i>Bestellvorschläge
+                        </a>
+                        <a href="{% url 'purchase_order_create' %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Neue Bestellung
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

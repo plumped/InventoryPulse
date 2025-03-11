@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Wareneingang für {{ order.order_number }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">Wareneingang erfassen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Wareneingang für Bestellung {{ order.order_number }} erfassen</h1>
+            <p class="text-muted">Lieferant: {{ order.supplier.name }}</p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Wareneingang</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" id="receiveForm">
+                {% csrf_token %}
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Produkt</th>
+                                <th>SKU</th>
+                                <th>Bestellt</th>
+                                <th>Bereits erhalten</th>
+                                <th>Ausstehend</th>
+                                <th>Jetzt liefern</th>
+                                <th>Ziellager</th>
+                                {% if has_batch_products %}
+                                <th>Charge</th>
+                                {% endif %}
+                                {% if has_expiry_products %}
+                                <th>Verfallsdatum</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr class="{% if item.is_fully_received %}table-success{% endif %}" data-item-id="{{ item.id }}">
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.supplier_sku|default:item.product.sku }}</td>
+                                <td>{{ item.quantity_ordered }} {{ item.product.unit }}</td>
+                                <td>{{ item.quantity_received }} {{ item.product.unit }}</td>
+                                <td>
+                                    <span class="badge {% if item.is_fully_received %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ item.quantity_ordered|sub:item.quantity_received }} {{ item.product.unit }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if not item.is_fully_received %}
+                                    <input type="number" name="receive_quantity_{{ item.id }}"
+                                           class="form-control receive-quantity"
+                                           value="{{ item.quantity_ordered|sub:item.quantity_received }}"
+                                           min="0" max="{{ item.quantity_ordered|sub:item.quantity_received }}"
+                                           step="0.01">
+                                    {% else %}
+                                    <span class="text-success">Vollständig erhalten</span>
+                                    <input type="hidden" name="receive_quantity_{{ item.id }}" value="0">
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not item.is_fully_received %}
+                                    <select name="warehouse_{{ item.id }}" class="form-select warehouse-select"
+                                            {% if item.is_fully_received %}disabled{% endif %}>
+                                        {% for warehouse in warehouses %}
+                                        <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    {% else %}
+                                    <input type="hidden" name="warehouse_{{ item.id }}" value="{{ warehouses.0.id }}">
+                                    {% endif %}
+                                </td>
+                                {% if item.product.has_batch_tracking %}
+                                <td>
+                                    {% if not item.is_fully_received %}
+                                    <input type="text" name="batch_{{ item.id }}" class="form-control batch-input"
+                                           placeholder="Chargennummer" required
+                                           {% if item.is_fully_received %}disabled{% endif %}>
+                                    {% else %}
+                                    <input type="hidden" name="batch_{{ item.id }}" value="">
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                                {% if item.product.has_expiry_tracking %}
+                                <td>
+                                    {% if not item.is_fully_received %}
+                                    <input type="date" name="expiry_{{ item.id }}" class="form-control expiry-input"
+                                           {% if item.is_fully_received %}disabled{% endif %}>
+                                    {% else %}
+                                    <input type="hidden" name="expiry_{{ item.id }}" value="">
+                                    {% endif %}
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Anmerkungen zum Wareneingang</label>
+                    {{ form.notes }}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">Abbrechen</a>
+                    <button type="submit" class="btn btn-primary">Wareneingang speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Wenn sich der Wert einer empfangenen Menge ändert, aktiviere/deaktiviere die zugehörigen Felder
+        $('.receive-quantity').on('input', function() {
+            const $row = $(this).closest('tr');
+            const value = parseFloat($(this).val()) || 0;
+
+            if (value > 0) {
+                $row.find('.warehouse-select, .batch-input, .expiry-input').prop('disabled', false).prop('required', true);
+            } else {
+                $row.find('.warehouse-select, .batch-input, .expiry-input').prop('disabled', true).prop('required', false);
+            }
+        });
+
+        // Initial den Status aller Felder setzen
+        $('.receive-quantity').each(function() {
+            const $row = $(this).closest('tr');
+            const value = parseFloat($(this).val()) || 0;
+
+            if (value > 0) {
+                $row.find('.warehouse-select, .batch-input, .expiry-input').prop('disabled', false).prop('required', true);
+            } else {
+                $row.find('.warehouse-select, .batch-input, .expiry-input').prop('disabled', true).prop('required', false);
+            }
+        });
+
+        // Formular-Validierung
+        $('#receiveForm').on('submit', function(e) {
+            let hasItems = false;
+
+            // Prüfen, ob mindestens ein Artikel empfangen wird
+            $('.receive-quantity').each(function() {
+                const value = parseFloat($(this).val()) || 0;
+                if (value > 0) {
+                    hasItems = true;
+                }
+            });
+
+            if (!hasItems) {
+                e.preventDefault();
+                alert('Bitte geben Sie mindestens eine Empfangsmenge größer als 0 an.');
+                return false;
+            }
+
+            // Prüfen, ob alle notwendigen Batch- und Expiry-Felder ausgefüllt sind
+            let isValid = true;
+            $('.receive-quantity').each(function() {
+                const $row = $(this).closest('tr');
+                const value = parseFloat($(this).val()) || 0;
+
+                if (value > 0) {
+                    const $batchInput = $row.find('.batch-input');
+                    const $expiryInput = $row.find('.expiry-input');
+
+                    if ($batchInput.length && !$batchInput.val().trim()) {
+                        isValid = false;
+                        $batchInput.addClass('is-invalid');
+                    }
+
+                    if ($expiryInput.length && !$expiryInput.val()) {
+                        isValid = false;
+                        $expiryInput.addClass('is-invalid');
+                    }
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                alert('Bitte füllen Sie alle erforderlichen Felder aus (Charge, Verfallsdatum).');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

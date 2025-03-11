@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellungen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Bestellungen</h1>
+            <div class="btn-group">
+                <a href="{% url 'order_suggestions' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-lightbulb"></i> Bestellvorschläge
+                </a>
+                <a href="{% url 'purchase_order_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Neue Bestellung
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">Alle Status</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="supplier" class="form-label">Lieferant</label>
+                    <select class="form-select" id="supplier" name="supplier">
+                        <option value="">Alle Lieferanten</option>
+                        {% for supplier_obj in suppliers %}
+                        <option value="{{ supplier_obj.id }}" {% if supplier == supplier_obj.id|stringformat:"s" %}selected{% endif %}>{{ supplier_obj.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">Von</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">Bis</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to|default:'' }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filtern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bestellungen -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Bestellnummer</th>
+                            <th>Lieferant</th>
+                            <th>Datum</th>
+                            <th>Liefertermin</th>
+                            <th>Status</th>
+                            <th>Wert</th>
+                            <th>Positionen</th>
+                            <th>Erstellt von</th>
+                            <th style="width: 120px;">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a>
+                            </td>
+                            <td>
+                                <a href="{% url 'supplier_detail' order.supplier.id %}">{{ order.supplier.name }}</a>
+                            </td>
+                            <td>{{ order.order_date|date:"d.m.Y" }}</td>
+                            <td>
+                                {% if order.expected_delivery %}
+                                {{ order.expected_delivery|date:"d.m.Y" }}
+                                {% else %}
+                                <span class="text-muted">--</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.status == 'draft' %}
+                                <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'pending' %}
+                                <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'approved' %}
+                                <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'sent' %}
+                                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'partially_received' %}
+                                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'received' %}
+                                <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.total|floatformat:2 }} €</td>
+                            <td>{{ order.items.count }}</td>
+                            <td>{{ order.created_by.username }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if order.status == 'draft' %}
+                                    <a href="{% url 'purchase_order_update' order.id %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'purchase_order_print' order.id %}">
+                                                <i class="bi bi-printer me-2"></i>Drucken
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'purchase_order_export' order.id %}">
+                                                <i class="bi bi-download me-2"></i>Exportieren
+                                            </a>
+                                        </li>
+                                        {% if order.status == 'sent' or order.status == 'partially_received' %}
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'purchase_order_receive' order.id %}">
+                                                <i class="bi bi-box-seam me-2"></i>Wareneingang
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        {% if order.status == 'draft' %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="{% url 'purchase_order_delete' order.id %}">
+                                                <i class="bi bi-trash me-2"></i>Löschen
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    <p>Keine Bestellungen gefunden.</p>
+                                    <a href="{% url 'purchase_order_create' %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle me-1"></i>Neue Bestellung anlegen
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginierung -->
+    {% if orders.has_other_pages %}
+    <nav aria-label="Pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if orders.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ orders.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+            </li>
+            {% endif %}
+
+            {% for num in page_range %}
+                {% if orders.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if orders.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ orders.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ orders.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

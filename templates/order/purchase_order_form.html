@@ -1,0 +1,420 @@
+<!-- templates/order/purchase_order_form.html -->
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Bestellung bearbeiten{% else %}Neue Bestellung{% endif %} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item active">
+                        {% if form.instance.pk %}Bestellung {{ form.instance.order_number }} bearbeiten{% else %}Neue Bestellung{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">
+                {% if form.instance.pk %}Bestellung {{ form.instance.order_number }} bearbeiten{% else %}Neue Bestellung{% endif %}
+            </h1>
+            <div>
+                {% if form.instance.pk %}
+                <div class="btn-group">
+                    {% if form.instance.status == 'draft' %}
+                    <a href="{% url 'purchase_order_submit' form.instance.pk %}" class="btn btn-success">
+                        <i class="bi bi-check2-circle"></i> Zur Genehmigung einreichen
+                    </a>
+                    {% elif form.instance.status == 'pending' and perms.order.approve %}
+                    <a href="{% url 'purchase_order_approve' form.instance.pk %}" class="btn btn-success">
+                        <i class="bi bi-check2-circle"></i> Genehmigen
+                    </a>
+                    <a href="{% url 'purchase_order_reject' form.instance.pk %}" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Ablehnen
+                    </a>
+                    {% elif form.instance.status == 'approved' %}
+                    <a href="{% url 'purchase_order_mark_sent' form.instance.pk %}" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Als bestellt markieren
+                    </a>
+                    {% elif form.instance.status in 'sent,partially_received' %}
+                    <a href="{% url 'purchase_order_receive' form.instance.pk %}" class="btn btn-primary">
+                        <i class="bi bi-box-seam"></i> Wareneingang erfassen
+                    </a>
+                    {% endif %}
+
+                    <a href="{% url 'purchase_order_print' form.instance.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-printer"></i> Drucken
+                    </a>
+                    <a href="{% url 'purchase_order_export' form.instance.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-download"></i> Export
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="purchase-order-form">
+        {% csrf_token %}
+
+        <div class="row">
+            <!-- Linke Spalte: Bestelldaten -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">Bestellinformationen</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if form.instance.pk %}
+                        <div class="alert alert-info mb-3">
+                            <div class="d-flex">
+                                <div class="me-3">
+                                    <i class="bi bi-info-circle fs-4"></i>
+                                </div>
+                                <div>
+                                    <h5 class="alert-heading">Status: {{ form.instance.get_status_display }}</h5>
+                                    <p class="mb-0">Bestellnummer: {{ form.instance.order_number }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">{{ form.supplier.label }}</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                            <div class="invalid-feedback d-block">{{ form.supplier.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.expected_delivery.id_for_label }}" class="form-label">{{ form.expected_delivery.label }}</label>
+                            {{ form.expected_delivery }}
+                            {% if form.expected_delivery.errors %}
+                            <div class="invalid-feedback d-block">{{ form.expected_delivery.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.shipping_address.id_for_label }}" class="form-label">{{ form.shipping_address.label }}</label>
+                            {{ form.shipping_address }}
+                            {% if form.shipping_address.errors %}
+                            <div class="invalid-feedback d-block">{{ form.shipping_address.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rechte Spalte: Artikelliste -->
+            <div class="col-md-8 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Bestellpositionen</h5>
+                        {% if not form.instance.pk or form.instance.status == 'draft' %}
+                        <button type="button" class="btn btn-sm btn-success" id="addItemButton">
+                            <i class="bi bi-plus-circle"></i> Position hinzufügen
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="itemsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Produkt</th>
+                                        <th>Lieferant-SKU</th>
+                                        <th>Menge</th>
+                                        <th>Einheit</th>
+                                        <th>Einzelpreis</th>
+                                        <th>Gesamt</th>
+                                        <th style="width: 80px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsTableBody">
+                                    {% if form.instance.pk %}
+                                    {% for item in form.instance.items.all %}
+                                    <tr data-item-id="{{ item.id }}">
+                                        <td>
+                                            {% if form.instance.status == 'draft' %}
+                                            <select name="item_product_{{ item.id }}" class="form-select product-select" required>
+                                                <option value="{{ item.product.id }}" selected>{{ item.product.name }}</option>
+                                            </select>
+                                            {% else %}
+                                            {{ item.product.name }}
+                                            <input type="hidden" name="item_product_{{ item.id }}" value="{{ item.product.id }}">
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if form.instance.status == 'draft' %}
+                                            <input type="text" name="item_supplier_sku_{{ item.id }}" class="form-control"
+                                                   value="{{ item.supplier_sku }}">
+                                            {% else %}
+                                            {{ item.supplier_sku }}
+                                            <input type="hidden" name="item_supplier_sku_{{ item.id }}" value="{{ item.supplier_sku }}">
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if form.instance.status == 'draft' %}
+                                            <input type="number" name="item_quantity_{{ item.id }}" class="form-control item-quantity"
+                                                  value="{{ item.quantity_ordered }}" min="0.01" step="0.01" required>
+                                            {% else %}
+                                            {{ item.quantity_ordered }}
+                                            <input type="hidden" name="item_quantity_{{ item.id }}" value="{{ item.quantity_ordered }}">
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.product.unit }}</td>
+                                        <td>
+                                            {% if form.instance.status == 'draft' %}
+                                            <input type="number" name="item_price_{{ item.id }}" class="form-control item-price"
+                                                  value="{{ item.unit_price }}" min="0.01" step="0.01" required>
+                                            {% else %}
+                                            {{ item.unit_price }}
+                                            <input type="hidden" name="item_price_{{ item.id }}" value="{{ item.unit_price }}">
+                                            {% endif %}
+                                        </td>
+                                        <td class="item-total">{{ item.line_total }}</td>
+                                        <td>
+                                            {% if form.instance.status == 'draft' %}
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endif %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="5" class="text-end"><strong>Zwischensumme:</strong></td>
+                                        <td><span id="subtotal">{{ form.instance.subtotal|default:"0.00" }}</span> €</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5" class="text-end">Steuern:</td>
+                                        <td>
+                                            {% if form.instance.status == 'draft' or not form.instance.pk %}
+                                            <input type="number" name="tax" id="taxInput" class="form-control"
+                                                   value="{{ form.instance.tax|default:0 }}" min="0" step="0.01">
+                                            {% else %}
+                                            {{ form.instance.tax }} €
+                                            <input type="hidden" name="tax" value="{{ form.instance.tax }}">
+                                            {% endif %}
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5" class="text-end">Versandkosten:</td>
+                                        <td>
+                                            {% if form.instance.status == 'draft' or not form.instance.pk %}
+                                            <input type="number" name="shipping_cost" id="shippingInput" class="form-control"
+                                                   value="{{ form.instance.shipping_cost|default:0 }}" min="0" step="0.01">
+                                            {% else %}
+                                            {{ form.instance.shipping_cost }} €
+                                            <input type="hidden" name="shipping_cost" value="{{ form.instance.shipping_cost }}">
+                                            {% endif %}
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="5" class="text-end"><strong>Gesamtsumme:</strong></td>
+                                        <td><strong><span id="total">{{ form.instance.total|default:"0.00" }}</span> €</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 d-flex justify-content-between">
+                <a href="{% url 'purchase_order_list' %}" class="btn btn-outline-secondary">Abbrechen</a>
+                {% if not form.instance.pk or form.instance.status == 'draft' %}
+                <button type="submit" class="btn btn-primary">Speichern</button>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Template für neue Positionen -->
+<template id="newItemTemplate">
+    <tr data-item-id="new_{index}">
+        <td>
+            <select name="item_product_new_{index}" class="form-select product-select" required>
+                <option value="">-- Produkt wählen --</option>
+                {% for product in products %}
+                <option value="{{ product.id }}" data-unit="{{ product.unit }}" data-supplier-sku="{{ product.supplier_sku }}">{{ product.name }}</option>
+                {% endfor %}
+            </select>
+        </td>
+        <td>
+            <input type="text" name="item_supplier_sku_new_{index}" class="form-control supplier-sku">
+        </td>
+        <td>
+            <input type="number" name="item_quantity_new_{index}" class="form-control item-quantity"
+                   value="1" min="0.01" step="0.01" required>
+        </td>
+        <td class="item-unit">--</td>
+        <td>
+            <input type="number" name="item_price_new_{index}" class="form-control item-price"
+                   value="0.00" min="0.01" step="0.01" required>
+        </td>
+        <td class="item-total">0.00</td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        let itemIndex = 0;
+
+        // Produktauswahl initialisieren
+        initializeProductSelects();
+
+        // Rechenoperationen initialisieren
+        initializeCalculations();
+
+        // Hinzufügen-Button
+        $('#addItemButton').click(function() {
+            addNewItem();
+        });
+
+        // Entfernen-Button für bestehende und neue Zeilen
+        $(document).on('click', '.remove-item', function() {
+            $(this).closest('tr').remove();
+            updateTotals();
+        });
+
+        // Funktion zum Hinzufügen einer neuen Position
+        function addNewItem() {
+            // Template klonen und anpassen
+            let template = document.getElementById('newItemTemplate').innerHTML;
+            template = template.replace(/{index}/g, itemIndex++);
+
+            // Zum Tabellenkörper hinzufügen
+            $('#itemsTableBody').append(template);
+
+            // Selects neu initialisieren
+            initializeProductSelects();
+
+            // Berechnungen initialisieren
+            initializeCalculations();
+
+            // Scroll zum neuen Element
+            $('html, body').animate({
+                scrollTop: $("#itemsTableBody tr:last").offset().top - 200
+            }, 500);
+        }
+
+        // Produktauswahl-Logik
+        function initializeProductSelects() {
+            // Select2 für Produktauswahl (falls vorhanden)
+            if($.fn.select2) {
+                $('.product-select').select2({
+                    placeholder: 'Produkt wählen',
+                    width: '100%'
+                });
+            }
+
+            // Änderungen in der Produktauswahl
+            $('.product-select').off('change').on('change', function() {
+                const $row = $(this).closest('tr');
+                const $option = $(this).find('option:selected');
+
+                // Einheit aktualisieren
+                $row.find('.item-unit').text($option.data('unit') || '--');
+
+                // Lieferanten-SKU füllen, falls verfügbar
+                const supplierSku = $option.data('supplier-sku') || '';
+                $row.find('.supplier-sku').val(supplierSku);
+
+                // Lieferantenspezifischen Preis abrufen, falls verfügbar
+                if($option.val()) {
+                    $.getJSON('/api/supplier-product-price/', {
+                        product_id: $option.val(),
+                        supplier_id: $('#id_supplier').val()
+                    }).done(function(data) {
+                        if(data.price) {
+                            $row.find('.item-price').val(data.price);
+                            updateRowTotal($row);
+                        }
+                    });
+                }
+            });
+        }
+
+        // Berechnungslogik
+        function initializeCalculations() {
+            // Menge oder Preis ändert sich
+            $('.item-quantity, .item-price').off('input').on('input', function() {
+                updateRowTotal($(this).closest('tr'));
+            });
+
+            // Steuern oder Versandkosten ändern sich
+            $('#taxInput, #shippingInput').off('input').on('input', function() {
+                updateTotals();
+            });
+        }
+
+        // Zeilensumme berechnen
+        function updateRowTotal($row) {
+            const quantity = parseFloat($row.find('.item-quantity').val()) || 0;
+            const price = parseFloat($row.find('.item-price').val()) || 0;
+            const total = (quantity * price).toFixed(2);
+
+            $row.find('.item-total').text(total);
+
+            // Gesamtsummen aktualisieren
+            updateTotals();
+        }
+
+        // Alle Summen aktualisieren
+        function updateTotals() {
+            let subtotal = 0;
+
+            // Alle Positionen summieren
+            $('#itemsTableBody tr').each(function() {
+                subtotal += parseFloat($(this).find('.item-total').text()) || 0;
+            });
+
+            const tax = parseFloat($('#taxInput').val()) || 0;
+            const shipping = parseFloat($('#shippingInput').val()) || 0;
+            const total = subtotal + tax + shipping;
+
+            // Summen aktualisieren
+            $('#subtotal').text(subtotal.toFixed(2));
+            $('#total').text(total.toFixed(2));
+        }
+
+        // Falls es keine Positionen gibt, eine leere hinzufügen
+        if($('#itemsTableBody tr').length === 0) {
+            addNewItem();
+        }
+    });
+</script>
+{% endblock %}

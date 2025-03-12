@@ -1,0 +1,123 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Gruppe bearbeiten{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_group_management' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Gruppe "{{ group.name }}" bearbeiten</h6>
+    </div>
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group mb-3">
+                <label for="name" class="form-label">Gruppenname</label>
+                <input type="text" class="form-control" id="name" name="name" value="{{ group.name }}" required>
+                <div class="form-text">Geben Sie einen eindeutigen Namen für die Gruppe ein.</div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Berechtigungen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for area, area_name in permission_areas.items %}
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">{{ area_name }}</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        {% for perm in permissions_by_area|get_item:area %}
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="permissions" id="perm_{{ perm.id }}" value="{{ perm.id }}" {% if perm in group_permissions %}checked{% endif %}>
+                                                <label class="form-check-label" for="perm_{{ perm.id }}">
+                                                    {{ perm.name }}
+                                                </label>
+                                            </div>
+                                        {% empty %}
+                                            <p class="text-muted">Keine Berechtigungen verfügbar</p>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'admin_group_management' %}" class="btn btn-secondary">Abbrechen</a>
+                <button type="submit" class="btn btn-primary">Änderungen speichern</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Berechtigungstypen</h6>
+    </div>
+    <div class="card-body">
+        <p>Berechtigungen werden in folgende Kategorien unterteilt:</p>
+        <ul>
+            <li><strong>Ansehen (view):</strong> Erlaubt das Betrachten von Daten</li>
+            <li><strong>Hinzufügen (add):</strong> Erlaubt das Erstellen neuer Einträge</li>
+            <li><strong>Ändern (change):</strong> Erlaubt das Bearbeiten bestehender Einträge</li>
+            <li><strong>Löschen (delete):</strong> Erlaubt das Entfernen von Einträgen</li>
+            <li><strong>Spezial (special):</strong> Besondere Funktionen wie Import/Export, Genehmigungen, etc.</li>
+        </ul>
+        <p class="mb-0">Wählen Sie die Berechtigungen sorgfältig aus, da sie den Zugriff auf sensible Daten steuern.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Helfer-Funktion für Bereiche
+        $('.card-header').each(function() {
+            const header = $(this);
+            const card = header.closest('.card');
+            const checkboxes = card.find('input[type="checkbox"]');
+
+            // "Alle auswählen" Funktion pro Bereich hinzufügen
+            if (checkboxes.length > 0) {
+                const selectAllHtml = `
+                    <div class="form-check form-check-inline float-end">
+                        <input class="form-check-input select-all-area" type="checkbox" id="select_all_${card.index()}">
+                        <label class="form-check-label small" for="select_all_${card.index()}">Alle</label>
+                    </div>
+                `;
+                header.append(selectAllHtml);
+
+                const selectAllCheckbox = header.find('.select-all-area');
+
+                // Initial state based on existing selections
+                const allChecked = checkboxes.length === checkboxes.filter(':checked').length;
+                selectAllCheckbox.prop('checked', allChecked);
+
+                selectAllCheckbox.change(function() {
+                    checkboxes.prop('checked', $(this).prop('checked'));
+                });
+
+                // Update "select all" when individual checkboxes change
+                checkboxes.change(function() {
+                    const allChecked = checkboxes.length === checkboxes.filter(':checked').length;
+                    selectAllCheckbox.prop('checked', allChecked);
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

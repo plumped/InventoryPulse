@@ -1,0 +1,129 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Gruppenverwaltung{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_group_create' %}" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus-circle"></i> Neue Gruppe erstellen
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Gruppenübersicht</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="groupsTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Benutzer</th>
+                        <th>Berechtigungen</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in groups %}
+                        <tr>
+                            <td>{{ group.name }}</td>
+                            <td>{{ group.user_count }}</td>
+                            <td>
+                                <div class="d-flex flex-wrap">
+                                    {% for perm in group.permissions.all|slice:":5" %}
+                                        <span class="badge bg-info me-1 mb-1">{{ perm.name }}</span>
+                                    {% empty %}
+                                        <span class="badge bg-secondary">Keine Berechtigungen</span>
+                                    {% endfor %}
+                                    {% if group.permissions.count > 5 %}
+                                        <span class="badge bg-secondary">+{{ group.permissions.count|add:"-5" }} weitere</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'admin_group_edit' group.id %}" class="btn btn-sm btn-outline-secondary" title="Bearbeiten">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'admin_group_delete' group.id %}" class="btn btn-sm btn-outline-danger" title="Löschen">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">Keine Gruppen gefunden</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Über Gruppen</h6>
+            </div>
+            <div class="card-body">
+                <p>Gruppen ermöglichen die zentrale Verwaltung von Berechtigungen für mehrere Benutzer. Statt Berechtigungen für jeden Benutzer einzeln zu vergeben, können Sie:</p>
+                <ul>
+                    <li>Berechtigungsgruppen erstellen und verwalten</li>
+                    <li>Benutzer zu Gruppen hinzufügen und entfernen</li>
+                    <li>Für jede Gruppe spezifische Berechtigungen festlegen</li>
+                </ul>
+                <p>Änderungen an Gruppenberechtigungen wirken sich sofort auf alle Mitglieder aus.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Standardgruppen</h6>
+            </div>
+            <div class="card-body">
+                <p>Das System bietet folgende Standardgruppen:</p>
+                <ul>
+                    <li><strong>Administratoren:</strong> Vollzugriff auf alle Systemfunktionen</li>
+                    <li><strong>Lagerverwalter:</strong> Verwaltung von Lagerbeständen und Produkten</li>
+                    <li><strong>Einkäufer:</strong> Bestellungen erstellen und verwalten</li>
+                    <li><strong>Genehmiger:</strong> Bestellungen prüfen und genehmigen</li>
+                    <li><strong>Mitarbeiter:</strong> Grundlegende Leserechte für Bestände und Produkte</li>
+                </ul>
+                <p class="mb-0">Sie können diese Gruppen an Ihre Bedürfnisse anpassen oder eigene Gruppen erstellen.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DataTable für bessere Sortier- und Suchfunktionen
+        $('#groupsTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/German.json"
+            },
+            "pageLength": 25,
+            "order": [[0, 'asc']]
+        });
+    });
+</script>
+{% endblock %}

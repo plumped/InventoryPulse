@@ -1,0 +1,112 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Neue Abteilung erstellen{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_department_management' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Abteilungsdaten</h6>
+    </div>
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.name.errors }}
+                    </div>
+                {% endif %}
+                {% if form.name.help_text %}
+                    <small class="form-text text-muted">{{ form.name.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.code.id_for_label }}" class="form-label">{{ form.code.label }}</label>
+                {{ form.code }}
+                {% if form.code.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.code.errors }}
+                    </div>
+                {% endif %}
+                {% if form.code.help_text %}
+                    <small class="form-text text-muted">{{ form.code.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.manager.id_for_label }}" class="form-label">{{ form.manager.label }}</label>
+                {{ form.manager }}
+                {% if form.manager.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.manager.errors }}
+                    </div>
+                {% endif %}
+                {% if form.manager.help_text %}
+                    <small class="form-text text-muted">{{ form.manager.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.description.errors }}
+                    </div>
+                {% endif %}
+                {% if form.description.help_text %}
+                    <small class="form-text text-muted">{{ form.description.help_text }}</small>
+                {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'admin_department_management' %}" class="btn btn-secondary">Abbrechen</a>
+                <button type="submit" class="btn btn-primary">
+                    Abteilung erstellen
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Hinweise</h6>
+    </div>
+    <div class="card-body">
+        <p>Beim Erstellen einer neuen Abteilung beachten Sie bitte:</p>
+        <ul>
+            <li><strong>Name:</strong> Der vollständige Name der Abteilung</li>
+            <li><strong>Code:</strong> Ein eindeutiger Kurzcode zur Identifikation (z.B. "HR", "IT", "FIN")</li>
+            <li><strong>Manager:</strong> Der verantwortliche Leiter der Abteilung</li>
+            <li><strong>Beschreibung:</strong> Optionale Informationen zur Abteilung</li>
+        </ul>
+        <p>Nach dem Erstellen können Sie der Abteilung Mitglieder zuweisen und Lagerzugriffsrechte einrichten.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Für Select-Felder wie 'manager' kann man Select2 zur besseren Benutzererfahrung verwenden
+        $('#{{ form.manager.id_for_label }}').select2({
+            placeholder: "Manager auswählen",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+</script>
+{% endblock %}

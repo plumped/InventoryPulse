@@ -1,0 +1,89 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Lagerzugriff löschen{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_warehouse_access_management' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-danger text-white">
+        <h6 class="m-0 font-weight-bold">Lagerzugriff löschen</h6>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Achtung:</strong> Das Löschen dieses Lagerzugriffsrechts kann nicht rückgängig gemacht werden.
+            Alle Mitglieder der betroffenen Abteilung verlieren Zugriff auf das Lager gemäß dieser Konfiguration.
+        </div>
+
+        <p>Sind Sie sicher, dass Sie das Zugriffsrecht für die Abteilung <strong>{{ access.department.name }}</strong> auf das Lager <strong>{{ access.warehouse.name }}</strong> löschen möchten?</p>
+
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">Zugriffssdetails</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Lager:</dt>
+                    <dd class="col-sm-9">{{ access.warehouse.name }}</dd>
+
+                    <dt class="col-sm-3">Abteilung:</dt>
+                    <dd class="col-sm-9">{{ access.department.name }}</dd>
+
+                    <dt class="col-sm-3">Berechtigungen:</dt>
+                    <dd class="col-sm-9">
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Ansehen
+                                <span>
+                                    {% if access.can_view %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    {% else %}
+                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                    {% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Bearbeiten
+                                <span>
+                                    {% if access.can_edit %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    {% else %}
+                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                    {% endif %}
+                                </span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Bestand verwalten
+                                <span>
+                                    {% if access.can_manage_stock %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    {% else %}
+                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                    {% endif %}
+                                </span>
+                            </li>
+                        </ul>
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <form method="post" class="d-flex justify-content-between">
+            {% csrf_token %}
+            <a href="{% url 'admin_warehouse_access_management' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Abbrechen
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash me-2"></i>Lagerzugriff endgültig löschen
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

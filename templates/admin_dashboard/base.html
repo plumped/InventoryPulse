@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0 text-gray-800">{% block content_title %}Admin{% endblock %}</h1>
+            <div class="mt-2">
+                {% block content_actions %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <div class="row">
+        <div class="col-md-3 col-lg-2 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Administration</h6>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'dashboard' %}active bg-light{% endif %}" href="{% url 'admin_dashboard' %}">
+                                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'users' %}active bg-light{% endif %}" href="{% url 'admin_user_management' %}">
+                                <i class="bi bi-people me-2"></i> Benutzerverwaltung
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'groups' %}active bg-light{% endif %}" href="{% url 'admin_group_management' %}">
+                                <i class="bi bi-collection me-2"></i> Gruppenverwaltung
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'departments' %}active bg-light{% endif %}" href="{% url 'admin_department_management' %}">
+                                <i class="bi bi-building me-2"></i> Abteilungsverwaltung
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'warehouse_access' %}active bg-light{% endif %}" href="{% url 'admin_warehouse_access_management' %}">
+                                <i class="bi bi-key me-2"></i> Lagerzugriff
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <hr class="my-2">
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'system_settings' %}active bg-light{% endif %}" href="{% url 'admin_system_settings' %}">
+                                <i class="bi bi-gear me-2"></i> Systemeinstellungen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'workflow_settings' %}active bg-light{% endif %}" href="{% url 'admin_workflow_settings' %}">
+                                <i class="bi bi-diagram-3 me-2"></i> Workflow-Einstellungen
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9 col-lg-10">
+            {% block admin_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% block admin_extra_js %}{% endblock %}
+{% endblock %}

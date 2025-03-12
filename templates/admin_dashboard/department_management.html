@@ -1,0 +1,114 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Abteilungsverwaltung{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_department_create' %}" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus-circle"></i> Neue Abteilung
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Abteilungsübersicht</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="departmentsTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Code</th>
+                        <th>Manager</th>
+                        <th>Mitglieder</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for department in departments %}
+                        <tr>
+                            <td>{{ department.department.name }}</td>
+                            <td>{{ department.department.code }}</td>
+                            <td>
+                                {% if department.department.manager %}
+                                    {{ department.department.manager.get_full_name|default:department.department.manager.username }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ department.user_count }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'admin_department_edit' department.department.id %}" class="btn btn-sm btn-outline-primary" title="Mitglieder">
+                                        <i class="bi bi-people"></i>
+                                    </a>
+                                    <a href="{% url 'admin_department_edit' department.department.id %}" class="btn btn-sm btn-outline-secondary" title="Bearbeiten">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'admin_department_delete' department.department.id %}" class="btn btn-sm btn-outline-danger" title="Löschen">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">Keine Abteilungen gefunden</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if user.is_superuser %}
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Abteilungsverwaltung</h6>
+    </div>
+    <div class="card-body">
+        <p>Abteilungen organisieren die Zuständigkeiten innerhalb des Unternehmens. Hier können Sie:</p>
+        <ul>
+            <li>Neue Abteilungen anlegen und bestehende bearbeiten</li>
+            <li>Mitglieder zu Abteilungen zuweisen</li>
+            <li>Abteilungsleiter festlegen</li>
+            <li>Berechtigungen für Lager über die Abteilungszugehörigkeit steuern</li>
+        </ul>
+
+        <div class="mt-3">
+            <a href="{% url 'admin_warehouse_access_management' %}" class="btn btn-outline-primary">
+                <i class="bi bi-key me-2"></i>Lagerzugriffsrechte verwalten
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DataTable für bessere Sortier- und Suchfunktionen
+        $('#departmentsTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/German.json"
+            },
+            "pageLength": 25,
+            "order": [[0, 'asc']]
+        });
+    });
+</script>
+{% endblock %}

@@ -29,6 +29,13 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    {% if product %}
+                    <input type="hidden" name="product" value="{{ product.id }}">
+                    <div class="alert alert-info">
+                        Ausgewähltes Produkt: {{ product.name }}
+                    </div>
+                    {% endif %}
                 </form>
             </div>
         </div>
@@ -61,6 +68,63 @@
                 </div>
 
                 {% if products %}
+                    {% if product and product.has_batch_tracking and batches %}
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="use_batch_selection" name="use_batch_selection">
+                                <label class="form-check-label" for="use_batch_selection">
+                                    Chargen für "{{ product.name }}" auswählen
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="card-body batch-selection-container" style="display:none;">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Charge</th>
+                                            <th>Verfügbare Menge</th>
+                                            <th>Ablaufdatum</th>
+                                            <th>Umzulagernde Menge</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for batch in batches %}
+                                        <tr>
+                                            <td>{{ batch.batch_number }}</td>
+                                            <td>{{ batch.quantity }} {{ product.unit }}</td>
+                                            <td>
+                                                {% if batch.expiry_date %}
+                                                <span class="{% if batch.is_expired %}text-danger{% elif batch.days_until_expiry < 30 %}text-warning{% endif %}">
+                                                    {{ batch.expiry_date|date:"d.m.Y" }}
+                                                </span>
+                                                {% else %}
+                                                -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number"
+                                                           name="batch_quantity_{{ batch.id }}"
+                                                           class="form-control batch-quantity"
+                                                           value="0"
+                                                           min="0"
+                                                           max="{{ batch.quantity }}"
+                                                           step="0.01">
+                                                    <span class="input-group-text">{{ product.unit }}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="card mb-3">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Produkte auswählen</h5>
@@ -82,20 +146,39 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for product, quantity in products %}
-                                            <tr>
+                                        {% for product_item, quantity in products %}
+                                            <tr class="{% if product and product.id == product_item.id %}table-primary{% endif %}">
                                                 <td>
                                                     <div class="form-check">
-                                                        <input class="form-check-input product-checkbox" type="checkbox" name="product_ids" value="{{ product.id }}" id="product_{{ product.id }}">
+                                                        <input class="form-check-input product-checkbox"
+                                                               type="checkbox"
+                                                               name="product_ids"
+                                                               value="{{ product_item.id }}"
+                                                               id="product_{{ product_item.id }}"
+                                                               {% if product and product.id == product_item.id and product.has_batch_tracking and batches %}disabled{% endif %}>
                                                     </div>
                                                 </td>
-                                                <td>{{ product.name }}</td>
-                                                <td>{{ product.sku }}</td>
-                                                <td>{{ quantity }} {{ product.unit }}</td>
+                                                <td>
+                                                    <a href="{% url 'bulk_warehouse_transfer' %}?source={{ source_warehouse_id }}&product={{ product_item.id }}">
+                                                    {{ product_item.name }}
+                                                    </a>
+                                                    {% if product_item.has_batch_tracking %}
+                                                    <span class="badge bg-info">Chargen</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ product_item.sku }}</td>
+                                                <td>{{ quantity }} {{ product_item.unit }}</td>
                                                 <td>
                                                     <div class="input-group input-group-sm">
-                                                        <input type="number" class="form-control" name="quantity_{{ product.id }}" min="0" max="{{ quantity }}" value="0" step="1">
-                                                        <span class="input-group-text">{{ product.unit }}</span>
+                                                        <input type="number"
+                                                               class="form-control product-quantity"
+                                                               name="quantity_{{ product_item.id }}"
+                                                               min="0"
+                                                               max="{{ quantity }}"
+                                                               value="0"
+                                                               step="0.01"
+                                                               {% if product and product.id == product_item.id and product.has_batch_tracking and batches %}readonly{% endif %}>
+                                                        <span class="input-group-text">{{ product_item.unit }}</span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -135,9 +218,65 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Chargenauswahl-Funktionalität
+        const batchSelectionCheckbox = document.getElementById('use_batch_selection');
+        const batchSelectionContainer = document.querySelector('.batch-selection-container');
+
+        if (batchSelectionCheckbox) {
+            batchSelectionCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    batchSelectionContainer.style.display = 'block';
+
+                    // Wenn Chargenauswahl aktiviert ist, Produktmenge basierend auf Chargen berechnen
+                    updateTotalFromBatches();
+                } else {
+                    batchSelectionContainer.style.display = 'none';
+
+                    // Wenn Chargenauswahl deaktiviert, Produktmenge freigeben
+                    const productCheckbox = document.querySelector('.product-checkbox[disabled]');
+                    const productQuantity = document.querySelector('.product-quantity[readonly]');
+
+                    if (productCheckbox) {
+                        productCheckbox.disabled = false;
+                    }
+
+                    if (productQuantity) {
+                        productQuantity.readOnly = false;
+                        productQuantity.value = "0";
+                    }
+                }
+            });
+
+            // Batch-Mengen-Input-Handler
+            const batchQuantityInputs = document.querySelectorAll('.batch-quantity');
+            batchQuantityInputs.forEach(input => {
+                input.addEventListener('input', updateTotalFromBatches);
+            });
+
+            function updateTotalFromBatches() {
+                if (!batchSelectionCheckbox.checked) return;
+
+                let total = 0;
+                batchQuantityInputs.forEach(input => {
+                    total += parseFloat(input.value) || 0;
+                });
+
+                // Produkt-ID aus der URL oder Hidden-Input ermitteln
+                const urlParams = new URLSearchParams(window.location.search);
+                const productId = urlParams.get('product');
+
+                if (productId) {
+                    const productQuantityInput = document.querySelector(`input[name="quantity_${productId}"]`);
+                    if (productQuantityInput) {
+                        productQuantityInput.value = total;
+                    }
+                }
+            }
+        }
+
         // Funktion für "Alle auswählen" Checkbox
         const selectAllCheckbox = document.getElementById('select-all');
-        const productCheckboxes = document.querySelectorAll('.product-checkbox');
+        const productCheckboxes = document.querySelectorAll('.product-checkbox:not([disabled])');
 
         if (selectAllCheckbox) {
             selectAllCheckbox.addEventListener('change', function() {
@@ -152,27 +291,49 @@
         const transferForm = document.getElementById('transfer-form');
         if (transferForm) {
             transferForm.addEventListener('submit', function(e) {
-                const selectedProducts = document.querySelectorAll('input[name="product_ids"]:checked');
+                // Überprüfen, ob Produkte oder Chargen ausgewählt wurden
+                const useCharges = batchSelectionCheckbox && batchSelectionCheckbox.checked;
 
-                if (selectedProducts.length === 0) {
-                    e.preventDefault();
-                    alert('Bitte wählen Sie mindestens ein Produkt aus.');
-                    return false;
-                }
+                if (useCharges) {
+                    // Prüfen, ob Chargenmenge > 0
+                    let hasChargeQuantity = false;
+                    const batchQuantityInputs = document.querySelectorAll('.batch-quantity');
 
-                let hasQuantity = false;
-                selectedProducts.forEach(checkbox => {
-                    const productId = checkbox.value;
-                    const quantityInput = document.querySelector(`input[name="quantity_${productId}"]`);
-                    if (quantityInput && parseFloat(quantityInput.value) > 0) {
-                        hasQuantity = true;
+                    batchQuantityInputs.forEach(input => {
+                        if (parseFloat(input.value) > 0) {
+                            hasChargeQuantity = true;
+                        }
+                    });
+
+                    if (!hasChargeQuantity) {
+                        e.preventDefault();
+                        alert('Bitte geben Sie für mindestens eine Charge eine Menge größer als 0 ein.');
+                        return false;
                     }
-                });
+                } else {
+                    // Herkömmliche Produktvalidierung
+                    const selectedProducts = document.querySelectorAll('input[name="product_ids"]:checked:not([disabled])');
 
-                if (!hasQuantity) {
-                    e.preventDefault();
-                    alert('Bitte geben Sie für mindestens ein ausgewähltes Produkt eine Menge größer als 0 ein.');
-                    return false;
+                    if (selectedProducts.length === 0) {
+                        e.preventDefault();
+                        alert('Bitte wählen Sie mindestens ein Produkt aus.');
+                        return false;
+                    }
+
+                    let hasQuantity = false;
+                    selectedProducts.forEach(checkbox => {
+                        const productId = checkbox.value;
+                        const quantityInput = document.querySelector(`input[name="quantity_${productId}"]`);
+                        if (quantityInput && parseFloat(quantityInput.value) > 0) {
+                            hasQuantity = true;
+                        }
+                    });
+
+                    if (!hasQuantity) {
+                        e.preventDefault();
+                        alert('Bitte geben Sie für mindestens ein ausgewähltes Produkt eine Menge größer als 0 ein.');
+                        return false;
+                    }
                 }
             });
         }

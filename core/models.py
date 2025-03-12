@@ -538,5 +538,5 @@ class BatchNumber(models.Model):
         return None
 
     class Meta:
-        unique_together = ('product', 'batch_number')
+        unique_together = ('product', 'batch_number', 'warehouse')
         ordering = ['-created_at']

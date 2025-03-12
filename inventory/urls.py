@@ -54,5 +54,4 @@ urlpatterns = [
     path('warehouses/<int:warehouse_id>/bulk-add-products/', views.bulk_add_products_to_warehouse, name='bulk_add_products_to_warehouse'),
     path('warehouses/bulk-transfer/', views.bulk_warehouse_transfer, name='bulk_warehouse_transfer'),
 
-
 ]

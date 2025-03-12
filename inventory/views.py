@@ -15,7 +15,7 @@ import csv
 from django import forms
 
 from core import models
-from core.models import Product, Category, ProductWarehouse
+from core.models import Product, Category, ProductWarehouse, BatchNumber
 from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department, WarehouseAccess
 from .forms import StockMovementForm, StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
     WarehouseForm, StockAdjustmentForm
@@ -1744,144 +1744,275 @@ class WarehouseAccessForm(forms.ModelForm):
                 'department'].help_text = "Wählen Sie eine Abteilung aus. Für jede Kombination aus Lager und Abteilung kann es nur einen Zugriffsrecht-Eintrag geben."
 
 
+# In inventory/views.py - bulk_warehouse_transfer View anpassen
+
 @login_required
 @permission_required('inventory', 'edit')
 def bulk_warehouse_transfer(request):
-    """Mehrere Produkte zwischen Lagern verschieben."""
+    """Umlagerung von Produkten zwischen Lagern mit Chargenunterstützung."""
 
-    # Nur Lager anzeigen, auf die der Benutzer Zugriff hat
-    managed_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                          if user_has_warehouse_access(request.user, w, 'manage_stock')]
+    # Verfügbare Lager für den Benutzer ermitteln
+    if request.user.is_superuser:
+        managed_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        user_departments = request.user.profile.departments.all()
+        warehouse_access = WarehouseAccess.objects.filter(
+            department__in=user_departments,
+            can_manage_stock=True
+        ).values_list('warehouse', flat=True)
+        managed_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
 
-    if not managed_warehouses:
-        messages.error(request, "Sie haben keine Berechtigung, Produkte zwischen Lagern zu transferieren.")
-        return redirect('warehouse_list')
+    # Quelllager aus GET-Parameter
+    source_warehouse_id = request.GET.get('source')
+    product_id = request.GET.get('product')
 
+    # Produkt und Chargen initialisieren
+    product = None
+    batches = []
+    products = []
+
+    # Spezifisches Produkt laden, falls vorhanden
+    if product_id:
+        try:
+            product = Product.objects.get(pk=product_id)
+        except Product.DoesNotExist:
+            product = None
+
+    # Wenn ein Quelllager ausgewählt wurde, verfügbare Produkte laden
+    if source_warehouse_id:
+        source_warehouse = get_object_or_404(Warehouse, pk=source_warehouse_id)
+
+        # Produkte mit Bestand im Quelllager abrufen
+        warehouse_products = ProductWarehouse.objects.filter(
+            warehouse=source_warehouse,
+            quantity__gt=0
+        ).select_related('product')
+
+        # Produkte und ihren Bestand für die Anzeige vorbereiten
+        products = [(item.product, item.quantity) for item in warehouse_products]
+
+        # Wenn ein spezifisches Produkt und Quelllager ausgewählt wurden und das Produkt Chargen hat
+        if product and product.has_batch_tracking:
+            # Alle Chargen für dieses Produkt im Quell-Lager laden
+            batches = BatchNumber.objects.filter(
+                product=product,
+                warehouse=source_warehouse,
+                quantity__gt=0
+            ).order_by('expiry_date')
+
+    # POST-Anfrage verarbeiten
     if request.method == 'POST':
         source_warehouse_id = request.POST.get('source_warehouse')
         destination_warehouse_id = request.POST.get('destination_warehouse')
-        product_ids = request.POST.getlist('product_ids')
         notes = request.POST.get('notes', '')
 
-        if not (source_warehouse_id and destination_warehouse_id and product_ids):
-            messages.error(request, "Quelllager, Ziellager und mindestens ein Produkt müssen ausgewählt werden.")
+        # Prüfen auf Chargenauswahl
+        has_batch_selection = 'use_batch_selection' in request.POST
+
+        if not source_warehouse_id or not destination_warehouse_id:
+            messages.error(request, 'Quell- und Ziellager müssen angegeben werden.')
             return redirect('bulk_warehouse_transfer')
 
-        # Verarbeitung der Verschiebung für jedes Produkt
-        try:
-            source_warehouse = Warehouse.objects.get(pk=source_warehouse_id)
-            destination_warehouse = Warehouse.objects.get(pk=destination_warehouse_id)
+        source_warehouse = get_object_or_404(Warehouse, pk=source_warehouse_id)
+        destination_warehouse = get_object_or_404(Warehouse, pk=destination_warehouse_id)
 
-            # Berechtigungsprüfung
-            if not (user_has_warehouse_access(request.user, source_warehouse, 'manage_stock') and
-                    user_has_warehouse_access(request.user, destination_warehouse, 'manage_stock')):
-                messages.error(request, "Sie haben keine Berechtigung für einen oder beide Lager.")
-                return redirect('bulk_warehouse_transfer')
+        if has_batch_selection and product_id:
+            product = get_object_or_404(Product, pk=product_id)
 
-            # Verarbeitung der ausgewählten Produkte
-            products_transferred = 0
-            errors = []
+            # Nur fortfahren wenn das Produkt Chargenverfolgung nutzt
+            if product.has_batch_tracking:
+                # Alle ausgewählten Chargen sammeln
+                batch_transfers = []
+                for key, value in request.POST.items():
+                    if key.startswith('batch_quantity_') and float(value) > 0:
+                        batch_id = key.replace('batch_quantity_', '')
+                        batch_transfers.append({
+                            'batch_id': batch_id,
+                            'quantity': Decimal(value)
+                        })
 
-            for product_id in product_ids:
-                try:
-                    product = Product.objects.get(pk=product_id)
+                if batch_transfers:
+                    with transaction.atomic():
+                        for batch_transfer in batch_transfers:
+                            batch = get_object_or_404(BatchNumber, pk=batch_transfer['batch_id'])
+                            quantity = batch_transfer['quantity']
 
-                    # Bestandsprüfung im Quelllager
-                    try:
-                        quantity_field_name = f'quantity_{product_id}'
-                        transfer_quantity = Decimal(request.POST.get(quantity_field_name, 0))
+                            # Ursprüngliches Lager aktualisieren
+                            if batch.quantity < quantity:
+                                messages.error(request, f'Unzureichender Chargenbestand für {batch.batch_number}.')
+                                return redirect('bulk_warehouse_transfer')
 
-                        source_product_warehouse = ProductWarehouse.objects.get(
-                            product=product, warehouse=source_warehouse)
+                            # 1. Ursprünglichen Batch aktualisieren
+                            batch.quantity -= quantity
+                            batch.save()
 
-                        if source_product_warehouse.quantity < transfer_quantity:
-                            errors.append(f"Nicht genügend Bestand für {product.name} im Quelllager.")
-                            continue
-
-                        # Transfer durchführen
-                        with transaction.atomic():
-                            # Abgang im Quelllager
-                            StockMovement.objects.create(
+                            # 2. Batch im Ziellager erstellen oder aktualisieren
+                            target_batch, created = BatchNumber.objects.get_or_create(
                                 product=product,
-                                quantity=transfer_quantity,
-                                movement_type='out',
-                                reference=f'Bulk-Transfer zu {destination_warehouse.name}',
-                                notes=notes,
-                                created_by=request.user,
-                                warehouse=source_warehouse
+                                batch_number=batch.batch_number,
+                                warehouse=destination_warehouse,
+                                defaults={
+                                    'quantity': 0,
+                                    'expiry_date': batch.expiry_date,
+                                    'production_date': batch.production_date,
+                                    'supplier': batch.supplier,
+                                    'notes': f'Umgelagert aus {batch.warehouse.name if batch.warehouse else "unbekannt"}'
+                                }
                             )
 
-                            # Quelllager-Bestand aktualisieren
-                            source_product_warehouse.quantity -= transfer_quantity
-                            source_product_warehouse.save()
+                            target_batch.quantity += quantity
+                            target_batch.save()
 
-                            # Zugang im Ziellager
+                            # 3. Bestandsbewegungen erstellen
+                            # Abgang aus Quell-Lager
                             StockMovement.objects.create(
                                 product=product,
-                                quantity=transfer_quantity,
-                                movement_type='in',
-                                reference=f'Bulk-Transfer von {source_warehouse.name}',
-                                notes=notes,
-                                created_by=request.user,
-                                warehouse=destination_warehouse
+                                warehouse=source_warehouse,
+                                quantity=-quantity,  # Negative Menge für Abgang
+                                movement_type='transfer_out',
+                                reference=f'Umlagerung nach {destination_warehouse.name}',
+                                notes=f'Charge: {batch.batch_number}, Menge: {quantity} {notes}',
+                                created_by=request.user
                             )
 
-                            # Ziellager-Bestand aktualisieren
-                            dest_warehouse_product, created = ProductWarehouse.objects.get_or_create(
+                            # Zugang im Ziel-Lager
+                            StockMovement.objects.create(
                                 product=product,
                                 warehouse=destination_warehouse,
-                                defaults={'quantity': 0}
+                                quantity=quantity,
+                                movement_type='transfer_in',
+                                reference=f'Umlagerung von {source_warehouse.name}',
+                                notes=f'Charge: {batch.batch_number}, Menge: {quantity} {notes}',
+                                created_by=request.user
                             )
 
-                            dest_warehouse_product.quantity += transfer_quantity
-                            dest_warehouse_product.save()
+                    # Aktualisiere die ProductWarehouse-Einträge basierend auf den Batch-Summen
+                    update_product_warehouse_from_batches(product, source_warehouse.id)
+                    update_product_warehouse_from_batches(product, destination_warehouse.id)
 
-                        products_transferred += 1
+                    messages.success(request, f'{len(batch_transfers)} Chargen erfolgreich umgelagert.')
+                    return redirect('product_detail', pk=product.id)
+                else:
+                    messages.error(request, 'Keine Chargen zum Umlagern ausgewählt.')
+                    return redirect('bulk_warehouse_transfer')
 
-                    except ProductWarehouse.DoesNotExist:
-                        errors.append(f"Kein Bestand von {product.name} im Quelllager vorhanden.")
+        # Normale Produktumlagerung (ohne Chargen)
+        product_ids = request.POST.getlist('product_ids')
 
-                except Product.DoesNotExist:
-                    errors.append(f"Produkt mit ID {product_id} nicht gefunden.")
-
-            # Meldungen anzeigen
-            if products_transferred > 0:
-                messages.success(request, f"{products_transferred} Produkte wurden erfolgreich transferiert.")
-
-            if errors:
-                for error in errors:
-                    messages.warning(request, error)
-
-            return redirect('warehouse_detail', pk=source_warehouse.pk)
-
-        except Exception as e:
-            messages.error(request, f"Fehler beim Transfer: {str(e)}")
+        if not product_ids:
+            messages.error(request, 'Keine Produkte ausgewählt.')
             return redirect('bulk_warehouse_transfer')
 
-    # Produkte im ersten Lager anzeigen (falls vorhanden)
-    products = []
-    source_warehouse_id = request.GET.get('source', '')
+        transferred_products = 0
 
-    if source_warehouse_id:
-        try:
-            source_warehouse = Warehouse.objects.get(pk=source_warehouse_id)
-            if user_has_warehouse_access(request.user, source_warehouse, 'manage_stock'):
-                product_warehouses = ProductWarehouse.objects.filter(
-                    warehouse=source_warehouse,
-                    quantity__gt=0
-                ).select_related('product')
+        with transaction.atomic():
+            for product_id in product_ids:
+                quantity_key = f'quantity_{product_id}'
 
-                products = [(pw.product, pw.quantity) for pw in product_warehouses]
-        except Warehouse.DoesNotExist:
-            pass
+                if quantity_key in request.POST:
+                    try:
+                        quantity = Decimal(request.POST[quantity_key])
+
+                        if quantity <= 0:
+                            continue
+
+                        product = get_object_or_404(Product, pk=product_id)
+
+                        # Bestand im Quelllager prüfen
+                        source_stock = ProductWarehouse.objects.get(
+                            product=product,
+                            warehouse=source_warehouse
+                        )
+
+                        if source_stock.quantity < quantity:
+                            messages.error(request, f'Unzureichender Bestand für {product.name}.')
+                            continue
+
+                        # Bestand im Quelllager reduzieren
+                        source_stock.quantity -= quantity
+                        source_stock.save()
+
+                        # Bestand im Ziellager erhöhen oder erstellen
+                        destination_stock, created = ProductWarehouse.objects.get_or_create(
+                            product=product,
+                            warehouse=destination_warehouse,
+                            defaults={'quantity': 0}
+                        )
+
+                        destination_stock.quantity += quantity
+                        destination_stock.save()
+
+                        # Bestandsbewegungen erstellen
+                        # Abgang aus Quell-Lager
+                        StockMovement.objects.create(
+                            product=product,
+                            warehouse=source_warehouse,
+                            quantity=-quantity,  # Negative Menge für Abgang
+                            movement_type='transfer_out',
+                            reference=f'Umlagerung nach {destination_warehouse.name}',
+                            notes=notes,
+                            created_by=request.user
+                        )
+
+                        # Zugang im Ziel-Lager
+                        StockMovement.objects.create(
+                            product=product,
+                            warehouse=destination_warehouse,
+                            quantity=quantity,
+                            movement_type='transfer_in',
+                            reference=f'Umlagerung von {source_warehouse.name}',
+                            notes=notes,
+                            created_by=request.user
+                        )
+
+                        transferred_products += 1
+
+                    except (ValueError, TypeError):
+                        messages.error(request, f'Ungültige Menge für Produkt {product_id}')
+                    except ProductWarehouse.DoesNotExist:
+                        messages.error(request, f'Produkt mit ID {product_id} nicht im Quelllager gefunden.')
+
+        if transferred_products > 0:
+            messages.success(request, f'{transferred_products} Produkte wurden erfolgreich umgelagert.')
+        else:
+            messages.warning(request, 'Keine Produkte wurden umgelagert.')
+
+        return redirect('bulk_warehouse_transfer')
 
     context = {
         'managed_warehouses': managed_warehouses,
-        'products': products,
         'source_warehouse_id': source_warehouse_id,
+        'products': products,
+        'product': product,
+        'batches': batches,
     }
 
     return render(request, 'inventory/bulk_warehouse_transfer.html', context)
+
+
+# Hilfsfunktion zum Aktualisieren des ProductWarehouse-Eintrags basierend auf Batches
+def update_product_warehouse_from_batches(product, warehouse_id):
+    """Aktualisiert den ProductWarehouse-Eintrag basierend auf der Summe aller Chargen."""
+    from django.db.models import Sum
+
+    # Gesamtmenge aller Chargen im Lager berechnen
+    batch_total = BatchNumber.objects.filter(
+        product=product,
+        warehouse_id=warehouse_id
+    ).aggregate(total=Sum('quantity'))['total'] or 0
+
+    # ProductWarehouse aktualisieren
+    product_warehouse, created = ProductWarehouse.objects.get_or_create(
+        product=product,
+        warehouse_id=warehouse_id,
+        defaults={'quantity': 0}
+    )
+
+    # Menge basierend auf Chargen setzen
+    product_warehouse.quantity = batch_total
+    product_warehouse.save()
+
+    return product_warehouse
 
 
 @login_required

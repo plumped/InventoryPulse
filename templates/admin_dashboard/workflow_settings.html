@@ -1,0 +1,276 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Workflow-Einstellungen{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Bestellprozess-Konfiguration</h6>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Genehmigungsprozess</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                {{ form.order_approval_required }}
+                                <label class="form-check-label" for="{{ form.order_approval_required.id_for_label }}">
+                                    Bestellungen erfordern Genehmigung
+                                </label>
+                                <div class="form-text text-muted">
+                                    Wenn deaktiviert, werden alle Bestellungen automatisch genehmigt
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.order_approval_threshold.id_for_label }}" class="form-label">
+                                    Genehmigungsschwelle (€)
+                                </label>
+                                {{ form.order_approval_threshold }}
+                                <div class="form-text text-muted">
+                                    Bestellungen über diesem Wert erfordern eine Genehmigung
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch">
+                                {{ form.require_separate_approver }}
+                                <label class="form-check-label" for="{{ form.require_separate_approver.id_for_label }}">
+                                    Ersteller darf eigene Bestellung nicht genehmigen
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Prozessvereinfachung</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                {{ form.skip_draft_for_small_orders }}
+                                <label class="form-check-label" for="{{ form.skip_draft_for_small_orders.id_for_label }}">
+                                    Kleine Bestellungen direkt zur Genehmigung senden
+                                </label>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.small_order_threshold.id_for_label }}" class="form-label">
+                                    Schwellenwert für kleine Bestellungen (€)
+                                </label>
+                                {{ form.small_order_threshold }}
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                {{ form.auto_approve_preferred_suppliers }}
+                                <label class="form-check-label" for="{{ form.auto_approve_preferred_suppliers.id_for_label }}">
+                                    Bestellungen von bevorzugten Lieferanten automatisch genehmigen
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Benachrichtigungen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        {{ form.send_order_emails }}
+                        <label class="form-check-label" for="{{ form.send_order_emails.id_for_label }}">
+                            E-Mails für genehmigte Bestellungen senden
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" onclick="window.history.back();">
+                    Zurück
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Einstellungen speichern
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Workflow-Visualisierung</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                <div class="workflow-diagram">
+                    <div class="d-flex justify-content-between text-center flex-wrap">
+                        <div class="workflow-step {% if form.initial.skip_draft_for_small_orders %}workflow-step-conditional{% endif %}">
+                            <div class="workflow-icon">
+                                <i class="bi bi-pencil-square"></i>
+                            </div>
+                            <div class="workflow-text">Entwurf</div>
+                            {% if form.initial.skip_draft_for_small_orders %}
+                            <div class="workflow-condition">
+                                Optional für kleine Bestellungen unter {{ form.initial.small_order_threshold }} €
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="workflow-connector">→</div>
+                        <div class="workflow-step {% if not form.initial.order_approval_required %}workflow-step-optional{% endif %}">
+                            <div class="workflow-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <div class="workflow-text">Wartend auf Genehmigung</div>
+                            {% if not form.initial.order_approval_required %}
+                            <div class="workflow-condition">
+                                Optional - Genehmigung deaktiviert
+                            </div>
+                            {% elif form.initial.auto_approve_preferred_suppliers %}
+                            <div class="workflow-condition">
+                                Übersprungen für bevorzugte Lieferanten
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="workflow-connector">→</div>
+                        <div class="workflow-step {% if not form.initial.order_approval_required %}workflow-step-optional{% endif %}">
+                            <div class="workflow-icon">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="workflow-text">Genehmigt</div>
+                            {% if not form.initial.order_approval_required %}
+                            <div class="workflow-condition">
+                                Automatisch genehmigt
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="workflow-connector">→</div>
+                        <div class="workflow-step">
+                            <div class="workflow-icon">
+                                <i class="bi bi-send"></i>
+                            </div>
+                            <div class="workflow-text">Bestellt</div>
+                            {% if form.initial.send_order_emails %}
+                            <div class="workflow-condition">
+                                E-Mail an Lieferant senden
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="workflow-connector">→</div>
+                        <div class="workflow-step">
+                            <div class="workflow-icon">
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+                            <div class="workflow-text">Erhalten</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<style>
+    .workflow-diagram {
+        padding: 20px 0;
+    }
+    .workflow-step {
+        min-width: 120px;
+        max-width: 180px;
+        padding: 15px;
+        margin: 10px;
+        background-color: #e3f2fd;
+        border-radius: 5px;
+        border: 1px solid #90caf9;
+    }
+    .workflow-step-optional {
+        background-color: #f5f5f5;
+        border: 1px dashed #bdbdbd;
+        color: #757575;
+    }
+    .workflow-step-conditional {
+        background-color: #fff3e0;
+        border: 1px solid #ffe0b2;
+    }
+    .workflow-icon {
+        font-size: 24px;
+        margin-bottom: 5px;
+    }
+    .workflow-text {
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .workflow-condition {
+        font-size: 12px;
+        margin-top: 5px;
+        color: #757575;
+    }
+    .workflow-connector {
+        display: flex;
+        align-items: center;
+        color: #757575;
+        font-size: 20px;
+    }
+
+    @media (max-width: 992px) {
+        .workflow-diagram .d-flex {
+            flex-direction: column;
+            align-items: center;
+        }
+        .workflow-connector {
+            transform: rotate(90deg);
+            margin: 10px 0;
+        }
+    }
+</style>
+
+<script>
+    // Show/hide certain form fields based on other fields
+    document.addEventListener('DOMContentLoaded', function() {
+        const approvalRequiredCheckbox = document.getElementById('{{ form.order_approval_required.id_for_label }}');
+        const approvalThresholdField = document.getElementById('{{ form.order_approval_threshold.id_for_label }}').closest('.mb-3');
+        const separateApproverField = document.getElementById('{{ form.require_separate_approver.id_for_label }}').closest('.form-check');
+
+        function toggleApprovalFields() {
+            if (approvalRequiredCheckbox.checked) {
+                approvalThresholdField.style.display = '';
+                separateApproverField.style.display = '';
+            } else {
+                approvalThresholdField.style.display = 'none';
+                separateApproverField.style.display = 'none';
+            }
+        }
+
+        // Initial setup
+        toggleApprovalFields();
+
+        // Add event listener
+        approvalRequiredCheckbox.addEventListener('change', toggleApprovalFields);
+
+        // Similar logic for small orders
+        const skipDraftCheckbox = document.getElementById('{{ form.skip_draft_for_small_orders.id_for_label }}');
+        const smallOrderThresholdField = document.getElementById('{{ form.small_order_threshold.id_for_label }}').closest('.mb-3');
+
+        function toggleSmallOrderFields() {
+            smallOrderThresholdField.style.display = skipDraftCheckbox.checked ? '' : 'none';
+        }
+
+        // Initial setup
+        toggleSmallOrderFields();
+
+        // Add event listener
+        skipDraftCheckbox.addEventListener('change', toggleSmallOrderFields);
+    });
+</script>
+{% endblock %}

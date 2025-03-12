@@ -1,0 +1,151 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}{{ access.id|yesno:"Lagerzugriff bearbeiten,Neuen Lagerzugriff erstellen" }}{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_warehouse_access_management' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">{{ access.id|yesno:"Lagerzugriff bearbeiten,Neuen Lagerzugriff erstellen" }}</h6>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            {% if not access.id %}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="warehouse" class="form-label">Lager</label>
+                        <select class="form-select" id="warehouse" name="warehouse" required>
+                            <option value="">-- Lager auswählen --</option>
+                            {% for warehouse in warehouses %}
+                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="department" class="form-label">Abteilung</label>
+                        <select class="form-select" id="department" name="department" required>
+                            <option value="">-- Abteilung auswählen --</option>
+                            {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Lager</label>
+                        <p class="form-control-static">{{ access.warehouse.name }}</p>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Abteilung</label>
+                        <p class="form-control-static">{{ access.department.name }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Berechtigungen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="can_view" name="can_view" {% if access.can_view or not access.id %}checked{% endif %}>
+                                <label class="form-check-label" for="can_view">
+                                    <strong>Ansehen</strong>
+                                </label>
+                                <div class="form-text">Grundlegende Berechtigung für Lesezugriff auf ein Lager</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="can_edit" name="can_edit" {% if access.can_edit or not access.id %}checked{% endif %}>
+                                <label class="form-check-label" for="can_edit">
+                                    <strong>Bearbeiten</strong>
+                                </label>
+                                <div class="form-text">Änderungen an Lagereinstellungen und Produktzuweisungen</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="can_manage_stock" name="can_manage_stock" {% if access.can_manage_stock or not access.id %}checked{% endif %}>
+                                <label class="form-check-label" for="can_manage_stock">
+                                    <strong>Bestand verwalten</strong>
+                                </label>
+                                <div class="form-text">Bestandsbewegungen, Inventuren, Korrekturen</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Hinweis: Eine Berechtigung höherer Stufe beinhaltet automatisch alle Rechte niedrigerer Stufen.
+                Bei Aktivierung von "Bestand verwalten" werden auch "Bearbeiten" und "Ansehen" implizit gewährt.
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'admin_warehouse_access_management' %}" class="btn btn-outline-secondary">Abbrechen</a>
+                <button type="submit" class="btn btn-primary">Speichern</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Die Hierarchie der Berechtigungen implementieren
+        const canViewCheckbox = document.getElementById('can_view');
+        const canEditCheckbox = document.getElementById('can_edit');
+        const canManageStockCheckbox = document.getElementById('can_manage_stock');
+
+        // Wenn eine höhere Berechtigung aktiviert wird, werden niedrigere automatisch aktiviert
+        canManageStockCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                canEditCheckbox.checked = true;
+                canViewCheckbox.checked = true;
+            }
+        });
+
+        canEditCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                canViewCheckbox.checked = true;
+            } else {
+                canManageStockCheckbox.checked = false;
+            }
+        });
+
+        canViewCheckbox.addEventListener('change', function() {
+            if (!this.checked) {
+                canEditCheckbox.checked = false;
+                canManageStockCheckbox.checked = false;
+            }
+        });
+    });
+</script>
+{% endblock %}

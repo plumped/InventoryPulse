@@ -1,0 +1,143 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Benutzer bearbeiten{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_user_management' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">{{ user_obj.username }} bearbeiten</h6>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Grunddaten</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Benutzername</label>
+                                <input type="text" class="form-control" id="username" name="username" value="{{ user_obj.username }}" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">E-Mail</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ user_obj.email }}">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="first_name" class="form-label">Vorname</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user_obj.first_name }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="last_name" class="form-label">Nachname</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user_obj.last_name }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Passwort</label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Leer lassen für keine Änderung">
+                                <div class="form-text">Nur ausfüllen, wenn das Passwort geändert werden soll.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Berechtigungen</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if user_obj.is_active %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">Aktiv</label>
+                                    <div class="form-text">Deaktivierte Benutzer können sich nicht anmelden.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="is_staff" name="is_staff" {% if user_obj.is_staff %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_staff">Admin-Zugriff</label>
+                                    <div class="form-text">Zugriff auf die Django-Admin-Oberfläche.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="is_superuser" name="is_superuser" {% if user_obj.is_superuser %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_superuser">Superuser</label>
+                                    <div class="form-text">Volle Systemrechte ohne Einschränkungen.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="groups" class="form-label">Gruppen</label>
+                                <select class="form-select" id="groups" name="groups" multiple size="5">
+                                    {% for group in groups %}
+                                    <option value="{{ group.id }}" {% if group in user_groups %}selected{% endif %}>{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Mehrere Auswahl mit Strg/Cmd+Klick möglich.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12 mb-4">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">Abteilungszugehörigkeit</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="departments" class="form-label">Abteilungen</label>
+                                <select class="form-select" id="departments" name="departments" multiple size="5">
+                                    {% for department in departments %}
+                                    <option value="{{ department.id }}" {% if department in user_departments %}selected{% endif %}>{{ department.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Die Abteilungszugehörigkeit bestimmt den Zugriff auf Lager und andere Ressourcen.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'admin_user_management' %}" class="btn btn-outline-secondary">Abbrechen</a>
+                <button type="submit" class="btn btn-primary">Änderungen speichern</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Möglicherweise zusätzliches JavaScript für erweiterte Formularfunktionen
+    });
+</script>
+{% endblock %}

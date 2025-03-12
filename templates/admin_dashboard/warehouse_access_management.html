@@ -1,0 +1,239 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Lagerzugriffe verwalten{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_warehouse_access_create' %}" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus-circle"></i> Neuen Zugriff erstellen
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Übersicht der Lagerzugriffsrechte</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="accessTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Abteilung</th>
+                        <th>Lager</th>
+                        <th>Ansehen</th>
+                        <th>Bearbeiten</th>
+                        <th>Bestand verwalten</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for access in accesses %}
+                    <tr>
+                        <td>{{ access.department.name }}</td>
+                        <td>{{ access.warehouse.name }}</td>
+                        <td class="text-center">
+                            {% if access.can_view %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if access.can_edit %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if access.can_manage_stock %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'admin_warehouse_access_edit' access.id %}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'admin_warehouse_access_delete' access.id %}" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Keine Zugriffsrechte gefunden</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Lager und Abteilungen</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Verfügbare Lager</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Standort</th>
+                                        <th>Zugriffsrechte</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for warehouse in warehouses %}
+                                    <tr>
+                                        <td>{{ warehouse.name }}</td>
+                                        <td>{{ warehouse.location|default:"-" }}</td>
+                                        <td>
+                                            {% with count=warehouse.warehouseaccess_set.count %}
+                                            {% if count > 0 %}
+                                            <span class="badge bg-success">{{ count }} Abteilung{% if count != 1 %}en{% endif %}</span>
+                                            {% else %}
+                                            <span class="badge bg-warning">Keine Zugriffe</span>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center">Keine Lager verfügbar</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5>Verfügbare Abteilungen</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Code</th>
+                                        <th>Lagerzugriffe</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for department in departments %}
+                                    <tr>
+                                        <td>{{ department.name }}</td>
+                                        <td>{{ department.code }}</td>
+                                        <td>
+                                            {% with count=department.warehouseaccess_set.count %}
+                                            {% if count > 0 %}
+                                            <span class="badge bg-success">{{ count }} Lager</span>
+                                            {% else %}
+                                            <span class="badge bg-warning">Keine Zugriffe</span>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center">Keine Abteilungen verfügbar</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Zugriffshierarchie</h6>
+    </div>
+    <div class="card-body">
+        <p class="mb-4">Die Zugriffsrechte für Lager werden hierarchisch vergeben. Ein Recht höherer Stufe beinhaltet automatisch alle Rechte niedrigerer Stufen.</p>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Stufe</th>
+                                <th>Beschreibung</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Bestand verwalten</strong></td>
+                                <td>Voller Zugriff inklusive Bestandsbewegungen, Inventuren, Bestandskorrekturen</td>
+                                <td>
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Alles von "Bearbeiten"</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Bestandsbewegungen erfassen</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Inventuren durchführen</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Korrekturen vornehmen</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Bearbeiten</strong></td>
+                                <td>Erlaubt Änderungen an Lagereinstellungen, Produktzuweisungen etc.</td>
+                                <td>
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Alles von "Ansehen"</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Lagerdaten bearbeiten</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Produkte hinzufügen/entfernen</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Ansehen</strong></td>
+                                <td>Grundlegende Berechtigung für Lesezugriff auf ein Lager</td>
+                                <td>
+                                    <ul class="list-unstyled mb-0">
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Lager ansehen</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Bestände einsehen</li>
+                                        <li><i class="bi bi-check-circle-fill text-success me-2"></i> Berichte ansehen</li>
+                                    </ul>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DataTable für bessere Sortier- und Suchfunktionen
+        $('#accessTable').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/German.json"
+            },
+            "pageLength": 25,
+            "order": [[0, 'asc'], [1, 'asc']]
+        });
+    });
+</script>
+{% endblock %}

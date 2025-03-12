@@ -1,0 +1,341 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Benutzerverwaltung{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_user_create' %}" class="btn btn-sm btn-primary">
+        <i class="bi bi-plus-circle"></i> Neuen Benutzer anlegen
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Benutzerübersicht</h6>
+
+        <div>
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
+        </div>
+    </div>
+
+    <div class="collapse {% if search_query or status_filter or group_filter %}show{% endif %}" id="filterCollapse">
+        <div class="card-body bg-light border-bottom">
+            <form method="get" class="mb-0">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="search" class="form-label">Suche</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Benutzername, Name oder E-Mail" value="{{ search_query }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Alle</option>
+                                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Aktiv</option>
+                                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inaktiv</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label for="group" class="form-label">Gruppe</label>
+                            <select class="form-select" id="group" name="group">
+                                <option value="">Alle Gruppen</option>
+                                {% for group in groups %}
+                                <option value="{{ group.id }}" {% if group_filter == group.id|stringformat:"i" %}selected{% endif %}>{{ group.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Suchen
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="usersTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="?sort={% if sort_by == 'username' %}-{% endif %}username{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}">
+                                Benutzername
+                                {% if sort_by == 'username' %}<i class="bi bi-arrow-down"></i>{% elif sort_by == '-username' %}<i class="bi bi-arrow-up"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?sort={% if sort_by == 'first_name' %}-{% endif %}first_name{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}">
+                                Name
+                                {% if sort_by == 'first_name' %}<i class="bi bi-arrow-down"></i>{% elif sort_by == '-first_name' %}<i class="bi bi-arrow-up"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>E-Mail</th>
+                        <th>Gruppen</th>
+                        <th>Status</th>
+                        <th>Letzter Login</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.get_full_name|default:"-" }}</td>
+                        <td>{{ user.email|default:"-" }}</td>
+                        <td>
+                            {% for group in user.groups.all %}
+                            <span class="badge bg-primary">{{ group.name }}</span>
+                            {% empty %}
+                            <span class="badge bg-secondary">Keine</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                            <span class="badge bg-success">Aktiv</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inaktiv</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.last_login|date:"d.m.Y H:i"|default:"Nie" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'admin_user_edit' user.id %}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-info btn-details" data-user-id="{{ user.id }}">
+                                    <i class="bi bi-info-circle"></i>
+                                </button>
+                                <a href="{% url 'admin_user_delete' user.id %}" class="btn btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">Keine Benutzer gefunden</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if users.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if users.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in users.paginator.page_range %}
+                    {% if page_num == users.number %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ page_num }}</a></li>
+                    {% elif page_num > users.number|add:'-3' and page_num < users.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}">{{ page_num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if users.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ users.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if group_filter %}&group={{ group_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal for User Details -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailsModalLabel">Benutzerdetails</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2">Benutzerdaten</h6>
+                        <dl class="row">
+                            <dt class="col-sm-5">Benutzername:</dt>
+                            <dd class="col-sm-7" id="detail-username"></dd>
+
+                            <dt class="col-sm-5">Voller Name:</dt>
+                            <dd class="col-sm-7" id="detail-name"></dd>
+
+                            <dt class="col-sm-5">E-Mail:</dt>
+                            <dd class="col-sm-7" id="detail-email"></dd>
+
+                            <dt class="col-sm-5">Status:</dt>
+                            <dd class="col-sm-7" id="detail-status"></dd>
+
+                            <dt class="col-sm-5">Registriert am:</dt>
+                            <dd class="col-sm-7" id="detail-date-joined"></dd>
+
+                            <dt class="col-sm-5">Letzte Anmeldung:</dt>
+                            <dd class="col-sm-7" id="detail-last-login"></dd>
+
+                            <dt class="col-sm-5">Admin-Zugriff:</dt>
+                            <dd class="col-sm-7" id="detail-is-staff"></dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="border-bottom pb-2">Gruppen & Abteilungen</h6>
+                        <div class="mb-3">
+                            <strong>Gruppen:</strong>
+                            <div id="detail-groups">
+                                <div class="placeholder-glow">
+                                    <span class="placeholder col-6"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <strong>Abteilungen:</strong>
+                            <div id="detail-departments">
+                                <div class="placeholder-glow">
+                                    <span class="placeholder col-6"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-primary" id="detail-edit-link">Bearbeiten</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const detailButtons = document.querySelectorAll('.btn-details');
+        const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+
+        detailButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-user-id');
+
+                // Show loading state
+                document.getElementById('detail-username').textContent = 'Wird geladen...';
+                document.getElementById('detail-name').textContent = '';
+                document.getElementById('detail-email').textContent = '';
+                document.getElementById('detail-status').innerHTML = '';
+                document.getElementById('detail-date-joined').textContent = '';
+                document.getElementById('detail-last-login').textContent = '';
+                document.getElementById('detail-is-staff').textContent = '';
+                document.getElementById('detail-groups').innerHTML = '<div class="placeholder-glow"><span class="placeholder col-6"></span></div>';
+                document.getElementById('detail-departments').innerHTML = '<div class="placeholder-glow"><span class="placeholder col-6"></span></div>';
+
+                // Show modal while loading
+                modal.show();
+
+                // Fetch user details
+                fetch(`{% url 'admin_get_user_details' 0 %}`.replace('0', userId))
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('detail-username').textContent = data.username;
+                        document.getElementById('detail-name').textContent = `${data.first_name} ${data.last_name}`.trim() || '-';
+                        document.getElementById('detail-email').textContent = data.email || '-';
+                        document.getElementById('detail-status').innerHTML = data.is_active ?
+                            '<span class="badge bg-success">Aktiv</span>' :
+                            '<span class="badge bg-danger">Inaktiv</span>';
+                        document.getElementById('detail-date-joined').textContent = new Date(data.date_joined).toLocaleString('de-DE');
+                        document.getElementById('detail-last-login').textContent = data.last_login ?
+                            new Date(data.last_login).toLocaleString('de-DE') :
+                            'Noch nie';
+                        document.getElementById('detail-is-staff').innerHTML = data.is_staff ?
+                            '<span class="badge bg-info">Ja</span>' :
+                            '<span class="badge bg-secondary">Nein</span>';
+
+                        // Update groups
+                        let groupsHtml = '';
+                        if (data.groups && data.groups.length > 0) {
+                            groupsHtml = data.groups.map(group =>
+                                `<span class="badge bg-primary me-1 mb-1">${group.name}</span>`
+                            ).join('');
+                        } else {
+                            groupsHtml = '<span class="badge bg-secondary">Keine Gruppenmitgliedschaften</span>';
+                        }
+                        document.getElementById('detail-groups').innerHTML = groupsHtml;
+
+                        // Update departments
+                        let departmentsHtml = '';
+                        if (data.departments && data.departments.length > 0) {
+                            departmentsHtml = data.departments.map(dept =>
+                                `<span class="badge bg-success me-1 mb-1">${dept.name}</span>`
+                            ).join('');
+                        } else {
+                            departmentsHtml = '<span class="badge bg-secondary">Keine Abteilungszugehörigkeiten</span>';
+                        }
+                        document.getElementById('detail-departments').innerHTML = departmentsHtml;
+
+                        // Update edit link
+                        document.getElementById('detail-edit-link').href = `{% url 'admin_user_edit' 0 %}`.replace('0', userId);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching user details:', error);
+                        document.getElementById('detail-username').textContent = 'Fehler beim Laden der Daten';
+                    });
+            });
+        });
+    });
+</script>
+{% endblock %}

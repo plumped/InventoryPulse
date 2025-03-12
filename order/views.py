@@ -22,6 +22,8 @@ from .models import (
 )
 from .forms import PurchaseOrderForm, ReceiveOrderForm
 from .services import generate_order_suggestions
+from .workflow import get_initial_order_status, check_auto_approval, can_approve_order
+
 
 
 @login_required
@@ -105,12 +107,12 @@ def purchase_order_detail(request, pk):
 
     # Ermitteln, ob Benutzer bestimmte Aktionen durchführen darf
     can_edit = request.user.has_perm('order.edit') and order.status == 'draft'
-    can_approve = request.user.has_perm('order.approve') and order.status == 'pending'
+    can_approve = can_approve_order(request.user, order) and order.status == 'pending'
     can_receive = request.user.has_perm('order.receive') and order.status in ['sent', 'partially_received']
 
     # Wareneingangshistorie abrufen
     receipts = order.receipts.select_related('received_by').prefetch_related('items__order_item__product',
-                                                                             'items__warehouse')
+                                                                           'items__warehouse')
 
     context = {
         'order': order,
@@ -154,6 +156,10 @@ def purchase_order_create(request):
                     next_seq = 1
 
                 order.order_number = f"{prefix}{next_seq:03d}"
+
+                # Initialen Status basierend auf Workflow-Einstellungen festlegen
+                order.status = get_initial_order_status(order)
+
                 order.save()
 
                 # Positionen speichern
@@ -161,6 +167,13 @@ def purchase_order_create(request):
 
                 # Summen aktualisieren
                 order.update_totals()
+
+                # Auto-Approval prüfen
+                if order.status == 'pending' and check_auto_approval(order):
+                    order.status = 'approved'
+                    order.approved_by = request.user
+                    order.save()
+                    messages.success(request, f'Bestellung {order.order_number} wurde automatisch genehmigt.')
 
                 messages.success(request, f'Bestellung {order.order_number} wurde erfolgreich erstellt.')
                 return redirect('purchase_order_detail', pk=order.pk)
@@ -304,6 +317,7 @@ def purchase_order_delete(request, pk):
 
     return render(request, 'order/purchase_order_confirm_delete.html', context)
 
+
 @login_required
 @permission_required('order', 'edit')
 def purchase_order_submit(request, pk):
@@ -326,8 +340,17 @@ def purchase_order_submit(request, pk):
         order.status = 'pending'
         order.save()
 
-        messages.success(request,
-                         f'Bestellung {order.order_number} wurde zur Genehmigung eingereicht.')
+        # Auto-Approval prüfen
+        if check_auto_approval(order):
+            order.status = 'approved'
+            order.approved_by = request.user
+            order.save()
+            messages.success(request,
+                             f'Bestellung {order.order_number} wurde zur Genehmigung eingereicht und automatisch genehmigt.')
+        else:
+            messages.success(request,
+                             f'Bestellung {order.order_number} wurde zur Genehmigung eingereicht.')
+
         return redirect('purchase_order_detail', pk=order.pk)
 
     context = {
@@ -335,6 +358,7 @@ def purchase_order_submit(request, pk):
     }
 
     return render(request, 'order/purchase_order_confirm_submit.html', context)
+
 
 @login_required
 @permission_required('order', 'approve')
@@ -348,10 +372,26 @@ def purchase_order_approve(request, pk):
                        f'Bestellung {order.order_number} kann nicht genehmigt werden, da sie nicht auf Genehmigung wartet.')
         return redirect('purchase_order_detail', pk=order.pk)
 
+    # Prüfen, ob der Benutzer diese Bestellung genehmigen darf
+    if not can_approve_order(request.user, order):
+        messages.error(request,
+                       f'Sie dürfen diese Bestellung nicht genehmigen, da Sie sie erstellt haben.')
+        return redirect('purchase_order_detail', pk=order.pk)
+
     if request.method == 'POST':
         order.status = 'approved'
         order.approved_by = request.user
         order.save()
+
+        # E-Mail-Benachrichtigung senden, falls aktiviert
+        try:
+            from admin_dashboard.models import WorkflowSettings
+            workflow_settings = WorkflowSettings.objects.first()
+            if workflow_settings and workflow_settings.send_order_emails:
+                # Hier Code zum Senden der E-Mail
+                pass
+        except:
+            pass
 
         messages.success(request, f'Bestellung {order.order_number} wurde genehmigt.')
         return redirect('purchase_order_detail', pk=order.pk)

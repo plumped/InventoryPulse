@@ -2091,7 +2091,8 @@ def stock_take_create_cycle(request, pk):
 @permission_required('inventory', 'edit')
 def stock_adjustment(request, product_id, warehouse_id=None):
     """
-    Ermöglicht die direkte Korrektur von Produktbeständen in einem Lager.
+    Ermöglicht die direkte Korrektur von Produktbeständen in einem Lager,
+    mit Unterstützung für Chargen.
     """
     product = get_object_or_404(Product, pk=product_id)
 
@@ -2132,61 +2133,149 @@ def stock_adjustment(request, product_id, warehouse_id=None):
     if len(product_warehouses) == 1:
         initial_warehouse = product_warehouses[0].warehouse.id
 
+    # Chargeninformationen für das ausgewählte Produkt
+    batches = []
+    selected_warehouse = None
+
+    if warehouse:
+        selected_warehouse = warehouse
+        if product.has_batch_tracking:
+            # Alle Chargen für dieses Produkt im ausgewählten Lager laden
+            batches = BatchNumber.objects.filter(
+                product=product,
+                warehouse=warehouse,
+                quantity__gt=0
+            ).order_by('expiry_date')
+
     if request.method == 'POST':
-        form = StockAdjustmentForm(
-            request.POST,
-            accessible_warehouses=accessible_warehouses,
-            product_warehouses=product_warehouses
-        )
-        if form.is_valid():
-            adjustment_warehouse = form.cleaned_data['warehouse']
-            new_quantity = form.cleaned_data['new_quantity']
-            reason = form.cleaned_data['reason']
-            notes = form.cleaned_data['notes']
+        # Prüfen, ob Chargen-Bestandskorrektur
+        use_batch_adjustment = 'use_batch_adjustment' in request.POST
+
+        if use_batch_adjustment and product.has_batch_tracking:
+            # Chargenbasierte Bestandskorrektur
+            adjustment_warehouse_id = request.POST.get('warehouse')
+            adjustment_warehouse = get_object_or_404(Warehouse, pk=adjustment_warehouse_id)
+            reason = request.POST.get('reason', 'Manuelle Korrektur')
+            notes = request.POST.get('notes', '')
 
             # Prüfen, ob der Benutzer Zugriff auf das gewählte Lager hat
             if adjustment_warehouse not in accessible_warehouses:
                 messages.error(request, f"Sie haben keine Berechtigung für das Lager {adjustment_warehouse.name}.")
                 return redirect('product_detail', pk=product_id)
 
-            # Aktuellen Bestand ermitteln
-            try:
-                current_quantity = ProductWarehouse.objects.get(
-                    product=product, warehouse=adjustment_warehouse
-                ).quantity
-            except ProductWarehouse.DoesNotExist:
-                current_quantity = Decimal('0')
-
-            # Bestandsbewegung erstellen
             with transaction.atomic():
-                # Bestandsbewegung für die Korrektur erstellen
-                StockMovement.objects.create(
-                    product=product,
-                    warehouse=adjustment_warehouse,
-                    quantity=new_quantity,
-                    movement_type='adj',
-                    reference=f'Bestandskorrektur: {reason}',
-                    notes=notes,
-                    created_by=request.user
-                )
+                # Alle Batches für dieses Produkt im ausgewählten Lager durchgehen
+                batch_adjustments = []
+                total_new_quantity = Decimal('0')
 
-                # Produktbestand im Lager aktualisieren
-                product_warehouse, created = ProductWarehouse.objects.get_or_create(
-                    product=product,
-                    warehouse=adjustment_warehouse,
-                    defaults={'quantity': 0}
-                )
+                for key, value in request.POST.items():
+                    if key.startswith('batch_new_quantity_') and value:
+                        batch_id = key.replace('batch_new_quantity_', '')
+                        old_quantity_key = f'batch_old_quantity_{batch_id}'
 
-                product_warehouse.quantity = new_quantity
-                product_warehouse.save()
+                        if old_quantity_key in request.POST:
+                            try:
+                                new_quantity = Decimal(value)
+                                old_quantity = Decimal(request.POST[old_quantity_key])
 
-            messages.success(
-                request,
-                f'Bestand für {product.name} im Lager {adjustment_warehouse.name} '
-                f'wurde von {current_quantity} auf {new_quantity} korrigiert.'
+                                # Nur hinzufügen, wenn sich die Menge geändert hat
+                                if new_quantity != old_quantity:
+                                    batch_adjustments.append({
+                                        'batch_id': batch_id,
+                                        'old_quantity': old_quantity,
+                                        'new_quantity': new_quantity,
+                                        'difference': new_quantity - old_quantity
+                                    })
+
+                                total_new_quantity += new_quantity
+                            except (ValueError, TypeError):
+                                continue
+
+                if batch_adjustments:
+                    for adjustment in batch_adjustments:
+                        batch = get_object_or_404(BatchNumber, pk=adjustment['batch_id'])
+
+                        # Batch-Menge aktualisieren
+                        batch.quantity = adjustment['new_quantity']
+                        batch.save()
+
+                    # Gesamte Bestandsbewegung erstellen
+                    StockMovement.objects.create(
+                        product=product,
+                        warehouse=adjustment_warehouse,
+                        quantity=total_new_quantity,  # Gesamtmenge aller Chargen
+                        movement_type='adj',
+                        reference=f'Bestandskorrektur: {reason}',
+                        notes=f"{notes}\nChargen-basierte Korrektur",
+                        created_by=request.user
+                    )
+
+                    # ProductWarehouse aktualisieren
+                    update_product_warehouse_from_batches(product, adjustment_warehouse.id)
+
+                    messages.success(
+                        request,
+                        f'Chargenbestände für {product.name} im Lager {adjustment_warehouse.name} wurden erfolgreich korrigiert.'
+                    )
+                    return redirect('product_detail', pk=product_id)
+                else:
+                    messages.error(request, 'Keine Änderungen an den Chargenbeständen vorgenommen.')
+        else:
+            # Normale Bestandskorrektur
+            form = StockAdjustmentForm(
+                request.POST,
+                accessible_warehouses=accessible_warehouses,
+                product_warehouses=product_warehouses
             )
+            if form.is_valid():
+                adjustment_warehouse = form.cleaned_data['warehouse']
+                new_quantity = form.cleaned_data['new_quantity']
+                reason = form.cleaned_data['reason']
+                notes = form.cleaned_data['notes']
 
-            return redirect('product_detail', pk=product_id)
+                # Prüfen, ob der Benutzer Zugriff auf das gewählte Lager hat
+                if adjustment_warehouse not in accessible_warehouses:
+                    messages.error(request, f"Sie haben keine Berechtigung für das Lager {adjustment_warehouse.name}.")
+                    return redirect('product_detail', pk=product_id)
+
+                # Aktuellen Bestand ermitteln
+                try:
+                    current_quantity = ProductWarehouse.objects.get(
+                        product=product, warehouse=adjustment_warehouse
+                    ).quantity
+                except ProductWarehouse.DoesNotExist:
+                    current_quantity = Decimal('0')
+
+                # Bestandsbewegung erstellen
+                with transaction.atomic():
+                    # Bestandsbewegung für die Korrektur erstellen
+                    StockMovement.objects.create(
+                        product=product,
+                        warehouse=adjustment_warehouse,
+                        quantity=new_quantity,
+                        movement_type='adj',
+                        reference=f'Bestandskorrektur: {reason}',
+                        notes=notes,
+                        created_by=request.user
+                    )
+
+                    # Produktbestand im Lager aktualisieren
+                    product_warehouse, created = ProductWarehouse.objects.get_or_create(
+                        product=product,
+                        warehouse=adjustment_warehouse,
+                        defaults={'quantity': 0}
+                    )
+
+                    product_warehouse.quantity = new_quantity
+                    product_warehouse.save()
+
+                messages.success(
+                    request,
+                    f'Bestand für {product.name} im Lager {adjustment_warehouse.name} '
+                    f'wurde von {current_quantity} auf {new_quantity} korrigiert.'
+                )
+
+                return redirect('product_detail', pk=product_id)
     else:
         # Initial-Daten für das Formular
         initial_data = {}
@@ -2208,6 +2297,9 @@ def stock_adjustment(request, product_id, warehouse_id=None):
         'form': form,
         'product_warehouses': product_warehouses,
         'current_stocks': current_stocks_json,
+        'selected_warehouse': selected_warehouse,
+        'batches': batches,
+        'has_batches': len(batches) > 0,
     }
 
     return render(request, 'inventory/stock_adjustment.html', context)

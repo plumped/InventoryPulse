@@ -129,6 +129,10 @@ def purchase_order_detail(request, pk):
 @permission_required('order', 'create')
 def purchase_order_create(request):
     """Neue Bestellung erstellen."""
+    # Systemeinstellungen abrufen
+    from admin_dashboard.models import SystemSettings
+    system_settings = SystemSettings.objects.first()
+
     if request.method == 'POST':
         form = PurchaseOrderForm(request.POST)
         if form.is_valid():
@@ -137,9 +141,12 @@ def purchase_order_create(request):
                 order = form.save(commit=False)
                 order.created_by = request.user
 
-                # Bestellnummer generieren (Beispiel: ORD-20230501-001)
+                # Bestellnummer generieren
                 today = date.today()
-                prefix = f"ORD-{today.strftime('%Y%m%d')}-"
+
+                # Präfix aus Systemeinstellungen oder Standardwert
+                prefix = (
+                             system_settings.order_number_prefix if system_settings else "ORD-") + f"{today.strftime('%Y%m%d')}-"
 
                 # Nächste Sequenznummer finden
                 last_order = PurchaseOrder.objects.filter(
@@ -153,9 +160,16 @@ def purchase_order_create(request):
                     except ValueError:
                         next_seq = 1
                 else:
-                    next_seq = 1
+                    # Wenn keine vorherige Bestellung, verwende Systemeinstellung oder 1
+                    next_seq = system_settings.next_order_number if system_settings else 1
 
+                # Bestellnummer generieren
                 order.order_number = f"{prefix}{next_seq:03d}"
+
+                # Systemeinstellungen aktualisieren (falls vorhanden)
+                if system_settings:
+                    system_settings.next_order_number = next_seq + 1
+                    system_settings.save()
 
                 # Initialen Status basierend auf Workflow-Einstellungen festlegen
                 order.status = get_initial_order_status(order)

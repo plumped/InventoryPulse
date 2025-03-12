@@ -60,17 +60,7 @@ def get_initial_order_status(order):
 
 
 def check_auto_approval(order):
-    """
-    Check if an order should be automatically approved based on workflow settings.
-
-    Args:
-        order: The PurchaseOrder instance
-
-    Returns:
-        bool: True if the order should be auto-approved
-    """
     workflow_settings = get_workflow_settings()
-
     # If approval is not required, always auto-approve
     if not workflow_settings.order_approval_required:
         return True
@@ -90,9 +80,8 @@ def check_auto_approval(order):
             # This may need to be adjusted based on your actual data model
             if hasattr(supplier, 'is_preferred') and supplier.is_preferred:
                 return True
-        except Exception:
-            pass
-
+        except Exception as e:
+            print(f"Supplier check error: {e}")
     return False
 
 

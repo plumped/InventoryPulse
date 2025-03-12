@@ -495,6 +495,27 @@ def purchase_order_receive(request, pk):
                                     except ValueError:
                                         pass  # Ungültiges Datum ignorieren
 
+                                if batch and item.product.has_batch_tracking:
+                                    from core.models import BatchNumber
+                                    # Erstelle oder aktualisiere den Batch-Eintrag
+                                    batch_obj, created = BatchNumber.objects.update_or_create(
+                                        product=item.product,
+                                        batch_number=batch,
+                                        defaults={
+                                            'warehouse': warehouse,
+                                            'quantity': quantity,
+                                            'expiry_date': receipt_item.expiry_date if hasattr(receipt_item,
+                                                                                               'expiry_date') and receipt_item.expiry_date else None,
+                                            'supplier': order.supplier,
+                                            'notes': f'Batch aus Wareneingang: {order.order_number}'
+                                        }
+                                    )
+
+                                    if not created:
+                                        # Falls der Batch bereits existiert, Menge erhöhen
+                                        batch_obj.quantity += quantity
+                                        batch_obj.save()
+
                                 # Bestandsbewegung erstellen
                                 StockMovement.objects.create(
                                     product=item.product,
@@ -629,10 +650,21 @@ def purchase_order_export(request, pk):
         messages.error(request, f'Das Format "{export_format}" wird nicht unterstützt.')
         return redirect('purchase_order_detail', pk=pk)
 
+
+# In order/views.py - order_suggestions View aktualisieren
+
 @login_required
 @permission_required('order', 'view')
 def order_suggestions(request):
     """Zeigt Bestellvorschläge basierend auf kritischen Beständen."""
+
+    # Automatisch alle Bestellvorschläge aktualisieren
+    # Hierfür können wir direkt die bereits vorhandene Funktion nutzen
+    suggestion_count = generate_order_suggestions()
+
+    if suggestion_count > 0:
+        messages.info(request, f'Bestellvorschläge wurden automatisch aktualisiert: {suggestion_count} Vorschläge.')
+
     # Bestellvorschläge abrufen
     suggestions = OrderSuggestion.objects.select_related('product', 'preferred_supplier').order_by(
         'product__name')

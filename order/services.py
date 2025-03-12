@@ -121,3 +121,41 @@ def generate_order_suggestions():
         OrderSuggestion.objects.bulk_create(suggestions)
 
     return len(suggestions)
+
+
+# In order/services.py - Erstellen Sie eine neue Funktion, die Bestellvorschläge aktualisiert
+
+def update_order_suggestions_suppliers():
+    """Aktualisiert die bevorzugten Lieferanten für alle Bestellvorschläge basierend
+    auf den aktuellen Lieferanten-Produkt-Zuordnungen."""
+
+    from suppliers.models import SupplierProduct
+
+    # Alle Bestellvorschläge ohne bevorzugten Lieferanten abrufen
+    suggestions_without_supplier = OrderSuggestion.objects.filter(preferred_supplier__isnull=True)
+    updated_count = 0
+
+    for suggestion in suggestions_without_supplier:
+        # Versuche, den bevorzugten Lieferanten zu finden
+        try:
+            # Zuerst nach bevorzugtem Lieferanten suchen
+            supplier_product = SupplierProduct.objects.filter(
+                product=suggestion.product,
+                is_preferred=True
+            ).first()
+
+            if not supplier_product:
+                # Als Fallback den ersten verfügbaren Lieferanten verwenden
+                supplier_product = SupplierProduct.objects.filter(
+                    product=suggestion.product
+                ).first()
+
+            if supplier_product:
+                suggestion.preferred_supplier = supplier_product.supplier
+                suggestion.save()
+                updated_count += 1
+        except Exception:
+            # Fehler ignorieren und mit dem nächsten Vorschlag fortfahren
+            continue
+
+    return updated_count

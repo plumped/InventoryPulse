@@ -51,6 +51,12 @@ def dashboard(request):
         ).values_list('warehouse', flat=True)
         accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
 
+    try:
+        from order.services import generate_order_suggestions
+        generate_order_suggestions()
+    except ImportError:
+        pass  # Ignorieren, falls die Funktion nicht importiert werden kann
+
     # Produkte mit niedrigem Bestand basierend auf zugänglichen Lagern
     low_stock_products = Product.objects.annotate(
         accessible_stock=Coalesce(

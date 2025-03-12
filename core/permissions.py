@@ -15,6 +15,10 @@ PERMISSION_GROUPS = {
     'supplier_viewer': 'Lieferanten-Betrachter',
     'report_viewer': 'Bericht-Betrachter',
     'import_admin': 'Import-Administrator',
+    # Neue Berechtigungsgruppen für Bestellungen
+    'order_admin': 'Bestellungs-Administrator',
+    'order_manager': 'Bestellungs-Manager',
+    'order_viewer': 'Bestellungs-Betrachter',
 }
 
 # Funktionsbereiche
@@ -24,6 +28,8 @@ PERMISSION_AREAS = {
     'supplier': 'Lieferantenverwaltung',
     'report': 'Berichtswesen',
     'import': 'Datenimport',
+    # Neuer Bereich für Bestellungen
+    'order': 'Bestellverwaltung',
 }
 
 # Berechtigungsstufen
@@ -33,6 +39,8 @@ PERMISSION_LEVELS = {
     'create': 'Erstellen',
     'delete': 'Löschen',
     'admin': 'Administrieren',
+    # Neue Berechtigungsstufe für Bestellungen
+    'approve': 'Genehmigen',
 }
 
 
@@ -94,7 +102,29 @@ def setup_permissions():
     )
     viewer_group.permissions.add(*viewer_perms)
 
-    # Ähnlich für andere Bereiche...
+    # Berechtigungen für Bestellungen
+    # Admin-Gruppe für Bestellungen erstellen und Berechtigungen zuweisen
+    order_admin_group = Group.objects.get(name=PERMISSION_GROUPS['order_admin'])
+    order_perms = Permission.objects.filter(codename__startswith='can_', codename__contains='_order')
+    order_admin_group.permissions.add(*order_perms)
+
+    # Manager-Gruppe für Bestellungen
+    order_manager_group = Group.objects.get(name=PERMISSION_GROUPS['order_manager'])
+    order_manager_perms = Permission.objects.filter(
+        codename__in=[
+            get_permission_name('order', 'view'),
+            get_permission_name('order', 'edit'),
+            get_permission_name('order', 'create')
+        ]
+    )
+    order_manager_group.permissions.add(*order_manager_perms)
+
+    # Viewer-Gruppe für Bestellungen
+    order_viewer_group = Group.objects.get(name=PERMISSION_GROUPS['order_viewer'])
+    order_viewer_perms = Permission.objects.filter(
+        codename=get_permission_name('order', 'view')
+    )
+    order_viewer_group.permissions.add(*order_viewer_perms)
 
 
 def has_permission(user, area, action):
@@ -118,5 +148,11 @@ class CustomPermission(models.Model):
             ('can_create_inventory', 'Kann in Lagerverwaltung erstellen'),
             ('can_delete_inventory', 'Kann in Lagerverwaltung löschen'),
             ('can_admin_inventory', 'Kann Lagerverwaltung administrieren'),
-            # Weitere Berechtigungen...
+
+            # Neue Berechtigungen für Bestellungen
+            ('can_view_order', 'Kann Bestellungen ansehen'),
+            ('can_edit_order', 'Kann Bestellungen bearbeiten'),
+            ('can_create_order', 'Kann Bestellungen erstellen'),
+            ('can_delete_order', 'Kann Bestellungen löschen'),
+            ('can_approve_order', 'Kann Bestellungen genehmigen'),
         )

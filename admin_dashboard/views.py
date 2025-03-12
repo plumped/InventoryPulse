@@ -290,10 +290,13 @@ def group_create(request):
         area_perms = Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
         permissions_by_area[area] = area_perms
 
+    levels = ['view', 'create', 'edit', 'delete', 'approve']
+
     context = {
         'form': form,
         'permissions_by_area': permissions_by_area,
         'permission_areas': PERMISSION_AREAS,
+        'levels': levels,
         'section': 'groups'
     }
 

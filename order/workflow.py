@@ -96,13 +96,15 @@ def can_approve_order(user, order):
     Returns:
         bool: True if the user can approve the order
     """
+    from core.permissions import has_permission
+
     workflow_settings = get_workflow_settings()
 
-    # First, check if the user has permission to approve orders
-    if not user.has_perm('order.approve'):
+    # Erste Prüfung: Hat der Benutzer die Berechtigung, Bestellungen zu genehmigen
+    if not has_permission(user, 'order', 'approve'):
         return False
 
-    # If separate approver is required, check that the user is not the creator
+    # Wenn separate Genehmiger erforderlich sind
     if workflow_settings.require_separate_approver and order.created_by == user:
         return False
 

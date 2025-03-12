@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellung {{ order.order_number }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item active">{{ order.order_number }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Bestellung {{ order.order_number }}</h1>
+            <p class="text-muted">{{ order.get_status_display }} | Erstellt am {{ order.order_date|date:"d.m.Y" }} von {{ order.created_by.username }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group">
+                {% if order.status == 'draft' %}
+                <a href="{% url 'purchase_order_update' order.id %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil-square"></i> Bearbeiten
+                </a>
+                <a href="{% url 'purchase_order_submit' order.id %}" class="btn btn-success">
+                    <i class="bi bi-check2-circle"></i> Zur Genehmigung einreichen
+                </a>
+                {% elif order.status == 'pending' and can_approve %}
+                <a href="{% url 'purchase_order_approve' order.id %}" class="btn btn-success">
+                    <i class="bi bi-check2-circle"></i> Genehmigen
+                </a>
+                <a href="{% url 'purchase_order_reject' order.id %}" class="btn btn-danger">
+                    <i class="bi bi-x-circle"></i> Ablehnen
+                </a>
+                {% elif order.status == 'approved' %}
+                <a href="{% url 'purchase_order_mark_sent' order.id %}" class="btn btn-primary">
+                    <i class="bi bi-send"></i> Als bestellt markieren
+                </a>
+                {% elif order.status in 'sent,partially_received' and can_receive %}
+                <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-primary">
+                    <i class="bi bi-box-seam"></i> Wareneingang erfassen
+                </a>
+                {% endif %}
+
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{% url 'purchase_order_print' order.id %}">
+                            <i class="bi bi-printer me-2"></i>Drucken
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{% url 'purchase_order_export' order.id %}?format=csv">
+                            <i class="bi bi-download me-2"></i>CSV-Export
+                        </a>
+                    </li>
+                    {% if order.status == 'draft' %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="{% url 'purchase_order_delete' order.id %}">
+                            <i class="bi bi-trash me-2"></i>Löschen
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Linke Spalte: Bestellinfos -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Bestellinformationen</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Status:</dt>
+                        <dd class="col-sm-7">
+                            {% if order.status == 'draft' %}
+                            <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'pending' %}
+                            <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'approved' %}
+                            <span class="badge bg-info">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'sent' %}
+                            <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'partially_received' %}
+                            <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'received' %}
+                            <span class="badge bg-success">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'cancelled' %}
+                            <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">Lieferant:</dt>
+                        <dd class="col-sm-7">
+                            <a href="{% url 'supplier_detail' order.supplier.id %}">{{ order.supplier.name }}</a>
+                        </dd>
+
+                        <dt class="col-sm-5">Bestelldatum:</dt>
+                        <dd class="col-sm-7">{{ order.order_date|date:"d.m.Y" }}</dd>
+
+                        <dt class="col-sm-5">Geplante Lieferung:</dt>
+                        <dd class="col-sm-7">
+                            {% if order.expected_delivery %}
+                            {{ order.expected_delivery|date:"d.m.Y" }}
+                            {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">Erstellt von:</dt>
+                        <dd class="col-sm-7">{{ order.created_by.username }}</dd>
+
+                        {% if order.approved_by %}
+                        <dt class="col-sm-5">Genehmigt von:</dt>
+                        <dd class="col-sm-7">{{ order.approved_by.username }}</dd>
+                        {% endif %}
+
+                        <dt class="col-sm-5">Lieferadresse:</dt>
+                        <dd class="col-sm-7">
+                            {% if order.shipping_address %}
+                            {{ order.shipping_address|linebreaks }}
+                            {% else %}
+                            <span class="text-muted">Standardadresse</span>
+                            {% endif %}
+                        </dd>
+
+                        {% if order.notes %}
+                        <dt class="col-sm-12">Anmerkungen:</dt>
+                        <dd class="col-sm-12">{{ order.notes|linebreaks }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rechte Spalte: Artikel und Summen -->
+        <div class="col-md-8 mb-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Bestellpositionen</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Artikel</th>
+                                    <th>Artikel-Nr.</th>
+                                    <th>Bestellt</th>
+                                    <th>Erhalten</th>
+                                    <th>Einheit</th>
+                                    <th>Einzelpreis</th>
+                                    <th>Gesamt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                                    </td>
+                                    <td>
+                                        {% if item.supplier_sku %}
+                                        {{ item.supplier_sku }}
+                                        {% else %}
+                                        {{ item.product.sku }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.quantity_ordered }}</td>
+                                    <td>
+                                        {% if item.is_fully_received %}
+                                        <span class="badge bg-success">{{ item.quantity_received }}</span>
+                                        {% elif item.quantity_received > 0 %}
+                                        <span class="badge bg-warning">{{ item.quantity_received }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.product.unit }}</td>
+                                    <td>{{ item.unit_price|floatformat:2 }} €</td>
+                                    <td>{{ item.line_total|floatformat:2 }} €</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-3">Keine Positionen vorhanden</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>Zwischensumme:</strong></td>
+                                    <td>{{ order.subtotal|floatformat:2 }} €</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-end">Steuern:</td>
+                                    <td>{{ order.tax|floatformat:2 }} €</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-end">Versandkosten:</td>
+                                    <td>{{ order.shipping_cost|floatformat:2 }} €</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>Gesamtsumme:</strong></td>
+                                    <td><strong>{{ order.total|floatformat:2 }} €</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wareneingänge -->
+            {% if receipts %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Wareneingänge</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="accordion" id="receiptsAccordion">
+                        {% for receipt in receipts %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ receipt.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapse{{ receipt.id }}" aria-expanded="false"
+                                        aria-controls="collapse{{ receipt.id }}">
+                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                        <span>Wareneingang vom {{ receipt.receipt_date|date:"d.m.Y" }}</span>
+                                        <span class="badge bg-info ms-2">{{ receipt.items.count }} Positionen</span>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ receipt.id }}" class="accordion-collapse collapse"
+                                 aria-labelledby="heading{{ receipt.id }}" data-bs-parent="#receiptsAccordion">
+                                <div class="accordion-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Artikel</th>
+                                                    <th>Menge</th>
+                                                    <th>Ziellager</th>
+                                                    {% if has_batch_products %}
+                                                    <th>Charge</th>
+                                                    {% endif %}
+                                                    {% if has_expiry_products %}
+                                                    <th>Verfallsdatum</th>
+                                                    {% endif %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in receipt.items.all %}
+                                                <tr>
+                                                    <td>{{ item.order_item.product.name }}</td>
+                                                    <td>{{ item.quantity_received }} {{ item.order_item.product.unit }}</td>
+                                                    <td>{{ item.warehouse.name }}</td>
+                                                    {% if has_batch_products %}
+                                                    <td>{{ item.batch_number|default:"-" }}</td>
+                                                    {% endif %}
+                                                    {% if has_expiry_products %}
+                                                    <td>
+                                                        {% if item.expiry_date %}
+                                                        {{ item.expiry_date|date:"d.m.Y" }}
+                                                        {% else %}
+                                                        -
+                                                        {% endif %}
+                                                    </td>
+                                                    {% endif %}
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% if receipt.notes %}
+                                    <div class="p-3 bg-light">
+                                        <h6>Anmerkungen:</h6>
+                                        <p class="mb-0">{{ receipt.notes|linebreaks }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

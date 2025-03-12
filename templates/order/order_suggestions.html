@@ -12,9 +12,6 @@
                 <button id="refreshSuggestions" class="btn btn-outline-primary me-2">
                     <i class="bi bi-arrow-clockwise"></i> Aktualisieren
                 </button>
-                <a href="{% url 'create_orders_from_suggestions' %}" class="btn btn-success">
-                    <i class="bi bi-plus-circle"></i> Bestellungen erstellen
-                </a>
             </div>
         </div>
     </div>
@@ -105,7 +102,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end mt-3">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="confirmOrderBtn">
                             <i class="bi bi-cart-plus"></i> Ausgewählte bestellen
                         </button>
                     </div>
@@ -167,6 +164,25 @@
                     $button.prop('disabled', false).html('<i class="bi bi-arrow-clockwise"></i> Aktualisieren');
                 }
             });
+        });
+        $('#suggestionForm').on('submit', function(e) {
+            // Überprüfen, ob Artikel ausgewählt wurden
+            var selectedItems = $('.suggestion-checkbox:checked').length;
+
+            if (selectedItems === 0) {
+                e.preventDefault();
+                alert('Bitte wählen Sie mindestens einen Artikel aus, der bestellt werden soll.');
+                return false;
+            }
+
+            // Bestätigungsdialog
+            if (!confirm('Sind Sie sicher, dass Sie für die ausgewählten ' + selectedItems + ' Artikel Bestellungen erstellen möchten?')) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Formular absenden, wenn bestätigt
+            return true;
         });
     });
 </script>

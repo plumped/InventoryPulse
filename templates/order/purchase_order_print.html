@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellung {{ order.order_number }} - Druckansicht{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Druckspezifische Stile */
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            font-size: 12pt;
+        }
+
+        .container-fluid {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .card-header {
+            background-color: #f8f9fa !important;
+            color: #000 !important;
+        }
+
+        table {
+            width: 100% !important;
+        }
+
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+    }
+
+    /* Allgemeine Stile für die Druckansicht */
+    .print-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .company-logo {
+        max-height: 80px;
+    }
+
+    .company-details, .supplier-details {
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Drucken-Button (nur auf dem Bildschirm sichtbar) -->
+    <div class="row mb-4 no-print">
+        <div class="col-12 d-flex justify-content-between">
+            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur Bestellung
+            </a>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Drucken
+            </button>
+        </div>
+    </div>
+
+    <!-- Druckinhalt -->
+    <div class="row print-header">
+        <div class="col-6">
+            <div class="company-details">
+                <h2>InventoryPulse</h2>
+                <p>
+                    Beispielstraße 123<br>
+                    12345 Musterstadt<br>
+                    Tel: +49 123 4567890<br>
+                    E-Mail: kontakt@inventorypulse.de
+                </p>
+            </div>
+        </div>
+        <div class="col-6 text-end">
+            <div class="document-info">
+                <h1 class="mb-3">Bestellung</h1>
+                <p>
+                    <strong>Bestellnummer:</strong> {{ order.order_number }}<br>
+                    <strong>Datum:</strong> {{ order.order_date|date:"d.m.Y" }}<br>
+                    {% if order.expected_delivery %}
+                    <strong>Liefertermin:</strong> {{ order.expected_delivery|date:"d.m.Y" }}<br>
+                    {% endif %}
+                    <strong>Status:</strong> {{ order.get_status_display }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <div class="supplier-details card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Lieferant</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">
+                        <strong>{{ order.supplier.name }}</strong><br>
+                        {% if order.supplier.contact_person %}{{ order.supplier.contact_person }}<br>{% endif %}
+                        {% if order.supplier.address %}{{ order.supplier.address|linebreaks }}{% endif %}
+                        {% if order.supplier.phone %}Tel: {{ order.supplier.phone }}<br>{% endif %}
+                        {% if order.supplier.email %}E-Mail: {{ order.supplier.email }}{% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="shipping-details card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Lieferadresse</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">
+                        {% if order.shipping_address %}
+                        {{ order.shipping_address|linebreaks }}
+                        {% else %}
+                        InventoryPulse<br>
+                        Beispielstraße 123<br>
+                        12345 Musterstadt
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Artikelliste -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Bestellpositionen</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 5%;">#</th>
+                                <th style="width: 40%;">Artikel</th>
+                                <th style="width: 15%;">Artikelnummer</th>
+                                <th style="width: 10%;">Menge</th>
+                                <th style="width: 10%;">Einheit</th>
+                                <th style="width: 10%;">Einzelpreis</th>
+                                <th style="width: 10%;">Gesamt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ item.product.name }}</td>
+                                <td>
+                                    {% if item.supplier_sku %}
+                                    {{ item.supplier_sku }}
+                                    {% else %}
+                                    {{ item.product.sku }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.quantity_ordered }}</td>
+                                <td>{{ item.product.unit }}</td>
+                                <td class="text-end">{{ item.unit_price|floatformat:2 }} €</td>
+                                <td class="text-end">{{ item.line_total|floatformat:2 }} €</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" class="text-end">Zwischensumme:</td>
+                                <td class="text-end">{{ order.subtotal|floatformat:2 }} €</td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" class="text-end">Steuern:</td>
+                                <td class="text-end">{{ order.tax|floatformat:2 }} €</td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" class="text-end">Versandkosten:</td>
+                                <td class="text-end">{{ order.shipping_cost|floatformat:2 }} €</td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" class="text-end"><strong>Gesamtsumme:</strong></td>
+                                <td class="text-end"><strong>{{ order.total|floatformat:2 }} €</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anmerkungen -->
+    {% if order.notes %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Anmerkungen</h5>
+                </div>
+                <div class="card-body">
+                    {{ order.notes|linebreaks }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Unterschriften -->
+    <div class="row mt-5">
+        <div class="col-6">
+            <div class="signature-field">
+                <hr>
+                <p>Datum, Unterschrift (Besteller)</p>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="signature-field">
+                <hr>
+                <p>Datum, Unterschrift (Genehmigt durch)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fußzeile -->
+    <div class="row mt-5 pt-4">
+        <div class="col-12 text-center">
+            <p class="small text-muted">
+                InventoryPulse GmbH | Beispielstraße 123 | 12345 Musterstadt | www.inventorypulse.de | USt-IdNr.: DE123456789
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

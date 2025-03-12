@@ -649,6 +649,9 @@ def refresh_order_suggestions(request):
 
     return JsonResponse({'success': False, 'message': 'Nur POST-Anfragen sind erlaubt.'})
 
+
+# Korrigiere die create_orders_from_suggestions Funktion in order/views.py
+
 @login_required
 @permission_required('order', 'create')
 def create_orders_from_suggestions(request):
@@ -665,8 +668,7 @@ def create_orders_from_suggestions(request):
         suggestions_by_supplier = {}
         for suggestion_id in selected_ids:
             try:
-                suggestion = OrderSuggestion.objects.select_related('product',
-                                                                    'preferred_supplier').get(
+                suggestion = OrderSuggestion.objects.select_related('product', 'preferred_supplier').get(
                     pk=suggestion_id)
 
                 # Bestellmenge aus dem Formular abrufen
@@ -697,24 +699,63 @@ def create_orders_from_suggestions(request):
             except (OrderSuggestion.DoesNotExist, ValueError):
                 continue
 
-        # Für jeden Lieferanten eine Bestellung erstellen
+        # Für jeden Lieferanten eine Bestellung erstellen oder vorhandenen Entwurf aktualisieren
         orders_created = 0
+        orders_updated = 0
+
         for supplier, items in suggestions_by_supplier.items():
             if not items:
                 continue
 
             with transaction.atomic():
-                # Bestellung erstellen
-                order = PurchaseOrder.objects.create(
+                # Prüfen, ob bereits ein Entwurf für diesen Lieferanten existiert
+                existing_draft = PurchaseOrder.objects.filter(
                     supplier=supplier,
-                    created_by=request.user,
-                    status='draft',
-                    # Bestellnummer generieren
-                    order_number=f"ORD-{date.today().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6]}"
-                )
+                    status='draft'
+                ).first()
 
-                # Positionen hinzufügen
+                if existing_draft:
+                    # Vorhandenen Entwurf aktualisieren
+                    order = existing_draft
+                    orders_updated += 1
+                else:
+                    # Bestellung erstellen
+                    # Bestellnummer generieren (z.B. ORD-20230501-001)
+                    today = date.today()
+                    prefix = f"ORD-{today.strftime('%Y%m%d')}-"
+
+                    # Nächste Sequenznummer finden
+                    last_order = PurchaseOrder.objects.filter(
+                        order_number__startswith=prefix
+                    ).order_by('-order_number').first()
+
+                    if last_order:
+                        try:
+                            last_seq = int(last_order.order_number.split('-')[-1])
+                            next_seq = last_seq + 1
+                        except ValueError:
+                            next_seq = 1
+                    else:
+                        next_seq = 1
+
+                    order_number = f"{prefix}{next_seq:03d}"
+
+                    order = PurchaseOrder.objects.create(
+                        supplier=supplier,
+                        created_by=request.user,
+                        status='draft',
+                        order_number=order_number
+                    )
+                    orders_created += 1
+
+                # Positionen hinzufügen oder aktualisieren
                 for item in items:
+                    # Prüfen, ob das Produkt bereits in der Bestellung ist
+                    existing_item = PurchaseOrderItem.objects.filter(
+                        purchase_order=order,
+                        product=item['product']
+                    ).first()
+
                     # Lieferantenpreis ermitteln
                     unit_price = Decimal('0.00')
                     supplier_sku = ''
@@ -729,24 +770,36 @@ def create_orders_from_suggestions(request):
                     except SupplierProduct.DoesNotExist:
                         pass
 
-                    # Bestellposition erstellen
-                    PurchaseOrderItem.objects.create(
-                        purchase_order=order,
-                        product=item['product'],
-                        quantity_ordered=item['quantity'],
-                        unit_price=unit_price,
-                        supplier_sku=supplier_sku
-                    )
+                    if existing_item:
+                        # Menge erhöhen
+                        existing_item.quantity_ordered += item['quantity']
+                        existing_item.save()
+                    else:
+                        # Neue Position erstellen
+                        PurchaseOrderItem.objects.create(
+                            purchase_order=order,
+                            product=item['product'],
+                            quantity_ordered=item['quantity'],
+                            unit_price=unit_price,
+                            supplier_sku=supplier_sku
+                        )
 
                 # Summen aktualisieren
                 order.update_totals()
-                orders_created += 1
 
-        if orders_created > 0:
-            messages.success(request, f'{orders_created} Bestellungen wurden erfolgreich erstellt.')
+        # Erfolgsmeldung anzeigen
+        if orders_created > 0 or orders_updated > 0:
+            message_parts = []
+            if orders_created > 0:
+                message_parts.append(f'{orders_created} neue Bestellung(en)')
+            if orders_updated > 0:
+                message_parts.append(f'{orders_updated} bestehende Bestellung(en) aktualisiert')
+
+            messages.success(request, 'Bestellungen wurden erfolgreich erstellt: ' + ' und '.join(message_parts))
         else:
             messages.warning(request, 'Es konnten keine Bestellungen erstellt werden.')
 
+        # Nach erfolgreichem Erstellen zurück zur Bestellliste
         return redirect('purchase_order_list')
 
     # GET-Anfragen umleiten

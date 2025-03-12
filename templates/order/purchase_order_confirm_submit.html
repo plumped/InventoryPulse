@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellung einreichen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">Zur Genehmigung einreichen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Bestellung zur Genehmigung einreichen</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h4 class="alert-heading">Hinweis</h4>
+                <p>Sie sind dabei, die Bestellung <strong>{{ order.order_number }}</strong> zur Genehmigung einzureichen.</p>
+                <hr>
+                <p class="mb-0">Nach dem Einreichen kann die Bestellung nicht mehr bearbeitet werden, bis sie genehmigt oder abgelehnt wurde.</p>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Bestelldetails</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Bestellnummer:</span>
+                            <span class="fw-bold">{{ order.order_number }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Lieferant:</span>
+                            <span>{{ order.supplier.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Bestelldatum:</span>
+                            <span>{{ order.order_date|date:"d.m.Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Geplante Lieferung:</span>
+                            <span>
+                                {% if order.expected_delivery %}
+                                {{ order.expected_delivery|date:"d.m.Y" }}
+                                {% else %}
+                                <span class="text-muted">Nicht angegeben</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Gesamtsumme:</span>
+                            <span class="fw-bold">{{ order.total|floatformat:2 }} €</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Übersicht der Positionen</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Artikel</th>
+                                    <th>Menge</th>
+                                    <th class="text-end">Preis</th>
+                                    <th class="text-end">Gesamt</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items.all %}
+                                <tr>
+                                    <td>{{ item.product.name }}</td>
+                                    <td>{{ item.quantity_ordered }} {{ item.product.unit }}</td>
+                                    <td class="text-end">{{ item.unit_price|floatformat:2 }} €</td>
+                                    <td class="text-end">{{ item.line_total|floatformat:2 }} €</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">Keine Positionen vorhanden</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Zwischensumme:</strong></td>
+                                    <td class="text-end">{{ order.subtotal|floatformat:2 }} €</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end">Steuern:</td>
+                                    <td class="text-end">{{ order.tax|floatformat:2 }} €</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end">Versandkosten:</td>
+                                    <td class="text-end">{{ order.shipping_cost|floatformat:2 }} €</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Gesamtsumme:</strong></td>
+                                    <td class="text-end"><strong>{{ order.total|floatformat:2 }} €</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-5">
+                <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Zurück
+                </a>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check2-circle"></i> Zur Genehmigung einreichen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

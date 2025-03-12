@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Bestellung genehmigen - InventoryPulse{% endblock %}
+{% block title %}Bestellung als bestellt markieren - InventoryPulse{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -11,7 +11,7 @@
                     <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
                     <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
-                    <li class="breadcrumb-item active">Genehmigen</li>
+                    <li class="breadcrumb-item active">Als bestellt markieren</li>
                 </ol>
             </nav>
         </div>
@@ -19,7 +19,7 @@
 
     <div class="row mb-4">
         <div class="col-12">
-            <h1 class="h3 mb-0">Bestellung genehmigen</h1>
+            <h1 class="h3 mb-0">Bestellung als bestellt markieren</h1>
         </div>
     </div>
 
@@ -27,9 +27,9 @@
         <div class="card-body">
             <div class="alert alert-info">
                 <h4 class="alert-heading">Hinweis</h4>
-                <p>Sie sind dabei, die Bestellung <strong>{{ order.order_number }}</strong> zu genehmigen.</p>
+                <p>Sie sind dabei, die Bestellung <strong>{{ order.order_number }}</strong> als bestellt zu markieren.</p>
                 <hr>
-                <p class="mb-0">Nach der Genehmigung kann die Bestellung an den Lieferanten gesendet werden.</p>
+                <p class="mb-0">Dadurch wird der Status auf "Bestellt" gesetzt und Sie können Wareneingänge für diese Bestellung erfassen.</p>
             </div>
 
             <div class="row mt-4">
@@ -60,11 +60,15 @@
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span>Status:</span>
-                            <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                            <span class="badge bg-info">{{ order.get_status_display }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span>Erstellt von:</span>
                             <span>{{ order.created_by.username }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Genehmigt von:</span>
+                            <span>{{ order.approved_by.username }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <span>Gesamtsumme:</span>
@@ -75,31 +79,29 @@
                 <div class="col-md-6">
                     <div class="card h-100">
                         <div class="card-body">
-                            <h5 class="card-title">Genehmigungscheckliste</h5>
-                            <p>Bitte überprüfen Sie folgende Punkte vor der Genehmigung:</p>
+                            <h5 class="card-title">Bestellinformationen</h5>
+                            <p>Haben Sie folgende Schritte bereits erledigt?</p>
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" value="" id="check1">
                                 <label class="form-check-label" for="check1">
-                                    Alle Artikelpositionen sind korrekt
+                                    Bestellung wurde an den Lieferanten übermittelt
                                 </label>
                             </div>
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" value="" id="check2">
                                 <label class="form-check-label" for="check2">
-                                    Preise und Konditionen wurden geprüft
+                                    Liefertermin wurde mit dem Lieferanten abgesprochen
                                 </label>
                             </div>
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" value="" id="check3">
                                 <label class="form-check-label" for="check3">
-                                    Budget für die Bestellung ist vorhanden
+                                    Alle notwendigen Dokumente wurden ausgetauscht
                                 </label>
                             </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" value="" id="check4">
-                                <label class="form-check-label" for="check4">
-                                    Lieferant und Lieferadresse sind korrekt
-                                </label>
+
+                            <div class="alert alert-warning mt-4">
+                                <i class="bi bi-info-circle me-2"></i> Nach dem Markieren als "Bestellt" kann der Status nur noch über die Wareneingänge geändert werden.
                             </div>
                         </div>
                     </div>
@@ -113,7 +115,6 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Artikel</th>
-                                <th>Artikel-Nr.</th>
                                 <th>Menge</th>
                                 <th>Einheit</th>
                                 <th class="text-end">Einzelpreis</th>
@@ -124,13 +125,6 @@
                             {% for item in order.items.all %}
                             <tr>
                                 <td>{{ item.product.name }}</td>
-                                <td>
-                                    {% if item.supplier_sku %}
-                                    {{ item.supplier_sku }}
-                                    {% else %}
-                                    {{ item.product.sku }}
-                                    {% endif %}
-                                </td>
                                 <td>{{ item.quantity_ordered }}</td>
                                 <td>{{ item.product.unit }}</td>
                                 <td class="text-end">{{ item.unit_price|floatformat:2 }} €</td>
@@ -138,25 +132,13 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center text-muted">Keine Positionen vorhanden</td>
+                                <td colspan="5" class="text-center text-muted">Keine Positionen vorhanden</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
-                                <td colspan="5" class="text-end"><strong>Zwischensumme:</strong></td>
-                                <td class="text-end">{{ order.subtotal|floatformat:2 }} €</td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="text-end">Steuern:</td>
-                                <td class="text-end">{{ order.tax|floatformat:2 }} €</td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="text-end">Versandkosten:</td>
-                                <td class="text-end">{{ order.shipping_cost|floatformat:2 }} €</td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="text-end"><strong>Gesamtsumme:</strong></td>
+                                <td colspan="4" class="text-end"><strong>Gesamtsumme:</strong></td>
                                 <td class="text-end"><strong>{{ order.total|floatformat:2 }} €</strong></td>
                             </tr>
                         </tfoot>
@@ -168,17 +150,12 @@
                 <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Zurück
                 </a>
-                <div class="btn-group">
-                    <a href="{% url 'purchase_order_reject' order.id %}" class="btn btn-outline-danger">
-                        <i class="bi bi-x-circle"></i> Ablehnen
-                    </a>
-                    <form method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success" id="approveButton">
-                            <i class="bi bi-check2-circle"></i> Bestellung genehmigen
-                        </button>
-                    </form>
-                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" id="confirmButton">
+                        <i class="bi bi-send"></i> Als bestellt markieren
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -186,9 +163,9 @@
 
 {% block extra_js %}
 <script>
-    // Checkboxen zur Unterstützung des Genehmigungsprozesses
+    // Diese Checkboxen sind nur zur Unterstützung des Nutzers und blockieren nicht den Formularversand
     const checkboxes = document.querySelectorAll('.form-check-input');
-    const approveButton = document.getElementById('approveButton');
+    const confirmButton = document.getElementById('confirmButton');
 
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', updateButtonState);
@@ -198,16 +175,13 @@
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
 
         if (allChecked) {
-            approveButton.classList.remove('btn-outline-success');
-            approveButton.classList.add('btn-success');
+            confirmButton.classList.remove('btn-outline-primary');
+            confirmButton.classList.add('btn-primary');
         } else {
-            approveButton.classList.remove('btn-success');
-            approveButton.classList.add('btn-outline-success');
+            confirmButton.classList.remove('btn-primary');
+            confirmButton.classList.add('btn-outline-primary');
         }
     }
-
-    // Initialen Zustand setzen
-    updateButtonState();
 </script>
 {% endblock %}
 

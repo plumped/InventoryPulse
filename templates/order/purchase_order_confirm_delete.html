@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellung löschen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">Löschen bestätigen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Bestellung löschen</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Achtung!</h4>
+                <p>Sind Sie sicher, dass Sie die Bestellung <strong>{{ order.order_number }}</strong> unwiderruflich löschen möchten?</p>
+                <hr>
+                <p class="mb-0">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Bestelldetails</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Bestellnummer:</span>
+                            <span class="fw-bold">{{ order.order_number }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Lieferant:</span>
+                            <span>{{ order.supplier.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Bestelldatum:</span>
+                            <span>{{ order.order_date|date:"d.m.Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Status:</span>
+                            <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Gesamtsumme:</span>
+                            <span class="fw-bold">{{ order.total|floatformat:2 }} €</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Artikelpositionen</h5>
+                    <ul class="list-group">
+                        {% for item in order.items.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold">{{ item.product.name }}</span>
+                                <br>
+                                <small class="text-muted">{{ item.quantity_ordered }} {{ item.product.unit }} x {{ item.unit_price|floatformat:2 }} €</small>
+                            </div>
+                            <span>{{ item.line_total|floatformat:2 }} €</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted">Keine Positionen vorhanden</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-5">
+                <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Abbrechen
+                </a>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Bestellung unwiderruflich löschen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

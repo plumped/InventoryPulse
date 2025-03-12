@@ -12,7 +12,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
 from core.decorators import permission_required
-from core.models import Product
+from core.models import Product, ProductWarehouse
 from suppliers.models import Supplier, SupplierProduct
 from inventory.models import Warehouse, StockMovement
 
@@ -417,6 +417,7 @@ def purchase_order_mark_sent(request, pk):
 
     return render(request, 'order/purchase_order_confirm_mark_sent.html', context)
 
+
 @login_required
 @permission_required('order', 'receive')
 def purchase_order_receive(request, pk):
@@ -433,14 +434,13 @@ def purchase_order_receive(request, pk):
         return redirect('purchase_order_detail', pk=order.pk)
 
     if request.method == 'POST':
-        form = ReceiveOrderForm(request.POST, order=order)
-        if form.is_valid():
+        try:
             with transaction.atomic():
                 # Wareneingang erstellen
                 receipt = PurchaseOrderReceipt.objects.create(
                     purchase_order=order,
                     received_by=request.user,
-                    notes=form.cleaned_data.get('notes', '')
+                    notes=request.POST.get('notes', '')
                 )
 
                 # Für jede Position prüfen, ob Menge empfangen wurde
@@ -448,69 +448,87 @@ def purchase_order_receive(request, pk):
                 all_items_fully_received = True
 
                 for item in order.items.all():
-                    quantity_key = f'receive_quantity_{item.id}'
-                    warehouse_key = f'warehouse_{item.id}'
-                    batch_key = f'batch_{item.id}'
-                    expiry_key = f'expiry_{item.id}'
+                    # Alle quantity-Felder für dieses Item finden (für multiple Batches)
+                    quantity_fields = [key for key in request.POST.keys() if
+                                       key.startswith(f'receive_quantity_{item.id}_')]
+                    item_received_total = Decimal('0')
 
-                    if quantity_key in request.POST and warehouse_key in request.POST:
-                        quantity = Decimal(request.POST[quantity_key])
-                        warehouse_id = request.POST[warehouse_key]
-                        batch = request.POST.get(batch_key, '')
-                        expiry = request.POST.get(expiry_key, '')
+                    # Jede Batch-Zeile verarbeiten
+                    for quantity_field in quantity_fields:
+                        # Line-Index aus dem Feldnamen extrahieren (z.B. receive_quantity_5_0, receive_quantity_5_1)
+                        line_index = quantity_field.split('_')[-1]
+                        quantity_str = request.POST.get(quantity_field, '0')
+
+                        try:
+                            quantity = Decimal(quantity_str)
+                        except:
+                            quantity = Decimal('0')
 
                         if quantity > 0:
-                            # Zielwarehouse abrufen
-                            warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
+                            # Zugehörige Felder finden
+                            warehouse_key = f'warehouse_{item.id}_{line_index}'
+                            batch_key = f'batch_{item.id}_{line_index}'
+                            expiry_key = f'expiry_{item.id}_{line_index}'
 
-                            # Wareneingangposition erstellen
-                            receipt_item = PurchaseOrderReceiptItem.objects.create(
-                                receipt=receipt,
-                                order_item=item,
-                                quantity_received=quantity,
-                                warehouse=warehouse,
-                                batch_number=batch
-                            )
+                            if warehouse_key in request.POST:
+                                warehouse_id = request.POST[warehouse_key]
+                                batch = request.POST.get(batch_key, '')
+                                expiry = request.POST.get(expiry_key, '')
 
-                            # Verfallsdatum setzen, falls angegeben
-                            if expiry:
-                                try:
-                                    receipt_item.expiry_date = date.fromisoformat(expiry)
-                                    receipt_item.save()
-                                except ValueError:
-                                    pass  # Ungültiges Datum ignorieren
+                                # Zielwarehouse abrufen
+                                warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
 
-                            # Bestandsbewegung erstellen
-                            StockMovement.objects.create(
-                                product=item.product,
-                                warehouse=warehouse,
-                                quantity=quantity,
-                                movement_type='in',
-                                reference=f'Wareneingang: {order.order_number}',
-                                notes=f'Erhaltene Menge: {quantity}',
-                                created_by=request.user
-                            )
+                                # Wareneingangposition erstellen
+                                receipt_item = PurchaseOrderReceiptItem.objects.create(
+                                    receipt=receipt,
+                                    order_item=item,
+                                    quantity_received=quantity,
+                                    warehouse=warehouse,
+                                    batch_number=batch
+                                )
 
-                            # Produktbestand im Lager aktualisieren oder neu anlegen
-                            from core.models import ProductWarehouse
-                            product_warehouse, created = ProductWarehouse.objects.get_or_create(
-                                product=item.product,
-                                warehouse=warehouse,
-                                defaults={'quantity': 0}
-                            )
+                                # Verfallsdatum setzen, falls angegeben
+                                if expiry:
+                                    try:
+                                        receipt_item.expiry_date = date.fromisoformat(expiry)
+                                        receipt_item.save()
+                                    except ValueError:
+                                        pass  # Ungültiges Datum ignorieren
 
-                            product_warehouse.quantity += quantity
-                            product_warehouse.save()
+                                # Bestandsbewegung erstellen
+                                StockMovement.objects.create(
+                                    product=item.product,
+                                    warehouse=warehouse,
+                                    quantity=quantity,
+                                    movement_type='in',
+                                    reference=f'Wareneingang: {order.order_number}',
+                                    notes=f'Erhaltene Menge: {quantity}, Charge: {batch}',
+                                    created_by=request.user
+                                )
 
-                            # Bestellposition aktualisieren
-                            item.quantity_received += quantity
-                            item.save()
+                                # Produktbestand im Lager aktualisieren oder neu anlegen
+                                from core.models import ProductWarehouse
+                                product_warehouse, created = ProductWarehouse.objects.get_or_create(
+                                    product=item.product,
+                                    warehouse=warehouse,
+                                    defaults={'quantity': 0}
+                                )
 
-                            items_received = True
+                                product_warehouse.quantity += quantity
+                                product_warehouse.save()
 
-                            # Prüfen, ob alle Artikel vollständig erhalten wurden
-                            if item.quantity_received < item.quantity_ordered:
-                                all_items_fully_received = False
+                                # Gesamtmenge für dieses Item aktualisieren
+                                item_received_total += quantity
+                                items_received = True
+
+                    # Bestellposition aktualisieren mit der Gesamtmenge aller Batches
+                    if item_received_total > 0:
+                        item.quantity_received += item_received_total
+                        item.save()
+
+                        # Prüfen, ob alle Artikel vollständig erhalten wurden
+                        if item.quantity_received < item.quantity_ordered:
+                            all_items_fully_received = False
 
                 # Bestellstatus aktualisieren, falls Artikel empfangen wurden
                 if items_received:
@@ -526,16 +544,28 @@ def purchase_order_receive(request, pk):
                     messages.warning(request, 'Es wurden keine Artikel als empfangen markiert.')
 
                 return redirect('purchase_order_detail', pk=order.pk)
-    else:
-        form = ReceiveOrderForm(order=order)
+
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())  # Print detailed error to console
+            messages.error(request, f'Fehler beim Speichern des Wareneingangs: {str(e)}')
+
+    # Create a simple form just for the notes field
+    form = ReceiveOrderForm()
 
     # Verfügbare Lager abrufen
     warehouses = Warehouse.objects.filter(is_active=True)
+
+    # Prüfen, ob Produkte Batch- oder Verfallsdatum-Tracking benötigen
+    has_batch_products = any(item.product.has_batch_tracking for item in order.items.all())
+    has_expiry_products = any(item.product.has_expiry_tracking for item in order.items.all())
 
     context = {
         'order': order,
         'form': form,
         'warehouses': warehouses,
+        'has_batch_products': has_batch_products,
+        'has_expiry_products': has_expiry_products,
     }
 
     return render(request, 'order/purchase_order_receive.html', context)

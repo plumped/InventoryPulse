@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellung ablehnen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">Ablehnen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Bestellung ablehnen</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h4 class="alert-heading">Hinweis</h4>
+                <p>Sie sind dabei, die Bestellung <strong>{{ order.order_number }}</strong> abzulehnen.</p>
+                <hr>
+                <p class="mb-0">Die Bestellung wird zurück in den Status "Entwurf" gesetzt und kann vom Ersteller überarbeitet werden.</p>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Bestelldetails</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Bestellnummer:</span>
+                            <span class="fw-bold">{{ order.order_number }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Lieferant:</span>
+                            <span>{{ order.supplier.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Bestelldatum:</span>
+                            <span>{{ order.order_date|date:"d.m.Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Status:</span>
+                            <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Erstellt von:</span>
+                            <span>{{ order.created_by.username }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Gesamtsumme:</span>
+                            <span class="fw-bold">{{ order.total|floatformat:2 }} €</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="rejection_reason" class="form-label">Begründung der Ablehnung</label>
+                            <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="6" required></textarea>
+                            <div class="form-text">
+                                Bitte geben Sie eine Begründung an, warum die Bestellung abgelehnt wird.
+                                Diese Information wird dem Ersteller angezeigt.
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h5>Artikelpositionen</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Artikel</th>
+                                <th>Menge</th>
+                                <th class="text-end">Preis</th>
+                                <th class="text-end">Gesamt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity_ordered }} {{ item.product.unit }}</td>
+                                <td class="text-end">{{ item.unit_price|floatformat:2 }} €</td>
+                                <td class="text-end">{{ item.line_total|floatformat:2 }} €</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Keine Positionen vorhanden</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Zwischensumme:</strong></td>
+                                <td class="text-end">{{ order.subtotal|floatformat:2 }} €</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">Steuern:</td>
+                                <td class="text-end">{{ order.tax|floatformat:2 }} €</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">Versandkosten:</td>
+                                <td class="text-end">{{ order.shipping_cost|floatformat:2 }} €</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Gesamtsumme:</strong></td>
+                                <td class="text-end"><strong>{{ order.total|floatformat:2 }} €</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-5">
+                <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Zurück
+                </a>
+                <button type="submit" form="rejection-form" class="btn btn-danger">
+                    <i class="bi bi-x-circle"></i> Bestellung ablehnen
+                </button>
+            </div>
+
+            <!-- Separat definiertes Formular, um den Submit-Button außerhalb platzieren zu können -->
+            <form id="rejection-form" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="rejection_reason" id="rejection_reason_hidden">
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Kopiere Wert des Textareas in das versteckte Formularfeld bei Absenden
+    document.getElementById('rejection-form').addEventListener('submit', function(e) {
+        const reasonText = document.getElementById('rejection_reason').value;
+        document.getElementById('rejection_reason_hidden').value = reasonText;
+    });
+</script>
+{% endblock %}
+
+{% endblock %}

@@ -291,27 +291,6 @@ def low_stock_list(request):
 
 
 @login_required
-@permission_required('product', 'view')
-def product_detail(request, pk):
-    """Show details for a specific product."""
-    product = get_object_or_404(Product, pk=pk)
-
-    # Lieferanteninformationen
-    supplier_products = SupplierProduct.objects.filter(product=product).select_related('supplier')
-
-    # Bestandsbewegungen
-    movements = StockMovement.objects.filter(product=product).select_related('created_by').order_by('-created_at')[:20]
-
-    context = {
-        'product': product,
-        'supplier_products': supplier_products,
-        'movements': movements,
-    }
-
-    return render(request, 'core/product_detail.html', context)
-
-
-@login_required
 @permission_required('product', 'create')
 def product_create(request):
     """Create a new product."""

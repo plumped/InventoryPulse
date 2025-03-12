@@ -232,6 +232,15 @@
                         </ul>
                     </li>
                     {% endif %}
+                    {% if user|has_perm:'import:view' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'import' in request.path %}active{% endif %}"
+                           href="#" id="exportDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-file-earmark-arrow-up"></i> Export
+                        </a>
+                    {% endif %}
+
                 </ul>
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}

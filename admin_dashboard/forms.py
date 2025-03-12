@@ -1,6 +1,6 @@
 # admin_dashboard/forms.py
 from django import forms
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User, Group, Permission
 from inventory.models import Department, Warehouse, WarehouseAccess
 
 from .models import SystemSettings, WorkflowSettings
@@ -147,6 +147,10 @@ class DepartmentForm(forms.ModelForm):
     members = forms.ModelMultipleChoiceField(
         queryset=User.objects.all(),
         widget=forms.SelectMultiple(attrs={'class': 'form-select'}),
+        required=False
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         required=False
     )
 

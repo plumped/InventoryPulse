@@ -1,4 +1,5 @@
 # admin_dashboard/views.py
+from django.db import connections
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Group, Permission
@@ -7,12 +8,15 @@ from django.db.models import Q, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 from django.utils import timezone
+import sys
+import django
 
 from core.permissions import PERMISSION_AREAS, PERMISSION_LEVELS, get_permission_name
 from inventory.models import Department, Warehouse, WarehouseAccess
 from core.decorators import permission_required
 
-from .forms import SystemSettingsForm, WorkflowSettingsForm
+from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
+    WarehouseAccessForm
 
 
 # Hilfsfunktion zur Prüfung von Admin-Berechtigungen
@@ -24,7 +28,6 @@ def is_admin(user):
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    print("Rendering admin dashboard")
     """Main admin dashboard view."""
     # Statistiken sammeln
     stats = {
@@ -44,9 +47,22 @@ def admin_dashboard(request):
     except:
         recent_activities = []
 
+    # Workflow-Einstellungen für die Visualisierung
+    from .models import WorkflowSettings
+    workflow_settings, _ = WorkflowSettings.objects.get_or_create(pk=1)
+
+    # System-Informationen
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    django_version = django.get_version()
+    database_type = request.META.get('DATABASE_ENGINE', connections.databases['default']['ENGINE'].split('.')[-1])
+
     context = {
         'stats': stats,
         'recent_activities': recent_activities,
+        'workflow_settings': workflow_settings,
+        'python_version': python_version,
+        'django_version': django_version,
+        'database_type': database_type,
         'section': 'dashboard'
     }
 
@@ -116,59 +132,80 @@ def user_management(request):
 
 @login_required
 @user_passes_test(is_admin)
+def user_create(request):
+    """Create a new user."""
+    if request.method == 'POST':
+        form = UserCreateForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+
+            # Passwort setzen
+            user.set_password(form.cleaned_data['password'])
+            user.save()
+
+            # Gruppen zuweisen
+            for group in form.cleaned_data['groups']:
+                user.groups.add(group)
+
+            # Abteilungen zuweisen
+            try:
+                for dept in form.cleaned_data['departments']:
+                    user.profile.departments.add(dept)
+                user.profile.save()
+            except:
+                pass
+
+            messages.success(request, f'Benutzer "{user.username}" wurde erfolgreich erstellt.')
+            return redirect('admin_user_management')
+    else:
+        form = UserCreateForm()
+
+    context = {
+        'form': form,
+        'groups': Group.objects.all(),
+        'departments': Department.objects.all(),
+        'section': 'users'
+    }
+
+    return render(request, 'admin_dashboard/user_create.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
 def user_edit(request, user_id):
     """Edit a user."""
     user = get_object_or_404(User, pk=user_id)
 
     if request.method == 'POST':
-        # Benutzerdaten aktualisieren
-        user.username = request.POST.get('username')
-        user.email = request.POST.get('email')
-        user.first_name = request.POST.get('first_name')
-        user.last_name = request.POST.get('last_name')
-        user.is_active = 'is_active' in request.POST
-        user.is_staff = 'is_staff' in request.POST
-        user.is_superuser = 'is_superuser' in request.POST
+        form = UserEditForm(request.POST, instance=user)
+        if form.is_valid():
+            user = form.save()
 
-        # Passwort aktualisieren, wenn angegeben
-        new_password = request.POST.get('password')
-        if new_password:
-            user.set_password(new_password)
+            # Passwort aktualisieren wenn angegeben
+            if form.cleaned_data['password']:
+                user.set_password(form.cleaned_data['password'])
+                user.save()
 
-        user.save()
-
-        # Gruppen aktualisieren
-        selected_groups = request.POST.getlist('groups')
-        user.groups.clear()
-        for group_id in selected_groups:
-            try:
-                group = Group.objects.get(pk=group_id)
+            # Gruppen aktualisieren
+            user.groups.clear()
+            for group in form.cleaned_data['groups']:
                 user.groups.add(group)
-            except Group.DoesNotExist:
+
+            # Abteilungen aktualisieren
+            try:
+                user.profile.departments.clear()
+                for dept in form.cleaned_data['departments']:
+                    user.profile.departments.add(dept)
+                user.profile.save()
+            except:
                 pass
 
-        # Abteilungen aktualisieren (falls verfügbar)
-        try:
-            selected_departments = request.POST.getlist('departments')
-            user.profile.departments.clear()
-            for dept_id in selected_departments:
-                try:
-                    dept = Department.objects.get(pk=dept_id)
-                    user.profile.departments.add(dept)
-                except Department.DoesNotExist:
-                    pass
-            user.profile.save()
-        except:
-            # Falls das Profil oder die Departments nicht existieren
-            pass
-
-        messages.success(request, f'Benutzer "{user.username}" wurde erfolgreich aktualisiert.')
-        return redirect('admin_user_management')
+            messages.success(request, f'Benutzer "{user.username}" wurde erfolgreich aktualisiert.')
+            return redirect('admin_user_management')
+    else:
+        form = UserEditForm(instance=user)
 
     # Gruppen und Abteilungen für die Auswahl
-    groups = Group.objects.all()
-    user_groups = user.groups.all()
-
     try:
         # Abteilungen abrufen, falls verfügbar
         departments = Department.objects.all()
@@ -178,89 +215,16 @@ def user_edit(request, user_id):
         user_departments = []
 
     context = {
+        'form': form,
         'user_obj': user,
-        'groups': groups,
-        'user_groups': user_groups,
+        'groups': Group.objects.all(),
+        'user_groups': user.groups.all(),
         'departments': departments,
         'user_departments': user_departments,
         'section': 'users'
     }
 
     return render(request, 'admin_dashboard/user_edit.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def user_create(request):
-    """Create a new user."""
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        password = request.POST.get('password')
-        is_active = 'is_active' in request.POST
-        is_staff = 'is_staff' in request.POST
-        is_superuser = 'is_superuser' in request.POST
-
-        # Prüfen, ob der Benutzername bereits existiert
-        if User.objects.filter(username=username).exists():
-            messages.error(request, f'Benutzername "{username}" existiert bereits.')
-            return redirect('admin_user_create')
-
-        # Benutzer erstellen
-        user = User.objects.create_user(
-            username=username,
-            email=email,
-            password=password,
-            first_name=first_name,
-            last_name=last_name
-        )
-        user.is_active = is_active
-        user.is_staff = is_staff
-        user.is_superuser = is_superuser
-        user.save()
-
-        # Gruppen zuweisen
-        selected_groups = request.POST.getlist('groups')
-        for group_id in selected_groups:
-            try:
-                group = Group.objects.get(pk=group_id)
-                user.groups.add(group)
-            except Group.DoesNotExist:
-                pass
-
-        # Abteilungen zuweisen (falls verfügbar)
-        try:
-            selected_departments = request.POST.getlist('departments')
-            for dept_id in selected_departments:
-                try:
-                    dept = Department.objects.get(pk=dept_id)
-                    user.profile.departments.add(dept)
-                except Department.DoesNotExist:
-                    pass
-            user.profile.save()
-        except:
-            # Falls das Profil oder die Departments nicht existieren
-            pass
-
-        messages.success(request, f'Benutzer "{username}" wurde erfolgreich erstellt.')
-        return redirect('admin_user_management')
-
-    # Gruppen und Abteilungen für die Auswahl
-    groups = Group.objects.all()
-    try:
-        departments = Department.objects.all()
-    except:
-        departments = []
-
-    context = {
-        'groups': groups,
-        'departments': departments,
-        'section': 'users'
-    }
-
-    return render(request, 'admin_dashboard/user_create.html', context)
 
 
 @login_required
@@ -299,27 +263,68 @@ def group_management(request):
 
 @login_required
 @user_passes_test(is_admin)
+def group_create(request):
+    """Create a new group."""
+    if request.method == 'POST':
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            group = form.save()
+
+            # Berechtigungen zuweisen
+            selected_permissions = request.POST.getlist('permissions')
+            for perm_id in selected_permissions:
+                try:
+                    perm = Permission.objects.get(pk=perm_id)
+                    group.permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
+
+            messages.success(request, f'Gruppe "{group.name}" wurde erfolgreich erstellt.')
+            return redirect('admin_group_management')
+    else:
+        form = GroupForm()
+
+    # Berechtigungen für die Auswahl
+    permissions_by_area = {}
+    for area in PERMISSION_AREAS.keys():
+        area_perms = Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
+        permissions_by_area[area] = area_perms
+
+    context = {
+        'form': form,
+        'permissions_by_area': permissions_by_area,
+        'permission_areas': PERMISSION_AREAS,
+        'section': 'groups'
+    }
+
+    return render(request, 'admin_dashboard/group_create.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
 def group_edit(request, group_id):
     """Edit a group."""
     group = get_object_or_404(Group, pk=group_id)
 
     if request.method == 'POST':
-        # Gruppe aktualisieren
-        group.name = request.POST.get('name')
-        group.save()
+        form = GroupForm(request.POST, instance=group)
+        if form.is_valid():
+            group = form.save()
 
-        # Berechtigungen aktualisieren
-        selected_permissions = request.POST.getlist('permissions')
-        group.permissions.clear()
-        for perm_id in selected_permissions:
-            try:
-                perm = Permission.objects.get(pk=perm_id)
-                group.permissions.add(perm)
-            except Permission.DoesNotExist:
-                pass
+            # Berechtigungen aktualisieren
+            selected_permissions = request.POST.getlist('permissions')
+            group.permissions.clear()
+            for perm_id in selected_permissions:
+                try:
+                    perm = Permission.objects.get(pk=perm_id)
+                    group.permissions.add(perm)
+                except Permission.DoesNotExist:
+                    pass
 
-        messages.success(request, f'Gruppe "{group.name}" wurde erfolgreich aktualisiert.')
-        return redirect('admin_group_management')
+            messages.success(request, f'Gruppe "{group.name}" wurde erfolgreich aktualisiert.')
+            return redirect('admin_group_management')
+    else:
+        form = GroupForm(instance=group)
 
     # Berechtigungen für die Auswahl
     permissions_by_area = {}
@@ -330,6 +335,7 @@ def group_edit(request, group_id):
     group_permissions = group.permissions.all()
 
     context = {
+        'form': form,
         'group': group,
         'permissions_by_area': permissions_by_area,
         'permission_areas': PERMISSION_AREAS,
@@ -338,48 +344,6 @@ def group_edit(request, group_id):
     }
 
     return render(request, 'admin_dashboard/group_edit.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def group_create(request):
-    """Create a new group."""
-    if request.method == 'POST':
-        name = request.POST.get('name')
-
-        # Prüfen, ob die Gruppe bereits existiert
-        if Group.objects.filter(name=name).exists():
-            messages.error(request, f'Gruppe "{name}" existiert bereits.')
-            return redirect('admin_group_create')
-
-        # Gruppe erstellen
-        group = Group.objects.create(name=name)
-
-        # Berechtigungen zuweisen
-        selected_permissions = request.POST.getlist('permissions')
-        for perm_id in selected_permissions:
-            try:
-                perm = Permission.objects.get(pk=perm_id)
-                group.permissions.add(perm)
-            except Permission.DoesNotExist:
-                pass
-
-        messages.success(request, f'Gruppe "{name}" wurde erfolgreich erstellt.')
-        return redirect('admin_group_management')
-
-    # Berechtigungen für die Auswahl
-    permissions_by_area = {}
-    for area in PERMISSION_AREAS.keys():
-        area_perms = Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
-        permissions_by_area[area] = area_perms
-
-    context = {
-        'permissions_by_area': permissions_by_area,
-        'permission_areas': PERMISSION_AREAS,
-        'section': 'groups'
-    }
-
-    return render(request, 'admin_dashboard/group_create.html', context)
 
 
 @login_required
@@ -431,117 +395,91 @@ def department_management(request):
 
 @login_required
 @user_passes_test(is_admin)
+def department_create(request):
+    """Create a new department."""
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST)
+        if form.is_valid():
+            department = form.save()
+
+            # Manager setzen
+            manager = form.cleaned_data.get('manager')
+            if manager:
+                department.manager = manager
+                department.save()
+
+            # Mitglieder hinzufügen
+            if form.cleaned_data.get('members'):
+                for user in form.cleaned_data['members']:
+                    try:
+                        department.user_profiles.add(user.profile)
+                    except:
+                        pass
+
+            messages.success(request, f'Abteilung "{department.name}" wurde erfolgreich erstellt.')
+            return redirect('admin_department_management')
+    else:
+        form = DepartmentForm()
+
+    context = {
+        'form': form,
+        'users': User.objects.all(),
+        'section': 'departments'
+    }
+
+    return render(request, 'admin_dashboard/department_create.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
 def department_edit(request, department_id):
     """Edit a department."""
     department = get_object_or_404(Department, pk=department_id)
 
     if request.method == 'POST':
-        # Abteilung aktualisieren
-        department.name = request.POST.get('name')
-        department.code = request.POST.get('code')
+        form = DepartmentForm(request.POST, instance=department)
+        if form.is_valid():
+            department = form.save()
 
-        # Manager zuweisen falls angegeben
-        manager_id = request.POST.get('manager')
-        if manager_id and manager_id != 'none':
-            try:
-                manager = User.objects.get(pk=manager_id)
-                department.manager = manager
-            except User.DoesNotExist:
-                department.manager = None
-        else:
-            department.manager = None
+            # Manager aktualisieren
+            manager = form.cleaned_data.get('manager')
+            department.manager = manager
+            department.save()
 
-        department.save()
+            # Mitglieder aktualisieren
+            if 'members' in form.cleaned_data:
+                # Alle Mitglieder entfernen
+                department.user_profiles.clear()
 
-        # Mitglieder aktualisieren
-        if 'members' in request.POST:
-            selected_members = request.POST.getlist('members')
-
-            # Aktuelle Mitglieder abrufen
-            current_members = [profile.user.id for profile in department.user_profiles.all()]
-
-            # Mitglieder entfernen, die nicht mehr ausgewählt sind
-            for profile in department.user_profiles.all():
-                if str(profile.user.id) not in selected_members:
-                    department.user_profiles.remove(profile)
-
-            # Neue Mitglieder hinzufügen
-            for member_id in selected_members:
-                if member_id not in current_members:
+                # Neue Mitglieder hinzufügen
+                for user in form.cleaned_data['members']:
                     try:
-                        user = User.objects.get(pk=member_id)
                         department.user_profiles.add(user.profile)
-                    except User.DoesNotExist:
+                    except:
                         pass
 
-        messages.success(request, f'Abteilung "{department.name}" wurde erfolgreich aktualisiert.')
-        return redirect('admin_department_management')
+            messages.success(request, f'Abteilung "{department.name}" wurde erfolgreich aktualisiert.')
+            return redirect('admin_department_management')
+    else:
+        # Bestehende Mitglieder für die Initialisierung
+        initial_members = [profile.user.id for profile in department.user_profiles.all()]
+        form = DepartmentForm(instance=department, initial={
+            'members': initial_members,
+            'manager': department.manager
+        })
 
-    # Benutzer für die Auswahl
-    users = User.objects.all()
-
-    # Aktuelle Mitglieder
+    # Aktuell zugewiesene Mitglieder
     department_members = [profile.user for profile in department.user_profiles.all()]
 
     context = {
+        'form': form,
         'department': department,
-        'users': users,
+        'users': User.objects.all(),
         'department_members': department_members,
         'section': 'departments'
     }
 
     return render(request, 'admin_dashboard/department_edit.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def department_create(request):
-    """Create a new department."""
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        code = request.POST.get('code')
-
-        # Prüfen, ob die Abteilung bereits existiert
-        if Department.objects.filter(Q(name=name) | Q(code=code)).exists():
-            messages.error(request, f'Eine Abteilung mit diesem Namen oder Code existiert bereits.')
-            return redirect('admin_department_create')
-
-        # Abteilung erstellen
-        department = Department(name=name, code=code)
-
-        # Manager zuweisen falls angegeben
-        manager_id = request.POST.get('manager')
-        if manager_id and manager_id != 'none':
-            try:
-                manager = User.objects.get(pk=manager_id)
-                department.manager = manager
-            except User.DoesNotExist:
-                pass
-
-        department.save()
-
-        # Mitglieder hinzufügen
-        if 'members' in request.POST:
-            selected_members = request.POST.getlist('members')
-            for member_id in selected_members:
-                try:
-                    user = User.objects.get(pk=member_id)
-                    department.user_profiles.add(user.profile)
-                except User.DoesNotExist:
-                    pass
-
-        messages.success(request, f'Abteilung "{name}" wurde erfolgreich erstellt.')
-        return redirect('admin_department_management')
-
-    # Benutzer für die Auswahl
-    users = User.objects.all()
-
-    context = {
-        'users': users,
-        'section': 'departments'
-    }
-
-    return render(request, 'admin_dashboard/department_create.html', context)
 
 
 @login_required
@@ -593,37 +531,22 @@ def warehouse_access_management(request):
 def warehouse_access_create(request):
     """Create a new warehouse access."""
     if request.method == 'POST':
-        warehouse_id = request.POST.get('warehouse')
-        department_id = request.POST.get('department')
-        can_view = 'can_view' in request.POST
-        can_edit = 'can_edit' in request.POST
-        can_manage_stock = 'can_manage_stock' in request.POST
-
-        # Prüfen, ob die Kombination bereits existiert
-        if WarehouseAccess.objects.filter(warehouse_id=warehouse_id, department_id=department_id).exists():
-            messages.error(request, f'Diese Kombination aus Lager und Abteilung existiert bereits.')
+        form = WarehouseAccessForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Lagerzugriff wurde erfolgreich erstellt.')
             return redirect('admin_warehouse_access_management')
-
-        # Zugriff erstellen
-        access = WarehouseAccess(
-            warehouse_id=warehouse_id,
-            department_id=department_id,
-            can_view=can_view,
-            can_edit=can_edit,
-            can_manage_stock=can_manage_stock
-        )
-        access.save()
-
-        messages.success(request, f'Lagerzugriff wurde erfolgreich erstellt.')
-        return redirect('admin_warehouse_access_management')
+    else:
+        form = WarehouseAccessForm()
 
     context = {
+        'form': form,
         'warehouses': Warehouse.objects.filter(is_active=True),
         'departments': Department.objects.all(),
         'section': 'warehouse_access'
     }
 
-    return render(request, 'admin_dashboard/warehouse_access_create.html', context)
+    return render(request, 'admin_dashboard/warehouse_access_form.html', context)
 
 
 @login_required
@@ -633,16 +556,16 @@ def warehouse_access_edit(request, access_id):
     access = get_object_or_404(WarehouseAccess, pk=access_id)
 
     if request.method == 'POST':
-        # Zugriffsrechte aktualisieren
-        access.can_view = 'can_view' in request.POST
-        access.can_edit = 'can_edit' in request.POST
-        access.can_manage_stock = 'can_manage_stock' in request.POST
-        access.save()
-
-        messages.success(request, f'Lagerzugriff wurde erfolgreich aktualisiert.')
-        return redirect('admin_warehouse_access_management')
+        form = WarehouseAccessForm(request.POST, instance=access)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Lagerzugriff wurde erfolgreich aktualisiert.')
+            return redirect('admin_warehouse_access_management')
+    else:
+        form = WarehouseAccessForm(instance=access)
 
     context = {
+        'form': form,
         'access': access,
         'section': 'warehouse_access'
     }

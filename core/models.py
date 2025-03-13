@@ -15,6 +15,39 @@ from inventory.models import Warehouse
 from organization.models import Department
 
 
+class Tax(models.Model):
+    """Modell für Mehrwertsteuersätze."""
+    name = models.CharField(max_length=100, verbose_name="Name")
+    code = models.CharField(max_length=20, unique=True, verbose_name="Steuerkürzel")
+    rate = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Steuersatz (%)")
+    description = models.TextField(blank=True, verbose_name="Beschreibung")
+    is_default = models.BooleanField(default=False, verbose_name="Standard-Steuersatz")
+    is_active = models.BooleanField(default=True, verbose_name="Aktiv")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Erstellt am")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Aktualisiert am")
+
+    class Meta:
+        verbose_name = "Mehrwertsteuersatz"
+        verbose_name_plural = "Mehrwertsteuersätze"
+        ordering = ['rate']
+
+    def __str__(self):
+        return f"{self.name} ({self.rate}%)"
+
+    def save(self, *args, **kwargs):
+        # Wenn dieser Steuersatz als Standard markiert wird, alle anderen auf nicht-Standard setzen
+        if self.is_default:
+            Tax.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_default_tax(cls):
+        """Gibt den Standard-Steuersatz zurück. Falls keiner existiert, wird der erste aktive Steuersatz zurückgegeben."""
+        default_tax = cls.objects.filter(is_default=True, is_active=True).first()
+        if not default_tax:
+            default_tax = cls.objects.filter(is_active=True).first()
+        return default_tax
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -43,6 +76,10 @@ class Product(models.Model):
     has_batch_tracking = models.BooleanField(default=False)
     has_expiry_tracking = models.BooleanField(default=False)
 
+    tax = models.ForeignKey(Tax, on_delete=models.SET_NULL, null=True, blank=True,
+                            verbose_name="Mehrwertsteuersatz",
+                            help_text="Der auf dieses Produkt anzuwendende Mehrwertsteuersatz")
+
     def __str__(self):
         return self.name
     
@@ -51,6 +88,18 @@ class Product(models.Model):
         """Berechnet den Gesamtbestand über alle Lager."""
         from django.db.models import Sum
         return self.productwarehouse_set.aggregate(Sum('quantity'))['quantity__sum'] or 0
+
+    @property
+    def get_tax_rate(self):
+        """Gibt den anzuwendenden Steuersatz zurück oder den Standard falls keiner hinterlegt ist."""
+        if self.tax and self.tax.is_active:
+            return self.tax.rate
+        # Standard-Steuersatz verwenden
+        default_tax = Tax.get_default_tax()
+        if default_tax:
+            return default_tax.rate
+        # Fallback, falls kein Steuersatz definiert ist
+        return 0
 
 
 class ProductWarehouse(models.Model):
@@ -541,3 +590,5 @@ class BatchNumber(models.Model):
     class Meta:
         unique_together = ('product', 'batch_number', 'warehouse')
         ordering = ['-created_at']
+
+

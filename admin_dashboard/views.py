@@ -13,10 +13,11 @@ import django
 from accessmanagement.decorators import is_admin
 from accessmanagement.models import WarehouseAccess
 from accessmanagement.permissions import PERMISSION_AREAS
+from core.models import Tax
 from inventory.models import Department, Warehouse
 
 from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
-    WarehouseAccessForm
+    WarehouseAccessForm, TaxForm
 
 
 @login_required
@@ -637,3 +638,86 @@ def get_department_details(request, department_id):
         pass
 
     return JsonResponse(data)
+
+
+@login_required
+@user_passes_test(is_admin)
+def tax_management(request):
+    """Verwaltung der Mehrwertsteuersätze."""
+    taxes = Tax.objects.all().order_by('rate')
+
+    context = {
+        'taxes': taxes,
+        'section': 'taxes'
+    }
+
+    return render(request, 'admin_dashboard/tax_management.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def tax_create(request):
+    """Neuen Mehrwertsteuersatz erstellen."""
+    if request.method == 'POST':
+        form = TaxForm(request.POST)
+        if form.is_valid():
+            tax = form.save()
+            messages.success(request, f'Mehrwertsteuersatz "{tax.name}" wurde erfolgreich erstellt.')
+            return redirect('admin_tax_management')
+    else:
+        form = TaxForm()
+
+    context = {
+        'form': form,
+        'section': 'taxes'
+    }
+
+    return render(request, 'admin_dashboard/tax_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def tax_edit(request, tax_id):
+    """Einen Mehrwertsteuersatz bearbeiten."""
+    tax = get_object_or_404(Tax, pk=tax_id)
+
+    if request.method == 'POST':
+        form = TaxForm(request.POST, instance=tax)
+        if form.is_valid():
+            tax = form.save()
+            messages.success(request, f'Mehrwertsteuersatz "{tax.name}" wurde erfolgreich aktualisiert.')
+            return redirect('admin_tax_management')
+    else:
+        form = TaxForm(instance=tax)
+
+    context = {
+        'form': form,
+        'tax': tax,
+        'section': 'taxes'
+    }
+
+    return render(request, 'admin_dashboard/tax_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def tax_delete(request, tax_id):
+    """Einen Mehrwertsteuersatz löschen."""
+    tax = get_object_or_404(Tax, pk=tax_id)
+
+    # Überprüfen, ob der Steuersatz bei Produkten verwendet wird
+    products_with_tax = tax.product_set.count()
+
+    if request.method == 'POST':
+        tax_name = tax.name
+        tax.delete()
+        messages.success(request, f'Mehrwertsteuersatz "{tax_name}" wurde erfolgreich gelöscht.')
+        return redirect('admin_tax_management')
+
+    context = {
+        'tax': tax,
+        'products_with_tax': products_with_tax,
+        'section': 'taxes'
+    }
+
+    return render(request, 'admin_dashboard/tax_confirm_delete.html', context)

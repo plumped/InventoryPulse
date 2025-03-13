@@ -1,0 +1,89 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}
+{% if tax %}Mehrwertsteuersatz bearbeiten{% else %}Neuen Mehrwertsteuersatz erstellen{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if tax %}Mehrwertsteuersatz "{{ tax.name }}" bearbeiten{% else %}Neuen Mehrwertsteuersatz erstellen{% endif %}
+        </h1>
+        <a href="{% url 'admin_tax_management' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                {% if tax %}Mehrwertsteuersatz bearbeiten{% else %}Neuen Mehrwertsteuersatz erstellen{% endif %}
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
+                        {{ form.code }}
+                        {% if form.code.errors %}
+                        <div class="invalid-feedback d-block">{{ form.code.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Ein eindeutiger Kürzel für diesen Steuersatz, z.B. "MWST-NOR" für Normalsatz</small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.rate.id_for_label }}">{{ form.rate.label }}</label>
+                        {{ form.rate }}
+                        {% if form.rate.errors %}
+                        <div class="invalid-feedback d-block">{{ form.rate.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">Der Prozentsatz des Steuersatzes, z.B. 7.7 für 7.7%</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check mt-4">
+                            {{ form.is_default }}
+                            <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                                {{ form.is_default.label }}
+                            </label>
+                            <small class="form-text text-muted d-block">Dieser Steuersatz wird für neue Produkte vorausgewählt.</small>
+                        </div>
+                        <div class="form-check mt-2">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                {{ form.is_active.label }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'admin_tax_management' %}" class="btn btn-secondary mr-2">Abbrechen</a>
+                    <button type="submit" class="btn btn-primary">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -246,6 +246,8 @@ def purchase_order_update(request, pk):
     return render(request, 'order/purchase_order_form.html', context)
 
 
+# Aktualisiere die Funktion process_order_items in order/views.py, um die Steuer korrekt zu übernehmen
+
 def process_order_items(post_data, order):
     """Verarbeitet die Bestellpositionen aus dem Formular."""
     # Bisherige Positionen abrufen
@@ -278,13 +280,14 @@ def process_order_items(post_data, order):
                 product = get_object_or_404(Product, pk=product_id)
 
                 if item_id.startswith('new_'):
-                    # Neue Position erstellen
+                    # Neue Position erstellen mit der Steuer vom Produkt
                     PurchaseOrderItem.objects.create(
                         purchase_order=order,
                         product=product,
                         quantity_ordered=quantity,
                         unit_price=price,
-                        supplier_sku=supplier_sku
+                        supplier_sku=supplier_sku,
+                        tax=product.tax  # Steuersatz vom Produkt übernehmen
                     )
                 else:
                     # Bestehende Position aktualisieren
@@ -296,6 +299,9 @@ def process_order_items(post_data, order):
                             item.quantity_ordered = quantity
                             item.unit_price = price
                             item.supplier_sku = supplier_sku
+                            # Steuersatz nur aktualisieren, wenn die Position neu ist oder das Produkt geändert wurde
+                            if item.product_id != product.id:
+                                item.tax = product.tax
                             item.save()
                             processed_ids.add(item_id_int)
                     except (ValueError, KeyError):

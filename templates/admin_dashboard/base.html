@@ -49,6 +49,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if section == 'taxes' %}active bg-light{% endif %}" href="{% url 'admin_tax_management' %}">
+                                <i class="bi bi-percent me-2"></i> Mehrwertsteuersätze
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <hr class="my-2">
                         </li>
                         <li class="nav-item">

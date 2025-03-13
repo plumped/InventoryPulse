@@ -1,0 +1,90 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Mehrwertsteuersätze verwalten{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Mehrwertsteuersätze verwalten</h1>
+        <a href="{% url 'admin_tax_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Neuen Steuersatz erstellen
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Alle Mehrwertsteuersätze</h6>
+        </div>
+        <div class="card-body">
+            {% if taxes %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="taxes-table" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Satz (%)</th>
+                            <th>Standard</th>
+                            <th>Status</th>
+                            <th>Letzte Änderung</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tax in taxes %}
+                        <tr>
+                            <td>{{ tax.name }}</td>
+                            <td>{{ tax.code }}</td>
+                            <td>{{ tax.rate }}%</td>
+                            <td>
+                                {% if tax.is_default %}
+                                <span class="badge badge-success">Standard</span>
+                                {% else %}
+                                <span class="badge badge-light">Nein</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tax.is_active %}
+                                <span class="badge badge-success">Aktiv</span>
+                                {% else %}
+                                <span class="badge badge-danger">Inaktiv</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ tax.updated_at|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'admin_tax_edit' tax.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_tax_delete' tax.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                Es wurden noch keine Mehrwertsteuersätze angelegt.
+                <a href="{% url 'admin_tax_create' %}" class="alert-link">Erstellen Sie den ersten Steuersatz</a>.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#taxes-table').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.22/i18n/German.json"
+            },
+            "order": [[2, "asc"]]
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Mehrwertsteuersatz löschen{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Mehrwertsteuersatz löschen</h1>
+        <a href="{% url 'admin_tax_management' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Mehrwertsteuersatz "{{ tax.name }}" wirklich löschen?</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Achtung: Diese Aktion kann nicht rückgängig gemacht werden.
+            </div>
+
+            <p>Sie sind dabei, den folgenden Mehrwertsteuersatz zu löschen:</p>
+
+            <table class="table table-bordered mb-4">
+                <tr>
+                    <th style="width: 150px;">Name:</th>
+                    <td>{{ tax.name }}</td>
+                </tr>
+                <tr>
+                    <th>Code:</th>
+                    <td>{{ tax.code }}</td>
+                </tr>
+                <tr>
+                    <th>Steuersatz:</th>
+                    <td>{{ tax.rate }}%</td>
+                </tr>
+                <tr>
+                    <th>Beschreibung:</th>
+                    <td>{{ tax.description|default:"Keine Beschreibung" }}</td>
+                </tr>
+                <tr>
+                    <th>Standard:</th>
+                    <td>{% if tax.is_default %}<span class="badge badge-success">Ja</span>{% else %}Nein{% endif %}</td>
+                </tr>
+                <tr>
+                    <th>Status:</th>
+                    <td>{% if tax.is_active %}<span class="badge badge-success">Aktiv</span>{% else %}<span class="badge badge-danger">Inaktiv</span>{% endif %}</td>
+                </tr>
+            </table>
+
+            {% if products_with_tax > 0 %}
+            <div class="alert alert-danger mb-4">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <strong>Warnung:</strong> Dieser Steuersatz wird aktuell von {{ products_with_tax }} Produkt{% if products_with_tax > 1 %}en{% endif %} verwendet.
+                Wenn Sie den Steuersatz löschen, wird der Steuersatz für diese Produkte auf null gesetzt.
+            </div>
+            {% endif %}
+
+            {% if tax.is_default %}
+            <div class="alert alert-warning mb-4">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>Hinweis:</strong> Sie löschen den aktuellen Standard-Steuersatz.
+                Sie sollten nach dem Löschen einen neuen Standard-Steuersatz festlegen.
+            </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-end">
+                    <a href="{% url 'admin_tax_management' %}" class="btn btn-secondary mr-2">Abbrechen</a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash mr-1"></i> Steuersatz löschen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

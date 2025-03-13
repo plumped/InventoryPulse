@@ -31,4 +31,9 @@ urlpatterns = [
 
     # Workflow-Einstellungen
     path('workflow-settings/', views.workflow_settings, name='admin_workflow_settings'),
+
+    path('taxes/', views.tax_management, name='admin_tax_management'),
+    path('taxes/create/', views.tax_create, name='admin_tax_create'),
+    path('taxes/<int:tax_id>/edit/', views.tax_edit, name='admin_tax_edit'),
+    path('taxes/<int:tax_id>/delete/', views.tax_delete, name='admin_tax_delete'),
 ]

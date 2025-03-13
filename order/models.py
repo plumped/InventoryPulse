@@ -1,7 +1,7 @@
 # order/models.py
 from django.db import models
 from django.contrib.auth.models import User
-from core.models import Product
+from core.models import Product, Tax
 from suppliers.models import Supplier
 
 
@@ -37,8 +37,22 @@ class PurchaseOrder(models.Model):
 
     def update_totals(self):
         """Aktualisiert alle Summen basierend auf den Bestellpositionen"""
-        self.subtotal = sum(item.line_total for item in self.items.all())
-        # Steuern und Versandkosten könnten hier berechnet werden
+        # Subtotal ohne Steuern
+        self.subtotal = sum(item.line_subtotal for item in self.items.all())
+
+        # Steuern berechnen - gruppiert nach Steuermodell
+        tax_groups = {}
+        for item in self.items.all():
+            if item.tax:
+                tax_id = item.tax.id
+                if tax_id not in tax_groups:
+                    tax_groups[tax_id] = 0
+                tax_groups[tax_id] += item.line_tax
+
+        # Gesamtsteuern
+        self.tax = sum(tax_groups.values())
+
+        # Gesamtsumme inkl. Steuern und Versandkosten
         self.total = self.subtotal + self.tax + self.shipping_cost
         self.save()
 
@@ -64,9 +78,32 @@ class PurchaseOrderItem(models.Model):
     # Optional: Spezielle Hinweise für diesen Artikel
     item_notes = models.TextField(blank=True)
 
+    # Neues Feld für den Steuersatz (beim Anlegen der Bestellung kopiert)
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                   verbose_name="MwSt-Satz",
+                                   help_text="Der zum Zeitpunkt der Bestellung gültige Mehrwertsteuersatz")
+
+    # Referenz auf das Tax-Modell anstatt ein Dezimalfeld
+    tax = models.ForeignKey(Tax, on_delete=models.PROTECT, null=True,
+                            verbose_name="Mehrwertsteuersatz",
+                            help_text="Der zum Zeitpunkt der Bestellung gültige Mehrwertsteuersatz")
+
+    @property
+    def line_subtotal(self):
+        """Zeilensumme ohne Steuer"""
+        return self.quantity_ordered * self.unit_price
+
+    @property
+    def line_tax(self):
+        """Steueranteil der Zeile"""
+        if self.tax:
+            return self.line_subtotal * (self.tax.rate / 100)
+        return 0
+
     @property
     def line_total(self):
-        return self.quantity_ordered * self.unit_price
+        """Zeilensumme inklusive Steuer"""
+        return self.line_subtotal + self.line_tax
 
     @property
     def is_fully_received(self):
@@ -83,6 +120,12 @@ class PurchaseOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product.name} ({self.quantity_ordered} {self.product.unit})"
+
+    def save(self, *args, **kwargs):
+        # Wenn neu erstellt und kein Steuersatz gesetzt ist, den Produktsteuersatz verwenden
+        if not self.pk and not self.tax and self.product and self.product.tax:
+            self.tax = self.product.tax
+        super().save(*args, **kwargs)
 
 
 class PurchaseOrderReceipt(models.Model):

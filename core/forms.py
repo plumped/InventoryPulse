@@ -2,7 +2,7 @@ from django import forms
 
 from inventory.models import Warehouse
 from .models import Product, Category, ProductVariant, SerialNumber, BatchNumber, ProductVariantType, ProductAttachment, \
-    ProductPhoto
+    ProductPhoto, Tax
 
 
 class ProductForm(forms.ModelForm):
@@ -17,17 +17,29 @@ class ProductForm(forms.ModelForm):
 
     class Meta:
         model = Product
-        fields = ['name', 'sku', 'barcode', 'description', 'category',
+        fields = ['name', 'sku', 'barcode', 'description', 'category', 'tax',
                   'minimum_stock', 'unit',
                   'has_variants', 'has_serial_numbers', 'has_batch_tracking', 'has_expiry_tracking']
 
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
+            'tax': forms.Select(attrs={'class': 'form-select'}),
             'has_variants': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'has_serial_numbers': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'has_batch_tracking': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'has_expiry_tracking': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Steuersätze nach Name sortieren
+        self.fields['tax'].queryset = Tax.objects.filter(is_active=True).order_by('name')
+
+        # Default-Steuersatz vorauswählen, wenn ein neues Produkt erstellt wird
+        if not self.instance.pk:
+            default_tax = Tax.get_default_tax()
+            if default_tax:
+                self.initial['tax'] = default_tax
 
     def clean_sku(self):
         """Ensure SKU is unique."""

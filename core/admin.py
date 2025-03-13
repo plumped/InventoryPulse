@@ -11,7 +11,7 @@ from .models import (
     BatchNumber,
     ImportLog,
     ImportError,
-    UserProfile
+    UserProfile, Tax
 )
 
 
@@ -46,14 +46,14 @@ class BatchNumberInline(admin.TabularInline):
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'sku', 'category', 'minimum_stock', 'total_stock', 'has_variants', 'has_serial_numbers', 'has_batch_tracking')
-    list_filter = ('category', 'has_variants', 'has_serial_numbers', 'has_batch_tracking')
+    list_display = ('name', 'sku', 'category', 'minimum_stock', 'total_stock', 'tax', 'has_variants', 'has_serial_numbers', 'has_batch_tracking')
+    list_filter = ('category', 'tax', 'has_variants', 'has_serial_numbers', 'has_batch_tracking')
     search_fields = ('name', 'sku', 'barcode', 'description')
     readonly_fields = ('created_at', 'updated_at')
     inlines = [ProductWarehouseInline, ProductPhotoInline, ProductAttachmentInline, ProductVariantInline, SerialNumberInline, BatchNumberInline]
     fieldsets = (
         (None, {
-            'fields': ('name', 'sku', 'barcode', 'description', 'category')
+            'fields': ('name', 'sku', 'barcode', 'description', 'category', 'tax')
         }),
         ('Bestand', {
             'fields': ('minimum_stock', 'unit')
@@ -66,7 +66,7 @@ class ProductAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    autocomplete_fields = ['category']
+    autocomplete_fields = ['category', 'tax']
 
 
 class CategoryAdmin(admin.ModelAdmin):
@@ -171,3 +171,29 @@ class CategoryAdminAutocomplete(CategoryAdmin):
 
 admin.site.unregister(Category)
 admin.site.register(Category, CategoryAdminAutocomplete)
+
+class TaxAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'rate', 'is_default', 'is_active', 'updated_at')
+    list_filter = ('is_active', 'is_default')
+    search_fields = ('name', 'code', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'code', 'rate', 'description')
+        }),
+        ('Status', {
+            'fields': ('is_default', 'is_active')
+        }),
+        ('Zeitstempel', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+admin.site.register(Tax, TaxAdmin)
+
+class TaxAdminAutocomplete(TaxAdmin):
+    search_fields = ['name', 'code']
+
+admin.site.unregister(Tax)
+admin.site.register(Tax, TaxAdminAutocomplete)

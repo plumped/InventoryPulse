@@ -162,6 +162,7 @@
                                     <th>Erhalten</th>
                                     <th>Einheit</th>
                                     <th>Einzelpreis</th>
+                                    <th>MwSt</th>
                                     <th>Gesamt</th>
                                 </tr>
                             </thead>
@@ -189,33 +190,72 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ item.product.unit }}</td>
-                                    <td>{{ item.unit_price|floatformat:2 }} €</td>
-                                    <td>{{ item.line_total|floatformat:2 }} €</td>
+                                    <td>{{ item.unit_price|floatformat:2 }} CHF</td>
+                                    <td>
+                                        {% if item.tax %}
+                                        {{ item.tax.rate }}%
+                                        {% else %}
+                                        0%
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.line_total|floatformat:2 }} CHF</td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-3">Keine Positionen vorhanden</td>
+                                    <td colspan="8" class="text-center py-3">Keine Positionen vorhanden</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <td colspan="6" class="text-end"><strong>Zwischensumme:</strong></td>
-                                    <td>{{ order.subtotal|floatformat:2 }} €</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="6" class="text-end">Steuern:</td>
-                                    <td>{{ order.tax|floatformat:2 }} €</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="6" class="text-end">Versandkosten:</td>
-                                    <td>{{ order.shipping_cost|floatformat:2 }} €</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="6" class="text-end"><strong>Gesamtsumme:</strong></td>
-                                    <td><strong>{{ order.total|floatformat:2 }} €</strong></td>
-                                </tr>
-                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Finanzzusammenfassung -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Finanzzusammenfassung</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>Zwischensumme (ohne MwSt)</th>
+                                <td class="text-end">{{ order.subtotal|floatformat:2 }} CHF</td>
+                            </tr>
+
+                            <!-- Gruppierte Steuersätze -->
+                            {% regroup order.items.all by tax as tax_groups %}
+                            {% for tax_group in tax_groups %}
+                            {% if tax_group.grouper %}
+                            <tr>
+                                <th>MwSt ({{ tax_group.grouper.name }} - {{ tax_group.grouper.rate }}%)</th>
+                                <td class="text-end">
+                                    {% with tax_sum=0 %}
+                                        {% for item in tax_group.list %}
+                                            {% with current_sum=tax_sum|add:item.line_tax %}
+                                                {% if forloop.last %}
+                                                    {{ current_sum|floatformat:2 }} CHF
+                                                {% endif %}
+                                                {% with tax_sum=current_sum %}{% endwith %}
+                                            {% endwith %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if order.shipping_cost > 0 %}
+                            <tr>
+                                <th>Versandkosten</th>
+                                <td class="text-end">{{ order.shipping_cost|floatformat:2 }} CHF</td>
+                            </tr>
+                            {% endif %}
+                            <tr class="table-active">
+                                <th>Gesamtsumme</th>
+                                <td class="text-end fw-bold">{{ order.total|floatformat:2 }} CHF</td>
+                            </tr>
                         </table>
                     </div>
                 </div>

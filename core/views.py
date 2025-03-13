@@ -2549,7 +2549,7 @@ def expiry_management(request):
         'today': today,
     }
 
-    return render(request, 'core/expiry_management.html', context)
+    return render(request, 'core/product/expiry_management.html', context)
 
 
 # ------------------------------------------------------------------------------

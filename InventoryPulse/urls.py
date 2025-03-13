@@ -25,6 +25,9 @@ urlpatterns = [
     path('products/', include([
         path('', core_views.product_list, name='product_list'),
         path('low-stock/', core_views.low_stock_list, name='low_stock_list'),
+        path('expiry-management/', core_views.expiry_management, name='expiry_management'),
+
+
         path('create/', core_views.product_create, name='product_create'),
         path('<int:pk>/', core_views.product_detail, name='product_detail'),
         path('<int:pk>/update/', core_views.product_update, name='product_update'),

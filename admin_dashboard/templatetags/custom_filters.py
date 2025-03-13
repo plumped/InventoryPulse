@@ -18,3 +18,11 @@ def has_perm(permission_list, permission):
     Usage: {{ group_permissions|has_perm:permission }}
     """
     return permission in permission_list
+
+@register.filter
+def get(dictionary, key):
+    """
+    Template filter to access dictionary values by variable key.
+    Usage: {{ mydict|get:key_variable }}
+    """
+    return dictionary.get(key)

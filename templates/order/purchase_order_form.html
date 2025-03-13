@@ -210,13 +210,13 @@
                                 </tbody>
                                 <tfoot class="table-light">
                                     <tr>
-                                        <td colspan="5" class="text-end"><strong>Zwischensumme:</strong></td>
-                                        <td><span id="subtotal">{{ form.instance.subtotal|default:"0.00" }}</span> €</td>
+                                        <td colspan="6" class="text-end"><strong>Zwischensumme:</strong></td>
+                                        <td class="text-end"><span id="subtotal">{{ form.instance.subtotal|default:"0.00" }}</span> €</td>
                                         <td></td>
                                     </tr>
                                     <tr>
-                                        <td colspan="5" class="text-end">Steuern:</td>
-                                        <td>
+                                        <td colspan="6" class="text-end">Steuern:</td>
+                                        <td class="text-end">
                                             {% if form.instance.status == 'draft' or not form.instance.pk %}
                                             <span id="taxDisplay">{{ form.instance.tax|default:"0.00" }}</span> €
                                             <input type="hidden" name="tax" id="taxInput" value="{{ form.instance.tax|default:0 }}">
@@ -228,8 +228,8 @@
                                         <td></td>
                                     </tr>
                                     <tr>
-                                        <td colspan="5" class="text-end">Versandkosten:</td>
-                                        <td>
+                                        <td colspan="6" class="text-end">Versandkosten:</td>
+                                        <td class="text-end">
                                             {% if form.instance.status == 'draft' or not form.instance.pk %}
                                             <span id="shippingDisplay">{{ form.instance.shipping_cost|default:"0.00" }}</span> €
                                             <input type="hidden" name="shipping_cost" id="shippingInput" value="{{ form.instance.shipping_cost|default:0 }}">
@@ -241,8 +241,8 @@
                                         <td></td>
                                     </tr>
                                     <tr>
-                                        <td colspan="5" class="text-end"><strong>Gesamtsumme:</strong></td>
-                                        <td><strong><span id="total">{{ form.instance.total|default:"0.00" }}</span> €</strong></td>
+                                        <td colspan="6" class="text-end"><strong>Gesamtsumme:</strong></td>
+                                        <td class="text-end"><strong><span id="total">{{ form.instance.total|default:"0.00" }}</span> €</strong></td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -544,6 +544,7 @@ $(document).ready(function() {
 
             // Remove notice if present
             $('#shipping-cost-warning').remove();
+
         }
 
         // Calculate total sum

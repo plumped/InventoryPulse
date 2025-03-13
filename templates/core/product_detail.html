@@ -90,6 +90,15 @@
                     <dt class="col-sm-5">Einheit:</dt>
                     <dd class="col-sm-7">{{ product.unit }}</dd>
 
+                    <dt class="col-sm-5">MwSt-Satz:</dt>
+                    <dd class="col-sm-7">
+                        {% if product.tax %}
+                        <span class="badge bg-info">{{ product.tax.name }} ({{ product.tax.rate }}%)</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Standard</span>
+                        {% endif %}
+                    </dd>
+
                     <dt class="col-sm-5">Varianten:</dt>
                         <dd class="col-sm-7">
                             {% if product.has_variants and variant_count > 0 %}

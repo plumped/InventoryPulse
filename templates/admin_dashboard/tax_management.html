@@ -54,10 +54,10 @@
                             <td>{{ tax.updated_at|date:"d.m.Y H:i" }}</td>
                             <td>
                                 <a href="{% url 'admin_tax_edit' tax.id %}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="bi bi-pencil"></i>
                                 </a>
                                 <a href="{% url 'admin_tax_delete' tax.id %}" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="bi bi-trash"></i>
                                 </a>
                             </td>
                         </tr>

@@ -20,11 +20,11 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.templatetags.static import static
 from django.utils import timezone
+from accessmanagement.decorators import permission_required
 from accessmanagement.models import WarehouseAccess
 from inventory.models import StockMovement, Warehouse, Department, StockTake
 from order.models import PurchaseOrder, OrderSuggestion
 from suppliers.models import Supplier, SupplierProduct
-from .decorators import permission_required
 from .forms import ProductForm, CategoryForm, SupplierProductImportForm, CategoryImportForm, SupplierImportForm, \
     ProductImportForm, WarehouseImportForm, DepartmentImportForm, WarehouseProductImportForm, ProductPhotoForm, \
     ProductAttachmentForm, ProductVariantTypeForm, ProductVariantForm, SerialNumberForm, BulkSerialNumberForm, \
@@ -32,7 +32,6 @@ from .forms import ProductForm, CategoryForm, SupplierProductImportForm, Categor
 from .importers import SupplierProductImporter, CategoryImporter, SupplierImporter, ProductImporter
 from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto, ProductAttachment, ProductVariantType, \
     ProductVariant, SerialNumber, BatchNumber
-from .permissions import PERMISSION_AREAS
 
 
 @login_required

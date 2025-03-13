@@ -11,7 +11,7 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
-from core.decorators import permission_required
+from accessmanagement.decorators import permission_required
 from core.models import Product, ProductWarehouse
 from suppliers.models import Supplier, SupplierProduct
 from inventory.models import Warehouse, StockMovement

@@ -5,7 +5,6 @@ from accessmanagement.models import WarehouseAccess
 
 from .models import StockMovement, StockTake, StockTakeItem, Department, Warehouse
 from core.models import Product
-from .utils import user_has_warehouse_access
 
 
 class StockMovementForm(forms.ModelForm):
@@ -156,12 +155,6 @@ class WarehouseForm(forms.ModelForm):
     class Meta:
         model = Warehouse
         fields = ['name', 'location', 'description', 'is_active']
-
-
-class WarehouseAccessForm(forms.ModelForm):
-    class Meta:
-        model = WarehouseAccess
-        fields = ['warehouse', 'department', 'can_view', 'can_edit', 'can_manage_stock']
 
 
 class StockAdjustmentForm(forms.Form):

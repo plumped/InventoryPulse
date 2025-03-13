@@ -14,15 +14,14 @@ import csv
 
 from django import forms
 
+from accessmanagement.decorators import permission_required
 from accessmanagement.models import WarehouseAccess
 from core import models
 from core.models import Product, Category, ProductWarehouse, BatchNumber
 from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department
 from .forms import StockMovementForm, StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
     WarehouseForm, StockAdjustmentForm
-from .utils import user_has_warehouse_access
-from core.decorators import permission_required
-from core.permissions import has_permission
+from accessmanagement.models import WarehouseAccess
 
 
 @login_required

@@ -4,7 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count
 
-from core.decorators import permission_required
+from accessmanagement.decorators import permission_required
+
 from .models import Supplier, SupplierProduct
 from core.models import Product
 from .forms import SupplierForm, SupplierProductForm

@@ -40,12 +40,6 @@ urlpatterns = [
     path('departments/<int:pk>/edit-member/<int:member_id>/', views.department_edit_member, name='department_edit_member'),
     path('departments/<int:pk>/remove-member/<int:member_id>/', views.department_remove_member, name='department_remove_member'),
 
-    # Lagerzugriffsrechte
-    path('warehouse-access/', views.warehouse_access_management, name='warehouse_access_management'),
-    path('warehouse-access/add/', views.warehouse_access_add, name='warehouse_access_add'),
-    path('warehouse-access/<int:pk>/update/', views.warehouse_access_update, name='warehouse_access_update'),
-    path('warehouse-access/<int:pk>/delete/', views.warehouse_access_delete, name='warehouse_access_delete'),
-
     # Produktbestandsverwaltung
     path('products/<int:product_id>/warehouses/', views.product_warehouses, name='product_warehouses'),
     path('products/add-to-warehouse/<int:warehouse_id>/', views.product_add_to_warehouse, name='product_add_to_warehouse'),

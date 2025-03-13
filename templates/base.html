@@ -254,9 +254,6 @@
                             {% if user.is_staff %}
                             <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2"></i>Admin</a></li>
                             {% endif %}
-                            {% if user.is_superuser %}
-                            <li><a class="dropdown-item" href="{% url 'permission_management' %}"><i class="bi bi-shield-lock me-2"></i>Berechtigungsverwaltung</a></li>
-                            {% endif %}
                             <li><hr class="dropdown-divider"></li>
                             <li>
                               <form method="post" action="{% url 'logout' %}" class="m-0 p-0">

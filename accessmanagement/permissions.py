@@ -1,8 +1,13 @@
+# accessmanagement/permissions.py
+"""
+Central module for all permission-related constants and functions.
+Consolidated from core/permissions.py
+"""
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-# Berechtigungsgruppen
+# Permission groups
 PERMISSION_GROUPS = {
     'inventory_admin': 'Lager-Administrator',
     'inventory_manager': 'Lager-Manager',
@@ -15,58 +20,55 @@ PERMISSION_GROUPS = {
     'supplier_viewer': 'Lieferanten-Betrachter',
     'report_viewer': 'Bericht-Betrachter',
     'import_admin': 'Import-Administrator',
-    # Neue Berechtigungsgruppen für Bestellungen
     'order_admin': 'Bestellungs-Administrator',
     'order_manager': 'Bestellungs-Manager',
     'order_viewer': 'Bestellungs-Betrachter',
 }
 
-# Funktionsbereiche
+# Functional areas
 PERMISSION_AREAS = {
     'inventory': 'Lagerverwaltung',
     'product': 'Produktverwaltung',
     'supplier': 'Lieferantenverwaltung',
     'report': 'Berichtswesen',
     'import': 'Datenimport',
-    # Neuer Bereich für Bestellungen
     'order': 'Bestellverwaltung',
 }
 
-# Berechtigungsstufen
+# Permission levels
 PERMISSION_LEVELS = {
     'view': 'Ansehen',
     'edit': 'Bearbeiten',
     'create': 'Erstellen',
     'delete': 'Löschen',
     'admin': 'Administrieren',
-    # Neue Berechtigungsstufe für Bestellungen
     'approve': 'Genehmigen',
 }
 
 
 def create_permission_groups():
-    """Erstellt alle Berechtigungsgruppen, falls sie nicht existieren."""
+    """Creates all permission groups if they don't exist."""
     for code, name in PERMISSION_GROUPS.items():
         Group.objects.get_or_create(name=name)
 
 
 def get_permission_name(area, action):
-    """Generiert einen einheitlichen Berechtigungsnamen."""
+    """Generates a standardized permission name."""
     return f'can_{action}_{area}'
 
 
 def setup_permissions():
-    """Richtet alle Berechtigungen im System ein."""
-    # Berechtigungsgruppen erstellen
+    """Sets up all permissions in the system."""
+    # Create permission groups
     create_permission_groups()
 
-    # ContentType für eigene Berechtigung
+    # ContentType for custom permission
     ct, _ = ContentType.objects.get_or_create(
-        app_label='core',
+        app_label='accessmanagement',
         model='custompermission'
     )
 
-    # Berechtigungen erstellen
+    # Create permissions
     for area in PERMISSION_AREAS.keys():
         for level in PERMISSION_LEVELS.keys():
             perm_name = get_permission_name(area, level)
@@ -78,13 +80,13 @@ def setup_permissions():
                 content_type=ct,
             )
 
-    # Berechtigungen den Gruppen zuweisen
-    # Admin-Gruppe erhält alle Berechtigungen
+    # Assign permissions to groups
+    # Admin group gets all permissions for inventory
     admin_group = Group.objects.get(name=PERMISSION_GROUPS['inventory_admin'])
     inventory_perms = Permission.objects.filter(codename__startswith='can_', codename__contains='_inventory')
     admin_group.permissions.add(*inventory_perms)
 
-    # Manager-Gruppe erhält Ansehen, Bearbeiten und Erstellen
+    # Manager group gets view, edit, create for inventory
     manager_group = Group.objects.get(name=PERMISSION_GROUPS['inventory_manager'])
     manager_perms = Permission.objects.filter(
         codename__in=[
@@ -95,20 +97,20 @@ def setup_permissions():
     )
     manager_group.permissions.add(*manager_perms)
 
-    # Viewer-Gruppe erhält nur Ansehen
+    # Viewer group only gets view permission for inventory
     viewer_group = Group.objects.get(name=PERMISSION_GROUPS['inventory_viewer'])
     viewer_perms = Permission.objects.filter(
         codename=get_permission_name('inventory', 'view')
     )
     viewer_group.permissions.add(*viewer_perms)
 
-    # Berechtigungen für Bestellungen
-    # Admin-Gruppe für Bestellungen erstellen und Berechtigungen zuweisen
+    # Permissions for orders
+    # Admin group for orders
     order_admin_group = Group.objects.get(name=PERMISSION_GROUPS['order_admin'])
     order_perms = Permission.objects.filter(codename__startswith='can_', codename__contains='_order')
     order_admin_group.permissions.add(*order_perms)
 
-    # Manager-Gruppe für Bestellungen
+    # Manager group for orders
     order_manager_group = Group.objects.get(name=PERMISSION_GROUPS['order_manager'])
     order_manager_perms = Permission.objects.filter(
         codename__in=[
@@ -119,7 +121,7 @@ def setup_permissions():
     )
     order_manager_group.permissions.add(*order_manager_perms)
 
-    # Viewer-Gruppe für Bestellungen
+    # Viewer group for orders
     order_viewer_group = Group.objects.get(name=PERMISSION_GROUPS['order_viewer'])
     order_viewer_perms = Permission.objects.filter(
         codename=get_permission_name('order', 'view')
@@ -128,31 +130,9 @@ def setup_permissions():
 
 
 def has_permission(user, area, action):
-    """Prüft, ob ein Benutzer eine bestimmte Berechtigung hat."""
+    """Checks if a user has a specific permission."""
     if user.is_superuser:
         return True
 
     perm_name = get_permission_name(area, action)
-    return user.has_perm(f'core.{perm_name}')
-
-
-class CustomPermission(models.Model):
-    """Dummy-Model für ContentType der benutzerdefinierten Berechtigungen."""
-
-    class Meta:
-        managed = False  # Keine Tabelle in der Datenbank erstellen
-        default_permissions = ()
-        permissions = (
-            ('can_view_inventory', 'Kann Lagerverwaltung ansehen'),
-            ('can_edit_inventory', 'Kann Lagerverwaltung bearbeiten'),
-            ('can_create_inventory', 'Kann in Lagerverwaltung erstellen'),
-            ('can_delete_inventory', 'Kann in Lagerverwaltung löschen'),
-            ('can_admin_inventory', 'Kann Lagerverwaltung administrieren'),
-
-            # Neue Berechtigungen für Bestellungen
-            ('can_view_order', 'Kann Bestellungen ansehen'),
-            ('can_edit_order', 'Kann Bestellungen bearbeiten'),
-            ('can_create_order', 'Kann Bestellungen erstellen'),
-            ('can_delete_order', 'Kann Bestellungen löschen'),
-            ('can_approve_order', 'Kann Bestellungen genehmigen'),
-        )
+    return user.has_perm(f'accessmanagement.{perm_name}')

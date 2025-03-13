@@ -26,13 +26,6 @@ urlpatterns = [
     path('departments/<int:department_id>/delete/', views.department_delete, name='admin_department_delete'),
     path('departments/<int:department_id>/details/', views.get_department_details, name='admin_get_department_details'),
 
-    # Lager-Zugriff
-    path('warehouse-access/', views.warehouse_access_management, name='admin_warehouse_access_management'),
-    path('warehouse-access/create/', views.warehouse_access_create, name='admin_warehouse_access_create'),
-    path('warehouse-access/<int:access_id>/edit/', views.warehouse_access_edit, name='admin_warehouse_access_edit'),
-    path('warehouse-access/<int:access_id>/delete/', views.warehouse_access_delete,
-         name='admin_warehouse_access_delete'),
-
     # Systemeinstellungen
     path('system-settings/', views.system_settings, name='admin_system_settings'),
 

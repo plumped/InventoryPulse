@@ -11,19 +11,13 @@ from django.utils import timezone
 import sys
 import django
 
+from accessmanagement.decorators import is_admin
 from accessmanagement.models import WarehouseAccess
-from core.permissions import PERMISSION_AREAS, PERMISSION_LEVELS, get_permission_name
+from accessmanagement.permissions import PERMISSION_AREAS
 from inventory.models import Department, Warehouse
-from core.decorators import permission_required
 
 from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
     WarehouseAccessForm
-
-
-# Hilfsfunktion zur Prüfung von Admin-Berechtigungen
-def is_admin(user):
-    """Check if user has admin privileges."""
-    return user.is_superuser or user.has_perm('admin_dashboard.access_admin')
 
 
 @login_required
@@ -516,69 +510,6 @@ def department_delete(request, department_id):
 
 @login_required
 @user_passes_test(is_admin)
-def warehouse_access_management(request):
-    """Warehouse access management view."""
-    accesses = WarehouseAccess.objects.select_related('warehouse', 'department').all()
-
-    context = {
-        'accesses': accesses,
-        'warehouses': Warehouse.objects.filter(is_active=True),
-        'departments': Department.objects.all(),
-        'section': 'warehouse_access'
-    }
-
-    return render(request, 'admin_dashboard/warehouse_access_management.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def warehouse_access_create(request):
-    """Create a new warehouse access."""
-    if request.method == 'POST':
-        form = WarehouseAccessForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f'Lagerzugriff wurde erfolgreich erstellt.')
-            return redirect('admin_warehouse_access_management')
-    else:
-        form = WarehouseAccessForm()
-
-    context = {
-        'form': form,
-        'warehouses': Warehouse.objects.filter(is_active=True),
-        'departments': Department.objects.all(),
-        'section': 'warehouse_access'
-    }
-
-    return render(request, 'admin_dashboard/warehouse_access_form.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
-def warehouse_access_edit(request, access_id):
-    """Edit a warehouse access."""
-    access = get_object_or_404(WarehouseAccess, pk=access_id)
-
-    if request.method == 'POST':
-        form = WarehouseAccessForm(request.POST, instance=access)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f'Lagerzugriff wurde erfolgreich aktualisiert.')
-            return redirect('admin_warehouse_access_management')
-    else:
-        form = WarehouseAccessForm(instance=access)
-
-    context = {
-        'form': form,
-        'access': access,
-        'section': 'warehouse_access'
-    }
-
-    return render(request, 'admin_dashboard/warehouse_access_edit.html', context)
-
-
-@login_required
-@user_passes_test(is_admin)
 def warehouse_access_delete(request, access_id):
     """Delete a warehouse access."""
     access = get_object_or_404(WarehouseAccess, pk=access_id)
@@ -586,7 +517,7 @@ def warehouse_access_delete(request, access_id):
     if request.method == 'POST':
         access.delete()
         messages.success(request, f'Lagerzugriff wurde erfolgreich gelöscht.')
-        return redirect('admin_warehouse_access_management')
+        return redirect('warehouse_access_management')
 
     context = {
         'access': access,

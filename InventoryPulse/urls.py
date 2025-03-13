@@ -104,6 +104,7 @@ urlpatterns = [
     path('suppliers/', include('suppliers.urls')),
     path('order/', include('order.urls')),
     path('admin-dashboard/', include('admin_dashboard.urls')),
+    path('access/', include('accessmanagement.urls')),
 
 
 
@@ -133,10 +134,5 @@ urlpatterns = [
         path('logs/bulk-delete/', core_views.bulk_delete_import_logs, name='bulk_delete_import_logs'),
         path('logs/export/', core_views.export_import_logs, name='export_import_logs'),
         path('logs/<int:log_id>/download-errors/', core_views.download_error_file, name='download_error_file'),
-    ])),
-
-    path('permissions/', include([
-        path('', core_views.permission_management, name='permission_management'),
-        path('user/', core_views.get_user_permissions, name='get_user_permissions'),
     ])),
 ]

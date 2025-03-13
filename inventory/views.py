@@ -29,8 +29,11 @@ from accessmanagement.models import WarehouseAccess
 def stock_movement_list(request):
     """List all stock movements with filtering and search."""
     # Nur Bewegungen in Lagern, auf die der Benutzer Zugriff hat
-    accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                        if WarehouseAccess.has_access(request.user, w, 'view')]
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'view')]
 
     movements_list = StockMovement.objects.select_related('product', 'created_by', 'warehouse').filter(
         warehouse__in=accessible_warehouses
@@ -106,8 +109,11 @@ def stock_movement_list(request):
 def stock_take_list(request):
     """List all stock takes with filtering."""
     # Nur Inventuren in Lagern anzeigen, auf die der Benutzer Zugriff hat
-    accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if WarehouseAccess.has_access(request.user, w, 'view')]
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'view')]
 
     stock_takes = StockTake.objects.filter(warehouse__in=accessible_warehouses)
 
@@ -167,8 +173,11 @@ def stock_take_list(request):
 def stock_take_create(request):
     """Create a new stock take."""
     # Lager abrufen, auf die der Benutzer Zugriff hat
-    accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
 
     if not accessible_warehouses:
         messages.error(request, "Sie haben keine Berechtigung, Inventuren durchzuführen.")
@@ -351,8 +360,11 @@ def stock_take_update(request, pk):
         return redirect('stock_take_detail', pk=stock_take.pk)
 
     # Lager abrufen, auf die der Benutzer Zugriff hat
-    accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
 
     if request.method == 'POST':
         form = StockTakeForm(request.POST, instance=stock_take)
@@ -1303,8 +1315,11 @@ def product_warehouses(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
 
     # Nur Lager anzeigen, auf die der Benutzer Zugriff hat
-    accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if WarehouseAccess.has_access(request.user, w, 'view')]
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'view')]
 
     # Produktbestände in den zugänglichen Lagern abrufen
     product_warehouses = ProductWarehouse.objects.filter(
@@ -2097,8 +2112,11 @@ def stock_adjustment(request, product_id, warehouse_id=None):
     product = get_object_or_404(Product, pk=product_id)
 
     # Lager abrufen, auf die der Benutzer Zugriff hat
-    accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
+    if request.user.is_superuser:
+        accessible_warehouses = Warehouse.objects.filter(is_active=True)
+    else:
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
 
     if not accessible_warehouses:
         messages.error(request, "Sie haben keine Berechtigung, Bestände in Lagern zu verwalten.")

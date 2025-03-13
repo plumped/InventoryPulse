@@ -88,15 +88,8 @@ def check_auto_approval(order):
 def can_approve_order(user, order):
     """
     Check if a user can approve an order.
-
-    Args:
-        user: The User instance
-        order: The PurchaseOrder instance
-
-    Returns:
-        bool: True if the user can approve the order
     """
-    from core.permissions import has_permission
+    from accessmanagement.permissions import has_permission
 
     workflow_settings = get_workflow_settings()
 

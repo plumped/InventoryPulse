@@ -82,14 +82,6 @@ class WarehouseAccess(models.Model):
     def has_access(cls, user, warehouse, permission_type='view'):
         """
         Check if a user has access to a specific warehouse.
-        
-        Args:
-            user: The user to check
-            warehouse: The warehouse to check access for
-            permission_type: Type of access ('view', 'edit', 'manage_stock')
-            
-        Returns:
-            bool: True if access is granted, False otherwise
         """
         # Admin always has access
         if user.is_superuser:
@@ -97,24 +89,27 @@ class WarehouseAccess(models.Model):
 
         # Get departments from user profile
         try:
-            user_departments = user.profile.departments.all()
-        except:
-            # Fallback to direct relationship if profile doesn't exist
-            try:
-                user_departments = user.departments.all()
-            except:
-                return False
+            if not hasattr(user, 'profile'):
+                # Fallback: Direkte Beziehung versuchen, falls Profil nicht existiert
+                try:
+                    user_departments = user.departments.all()
+                except:
+                    return False
+            else:
+                user_departments = user.profile.departments.all()
 
-        for department in user_departments:
-            try:
-                access = cls.objects.get(warehouse=warehouse, department=department)
-                if permission_type == 'view' and access.can_view:
-                    return True
-                elif permission_type == 'edit' and access.can_edit:
-                    return True
-                elif permission_type == 'manage_stock' and access.can_manage_stock:
-                    return True
-            except cls.DoesNotExist:
-                continue
+            for department in user_departments:
+                try:
+                    access = cls.objects.get(warehouse=warehouse, department=department)
+                    if permission_type == 'view' and access.can_view:
+                        return True
+                    elif permission_type == 'edit' and access.can_edit:
+                        return True
+                    elif permission_type == 'manage_stock' and access.can_manage_stock:
+                        return True
+                except cls.DoesNotExist:
+                    continue
+        except Exception:
+            return False
 
         return False

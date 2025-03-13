@@ -34,6 +34,7 @@ from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto
     ProductVariant, SerialNumber, BatchNumber
 
 
+
 @login_required
 def dashboard(request):
     # Existierende Daten
@@ -45,11 +46,8 @@ def dashboard(request):
     if request.user.is_superuser:
         accessible_warehouses = Warehouse.objects.filter(is_active=True)
     else:
-        user_departments = request.user.profile.departments.all()
-        warehouse_access = WarehouseAccess.objects.filter(
-            department__in=user_departments
-        ).values_list('warehouse', flat=True)
-        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'view')]
 
     try:
         from order.services import generate_order_suggestions
@@ -174,15 +172,11 @@ def product_list(request):
     # Abrufen aller Produkte mit zugehörigen Kategorien
     products_list = Product.objects.select_related('category').all()
 
-    # Abrufen aller Lager, auf die der Benutzer Zugriff hat
     if request.user.is_superuser:
         accessible_warehouses = Warehouse.objects.filter(is_active=True)
     else:
-        user_departments = request.user.profile.departments.all()
-        warehouse_access = WarehouseAccess.objects.filter(
-            department__in=user_departments
-        ).values_list('warehouse', flat=True)
-        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'view')]
 
     # Suche
     search_query = request.GET.get('search', '')
@@ -262,11 +256,8 @@ def low_stock_list(request):
     if request.user.is_superuser:
         accessible_warehouses = Warehouse.objects.filter(is_active=True)
     else:
-        user_departments = request.user.profile.departments.all()
-        warehouse_access = WarehouseAccess.objects.filter(
-            department__in=user_departments
-        ).values_list('warehouse', flat=True)
-        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'view')]
 
     # Produkte mit Kategorie abrufen
     products_list = Product.objects.select_related('category').all()
@@ -2590,11 +2581,8 @@ def product_detail(request, pk):
     if request.user.is_superuser:
         accessible_warehouses = Warehouse.objects.filter(is_active=True)
     else:
-        user_departments = request.user.profile.departments.all()
-        warehouse_access = WarehouseAccess.objects.filter(
-            department__in=user_departments
-        ).values_list('warehouse', flat=True)
-        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
+        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
+                                 if WarehouseAccess.has_access(request.user, w, 'view')]
 
     # Varianten mit kritischem Bestand
     # Hier holen wir zuerst alle Varianten

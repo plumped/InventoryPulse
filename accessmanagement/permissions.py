@@ -74,11 +74,13 @@ def setup_permissions():
             perm_name = get_permission_name(area, level)
             perm_display = f'Kann {PERMISSION_LEVELS[level]} in {PERMISSION_AREAS[area]}'
 
-            perm, created = Permission.objects.get_or_create(
-                codename=perm_name,
-                name=perm_display,
-                content_type=ct,
-            )
+            # Prüfen, ob Berechtigung bereits existiert
+            if not Permission.objects.filter(codename=perm_name, content_type=ct).exists():
+                Permission.objects.create(
+                    codename=perm_name,
+                    name=perm_display,
+                    content_type=ct
+                )
 
     # Assign permissions to groups
     # Admin group gets all permissions for inventory

@@ -30,7 +30,7 @@ def stock_movement_list(request):
     """List all stock movements with filtering and search."""
     # Nur Bewegungen in Lagern, auf die der Benutzer Zugriff hat
     accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                            if user_has_warehouse_access(request.user, w, 'view')]
+                        if WarehouseAccess.has_access(request.user, w, 'view')]
 
     movements_list = StockMovement.objects.select_related('product', 'created_by', 'warehouse').filter(
         warehouse__in=accessible_warehouses
@@ -40,7 +40,7 @@ def stock_movement_list(request):
     warehouse_id = request.GET.get('warehouse', '')
     if warehouse_id:
         warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
-        if user_has_warehouse_access(request.user, warehouse, 'view'):
+        if WarehouseAccess.has_access(request.user, warehouse, 'view'):
             movements_list = movements_list.filter(warehouse=warehouse)
         else:
             messages.error(request, "Sie haben keinen Zugriff auf dieses Lager.")
@@ -107,7 +107,7 @@ def stock_take_list(request):
     """List all stock takes with filtering."""
     # Nur Inventuren in Lagern anzeigen, auf die der Benutzer Zugriff hat
     accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if user_has_warehouse_access(request.user, w, 'view')]
+                             if WarehouseAccess.has_access(request.user, w, 'view')]
 
     stock_takes = StockTake.objects.filter(warehouse__in=accessible_warehouses)
 
@@ -115,7 +115,7 @@ def stock_take_list(request):
     warehouse_id = request.GET.get('warehouse', '')
     if warehouse_id:
         warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
-        if user_has_warehouse_access(request.user, warehouse, 'view'):
+        if WarehouseAccess.has_access(request.user, warehouse, 'view'):
             stock_takes = stock_takes.filter(warehouse=warehouse)
 
     # Filter Form
@@ -168,7 +168,7 @@ def stock_take_create(request):
     """Create a new stock take."""
     # Lager abrufen, auf die der Benutzer Zugriff hat
     accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if user_has_warehouse_access(request.user, w, 'manage_stock')]
+                             if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
 
     if not accessible_warehouses:
         messages.error(request, "Sie haben keine Berechtigung, Inventuren durchzuführen.")
@@ -279,7 +279,7 @@ def stock_take_detail(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'view'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'view'):
         return HttpResponseForbidden("Sie haben keinen Zugriff auf dieses Lager.")
 
     # Inventurpositionen mit Filtermöglichkeit
@@ -341,7 +341,7 @@ def stock_take_update(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Inventur zu bearbeiten.")
 
     # Nur Entwürfe können bearbeitet werden
@@ -352,7 +352,7 @@ def stock_take_update(request, pk):
 
     # Lager abrufen, auf die der Benutzer Zugriff hat
     accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if user_has_warehouse_access(request.user, w, 'manage_stock')]
+                             if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
 
     if request.method == 'POST':
         form = StockTakeForm(request.POST, instance=stock_take)
@@ -403,7 +403,7 @@ def stock_take_delete(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Inventur zu löschen.")
 
     # Nur Entwürfe können gelöscht werden
@@ -431,7 +431,7 @@ def stock_take_start(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Inventur zu starten.")
 
     # Nur Entwürfe können gestartet werden
@@ -463,7 +463,7 @@ def stock_take_complete(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Inventur abzuschließen.")
 
     # Nur laufende Inventuren können abgeschlossen werden
@@ -561,7 +561,7 @@ def stock_take_cancel(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Inventur abzubrechen.")
 
     # Nur Entwürfe und laufende Inventuren können abgebrochen werden
@@ -594,7 +594,7 @@ def stock_take_item_count(request, pk, item_id):
     item = get_object_or_404(StockTakeItem, pk=item_id, stock_take=stock_take)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, in dieser Inventur zu zählen.")
 
     # Nur laufende Inventuren können gezählt werden
@@ -662,7 +662,7 @@ def stock_take_count_items(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, in dieser Inventur zu zählen.")
 
     # Nur laufende Inventuren können gezählt werden
@@ -729,7 +729,7 @@ def stock_take_barcode_scan(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, in dieser Inventur zu zählen.")
 
     # Nur laufende Inventuren können gescannt werden
@@ -784,7 +784,7 @@ def stock_take_report(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'view'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'view'):
         return HttpResponseForbidden("Sie haben keinen Zugriff auf diesen Bericht.")
 
     # Statistiken berechnen
@@ -893,7 +893,7 @@ def stock_take_export_csv(request, pk):
     stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, stock_take.warehouse, 'view'):
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'view'):
         return HttpResponseForbidden("Sie haben keinen Zugriff auf diesen Export.")
 
     # CSV Datei erstellen
@@ -951,7 +951,7 @@ def warehouse_list(request):
     all_warehouses = Warehouse.objects.filter(is_active=True)
 
     for warehouse in all_warehouses:
-        if user_has_warehouse_access(request.user, warehouse, 'view'):
+        if WarehouseAccess.has_access(request.user, warehouse, 'view'):
             warehouses.append(warehouse)
 
     return render(request, 'inventory/warehouse_list.html', {'warehouses': warehouses})
@@ -1304,7 +1304,7 @@ def product_warehouses(request, product_id):
 
     # Nur Lager anzeigen, auf die der Benutzer Zugriff hat
     accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if user_has_warehouse_access(request.user, w, 'view')]
+                             if WarehouseAccess.has_access(request.user, w, 'view')]
 
     # Produktbestände in den zugänglichen Lagern abrufen
     product_warehouses = ProductWarehouse.objects.filter(
@@ -1358,7 +1358,7 @@ def warehouse_detail(request, pk):
     warehouse = get_object_or_404(Warehouse, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, warehouse, 'view'):
+    if not WarehouseAccess.has_access(request.user, warehouse, 'view'):
         return HttpResponseForbidden("Sie haben keinen Zugriff auf dieses Lager.")
 
     # Produkte im Lager
@@ -1408,8 +1408,8 @@ def warehouse_detail(request, pk):
         'products': products,
         'recent_movements': recent_movements,
         'active_stock_takes': active_stock_takes,
-        'can_manage': user_has_warehouse_access(request.user, warehouse, 'manage_stock'),
-        'can_edit': user_has_warehouse_access(request.user, warehouse, 'edit'),
+        'can_manage': WarehouseAccess.has_access(request.user, warehouse, 'manage_stock'),
+        'can_edit': WarehouseAccess.has_access(request.user, warehouse, 'edit'),
         'search_query': search_query,
         'category_id': category_id,
         'categories': categories,
@@ -1543,7 +1543,7 @@ def product_add_to_warehouse(request, warehouse_id):
     warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
 
     # Prüfen der Zugriffsrechte
-    if not user_has_warehouse_access(request.user, warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, warehouse, 'manage_stock'):
         messages.error(request, "Sie haben keine Berechtigung, Produkte zu diesem Lager hinzuzufügen.")
         return redirect('warehouse_detail', pk=warehouse_id)
 
@@ -1615,7 +1615,7 @@ def bulk_add_products_to_warehouse(request, warehouse_id):
     warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
 
     # Zugriffskontrollen
-    if not user_has_warehouse_access(request.user, warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, warehouse, 'manage_stock'):
         messages.error(request, "Sie haben keine Berechtigung, Produkte zu diesem Lager hinzuzufügen.")
         return redirect('warehouse_detail', pk=warehouse_id)
 
@@ -2022,7 +2022,7 @@ def stock_take_create_cycle(request, pk):
     original_stock_take = get_object_or_404(StockTake, pk=pk)
 
     # Zugriffskontrolle
-    if not user_has_warehouse_access(request.user, original_stock_take.warehouse, 'manage_stock'):
+    if not WarehouseAccess.has_access(request.user, original_stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, für dieses Lager Inventuren zu erstellen.")
 
     # Nur für rollierende Inventuren
@@ -2098,7 +2098,7 @@ def stock_adjustment(request, product_id, warehouse_id=None):
 
     # Lager abrufen, auf die der Benutzer Zugriff hat
     accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                             if user_has_warehouse_access(request.user, w, 'manage_stock')]
+                             if WarehouseAccess.has_access(request.user, w, 'manage_stock')]
 
     if not accessible_warehouses:
         messages.error(request, "Sie haben keine Berechtigung, Bestände in Lagern zu verwalten.")
@@ -2109,7 +2109,7 @@ def stock_adjustment(request, product_id, warehouse_id=None):
     if warehouse_id:
         try:
             warehouse = Warehouse.objects.get(pk=warehouse_id, is_active=True)
-            if not user_has_warehouse_access(request.user, warehouse, 'manage_stock'):
+            if not WarehouseAccess.has_access(request.user, warehouse, 'manage_stock'):
                 messages.error(request, f"Sie haben keine Berechtigung für das Lager {warehouse.name}.")
                 warehouse = None
         except Warehouse.DoesNotExist:

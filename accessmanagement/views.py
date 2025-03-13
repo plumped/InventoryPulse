@@ -1,7 +1,7 @@
 # accessmanagement/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponseForbidden, JsonResponse
 from django.contrib.auth.models import User, Group, Permission
 
@@ -13,13 +13,9 @@ from .forms import WarehouseAccessForm
 
 
 @login_required
-@permission_required('inventory', 'admin')
+@user_passes_test(is_admin)
 def warehouse_access_management(request):
     """Manage warehouse access rights."""
-    # Only administrators can manage access rights
-    if not is_admin(request.user):
-        return HttpResponseForbidden("Only administrators can manage warehouse access rights.")
-
     warehouses = Warehouse.objects.filter(is_active=True)
     departments = Department.objects.all()
 
@@ -66,13 +62,9 @@ def warehouse_access_management(request):
 
 
 @login_required
-@permission_required('inventory', 'admin')
+@user_passes_test(is_admin)
 def warehouse_access_add(request):
     """Add new warehouse access rights."""
-    # Only administrators can manage access rights
-    if not is_admin(request.user):
-        return HttpResponseForbidden("Only administrators can manage warehouse access rights.")
-
     if request.method == 'POST':
         form = WarehouseAccessForm(request.POST)
         if form.is_valid():
@@ -94,14 +86,10 @@ def warehouse_access_add(request):
 
 
 @login_required
-@permission_required('inventory', 'admin')
+@user_passes_test(is_admin)
 def warehouse_access_edit(request, pk):
     """Edit warehouse access rights."""
     access = get_object_or_404(WarehouseAccess, pk=pk)
-
-    # Only administrators can manage access rights
-    if not is_admin(request.user):
-        return HttpResponseForbidden("Only administrators can manage warehouse access rights.")
 
     if request.method == 'POST':
         form = WarehouseAccessForm(request.POST, instance=access)
@@ -125,14 +113,10 @@ def warehouse_access_edit(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'admin')
+@user_passes_test(is_admin)
 def warehouse_access_delete(request, pk):
     """Delete warehouse access rights."""
     access = get_object_or_404(WarehouseAccess, pk=pk)
-
-    # Only administrators can manage access rights
-    if not is_admin(request.user):
-        return HttpResponseForbidden("Only administrators can manage warehouse access rights.")
 
     if request.method == 'POST':
         warehouse_name = access.warehouse.name
@@ -149,13 +133,9 @@ def warehouse_access_delete(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'admin')
+@user_passes_test(is_admin)
 def user_permissions_management(request):
     """Manage user permissions."""
-    # Only administrators can manage permissions
-    if not is_admin(request.user):
-        return HttpResponseForbidden("Only administrators can manage user permissions.")
-
     users = User.objects.all().order_by('username')
     groups = Group.objects.all().order_by('name')
 
@@ -216,6 +196,7 @@ def user_permissions_management(request):
 
 
 @login_required
+@user_passes_test(is_admin)
 def get_user_permissions(request):
     """AJAX endpoint to get user permissions."""
     user_id = request.GET.get('user_id')
@@ -251,11 +232,11 @@ def get_user_permissions(request):
                 'source': 'Directly assigned'
             })
 
-        return JsonResponse({
-            'groups': groups,
-            'direct_permissions': direct_permissions,
-            'effective_permissions': effective_permissions
-        })
+            return JsonResponse({
+                'groups': groups,
+                'direct_permissions': direct_permissions,
+                'effective_permissions': effective_permissions
+            })
 
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)

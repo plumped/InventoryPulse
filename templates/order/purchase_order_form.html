@@ -300,23 +300,23 @@
 
 {% block extra_js %}
 <script>
-    // Erweiterte JavaScript für das Bestellformular mit korrekter Steuerbehandlung
-    // Erweiterte JavaScript für das Bestellformular mit korrekter Steuerbehandlung
 $(document).ready(function() {
     let itemIndex = 0;
+    let supplierShippingCost = 0;
+    let supplierMinimumOrderValue = 0;
 
-    // Produktauswahl initialisieren
+    // Initialize product selections
     initializeProductSelects();
 
-    // Rechenoperationen initialisieren
+    // Initialize calculations
     initializeCalculations();
 
-    // Lieferanten-Änderung überwachen
+    // Watch for supplier changes
     $('#id_supplier').on('change', function() {
         const supplierId = $(this).val();
 
         if (supplierId) {
-            // Aktualisieren der Produktdaten für alle bereits vorhandenen Zeilen
+            // Update product data for existing rows
             $('.product-select').each(function() {
                 const selectedProductId = $(this).val();
                 if (selectedProductId) {
@@ -324,17 +324,23 @@ $(document).ready(function() {
                 }
             });
 
-            // Lieferanten-Daten abrufen (Versandkosten und Mindestbestellwert)
-            $.getJSON('/supplier/get-supplier-data/', {
+            // Retrieve supplier data (shipping costs and minimum order value)
+            $.getJSON('/suppliers/get-supplier-data/', {
                 supplier_id: supplierId
             }).done(function(data) {
                 if (data.success) {
-                    // Versandkosten aktualisieren
-                    $('#shippingInput').val(data.shipping_cost);
+                    // Store supplier data for later calculations
+                    supplierShippingCost = parseFloat(data.shipping_cost);
+                    supplierMinimumOrderValue = parseFloat(data.minimum_order_value);
 
-                    // Wenn ein Mindestbestellwert vorhanden ist und er größer als 0 ist
+                    console.log('Supplier data loaded:', {
+                        supplierShippingCost: supplierShippingCost,
+                        supplierMinimumOrderValue: supplierMinimumOrderValue
+                    });
+
+                    // If a minimum order value exists and is greater than 0
                     if (data.minimum_order_value > 0) {
-                        // Hinweis zum Mindestbestellwert anzeigen
+                        // Show minimum order value notice
                         if (!$('#minimum-order-warning').length) {
                             $('<div id="minimum-order-warning" class="alert alert-warning mt-3">' +
                               '<i class="bi bi-exclamation-triangle me-2"></i>' +
@@ -344,54 +350,54 @@ $(document).ready(function() {
                             $('#minimum-order-warning strong').text(data.minimum_order_value + ' €');
                         }
                     } else {
-                        // Hinweis entfernen, falls kein Mindestbestellwert
+                        // Remove notice if no minimum order value
                         $('#minimum-order-warning').remove();
                     }
 
-                    // Summen neu berechnen
+                    // Recalculate totals
                     updateTotals();
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.error('Fehler beim Abrufen der Lieferantendaten:', textStatus, errorThrown);
+                console.error('Error retrieving supplier data:', textStatus, errorThrown);
             });
         }
     });
 
-    // Hinzufügen-Button
+    // Add item button
     $('#addItemButton').click(function() {
         addNewItem();
     });
 
-    // Entfernen-Button für bestehende und neue Zeilen
+    // Remove button for existing and new rows
     $(document).on('click', '.remove-item', function() {
         $(this).closest('tr').remove();
         updateTotals();
     });
 
-    // Funktion zum Hinzufügen einer neuen Position
+    // Function to add a new item
     function addNewItem() {
-        // Template klonen und anpassen
+        // Clone and adapt template
         let template = document.getElementById('newItemTemplate').innerHTML;
         template = template.replace(/{index}/g, itemIndex++);
 
-        // Zum Tabellenkörper hinzufügen
+        // Add to table body
         $('#itemsTableBody').append(template);
 
-        // Selects neu initialisieren
+        // Initialize selects
         initializeProductSelects();
 
-        // Berechnungen initialisieren
+        // Initialize calculations
         initializeCalculations();
 
-        // Scroll zum neuen Element
+        // Scroll to new element
         $('html, body').animate({
             scrollTop: $("#itemsTableBody tr:last").offset().top - 200
         }, 500);
     }
 
-    // Verbesserte Produktauswahl-Logik
+    // Improved product selection logic
     function initializeProductSelects() {
-        // Select2 für Produktauswahl (falls vorhanden)
+        // Select2 for product selection (if available)
         if($.fn.select2) {
             $('.product-select').select2({
                 placeholder: 'Produkt wählen',
@@ -399,7 +405,7 @@ $(document).ready(function() {
             });
         }
 
-        // Änderungen in der Produktauswahl
+        // Changes in product selection
         $('.product-select').off('change').on('change', function() {
             const productId = $(this).val();
             if (productId) {
@@ -408,46 +414,46 @@ $(document).ready(function() {
         });
     }
 
-    // Funktion zum Abrufen und Aktualisieren der Produktdaten vom Server
+    // Function to retrieve and update product data from server
     function fetchAndUpdateProductData($select, productId) {
         const $row = $select.closest('tr');
         const supplierId = $('#id_supplier').val();
 
         if (!supplierId) {
-            console.warn('Kein Lieferant ausgewählt!');
+            console.warn('No supplier selected!');
             return;
         }
 
-        // AJAX-Anfrage, um Lieferantendaten zu erhalten
+        // AJAX request to get supplier data
         $.getJSON('/order/get-supplier-product-price/', {
             product_id: productId,
             supplier_id: supplierId
         }).done(function(data) {
-            console.log('Produktdaten erhalten:', data);
+            console.log('Product data received:', data);
 
             if (data.success) {
-                // Preis setzen, wenn verfügbar
+                // Set price if available
                 if (data.price) {
                     $row.find('.item-price').val(data.price);
                 }
 
-                // Lieferanten-SKU setzen, wenn verfügbar
+                // Set supplier SKU if available
                 if (data.supplier_sku) {
                     $row.find('.supplier-sku').val(data.supplier_sku);
                 }
 
-                // Einheit aktualisieren
+                // Update unit
                 $row.find('.item-unit').text(data.unit || '--');
 
-                // Steuerinformationen speichern
+                // Store tax information
                 if (data.tax_id !== null && data.tax_id !== undefined) {
-                    // Verstecktes Feld für tax_id erstellen oder aktualisieren
+                    // Create or update hidden field for tax_id
                     const itemId = $row.data('item-id');
 
-                    // Prüfen, ob das Feld bereits existiert
+                    // Check if field already exists
                     let $taxIdField = $row.find('.item-tax-id');
                     if ($taxIdField.length === 0) {
-                        // Feld erstellen, wenn es nicht existiert
+                        // Create field if it doesn't exist
                         $taxIdField = $('<input>')
                             .attr('type', 'hidden')
                             .addClass('item-tax-id')
@@ -455,40 +461,48 @@ $(document).ready(function() {
                             .appendTo($row);
                     }
 
-                    // Steuersatz setzen
+                    // Set tax rate
                     $taxIdField.val(data.tax_id);
 
-                    // Steuersatz anzeigen, falls ein entsprechendes Element existiert
+                    // Display tax rate if corresponding element exists
                     const $taxRateDisplay = $row.find('.item-tax-rate');
                     if ($taxRateDisplay.length > 0) {
                         $taxRateDisplay.text(data.tax_rate + '%');
                     }
                 }
 
-                // Zeilensumme aktualisieren
+                // Update row total
                 updateRowTotal($row);
             } else {
-                console.warn('Keine Lieferantendaten gefunden:', data.message);
+                console.warn('No supplier data found:', data.message);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            console.error('Fehler beim Abrufen der Lieferantendaten:', textStatus, errorThrown);
+            console.error('Error retrieving supplier data:', textStatus, errorThrown);
         });
     }
 
-    // Berechnungslogik
+    // Calculation logic
     function initializeCalculations() {
-        // Menge oder Preis ändert sich
+        // Quantity or price changes
         $('.item-quantity, .item-price').off('input').on('input', function() {
             updateRowTotal($(this).closest('tr'));
         });
 
-        // Steuern oder Versandkosten ändern sich
+        // Tax or shipping cost changes
         $('#taxInput, #shippingInput').off('input').on('input', function() {
-            updateTotals();
+            // Only update totals if manual shipping input is triggered by user
+            // This prevents conflicts with automatic shipping calculations
+            if ($(this).is('#shippingInput') && !$(this).data('auto-update')) {
+                // User is manually changing shipping costs
+                supplierMinimumOrderValue = 0; // Disable automatic calculation
+                updateTotals();
+            } else if ($(this).is('#taxInput')) {
+                updateTotals();
+            }
         });
     }
 
-    // Zeilensumme berechnen
+    // Calculate row total
     function updateRowTotal($row) {
         const quantity = parseFloat($row.find('.item-quantity').val()) || 0;
         const price = parseFloat($row.find('.item-price').val()) || 0;
@@ -496,58 +510,116 @@ $(document).ready(function() {
 
         $row.find('.item-total').text(total);
 
-        // Gesamtsummen aktualisieren
+        // Update totals
         updateTotals();
     }
 
-    // Alle Summen aktualisieren
+    // Update all totals
     function updateTotals() {
         let subtotal = 0;
         let taxTotal = 0;
 
-        // Alle Positionen summieren und Steuern berechnen
+        // Sum all items and calculate taxes
         $('#itemsTableBody tr').each(function() {
-            // Zeilensumme ohne Steuern
+            // Row total without taxes
             const lineTotal = parseFloat($(this).find('.item-total').text()) || 0;
             subtotal += lineTotal;
 
-            // Steuer für diese Zeile berechnen
+            // Calculate tax for this row
             const taxRateText = $(this).find('.item-tax-rate').text();
             if (taxRateText && taxRateText !== '--') {
-                // Extrahiere die Steuersatz-Zahl (entferne das %-Zeichen)
+                // Extract tax rate (remove % sign)
                 const taxRate = parseFloat(taxRateText.replace('%', '')) || 0;
-                // Berechne die Steuer für diese Zeile
+                // Calculate tax for this row
                 const lineTax = lineTotal * (taxRate / 100);
                 taxTotal += lineTax;
             }
         });
 
-        // Abrunden auf 2 Dezimalstellen
+        // Round to 2 decimal places
         subtotal = Math.round(subtotal * 100) / 100;
         taxTotal = Math.round(taxTotal * 100) / 100;
 
-        // Holen und konvertieren der Versandkosten
+        // Automatically set shipping costs based on minimum order value
+        if (supplierMinimumOrderValue > 0 && subtotal < supplierMinimumOrderValue) {
+            // Set shipping costs
+            // Mark input as auto-updated to avoid event loop
+            $('#shippingInput').data('auto-update', true);
+            $('#shippingInput').val(supplierShippingCost.toFixed(2));
+            $('#shippingInput').data('auto-update', false);
+
+            // Show notice if not already present
+            if (!$('#shipping-cost-warning').length) {
+                $('<div id="shipping-cost-warning" class="alert alert-info mt-2 mb-2">' +
+                  '<i class="bi bi-info-circle me-2"></i>' +
+                  'Versandkosten werden berechnet, da der Bestellwert unter dem Mindestbestellwert liegt.' +
+                  '</div>').insertAfter('#shippingInput');
+            }
+
+            // Remove "free shipping" notice if present
+            $('#free-shipping-info').remove();
+        } else if (supplierMinimumOrderValue > 0) {
+            // Order value exceeds minimum - remove shipping costs
+            // Mark input as auto-updated to avoid event loop
+            $('#shippingInput').data('auto-update', true);
+            $('#shippingInput').val('0.00');
+            $('#shippingInput').data('auto-update', false);
+
+            // Remove notice if present
+            $('#shipping-cost-warning').remove();
+
+            // Show "free shipping" notice if not already present
+            if (!$('#free-shipping-info').length) {
+                $('<div id="free-shipping-info" class="alert alert-success mt-2 mb-2">' +
+                  '<i class="bi bi-check-circle me-2"></i>' +
+                  'Kostenloser Versand - Mindestbestellwert erreicht!' +
+                  '</div>').insertAfter('#shippingInput');
+            }
+        }
+        // If no minimum order value set, we leave the shipping input as is
+
+        // Get shipping costs directly from the input (which we just updated)
         const shipping = parseFloat($('#shippingInput').val()) || 0;
 
-        // Gesamtsumme berechnen
+        // Calculate total sum
         const total = subtotal + taxTotal + shipping;
 
-        // Summen aktualisieren
+        // Update sums
         $('#subtotal').text(subtotal.toFixed(2));
-
-        // Steuerfeld aktualisieren (Eingabefeld oder Text)
         $('#taxInput').val(taxTotal.toFixed(2));
-
-        // Gesamtsumme aktualisieren
         $('#total').text(total.toFixed(2));
+
+        // Update status display for minimum order value
+        if (supplierMinimumOrderValue > 0) {
+            const remainingForFreeShipping = Math.max(0, supplierMinimumOrderValue - subtotal);
+
+            if (remainingForFreeShipping > 0) {
+                // Minimum order value not yet reached
+                if ($('#minimum-order-warning').length) {
+                    $('#minimum-order-warning').html(
+                        '<i class="bi bi-exclamation-triangle me-2"></i>' +
+                        'Mindestbestellwert für diesen Lieferanten: <strong>' + supplierMinimumOrderValue.toFixed(2) + ' €</strong><br>' +
+                        'Noch <strong>' + remainingForFreeShipping.toFixed(2) + ' €</strong> bis zum kostenlosen Versand'
+                    );
+                }
+            } else {
+                // Minimum order value reached
+                if ($('#minimum-order-warning').length) {
+                    $('#minimum-order-warning').html(
+                        '<i class="bi bi-check-circle me-2"></i>' +
+                        'Mindestbestellwert für kostenlosen Versand erreicht!'
+                    ).removeClass('alert-warning').addClass('alert-success');
+                }
+            }
+        }
     }
 
-    // Falls es keine Positionen gibt, eine leere hinzufügen
+    // If there are no items, add an empty one
     if($('#itemsTableBody tr').length === 0) {
         addNewItem();
     }
 
-    // Initial die Summen berechnen
+    // Initially calculate totals
     updateTotals();
 });
 </script>

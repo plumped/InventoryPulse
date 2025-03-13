@@ -218,8 +218,8 @@
                                         <td colspan="5" class="text-end">Steuern:</td>
                                         <td>
                                             {% if form.instance.status == 'draft' or not form.instance.pk %}
-                                            <input type="number" name="tax" id="taxInput" class="form-control"
-                                                   value="{{ form.instance.tax|default:0 }}" min="0" step="0.01">
+                                            <span id="taxDisplay">{{ form.instance.tax|default:"0.00" }}</span> €
+                                            <input type="hidden" name="tax" id="taxInput" value="{{ form.instance.tax|default:0 }}">
                                             {% else %}
                                             {{ form.instance.tax }} €
                                             <input type="hidden" name="tax" value="{{ form.instance.tax }}">
@@ -231,8 +231,8 @@
                                         <td colspan="5" class="text-end">Versandkosten:</td>
                                         <td>
                                             {% if form.instance.status == 'draft' or not form.instance.pk %}
-                                            <input type="number" name="shipping_cost" id="shippingInput" class="form-control"
-                                                   value="{{ form.instance.shipping_cost|default:0 }}" min="0" step="0.01">
+                                            <span id="shippingDisplay">{{ form.instance.shipping_cost|default:"0.00" }}</span> €
+                                            <input type="hidden" name="shipping_cost" id="shippingInput" value="{{ form.instance.shipping_cost|default:0 }}">
                                             {% else %}
                                             {{ form.instance.shipping_cost }} €
                                             <input type="hidden" name="shipping_cost" value="{{ form.instance.shipping_cost }}">
@@ -487,19 +487,6 @@ $(document).ready(function() {
         $('.item-quantity, .item-price').off('input').on('input', function() {
             updateRowTotal($(this).closest('tr'));
         });
-
-        // Tax or shipping cost changes
-        $('#taxInput, #shippingInput').off('input').on('input', function() {
-            // Only update totals if manual shipping input is triggered by user
-            // This prevents conflicts with automatic shipping calculations
-            if ($(this).is('#shippingInput') && !$(this).data('auto-update')) {
-                // User is manually changing shipping costs
-                supplierMinimumOrderValue = 0; // Disable automatic calculation
-                updateTotals();
-            } else if ($(this).is('#taxInput')) {
-                updateTotals();
-            }
-        });
     }
 
     // Calculate row total
@@ -541,45 +528,23 @@ $(document).ready(function() {
         taxTotal = Math.round(taxTotal * 100) / 100;
 
         // Automatically set shipping costs based on minimum order value
+        let shipping = 0;
         if (supplierMinimumOrderValue > 0 && subtotal < supplierMinimumOrderValue) {
             // Set shipping costs
-            // Mark input as auto-updated to avoid event loop
-            $('#shippingInput').data('auto-update', true);
-            $('#shippingInput').val(supplierShippingCost.toFixed(2));
-            $('#shippingInput').data('auto-update', false);
+            shipping = supplierShippingCost;
+            $('#shippingInput').val(shipping.toFixed(2));
 
-            // Show notice if not already present
-            if (!$('#shipping-cost-warning').length) {
-                $('<div id="shipping-cost-warning" class="alert alert-info mt-2 mb-2">' +
-                  '<i class="bi bi-info-circle me-2"></i>' +
-                  'Versandkosten werden berechnet, da der Bestellwert unter dem Mindestbestellwert liegt.' +
-                  '</div>').insertAfter('#shippingInput');
-            }
 
             // Remove "free shipping" notice if present
             $('#free-shipping-info').remove();
         } else if (supplierMinimumOrderValue > 0) {
             // Order value exceeds minimum - remove shipping costs
-            // Mark input as auto-updated to avoid event loop
-            $('#shippingInput').data('auto-update', true);
-            $('#shippingInput').val('0.00');
-            $('#shippingInput').data('auto-update', false);
+            shipping = 0;
+            $('#shippingInput').val(shipping.toFixed(2));
 
             // Remove notice if present
             $('#shipping-cost-warning').remove();
-
-            // Show "free shipping" notice if not already present
-            if (!$('#free-shipping-info').length) {
-                $('<div id="free-shipping-info" class="alert alert-success mt-2 mb-2">' +
-                  '<i class="bi bi-check-circle me-2"></i>' +
-                  'Kostenloser Versand - Mindestbestellwert erreicht!' +
-                  '</div>').insertAfter('#shippingInput');
-            }
         }
-        // If no minimum order value set, we leave the shipping input as is
-
-        // Get shipping costs directly from the input (which we just updated)
-        const shipping = parseFloat($('#shippingInput').val()) || 0;
 
         // Calculate total sum
         const total = subtotal + taxTotal + shipping;
@@ -587,6 +552,8 @@ $(document).ready(function() {
         // Update sums
         $('#subtotal').text(subtotal.toFixed(2));
         $('#taxInput').val(taxTotal.toFixed(2));
+        $('#taxDisplay').text(taxTotal.toFixed(2));
+        $('#shippingDisplay').text(shipping.toFixed(2));
         $('#total').text(total.toFixed(2));
 
         // Update status display for minimum order value

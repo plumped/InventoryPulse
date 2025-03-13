@@ -11,8 +11,9 @@ from django.utils import timezone
 import sys
 import django
 
+from accessmanagement.models import WarehouseAccess
 from core.permissions import PERMISSION_AREAS, PERMISSION_LEVELS, get_permission_name
-from inventory.models import Department, Warehouse, WarehouseAccess
+from inventory.models import Department, Warehouse
 from core.decorators import permission_required
 
 from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \

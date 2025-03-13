@@ -1,9 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
-
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import F
+from organization.models import Department
 
 
 class Warehouse(models.Model):
@@ -179,34 +179,3 @@ class StockTakeItem(models.Model):
         ordering = ['product__name']
         verbose_name = "Inventurposition"
         verbose_name_plural = "Inventurpositionen"
-
-
-
-
-
-class Department(models.Model):
-    name = models.CharField(max_length=100)
-    code = models.CharField(max_length=10, unique=True)
-    manager = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='managed_departments')
-    members = models.ManyToManyField(User, related_name='departments')
-    description = models.TextField(blank=True, verbose_name="Beschreibung")
-
-
-    def __str__(self):
-        return self.name
-
-
-class WarehouseAccess(models.Model):
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    # Zugriffsrechte definieren
-    can_view = models.BooleanField(default=True)
-    can_edit = models.BooleanField(default=False)
-    can_manage_stock = models.BooleanField(default=False)
-
-    class Meta:
-        unique_together = ('warehouse', 'department')
-        verbose_name_plural = 'Warehouse Access Rights'
-
-    def __str__(self):
-        return f"{self.department} -> {self.warehouse}"

@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'inventory',
     'suppliers',
     'order',
-    'admin_dashboard'
+    'admin_dashboard',
+    'organization',
+    'accessmanagement'
 ]
 
 MIDDLEWARE = [

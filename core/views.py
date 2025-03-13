@@ -20,7 +20,8 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.templatetags.static import static
 from django.utils import timezone
-from inventory.models import StockMovement, Warehouse, Department, StockTake, WarehouseAccess
+from accessmanagement.models import WarehouseAccess
+from inventory.models import StockMovement, Warehouse, Department, StockTake
 from order.models import PurchaseOrder, OrderSuggestion
 from suppliers.models import Supplier, SupplierProduct
 from .decorators import permission_required

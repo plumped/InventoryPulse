@@ -3,18 +3,6 @@ from django.db import models
 from django.conf import settings
 
 
-# Custom Permission Model
-class AdminDashboardPermission(models.Model):
-    """Model for admin dashboard permissions."""
-
-    class Meta:
-        managed = False  # No database table creation
-        default_permissions = ()
-        permissions = (
-            ('access_admin', 'Can access admin dashboard'),
-        )
-
-
 # Workflow-Einstellungen
 class WorkflowSettings(models.Model):
     """Settings for workflow processes."""

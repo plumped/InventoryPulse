@@ -1,5 +1,5 @@
 # In inventory/utils.py oder einer ähnlichen Datei
-from inventory.models import WarehouseAccess
+from accessmanagement.models import WarehouseAccess
 
 
 def user_has_warehouse_access(user, warehouse, permission_type='view'):

@@ -14,9 +14,10 @@ import csv
 
 from django import forms
 
+from accessmanagement.models import WarehouseAccess
 from core import models
 from core.models import Product, Category, ProductWarehouse, BatchNumber
-from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department, WarehouseAccess
+from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department
 from .forms import StockMovementForm, StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
     WarehouseForm, StockAdjustmentForm
 from .utils import user_has_warehouse_access

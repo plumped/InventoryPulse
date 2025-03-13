@@ -1,7 +1,9 @@
 from django import forms
 from django.contrib.auth.models import User
 
-from .models import StockMovement, StockTake, StockTakeItem, Department, Warehouse, WarehouseAccess
+from accessmanagement.models import WarehouseAccess
+
+from .models import StockMovement, StockTake, StockTakeItem, Department, Warehouse
 from core.models import Product
 from .utils import user_has_warehouse_access
 

@@ -9,9 +9,10 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db import models
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 
 from inventory.models import Warehouse
+from organization.models import Department
 
 
 class Category(models.Model):
@@ -356,7 +357,7 @@ class ImportError(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    departments = models.ManyToManyField('inventory.Department', related_name='user_profiles', blank=True)
+    departments = models.ManyToManyField(Department, related_name='user_profiles', blank=True)
 
     def __str__(self):
         return f"Profil von {self.user.username}"

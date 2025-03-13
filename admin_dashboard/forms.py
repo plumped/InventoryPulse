@@ -1,7 +1,8 @@
 # admin_dashboard/forms.py
 from django import forms
 from django.contrib.auth.models import User, Group, Permission
-from inventory.models import Department, Warehouse, WarehouseAccess
+from accessmanagement.models import WarehouseAccess
+from inventory.models import Department
 
 from .models import SystemSettings, WorkflowSettings
 

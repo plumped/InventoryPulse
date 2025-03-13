@@ -1,11 +1,12 @@
 from django.contrib import admin
+
+from accessmanagement.models import WarehouseAccess
 from .models import (
     Warehouse,
     StockMovement,
     StockTake,
     StockTakeItem,
     Department,
-    WarehouseAccess
 )
 
 class WarehouseAdmin(admin.ModelAdmin):

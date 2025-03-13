@@ -13,6 +13,12 @@ class Supplier(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
 
+    # Neue Felder hinzufügen
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                        verbose_name="Versandkosten")
+    minimum_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                              verbose_name="Mindestbestellwert")
+
     def __str__(self):
         return self.name
 

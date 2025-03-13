@@ -62,13 +62,35 @@
                         {% endif %}
                     </div>
                 </div>
-                <div class="row">
+                <div class="row mb-3">
                     <div class="col-md-5 fw-bold">Adresse:</div>
                     <div class="col-md-7">
                         {% if supplier.address %}
                             {{ supplier.address|linebreaks }}
                         {% else %}
                             <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Neue Felder für Versandkosten und Mindestbestellwert -->
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Versandkosten:</div>
+                    <div class="col-md-7">
+                        {% if supplier.shipping_cost > 0 %}
+                            <span class="badge bg-info">{{ supplier.shipping_cost }} €</span>
+                        {% else %}
+                            <span class="badge bg-success">Kostenlos</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Mindestbestellwert:</div>
+                    <div class="col-md-7">
+                        {% if supplier.minimum_order_value > 0 %}
+                            <span class="badge bg-warning">{{ supplier.minimum_order_value }} €</span>
+                        {% else %}
+                            <span class="badge bg-success">Kein Minimum</span>
                         {% endif %}
                     </div>
                 </div>
@@ -86,6 +108,9 @@
                     </a>
                     <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-success">
                         <i class="fas fa-plus me-2"></i>Produkt hinzufügen
+                    </a>
+                    <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-info">
+                        <i class="fas fa-shopping-cart me-2"></i>Neue Bestellung
                     </a>
                     <a href="#" class="btn btn-outline-secondary">
                         <i class="fas fa-print me-2"></i>Kontaktdaten drucken
@@ -128,7 +153,7 @@
                                 <td>{{ sp.lead_time_days }} Tage</td>
                                 <td>
                                     {% if sp.is_preferred %}
-                                        <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
                                     {% else %}
                                         <span class="badge bg-secondary"><i class="fas fa-times"></i></span>
                                     {% endif %}
@@ -136,10 +161,10 @@
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{% url 'supplier_product_update' sp.id %}" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-edit"></i>
+                                            <i class="bi bi-pencil"></i>
                                         </a>
                                         <a href="{% url 'supplier_product_delete' sp.id %}" class="btn btn-sm btn-danger">
-                                            <i class="fas fa-trash"></i>
+                                            <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
                                 </td>
@@ -152,6 +177,17 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <!-- Aktuelle Bestellungen -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shipping-fast me-2"></i>Aktuelle Bestellungen</h5>
+            </div>
+            <div class="card-body">
+                <!-- Hier kann später eine Liste der aktuellen Bestellungen angezeigt werden -->
+                <p class="text-muted">Keine aktuellen Bestellungen vorhanden.</p>
             </div>
         </div>
     </div>

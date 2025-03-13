@@ -1,3 +1,4 @@
+from django.http.response import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -221,3 +222,33 @@ def supplier_product_delete(request, pk):
     }
 
     return render(request, 'suppliers/supplier_product_confirm_delete.html', context)
+
+@login_required
+def get_supplier_data(request):
+    """AJAX-Endpunkt zum Abrufen der Lieferantendaten inkl. Versandkosten und Mindestbestellwert."""
+    supplier_id = request.GET.get('supplier_id')
+
+    if not supplier_id:
+        return JsonResponse(
+            {'success': False, 'message': 'Lieferanten-ID erforderlich'})
+
+    try:
+        # Lieferanten-Informationen abrufen
+        supplier = Supplier.objects.get(pk=supplier_id)
+
+        return JsonResponse({
+            'success': True,
+            'shipping_cost': float(supplier.shipping_cost),
+            'minimum_order_value': float(supplier.minimum_order_value),
+            'name': supplier.name
+        })
+    except Supplier.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Lieferant nicht gefunden'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Fehler: {str(e)}'
+        })

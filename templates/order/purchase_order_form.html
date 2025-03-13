@@ -313,13 +313,48 @@ $(document).ready(function() {
 
     // Lieferanten-Änderung überwachen
     $('#id_supplier').on('change', function() {
-        // Aktualisieren der Produktdaten für alle bereits vorhandenen Zeilen
-        $('.product-select').each(function() {
-            const selectedProductId = $(this).val();
-            if (selectedProductId) {
-                fetchAndUpdateProductData($(this), selectedProductId);
-            }
-        });
+        const supplierId = $(this).val();
+
+        if (supplierId) {
+            // Aktualisieren der Produktdaten für alle bereits vorhandenen Zeilen
+            $('.product-select').each(function() {
+                const selectedProductId = $(this).val();
+                if (selectedProductId) {
+                    fetchAndUpdateProductData($(this), selectedProductId);
+                }
+            });
+
+            // Lieferanten-Daten abrufen (Versandkosten und Mindestbestellwert)
+            $.getJSON('/supplier/get-supplier-data/', {
+                supplier_id: supplierId
+            }).done(function(data) {
+                if (data.success) {
+                    // Versandkosten aktualisieren
+                    $('#shippingInput').val(data.shipping_cost);
+
+                    // Wenn ein Mindestbestellwert vorhanden ist und er größer als 0 ist
+                    if (data.minimum_order_value > 0) {
+                        // Hinweis zum Mindestbestellwert anzeigen
+                        if (!$('#minimum-order-warning').length) {
+                            $('<div id="minimum-order-warning" class="alert alert-warning mt-3">' +
+                              '<i class="bi bi-exclamation-triangle me-2"></i>' +
+                              'Mindestbestellwert für diesen Lieferanten: <strong>' + data.minimum_order_value + ' €</strong>' +
+                              '</div>').insertAfter('#itemsTable');
+                        } else {
+                            $('#minimum-order-warning strong').text(data.minimum_order_value + ' €');
+                        }
+                    } else {
+                        // Hinweis entfernen, falls kein Mindestbestellwert
+                        $('#minimum-order-warning').remove();
+                    }
+
+                    // Summen neu berechnen
+                    updateTotals();
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('Fehler beim Abrufen der Lieferantendaten:', textStatus, errorThrown);
+            });
+        }
     });
 
     // Hinzufügen-Button

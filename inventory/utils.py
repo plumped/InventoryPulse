@@ -18,7 +18,12 @@ def user_has_warehouse_access(user, warehouse, permission_type='view'):
     if user.is_superuser:
         return True
 
-    user_departments = user.departments.all()
+    # Korrekt auf die Abteilungen über das Benutzerprofil zugreifen
+    try:
+        user_departments = user.profile.departments.all()
+    except:
+        # Fallback zur direkten Beziehung, falls das Profil nicht existiert
+        user_departments = user.departments.all()
 
     for department in user_departments:
         try:

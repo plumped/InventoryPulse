@@ -270,24 +270,41 @@ def process_order_items(post_data, order):
             quantity_key = f'item_quantity_{item_id}'
             price_key = f'item_price_{item_id}'
             supplier_sku_key = f'item_supplier_sku_{item_id}'
+            tax_id_key = f'item_tax_id_{item_id}'
 
             if quantity_key in post_data and price_key in post_data:
                 quantity = Decimal(post_data[quantity_key])
                 price = Decimal(post_data[price_key])
                 supplier_sku = post_data.get(supplier_sku_key, '')
 
+                # Steuersatz ID, falls vorhanden
+                tax_id = post_data.get(tax_id_key, None)
+
                 # Produkt abrufen
                 product = get_object_or_404(Product, pk=product_id)
 
+                # Steuersatz bestimmen
+                from core.models import Tax
+                tax = None
+                if tax_id:
+                    try:
+                        tax = Tax.objects.get(pk=tax_id)
+                    except Tax.DoesNotExist:
+                        # Fallback zum Produkt-Steuersatz
+                        tax = product.tax
+                else:
+                    # Fallback zum Produkt-Steuersatz
+                    tax = product.tax
+
                 if item_id.startswith('new_'):
-                    # Neue Position erstellen mit der Steuer vom Produkt
+                    # Neue Position erstellen mit der Steuer vom Produkt oder explizit gesetzter Steuer
                     PurchaseOrderItem.objects.create(
                         purchase_order=order,
                         product=product,
                         quantity_ordered=quantity,
                         unit_price=price,
                         supplier_sku=supplier_sku,
-                        tax=product.tax  # Steuersatz vom Produkt übernehmen
+                        tax=tax  # Steuersatz explizit setzen
                     )
                 else:
                     # Bestehende Position aktualisieren
@@ -295,13 +312,16 @@ def process_order_items(post_data, order):
                         item_id_int = int(item_id)
                         if item_id_int in existing_items:
                             item = existing_items[item_id_int]
+
+                            # Produkt und Menge aktualisieren
                             item.product = product
                             item.quantity_ordered = quantity
                             item.unit_price = price
                             item.supplier_sku = supplier_sku
-                            # Steuersatz nur aktualisieren, wenn die Position neu ist oder das Produkt geändert wurde
-                            if item.product_id != product.id:
-                                item.tax = product.tax
+
+                            # Explizit den Steuersatz aktualisieren
+                            item.tax = tax
+
                             item.save()
                             processed_ids.add(item_id_int)
                     except (ValueError, KeyError):
@@ -927,9 +947,10 @@ def create_orders_from_suggestions(request):
     # GET-Anfragen umleiten
     return redirect('order_suggestions')
 
+
 @login_required
 def get_supplier_product_price(request):
-    """AJAX-Endpunkt zum Abrufen des Lieferantenpreises für ein Produkt."""
+    """AJAX-Endpunkt zum Abrufen des Lieferantenpreises und der SKU für ein Produkt."""
     product_id = request.GET.get('product_id')
     supplier_id = request.GET.get('supplier_id')
 
@@ -938,15 +959,44 @@ def get_supplier_product_price(request):
             {'success': False, 'message': 'Produkt- und Lieferanten-ID erforderlich'})
 
     try:
+        # Lieferanten-Produkt-Informationen abrufen
         supplier_product = SupplierProduct.objects.get(
             product_id=product_id,
             supplier_id=supplier_id
         )
 
+        # Produkt-Informationen für Steuersatz abrufen
+        product = Product.objects.get(pk=product_id)
+
         return JsonResponse({
             'success': True,
             'price': float(supplier_product.purchase_price),
-            'supplier_sku': supplier_product.supplier_sku
+            'supplier_sku': supplier_product.supplier_sku,
+            'tax_rate': float(product.get_tax_rate) if hasattr(product, 'get_tax_rate') else 0,
+            'tax_id': product.tax.id if product.tax else None,
+            'unit': product.unit
         })
     except SupplierProduct.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Keine Lieferanteninformation gefunden'})
+        # Wenn keine spezifische Lieferanten-Produkt-Beziehung existiert,
+        # geben wir trotzdem die Produktinformationen zurück
+        try:
+            product = Product.objects.get(pk=product_id)
+            return JsonResponse({
+                'success': True,
+                'price': None,  # Kein spezifischer Preis vorhanden
+                'supplier_sku': '',  # Keine Lieferanten-SKU vorhanden
+                'tax_rate': float(product.get_tax_rate) if hasattr(product, 'get_tax_rate') else 0,
+                'tax_id': product.tax.id if product.tax else None,
+                'unit': product.unit,
+                'message': 'Keine spezifischen Lieferanteninformationen gefunden'
+            })
+        except Product.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Produkt nicht gefunden'
+            })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Fehler: {str(e)}'
+        })

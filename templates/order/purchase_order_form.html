@@ -141,6 +141,7 @@
                                         <th>Menge</th>
                                         <th>Einheit</th>
                                         <th>Einzelpreis</th>
+                                        <th>MwSt</th>  <!-- Neue Spalte für MwSt -->
                                         <th>Gesamt</th>
                                         <th style="width: 80px;"></th>
                                     </tr>
@@ -148,54 +149,62 @@
                                 <tbody id="itemsTableBody">
                                     {% if form.instance.pk %}
                                     {% for item in form.instance.items.all %}
-                                    <tr data-item-id="{{ item.id }}">
-                                        <td>
-                                            {% if form.instance.status == 'draft' %}
-                                            <select name="item_product_{{ item.id }}" class="form-select product-select" required>
-                                                <option value="{{ item.product.id }}" selected>{{ item.product.name }}</option>
-                                            </select>
-                                            {% else %}
-                                            {{ item.product.name }}
-                                            <input type="hidden" name="item_product_{{ item.id }}" value="{{ item.product.id }}">
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if form.instance.status == 'draft' %}
-                                            <input type="text" name="item_supplier_sku_{{ item.id }}" class="form-control"
-                                                   value="{{ item.supplier_sku }}">
-                                            {% else %}
-                                            {{ item.supplier_sku }}
-                                            <input type="hidden" name="item_supplier_sku_{{ item.id }}" value="{{ item.supplier_sku }}">
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if form.instance.status == 'draft' %}
-                                            <input type="number" name="item_quantity_{{ item.id }}" class="form-control item-quantity"
-                                                  value="{{ item.quantity_ordered }}" min="0.01" step="0.01" required>
-                                            {% else %}
-                                            {{ item.quantity_ordered }}
-                                            <input type="hidden" name="item_quantity_{{ item.id }}" value="{{ item.quantity_ordered }}">
-                                            {% endif %}
-                                        </td>
-                                        <td>{{ item.product.unit }}</td>
-                                        <td>
-                                            {% if form.instance.status == 'draft' %}
-                                            <input type="number" name="item_price_{{ item.id }}" class="form-control item-price"
-                                                  value="{{ item.unit_price }}" min="0.01" step="0.01" required>
-                                            {% else %}
-                                            {{ item.unit_price }}
-                                            <input type="hidden" name="item_price_{{ item.id }}" value="{{ item.unit_price }}">
-                                            {% endif %}
-                                        </td>
-                                        <td class="item-total">{{ item.line_total }}</td>
-                                        <td>
-                                            {% if form.instance.status == 'draft' %}
-                                            <button type="button" class="btn btn-sm btn-outline-danger remove-item">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
+                                        <tr data-item-id="{{ item.id }}">
+                                            <td>
+                                                {% if form.instance.status == 'draft' %}
+                                                <select name="item_product_{{ item.id }}" class="form-select product-select" required>
+                                                    <option value="{{ item.product.id }}" selected>{{ item.product.name }}</option>
+                                                </select>
+                                                {% else %}
+                                                {{ item.product.name }}
+                                                <input type="hidden" name="item_product_{{ item.id }}" value="{{ item.product.id }}">
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if form.instance.status == 'draft' %}
+                                                <input type="text" name="item_supplier_sku_{{ item.id }}" class="form-control supplier-sku"
+                                                       value="{{ item.supplier_sku }}">
+                                                {% else %}
+                                                {{ item.supplier_sku }}
+                                                <input type="hidden" name="item_supplier_sku_{{ item.id }}" value="{{ item.supplier_sku }}">
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if form.instance.status == 'draft' %}
+                                                <input type="number" name="item_quantity_{{ item.id }}" class="form-control item-quantity"
+                                                      value="{{ item.quantity_ordered }}" min="0.01" step="0.01" required>
+                                                {% else %}
+                                                {{ item.quantity_ordered }}
+                                                <input type="hidden" name="item_quantity_{{ item.id }}" value="{{ item.quantity_ordered }}">
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ item.product.unit }}</td>
+                                            <td>
+                                                {% if form.instance.status == 'draft' %}
+                                                <input type="number" name="item_price_{{ item.id }}" class="form-control item-price"
+                                                      value="{{ item.unit_price }}" min="0.01" step="0.01" required>
+                                                {% else %}
+                                                {{ item.unit_price }}
+                                                <input type="hidden" name="item_price_{{ item.id }}" value="{{ item.unit_price }}">
+                                                {% endif %}
+                                            </td>
+                                            <td class="item-tax-rate">
+                                                {% if item.tax %}
+                                                    {{ item.tax.rate }}%
+                                                    <input type="hidden" name="item_tax_id_{{ item.id }}" class="item-tax-id" value="{{ item.tax.id }}">
+                                                {% else %}
+                                                    --
+                                                {% endif %}
+                                            </td>
+                                            <td class="item-total">{{ item.line_total }}</td>
+                                            <td>
+                                                {% if form.instance.status == 'draft' %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-item">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
                                     {% endfor %}
                                     {% endif %}
                                 </tbody>
@@ -278,6 +287,7 @@
             <input type="number" name="item_price_new_{index}" class="form-control item-price"
                    value="0.00" min="0.01" step="0.01" required>
         </td>
+        <td class="item-tax-rate">--</td>  <!-- Neue Spalte für die Steuerrate -->
         <td class="item-total">0.00</td>
         <td>
             <button type="button" class="btn btn-sm btn-outline-danger remove-item">
@@ -290,131 +300,220 @@
 
 {% block extra_js %}
 <script>
-    $(document).ready(function() {
-        let itemIndex = 0;
+    // Erweiterte JavaScript für das Bestellformular mit korrekter Steuerbehandlung
+    // Erweiterte JavaScript für das Bestellformular mit korrekter Steuerbehandlung
+$(document).ready(function() {
+    let itemIndex = 0;
 
-        // Produktauswahl initialisieren
+    // Produktauswahl initialisieren
+    initializeProductSelects();
+
+    // Rechenoperationen initialisieren
+    initializeCalculations();
+
+    // Lieferanten-Änderung überwachen
+    $('#id_supplier').on('change', function() {
+        // Aktualisieren der Produktdaten für alle bereits vorhandenen Zeilen
+        $('.product-select').each(function() {
+            const selectedProductId = $(this).val();
+            if (selectedProductId) {
+                fetchAndUpdateProductData($(this), selectedProductId);
+            }
+        });
+    });
+
+    // Hinzufügen-Button
+    $('#addItemButton').click(function() {
+        addNewItem();
+    });
+
+    // Entfernen-Button für bestehende und neue Zeilen
+    $(document).on('click', '.remove-item', function() {
+        $(this).closest('tr').remove();
+        updateTotals();
+    });
+
+    // Funktion zum Hinzufügen einer neuen Position
+    function addNewItem() {
+        // Template klonen und anpassen
+        let template = document.getElementById('newItemTemplate').innerHTML;
+        template = template.replace(/{index}/g, itemIndex++);
+
+        // Zum Tabellenkörper hinzufügen
+        $('#itemsTableBody').append(template);
+
+        // Selects neu initialisieren
         initializeProductSelects();
 
-        // Rechenoperationen initialisieren
+        // Berechnungen initialisieren
         initializeCalculations();
 
-        // Hinzufügen-Button
-        $('#addItemButton').click(function() {
-            addNewItem();
-        });
+        // Scroll zum neuen Element
+        $('html, body').animate({
+            scrollTop: $("#itemsTableBody tr:last").offset().top - 200
+        }, 500);
+    }
 
-        // Entfernen-Button für bestehende und neue Zeilen
-        $(document).on('click', '.remove-item', function() {
-            $(this).closest('tr').remove();
-            updateTotals();
-        });
-
-        // Funktion zum Hinzufügen einer neuen Position
-        function addNewItem() {
-            // Template klonen und anpassen
-            let template = document.getElementById('newItemTemplate').innerHTML;
-            template = template.replace(/{index}/g, itemIndex++);
-
-            // Zum Tabellenkörper hinzufügen
-            $('#itemsTableBody').append(template);
-
-            // Selects neu initialisieren
-            initializeProductSelects();
-
-            // Berechnungen initialisieren
-            initializeCalculations();
-
-            // Scroll zum neuen Element
-            $('html, body').animate({
-                scrollTop: $("#itemsTableBody tr:last").offset().top - 200
-            }, 500);
+    // Verbesserte Produktauswahl-Logik
+    function initializeProductSelects() {
+        // Select2 für Produktauswahl (falls vorhanden)
+        if($.fn.select2) {
+            $('.product-select').select2({
+                placeholder: 'Produkt wählen',
+                width: '100%'
+            });
         }
 
-        // Produktauswahl-Logik
-        function initializeProductSelects() {
-            // Select2 für Produktauswahl (falls vorhanden)
-            if($.fn.select2) {
-                $('.product-select').select2({
-                    placeholder: 'Produkt wählen',
-                    width: '100%'
-                });
+        // Änderungen in der Produktauswahl
+        $('.product-select').off('change').on('change', function() {
+            const productId = $(this).val();
+            if (productId) {
+                fetchAndUpdateProductData($(this), productId);
             }
+        });
+    }
 
-            // Änderungen in der Produktauswahl
-            $('.product-select').off('change').on('change', function() {
-                const $row = $(this).closest('tr');
-                const $option = $(this).find('option:selected');
+    // Funktion zum Abrufen und Aktualisieren der Produktdaten vom Server
+    function fetchAndUpdateProductData($select, productId) {
+        const $row = $select.closest('tr');
+        const supplierId = $('#id_supplier').val();
+
+        if (!supplierId) {
+            console.warn('Kein Lieferant ausgewählt!');
+            return;
+        }
+
+        // AJAX-Anfrage, um Lieferantendaten zu erhalten
+        $.getJSON('/order/get-supplier-product-price/', {
+            product_id: productId,
+            supplier_id: supplierId
+        }).done(function(data) {
+            console.log('Produktdaten erhalten:', data);
+
+            if (data.success) {
+                // Preis setzen, wenn verfügbar
+                if (data.price) {
+                    $row.find('.item-price').val(data.price);
+                }
+
+                // Lieferanten-SKU setzen, wenn verfügbar
+                if (data.supplier_sku) {
+                    $row.find('.supplier-sku').val(data.supplier_sku);
+                }
 
                 // Einheit aktualisieren
-                $row.find('.item-unit').text($option.data('unit') || '--');
+                $row.find('.item-unit').text(data.unit || '--');
 
-                // Lieferanten-SKU füllen, falls verfügbar
-                const supplierSku = $option.data('supplier-sku') || '';
-                $row.find('.supplier-sku').val(supplierSku);
+                // Steuerinformationen speichern
+                if (data.tax_id !== null && data.tax_id !== undefined) {
+                    // Verstecktes Feld für tax_id erstellen oder aktualisieren
+                    const itemId = $row.data('item-id');
 
-                // Lieferantenspezifischen Preis abrufen, falls verfügbar
-                if($option.val()) {
-                    $.getJSON('/api/supplier-product-price/', {
-                        product_id: $option.val(),
-                        supplier_id: $('#id_supplier').val()
-                    }).done(function(data) {
-                        if(data.price) {
-                            $row.find('.item-price').val(data.price);
-                            updateRowTotal($row);
-                        }
-                    });
+                    // Prüfen, ob das Feld bereits existiert
+                    let $taxIdField = $row.find('.item-tax-id');
+                    if ($taxIdField.length === 0) {
+                        // Feld erstellen, wenn es nicht existiert
+                        $taxIdField = $('<input>')
+                            .attr('type', 'hidden')
+                            .addClass('item-tax-id')
+                            .attr('name', 'item_tax_id_' + itemId)
+                            .appendTo($row);
+                    }
+
+                    // Steuersatz setzen
+                    $taxIdField.val(data.tax_id);
+
+                    // Steuersatz anzeigen, falls ein entsprechendes Element existiert
+                    const $taxRateDisplay = $row.find('.item-tax-rate');
+                    if ($taxRateDisplay.length > 0) {
+                        $taxRateDisplay.text(data.tax_rate + '%');
+                    }
                 }
-            });
-        }
 
-        // Berechnungslogik
-        function initializeCalculations() {
-            // Menge oder Preis ändert sich
-            $('.item-quantity, .item-price').off('input').on('input', function() {
-                updateRowTotal($(this).closest('tr'));
-            });
+                // Zeilensumme aktualisieren
+                updateRowTotal($row);
+            } else {
+                console.warn('Keine Lieferantendaten gefunden:', data.message);
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error('Fehler beim Abrufen der Lieferantendaten:', textStatus, errorThrown);
+        });
+    }
 
-            // Steuern oder Versandkosten ändern sich
-            $('#taxInput, #shippingInput').off('input').on('input', function() {
-                updateTotals();
-            });
-        }
+    // Berechnungslogik
+    function initializeCalculations() {
+        // Menge oder Preis ändert sich
+        $('.item-quantity, .item-price').off('input').on('input', function() {
+            updateRowTotal($(this).closest('tr'));
+        });
 
-        // Zeilensumme berechnen
-        function updateRowTotal($row) {
-            const quantity = parseFloat($row.find('.item-quantity').val()) || 0;
-            const price = parseFloat($row.find('.item-price').val()) || 0;
-            const total = (quantity * price).toFixed(2);
-
-            $row.find('.item-total').text(total);
-
-            // Gesamtsummen aktualisieren
+        // Steuern oder Versandkosten ändern sich
+        $('#taxInput, #shippingInput').off('input').on('input', function() {
             updateTotals();
-        }
+        });
+    }
 
-        // Alle Summen aktualisieren
-        function updateTotals() {
-            let subtotal = 0;
+    // Zeilensumme berechnen
+    function updateRowTotal($row) {
+        const quantity = parseFloat($row.find('.item-quantity').val()) || 0;
+        const price = parseFloat($row.find('.item-price').val()) || 0;
+        const total = (quantity * price).toFixed(2);
 
-            // Alle Positionen summieren
-            $('#itemsTableBody tr').each(function() {
-                subtotal += parseFloat($(this).find('.item-total').text()) || 0;
-            });
+        $row.find('.item-total').text(total);
 
-            const tax = parseFloat($('#taxInput').val()) || 0;
-            const shipping = parseFloat($('#shippingInput').val()) || 0;
-            const total = subtotal + tax + shipping;
+        // Gesamtsummen aktualisieren
+        updateTotals();
+    }
 
-            // Summen aktualisieren
-            $('#subtotal').text(subtotal.toFixed(2));
-            $('#total').text(total.toFixed(2));
-        }
+    // Alle Summen aktualisieren
+    function updateTotals() {
+        let subtotal = 0;
+        let taxTotal = 0;
 
-        // Falls es keine Positionen gibt, eine leere hinzufügen
-        if($('#itemsTableBody tr').length === 0) {
-            addNewItem();
-        }
-    });
+        // Alle Positionen summieren und Steuern berechnen
+        $('#itemsTableBody tr').each(function() {
+            // Zeilensumme ohne Steuern
+            const lineTotal = parseFloat($(this).find('.item-total').text()) || 0;
+            subtotal += lineTotal;
+
+            // Steuer für diese Zeile berechnen
+            const taxRateText = $(this).find('.item-tax-rate').text();
+            if (taxRateText && taxRateText !== '--') {
+                // Extrahiere die Steuersatz-Zahl (entferne das %-Zeichen)
+                const taxRate = parseFloat(taxRateText.replace('%', '')) || 0;
+                // Berechne die Steuer für diese Zeile
+                const lineTax = lineTotal * (taxRate / 100);
+                taxTotal += lineTax;
+            }
+        });
+
+        // Abrunden auf 2 Dezimalstellen
+        subtotal = Math.round(subtotal * 100) / 100;
+        taxTotal = Math.round(taxTotal * 100) / 100;
+
+        // Holen und konvertieren der Versandkosten
+        const shipping = parseFloat($('#shippingInput').val()) || 0;
+
+        // Gesamtsumme berechnen
+        const total = subtotal + taxTotal + shipping;
+
+        // Summen aktualisieren
+        $('#subtotal').text(subtotal.toFixed(2));
+
+        // Steuerfeld aktualisieren (Eingabefeld oder Text)
+        $('#taxInput').val(taxTotal.toFixed(2));
+
+        // Gesamtsumme aktualisieren
+        $('#total').text(total.toFixed(2));
+    }
+
+    // Falls es keine Positionen gibt, eine leere hinzufügen
+    if($('#itemsTableBody tr').length === 0) {
+        addNewItem();
+    }
+
+    // Initial die Summen berechnen
+    updateTotals();
+});
 </script>
 {% endblock %}

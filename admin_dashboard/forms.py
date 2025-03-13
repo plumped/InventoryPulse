@@ -126,7 +126,6 @@ class UserEditForm(forms.ModelForm):
             except:
                 self.initial['departments'] = []
 
-
 class GroupForm(forms.ModelForm):
     """Form for creating or editing a group."""
 
@@ -136,7 +135,6 @@ class GroupForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
-
 
 class DepartmentForm(forms.ModelForm):
     """Form for creating or editing a department."""

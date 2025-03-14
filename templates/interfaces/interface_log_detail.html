@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Übertragungsprotokoll{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>Übertragungsprotokoll</h1>
+                <div>
+                    {% if log.status == 'failed' %}
+                        <a href="{% url 'retry_failed_transmission' log_id=log.id %}" class="btn btn-warning me-2">
+                            <i class="fas fa-redo"></i> Erneut versuchen
+                        </a>
+                    {% endif %}
+                    
+                    {% if request.META.HTTP_REFERER %}
+                        <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Zurück
+                        </a>
+                    {% else %}
+                        <a href="{% url 'interface_logs' %}" class="btn btn-secondary">
+                            <i class="fas fa-list"></i> Alle Protokolle
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <!-- Basisinformationen -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Übertragungsinformationen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="fw-bold mb-0">Status</h6>
+                                <span class="badge {% if log.status == 'success' %}bg-success{% elif log.status == 'failed' %}bg-danger{% elif log.status == 'pending' %}bg-warning{% elif log.status == 'in_progress' %}bg-info{% else %}bg-secondary{% endif %} mt-1">
+                                    {{ log.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="text-end">
+                                <h6 class="fw-bold mb-0">Zeitpunkt</h6>
+                                <span>{{ log.timestamp|date:"d.m.Y H:i:s" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Schnittstelle</h6>
+                        <a href="{% url 'interface_detail' pk=log.interface.id %}">{{ log.interface.name }}</a>
+                        <span class="text-muted">({{ log.interface.interface_type.name }})</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Bestellung</h6>
+                        <a href="{% url 'purchase_order_detail' pk=log.order.id %}">{{ log.order.order_number }}</a>
+                        <span class="text-muted">({{ log.order.order_date|date:"d.m.Y" }})</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Lieferant</h6>
+                        <a href="{% url 'supplier_detail' pk=log.order.supplier.id %}">{{ log.order.supplier.name }}</a>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Gestartet von</h6>
+                        {% if log.initiated_by %}
+                            {{ log.initiated_by.username }} ({{ log.initiated_by.first_name }} {{ log.initiated_by.last_name }})
+                        {% else %}
+                            <span class="text-muted">System</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Versuchszähler</h6>
+                        <span class="{% if log.attempt_count > 1 %}text-warning{% endif %}">{{ log.attempt_count }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nachricht -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Nachricht</h5>
+                </div>
+                <div class="card-body">
+                    {% if log.message %}
+                        <div class="p-3 {% if log.status == 'failed' %}bg-danger bg-opacity-10{% elif log.status == 'success' %}bg-success bg-opacity-10{% else %}bg-light{% endif %} rounded">
+                            {{ log.message|linebreaks }}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Keine Nachricht vorhanden.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <!-- Request-Daten -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Gesendete Daten</h5>
+                </div>
+                <div class="card-body">
+                    {% if log.request_data %}
+                        <div class="bg-light p-3 rounded">
+                            <pre class="mb-0" style="max-height: 300px; overflow-y: auto;"><code>{{ log.request_data }}</code></pre>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Keine Anfragedaten vorhanden.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Response-Daten -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Empfangene Daten</h5>
+                </div>
+                <div class="card-body">
+                    {% if log.response_data %}
+                        <div class="bg-light p-3 rounded">
+                            <pre class="mb-0" style="max-height: 300px; overflow-y: auto;"><code>{{ log.response_data }}</code></pre>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">Keine Antwortdaten vorhanden.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

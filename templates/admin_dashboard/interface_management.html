@@ -1,0 +1,248 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Schnittstellen-Verwaltung{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid p-0">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Schnittstellen-Verwaltung</h1>
+                <div>
+                    <a href="{% url 'admin_interface_type_management' %}" class="btn btn-primary">
+                        <i class="fas fa-cogs"></i> Schnittstellentypen verwalten
+                    </a>
+                    <a href="{% url 'interface_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> Alle Schnittstellen anzeigen
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistik-Karten -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col mt-0">
+                            <h5 class="card-title">Gesamtzahl Schnittstellen</h5>
+                        </div>
+                        <div class="col-auto">
+                            <div class="stat text-primary">
+                                <i class="fas fa-plug"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h1 class="mt-1 mb-0">{{ total_interfaces }}</h1>
+                    <div class="mb-0 text-muted">
+                        <span class="text-success me-2">
+                            <i class="fas fa-check-circle"></i> {{ active_interfaces }} aktiv
+                        </span>
+                        <span class="text-muted">
+                            {{ total_interfaces|add:"-"|add:active_interfaces }} inaktiv
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col mt-0">
+                            <h5 class="card-title">Übertragungen (30 Tage)</h5>
+                        </div>
+                        <div class="col-auto">
+                            <div class="stat text-primary">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h1 class="mt-1 mb-0">{{ total_transmissions }}</h1>
+                    <div class="mb-0 text-muted">
+                        <span class="text-success me-2">
+                            <i class="fas fa-check-circle"></i> {{ success_count }} erfolgreich
+                        </span>
+                        <span class="text-danger">
+                            <i class="fas fa-times-circle"></i> {{ failed_count }} fehlgeschlagen
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col mt-0">
+                            <h5 class="card-title">Erfolgsquote</h5>
+                        </div>
+                        <div class="col-auto">
+                            <div class="stat text-primary">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h1 class="mt-1 mb-0">{{ success_rate|floatformat:1 }}%</h1>
+                    <div class="mb-0 text-muted">
+                        {% if success_rate >= 95 %}
+                            <span class="text-success">
+                                <i class="fas fa-thumbs-up"></i> Ausgezeichnet
+                            </span>
+                        {% elif success_rate >= 80 %}
+                            <span class="text-success">
+                                <i class="fas fa-check"></i> Gut
+                            </span>
+                        {% elif success_rate >= 60 %}
+                            <span class="text-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Verbesserungswürdig
+                            </span>
+                        {% else %}
+                            <span class="text-danger">
+                                <i class="fas fa-exclamation-circle"></i> Problematisch
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col mt-0">
+                            <h5 class="card-title">Schnittstellentypen</h5>
+                        </div>
+                        <div class="col-auto">
+                            <div class="stat text-primary">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <h1 class="mt-1 mb-0">{{ interface_types|length }}</h1>
+                    <div class="mb-0">
+                        <a href="{% url 'admin_interface_type_create' %}" class="text-primary">
+                            <i class="fas fa-plus-circle"></i> Neuen Typ erstellen
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schnittstellentypen -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Verfügbare Schnittstellentypen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover my-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Beschreibung</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Anzahl Schnittstellen</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for type in interface_types %}
+                                    <tr>
+                                        <td>{{ type.name }}</td>
+                                        <td><code>{{ type.code }}</code></td>
+                                        <td>{{ type.description|truncatechars:50 }}</td>
+                                        <td>
+                                            <span class="badge {% if type.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                                {% if type.is_active %}Aktiv{% else %}Inaktiv{% endif %}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">{{ type.count }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'admin_interface_type_edit' type_id=type.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'admin_interface_type_delete' type_id=type.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-3">
+                                            <i class="fas fa-info-circle text-info me-2"></i>
+                                            Keine Schnittstellentypen definiert.
+                                            <a href="{% url 'admin_interface_type_create' %}" class="btn btn-sm btn-primary ms-3">
+                                                <i class="fas fa-plus"></i> Ersten Typ erstellen
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vorgehensweise / Anleitung -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Vorgehensweise zur Schnittstelleneinrichtung</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>1. Schnittstellentypen definieren</h5>
+                            <p>
+                                Definieren Sie zunächst die verschiedenen Arten von Schnittstellen, die Sie verwenden möchten:
+                            </p>
+                            <ul>
+                                <li><strong>E-Mail</strong> - Bestellungen per E-Mail versenden</li>
+                                <li><strong>API</strong> - Bestellungen über eine REST-API senden</li>
+                                <li><strong>FTP/SFTP</strong> - Bestellungen als Dateien auf einem FTP-Server ablegen</li>
+                                <li><strong>Webservice</strong> - Bestellungen über einen SOAP- oder anderen Webservice senden</li>
+                            </ul>
+                            <p>
+                                <a href="{% url 'admin_interface_type_management' %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-cogs"></i> Schnittstellentypen verwalten
+                                </a>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>2. Schnittstellen für Lieferanten konfigurieren</h5>
+                            <p>
+                                Konfigurieren Sie für jeden Lieferanten die passenden Schnittstellen:
+                            </p>
+                            <ul>
+                                <li>Gehen Sie zur <a href="{% url 'interface_list' %}">Schnittstellenliste</a></li>
+                                <li>Klicken Sie auf "Neue Schnittstelle" und wählen Sie einen Lieferanten</li>
+                                <li>Wählen Sie den passenden Schnittstellentyp und konfigurieren Sie die Details</li>
+                                <li>Bei Bedarf können Sie mehrere Schnittstellen pro Lieferant anlegen</li>
+                                <li>Markieren Sie eine Schnittstelle als Standard für automatische Übertragungen</li>
+                            </ul>
+                            <p>
+                                <a href="{% url 'interface_create' %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus"></i> Neue Schnittstelle anlegen
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

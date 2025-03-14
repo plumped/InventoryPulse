@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ interface.name }} - Schnittstelle Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ interface.name }}</h1>
+        <div class="btn-group">
+            <a href="{% url 'interface_update' pk=interface.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Bearbeiten
+            </a>
+            <a href="{% url 'interface_delete' pk=interface.id %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Löschen
+            </a>
+            <a href="{% url 'interface_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Zur Liste
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Hauptinformationen -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Allgemeine Informationen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Lieferant:</div>
+                        <div class="col-md-8">
+                            <a href="{% url 'supplier_detail' pk=interface.supplier.id %}">{{ interface.supplier.name }}</a>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Schnittstellentyp:</div>
+                        <div class="col-md-8">{{ interface.interface_type.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Status:</div>
+                        <div class="col-md-8">
+                            <span class="badge {% if interface.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                {% if interface.is_active %}Aktiv{% else %}Inaktiv{% endif %}
+                            </span>
+                            <a href="{% url 'interface_toggle_active' pk=interface.id %}" class="btn btn-sm btn-outline-secondary ms-2">
+                                {% if interface.is_active %}Deaktivieren{% else %}Aktivieren{% endif %}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Standard-Schnittstelle:</div>
+                        <div class="col-md-8">
+                            {% if interface.is_default %}
+                                <span class="badge bg-primary">Standard</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">Nein</span>
+                                <a href="{% url 'interface_set_default' pk=interface.id %}" class="btn btn-sm btn-outline-primary ms-2">
+                                    Als Standard setzen
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Bestellformat:</div>
+                        <div class="col-md-8">{{ interface.get_order_format_display }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Erstellt von:</div>
+                        <div class="col-md-8">{{ interface.created_by.username }} ({{ interface.created_at|date:"d.m.Y H:i" }})</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Zuletzt aktualisiert:</div>
+                        <div class="col-md-8">{{ interface.updated_at|date:"d.m.Y H:i" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4 text-muted">Zuletzt verwendet:</div>
+                        <div class="col-md-8">
+                            {% if interface.last_used %}
+                                {{ interface.last_used|date:"d.m.Y H:i" }}
+                            {% else %}
+                                <span class="text-muted">Nie</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Konfigurationsdetails -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Konfigurationsdetails</h5>
+                </div>
+                <div class="card-body">
+                    {% if interface.interface_type.code|lower == 'email' %}
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Empfänger:</div>
+                            <div class="col-md-8">{{ interface.email_to|default:"Nicht konfiguriert" }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">CC:</div>
+                            <div class="col-md-8">{{ interface.email_cc|default:"Keine" }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Betreffvorlage:</div>
+                            <div class="col-md-8">{{ interface.email_subject_template|default:"Standard" }}</div>
+                        </div>
+                    {% elif interface.interface_type.code|lower == 'api' %}
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">API-URL:</div>
+                            <div class="col-md-8">{{ interface.api_url|default:"Nicht konfiguriert" }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Benutzername:</div>
+                            <div class="col-md-8">
+                                {% if interface.username %}
+                                    <span class="text-muted">Konfiguriert</span>
+                                {% else %}
+                                    <span class="text-danger">Nicht konfiguriert</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">API-Schlüssel:</div>
+                            <div class="col-md-8">
+                                {% if interface.api_key %}
+                                    <span class="text-muted">Konfiguriert</span>
+                                {% else %}
+                                    <span class="text-warning">Nicht konfiguriert</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% elif interface.interface_type.code|lower == 'ftp' or interface.interface_type.code|lower == 'sftp' %}
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Host:</div>
+                            <div class="col-md-8">{{ interface.host|default:"Nicht konfiguriert" }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Port:</div>
+                            <div class="col-md-8">{{ interface.port|default:"Standard" }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Remote-Pfad:</div>
+                            <div class="col-md-8">{{ interface.remote_path|default:"/" }}</div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Benutzername:</div>
+                            <div class="col-md-8">
+                                {% if interface.username %}
+                                    <span class="text-muted">Konfiguriert</span>
+                                {% else %}
+                                    <span class="text-danger">Nicht konfiguriert</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if interface.template %}
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Formatvorlage:</div>
+                            <div class="col-md-8">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#templateCollapse">
+                                    Vorlage anzeigen
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse" id="templateCollapse">
+                            <div class="card card-body bg-light mb-3">
+                                <pre class="mb-0"><code>{{ interface.template }}</code></pre>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if interface.config_json %}
+                        <div class="row mb-3">
+                            <div class="col-md-4 text-muted">Zusätzliche Konfiguration:</div>
+                            <div class="col-md-8">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#configCollapse">
+                                    Konfiguration anzeigen
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapse" id="configCollapse">
+                            <div class="card card-body bg-light mb-3">
+                                <pre class="mb-0"><code>{{ interface.config_json }}</code></pre>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testtool -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Schnittstellentest</h5>
+            <span class="badge {% if interface.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                {% if interface.is_active %}Bereit für Tests{% else %}Schnittstelle inaktiv{% endif %}
+            </span>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'test_interface' pk=interface.id %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="id_order" class="form-label">Bestellung zum Testen</label>
+                            <select name="order" id="id_order" class="form-select" required>
+                                <option value="">-- Bestellung auswählen --</option>
+                                {% for order in test_form.fields.order.queryset %}
+                                    <option value="{{ order.id }}">{{ order.order_number }} vom {{ order.order_date|date:"d.m.Y" }} ({{ order.get_status_display }})</option>
+                                {% empty %}
+                                    <option value="" disabled>Keine passenden Bestellungen verfügbar</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Wählen Sie eine genehmigte oder bereits gesendete Bestellung für den Test aus.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary" {% if not interface.is_active %}disabled{% endif %}>
+                            <i class="fas fa-paper-plane"></i> Testübertragung starten
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Statistiken -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Gesamtübertragungen</h5>
+                    <h2 class="mt-3 mb-0">{{ total_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Erfolgreiche Übertragungen</h5>
+                    <h2 class="mt-3 mb-0 text-success">{{ success_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Fehlgeschlagene Übertragungen</h5>
+                    <h2 class="mt-3 mb-0 text-danger">{{ failed_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Erfolgsrate</h5>
+                    <h2 class="mt-3 mb-0 {% if success_rate > 90 %}text-success{% elif success_rate > 75 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ success_rate|floatformat:1 }}%
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Letzte Übertragungen -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Letzte Übertragungen</h5>
+            <a href="{% url 'interface_logs' interface_id=interface.id %}" class="btn btn-sm btn-outline-primary">
+                Alle Protokolle anzeigen
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Zeitpunkt</th>
+                            <th>Bestellung</th>
+                            <th>Status</th>
+                            <th>Nachricht</th>
+                            <th>Benutzer</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td>{{ log.timestamp|date:"d.m.Y H:i:s" }}</td>
+                                <td>
+                                    <a href="{% url 'purchase_order_detail' pk=log.order.id %}">{{ log.order.order_number }}</a>
+                                </td>
+                                <td>
+                                    <span class="badge {% if log.status == 'success' %}bg-success{% elif log.status == 'failed' %}bg-danger{% elif log.status == 'pending' %}bg-warning{% elif log.status == 'in_progress' %}bg-info{% else %}bg-secondary{% endif %}">
+                                        {{ log.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ log.message|truncatechars:50 }}
+                                </td>
+                                <td>
+                                    {% if log.initiated_by %}
+                                        {{ log.initiated_by.username }}
+                                    {% else %}
+                                        <span class="text-muted">System</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'interface_log_detail' pk=log.id %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if log.status == 'failed' %}
+                                            <a href="{% url 'retry_failed_transmission' log_id=log.id %}" class="btn btn-outline-warning">
+                                                <i class="fas fa-redo"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <i class="fas fa-info-circle text-muted me-2"></i>
+                                    Keine Übertragungen gefunden
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

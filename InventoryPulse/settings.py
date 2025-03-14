@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_yasg',  # Für API-Dokumentation
     'django_filters',  # Für Filterfunktionalität
-    'api'
+    'api',
+    'interfaces',
 ]
 
 MIDDLEWARE = [

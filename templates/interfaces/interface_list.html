@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Lieferanten-Schnittstellen{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Lieferanten-Schnittstellen</h1>
+        <div>
+            <a href="{% url 'interface_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Neue Schnittstelle
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Filter</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'interface_list' %}" class="row g-3">
+                <div class="col-md-3">
+                    <label for="supplier" class="form-label">Lieferant</label>
+                    <select name="supplier" id="supplier" class="form-select">
+                        <option value="">Alle Lieferanten</option>
+                        {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}" {% if supplier_id == supplier.id|stringformat:"s" %}selected{% endif %}>{{ supplier.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Schnittstellentyp</label>
+                    <select name="type" id="type" class="form-select">
+                        <option value="">Alle Typen</option>
+                        {% for type in interface_types %}
+                            <option value="{{ type.id }}" {% if interface_type_id == type.id|stringformat:"s" %}selected{% endif %}>{{ type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="active" class="form-label">Status</label>
+                    <select name="active" id="active" class="form-select">
+                        <option value="">Alle</option>
+                        <option value="true" {% if is_active == "true" %}selected{% endif %}>Aktiv</option>
+                        <option value="false" {% if is_active == "false" %}selected{% endif %}>Inaktiv</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Suche</label>
+                    <input type="text" name="search" id="search" class="form-control" placeholder="Schnittstellenname, Lieferant..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Suchen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Schnittstellen-Tabelle -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Schnittstellen</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Lieferant</th>
+                            <th>Typ</th>
+                            <th>Status</th>
+                            <th>Standard</th>
+                            <th>Zuletzt verwendet</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for interface in interfaces %}
+                            <tr>
+                                <td><a href="{% url 'interface_detail' pk=interface.id %}">{{ interface.name }}</a></td>
+                                <td>{{ interface.supplier.name }}</td>
+                                <td>{{ interface.interface_type.name }}</td>
+                                <td>
+                                    <span class="badge {% if interface.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                        {% if interface.is_active %}Aktiv{% else %}Inaktiv{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if interface.is_default %}
+                                        <span class="badge bg-primary">Standard</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if interface.last_used %}
+                                        {{ interface.last_used|date:"d.m.Y H:i" }}
+                                    {% else %}
+                                        <span class="text-muted">Nie</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'interface_detail' pk=interface.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'interface_update' pk=interface.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'interface_delete' pk=interface.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fas fa-info-circle text-muted me-2"></i>
+                                    Keine Schnittstellen gefunden
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginierung -->
+    {% if interfaces.has_other_pages %}
+    <div class="d-flex justify-content-center mt-4">
+        <nav aria-label="Schnittstellen-Navigation">
+            <ul class="pagination">
+                {% if interfaces.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Erste">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ interfaces.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Vorherige">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Erste">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Vorherige">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for i in interfaces.paginator.page_range %}
+                    {% if interfaces.number == i %}
+                        <li class="page-item active">
+                            <a class="page-link" href="#">{{ i }}</a>
+                        </li>
+                    {% elif i > interfaces.number|add:'-3' and i < interfaces.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if interfaces.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ interfaces.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Nächste">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ interfaces.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Letzte">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Nächste">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Letzte">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Automatisches Absenden des Formulars bei Änderung der Filter
+        $('#supplier, #type, #active').on('change', function() {
+            $(this).closest('form').submit();
+        });
+    });
+</script>
+{% endblock %}

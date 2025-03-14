@@ -36,4 +36,10 @@ urlpatterns = [
     path('taxes/create/', views.tax_create, name='admin_tax_create'),
     path('taxes/<int:tax_id>/edit/', views.tax_edit, name='admin_tax_edit'),
     path('taxes/<int:tax_id>/delete/', views.tax_delete, name='admin_tax_delete'),
+
+    path('interfaces/', views.interface_management, name='admin_interface_management'),
+    path('interfaces/types/', views.interface_type_management, name='admin_interface_type_management'),
+    path('interfaces/types/create/', views.interface_type_create, name='admin_interface_type_create'),
+    path('interfaces/types/<int:type_id>/edit/', views.interface_type_edit, name='admin_interface_type_edit'),
+    path('interfaces/types/<int:type_id>/delete/', views.interface_type_delete, name='admin_interface_type_delete'),
 ]

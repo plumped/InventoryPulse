@@ -35,6 +35,15 @@ def admin_dashboard(request):
             Q(is_superuser=True) | Q(user_permissions__codename='access_admin')).distinct().count(),
     }
 
+    try:
+        from interfaces.models import SupplierInterface
+        interface_stats = {
+            'total': SupplierInterface.objects.count(),
+            'active': SupplierInterface.objects.filter(is_active=True).count(),
+        }
+    except (ImportError, Exception):
+        interface_stats = None
+
     # Letzte Benutzeraktivitäten (falls vorhanden)
     try:
         from django.contrib.admin.models import LogEntry
@@ -58,7 +67,8 @@ def admin_dashboard(request):
         'python_version': python_version,
         'django_version': django_version,
         'database_type': database_type,
-        'section': 'dashboard'
+        'section': 'dashboard',
+        'interface_stats': interface_stats,
     }
 
     return render(request, 'admin_dashboard/dashboard.html', context)
@@ -721,3 +731,185 @@ def tax_delete(request, tax_id):
     }
 
     return render(request, 'admin_dashboard/tax_confirm_delete.html', context)
+
+# In admin_dashboard/views.py
+# Fügen Sie Views für die Schnittstellen-Verwaltung hinzu
+
+@login_required
+@user_passes_test(is_admin)
+def interface_management(request):
+    """Verwaltung der Lieferantenschnittstellen im Admin-Dashboard."""
+    # Schnittstellentypen abrufen
+    from interfaces.models import InterfaceType, SupplierInterface
+    
+    interface_types = InterfaceType.objects.all().order_by('name')
+    
+    # Anzahl der Schnittstellen pro Typ ermitteln
+    for interface_type in interface_types:
+        interface_type.count = SupplierInterface.objects.filter(interface_type=interface_type).count()
+    
+    # Gesamtanzahl der Schnittstellen
+    total_interfaces = SupplierInterface.objects.count()
+    active_interfaces = SupplierInterface.objects.filter(is_active=True).count()
+    
+    # Erfolgsmessung der letzten 30 Tage
+    from interfaces.models import InterfaceLog
+    from django.utils import timezone
+    from django.db.models import Count
+    
+    thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+    
+    # Erfolgreiche vs. fehlgeschlagene Übertragungen
+    success_count = InterfaceLog.objects.filter(
+        status='success',
+        timestamp__gte=thirty_days_ago
+    ).count()
+    
+    failed_count = InterfaceLog.objects.filter(
+        status='failed',
+        timestamp__gte=thirty_days_ago
+    ).count()
+    
+    total_transmissions = success_count + failed_count
+    success_rate = (success_count / total_transmissions * 100) if total_transmissions > 0 else 0
+    
+    context = {
+        'interface_types': interface_types,
+        'total_interfaces': total_interfaces,
+        'active_interfaces': active_interfaces,
+        'success_count': success_count,
+        'failed_count': failed_count,
+        'total_transmissions': total_transmissions,
+        'success_rate': success_rate,
+        'section': 'interfaces'
+    }
+    
+    return render(request, 'admin_dashboard/interface_management.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def interface_type_management(request):
+    """Verwaltung der Schnittstellentypen im Admin-Dashboard."""
+    from interfaces.models import InterfaceType, SupplierInterface
+    
+    interface_types = InterfaceType.objects.all().order_by('name')
+    
+    # Anzahl der Schnittstellen pro Typ ermitteln
+    for interface_type in interface_types:
+        interface_type.count = SupplierInterface.objects.filter(interface_type=interface_type).count()
+    
+    context = {
+        'interface_types': interface_types,
+        'section': 'interfaces'
+    }
+    
+    return render(request, 'admin_dashboard/interface_type_management.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def interface_type_create(request):
+    """Neuen Schnittstellentyp erstellen."""
+    from interfaces.models import InterfaceType
+    from django import forms
+    
+    class InterfaceTypeForm(forms.ModelForm):
+        class Meta:
+            model = InterfaceType
+            fields = ['name', 'code', 'description', 'is_active']
+            widgets = {
+                'name': forms.TextInput(attrs={'class': 'form-control'}),
+                'code': forms.TextInput(attrs={'class': 'form-control'}),
+                'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            }
+    
+    if request.method == 'POST':
+        form = InterfaceTypeForm(request.POST)
+        if form.is_valid():
+            interface_type = form.save()
+            messages.success(request, f'Schnittstellentyp "{interface_type.name}" wurde erfolgreich erstellt.')
+            return redirect('admin_interface_type_management')
+    else:
+        form = InterfaceTypeForm()
+    
+    context = {
+        'form': form,
+        'title': 'Neuen Schnittstellentyp erstellen',
+        'section': 'interfaces'
+    }
+    
+    return render(request, 'admin_dashboard/interface_type_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def interface_type_edit(request, type_id):
+    """Schnittstellentyp bearbeiten."""
+    from interfaces.models import InterfaceType
+    from django import forms
+    
+    interface_type = get_object_or_404(InterfaceType, pk=type_id)
+    
+    class InterfaceTypeForm(forms.ModelForm):
+        class Meta:
+            model = InterfaceType
+            fields = ['name', 'code', 'description', 'is_active']
+            widgets = {
+                'name': forms.TextInput(attrs={'class': 'form-control'}),
+                'code': forms.TextInput(attrs={'class': 'form-control'}),
+                'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+                'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            }
+    
+    if request.method == 'POST':
+        form = InterfaceTypeForm(request.POST, instance=interface_type)
+        if form.is_valid():
+            interface_type = form.save()
+            messages.success(request, f'Schnittstellentyp "{interface_type.name}" wurde erfolgreich aktualisiert.')
+            return redirect('admin_interface_type_management')
+    else:
+        form = InterfaceTypeForm(instance=interface_type)
+    
+    context = {
+        'form': form,
+        'interface_type': interface_type,
+        'title': f'Schnittstellentyp "{interface_type.name}" bearbeiten',
+        'section': 'interfaces'
+    }
+    
+    return render(request, 'admin_dashboard/interface_type_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def interface_type_delete(request, type_id):
+    """Schnittstellentyp löschen."""
+    from interfaces.models import InterfaceType, SupplierInterface
+    
+    interface_type = get_object_or_404(InterfaceType, pk=type_id)
+    
+    # Prüfen, ob dieser Typ von Schnittstellen verwendet wird
+    interfaces_using_type = SupplierInterface.objects.filter(interface_type=interface_type).count()
+    
+    if request.method == 'POST':
+        if interfaces_using_type > 0:
+            messages.error(
+                request,
+                f'Schnittstellentyp "{interface_type.name}" kann nicht gelöscht werden, da er von {interfaces_using_type} Schnittstellen verwendet wird.'
+            )
+        else:
+            type_name = interface_type.name
+            interface_type.delete()
+            messages.success(request, f'Schnittstellentyp "{type_name}" wurde erfolgreich gelöscht.')
+        
+        return redirect('admin_interface_type_management')
+    
+    context = {
+        'interface_type': interface_type,
+        'interfaces_using_type': interfaces_using_type,
+        'section': 'interfaces'
+    }
+    
+    return render(request, 'admin_dashboard/interface_type_confirm_delete.html', context)

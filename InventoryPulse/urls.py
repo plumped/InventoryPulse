@@ -108,6 +108,7 @@ urlpatterns = [
     path('order/', include('order.urls')),
     path('admin-dashboard/', include('admin_dashboard.urls')),
     path('access/', include('accessmanagement.urls')),
+    path('interfaces/', include('interfaces.urls')),
 
 # API Endpoints
     path('api/v1/', include('api.urls')),

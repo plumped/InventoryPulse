@@ -1,0 +1,159 @@
+{% extends "admin_dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Schnittstellentypen-Verwaltung{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid p-0">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">Schnittstellentypen</h1>
+                <div>
+                    <a href="{% url 'admin_interface_type_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Neuen Typ erstellen
+                    </a>
+                    <a href="{% url 'admin_interface_management' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Verfügbare Schnittstellentypen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Beschreibung</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Anzahl Schnittstellen</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for type in interface_types %}
+                                    <tr>
+                                        <td>{{ type.name }}</td>
+                                        <td><code>{{ type.code }}</code></td>
+                                        <td>{{ type.description|truncatechars:80 }}</td>
+                                        <td>
+                                            <span class="badge {% if type.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                                {% if type.is_active %}Aktiv{% else %}Inaktiv{% endif %}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">{{ type.count }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'admin_interface_type_edit' type_id=type.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="{% url 'admin_interface_type_delete' type_id=type.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="alert alert-info mb-0">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                Keine Schnittstellentypen vorhanden.
+                                            </div>
+                                            <a href="{% url 'admin_interface_type_create' %}" class="btn btn-primary mt-3">
+                                                <i class="fas fa-plus"></i> Ersten Typ erstellen
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informationsbereich -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Standardtypen für Lieferantenschnittstellen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3"><i class="fas fa-envelope me-2"></i> E-Mail</h6>
+                            <p>
+                                Bestellungen werden als Anhang per E-Mail an den Lieferanten gesendet.
+                                Diese Methode eignet sich für Lieferanten ohne technische Schnittstelle.
+                            </p>
+                            <ul>
+                                <li>Erfordert: E-Mail-Adresse(n) des Lieferanten</li>
+                                <li>Optionen: CC-Empfänger, Betreffvorlage</li>
+                                <li>Formate: CSV, XML, JSON, PDF</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3"><i class="fas fa-cloud me-2"></i> API</h6>
+                            <p>
+                                Bestellungen werden über eine REST-API direkt an das System des Lieferanten übermittelt.
+                                Diese Methode bietet die beste Integration und Automatisierung.
+                            </p>
+                            <ul>
+                                <li>Erfordert: API-URL</li>
+                                <li>Optionen: Authentifizierung, API-Schlüssel</li>
+                                <li>Formate: Meist JSON oder XML</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6 class="mb-3"><i class="fas fa-server me-2"></i> FTP/SFTP</h6>
+                            <p>
+                                Bestellungen werden als Dateien auf einen FTP- oder SFTP-Server hochgeladen.
+                                Diese Methode wird häufig für regelmäßige Batch-Verarbeitungen verwendet.
+                            </p>
+                            <ul>
+                                <li>Erfordert: Host, Benutzername, Passwort</li>
+                                <li>Optionen: Port, Remote-Pfad</li>
+                                <li>Formate: CSV, XML, JSON</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3"><i class="fas fa-cogs me-2"></i> Webservice</h6>
+                            <p>
+                                Bestellungen werden über einen SOAP- oder anderen Webservice übermittelt.
+                                Diese Methode wird oft in älteren Enterprise-Systemen eingesetzt.
+                            </p>
+                            <ul>
+                                <li>Erfordert: Service-URL</li>
+                                <li>Optionen: Authentifizierung, zusätzliche Parameter</li>
+                                <li>Formate: XML, oft mit spezifischem Schema</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="mb-0">
+                            <i class="fas fa-info-circle text-primary me-2"></i>
+                            Schnittstellentypen definieren die grundlegende Art der Kommunikation. Bei Bedarf können Sie weitere Typen hinzufügen.
+                            Für jeden Lieferanten können später eine oder mehrere konkrete Schnittstellen auf Basis dieser Typen konfiguriert werden.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .field-section {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        <div>
+            {% if interface %}
+                <a href="{% url 'interface_detail' pk=interface.id %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Abbrechen
+                </a>
+            {% else %}
+                <a href="{% url 'interface_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Abbrechen
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Schnittstellenkonfiguration</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" id="interface-form">
+                {% csrf_token %}
+                
+                <!-- Allgemeine Informationen -->
+                <div class="mb-4">
+                    <h4>Allgemeine Informationen</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_supplier" class="form-label">Lieferant</label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.supplier.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.supplier.help_text %}
+                                    <div class="form-text">{{ form.supplier.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_name" class="form-label">Schnittstellenname</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.name.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.name.help_text %}
+                                    <div class="form-text">{{ form.name.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_interface_type" class="form-label">Schnittstellentyp</label>
+                                {{ form.interface_type }}
+                                {% if form.interface_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.interface_type.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.interface_type.help_text %}
+                                    <div class="form-text">{{ form.interface_type.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_order_format" class="form-label">Bestellformat</label>
+                                {{ form.order_format }}
+                                {% if form.order_format.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.order_format.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.order_format.help_text %}
+                                    <div class="form-text">{{ form.order_format.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="id_is_active">
+                                    Schnittstelle ist aktiv
+                                </label>
+                                {% if form.is_active.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.is_active.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                {{ form.is_default }}
+                                <label class="form-check-label" for="id_is_default">
+                                    Als Standard-Schnittstelle für diesen Lieferanten verwenden
+                                </label>
+                                {% if form.is_default.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.is_default.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.is_default.help_text %}
+                                    <div class="form-text">{{ form.is_default.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- API/Web-Konfiguration -->
+                <div id="api-section" class="field-section mb-4">
+                    <h4>API/Web-Konfiguration</h4>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_api_url" class="form-label">API-URL</label>
+                                {{ form.api_url }}
+                                {% if form.api_url.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.api_url.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.api_url.help_text %}
+                                    <div class="form-text">{{ form.api_url.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">Benutzername</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.username.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.username.help_text %}
+                                    <div class="form-text">{{ form.username.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_password" class="form-label">Passwort</label>
+                                {{ form.password }}
+                                {% if form.password.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.password.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.password.help_text %}
+                                    <div class="form-text">{{ form.password.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_api_key" class="form-label">API-Schlüssel</label>
+                                {{ form.api_key }}
+                                {% if form.api_key.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.api_key.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.api_key.help_text %}
+                                    <div class="form-text">{{ form.api_key.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- FTP/SFTP-Konfiguration -->
+                <div id="ftp-section" class="field-section mb-4">
+                    <h4>FTP/SFTP-Konfiguration</h4>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="id_host" class="form-label">Host</label>
+                                {{ form.host }}
+                                {% if form.host.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.host.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.host.help_text %}
+                                    <div class="form-text">{{ form.host.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="id_port" class="form-label">Port</label>
+                                {{ form.port }}
+                                {% if form.port.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.port.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.port.help_text %}
+                                    <div class="form-text">{{ form.port.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_remote_path" class="form-label">Remote-Pfad</label>
+                                {{ form.remote_path }}
+                                {% if form.remote_path.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.remote_path.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.remote_path.help_text %}
+                                    <div class="form-text">{{ form.remote_path.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_username" class="form-label">Benutzername</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.username.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.username.help_text %}
+                                    <div class="form-text">{{ form.username.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="id_password" class="form-label">Passwort</label>
+                                {{ form.password }}
+                                {% if form.password.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.password.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.password.help_text %}
+                                    <div class="form-text">{{ form.password.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- E-Mail-Konfiguration -->
+                <div id="email-section" class="field-section mb-4">
+                    <h4>E-Mail-Konfiguration</h4>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_email_to" class="form-label">Empfänger</label>
+                                {{ form.email_to }}
+                                {% if form.email_to.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.email_to.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.email_to.help_text %}
+                                    <div class="form-text">{{ form.email_to.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_email_cc" class="form-label">CC</label>
+                                {{ form.email_cc }}
+                                {% if form.email_cc.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.email_cc.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.email_cc.help_text %}
+                                    <div class="form-text">{{ form.email_cc.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_email_subject_template" class="form-label">Betreffvorlage</label>
+                                {{ form.email_subject_template }}
+                                {% if form.email_subject_template.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.email_subject_template.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.email_subject_template.help_text %}
+                                    <div class="form-text">{{ form.email_subject_template.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formatierungsvorlagen -->
+                <div id="format-section" class="mb-4">
+                    <h4>Formatierungsvorlage</h4>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_template" class="form-label">Vorlage</label>
+                                {{ form.template }}
+                                {% if form.template.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.template.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.template.help_text %}
+                                    <div class="form-text">{{ form.template.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Erweiterte Konfiguration -->
+                <div class="mb-4">
+                    <h4>Erweiterte Konfiguration</h4>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="id_config_json" class="form-label">Zusätzliche Konfiguration (JSON)</label>
+                                {{ form.config_json }}
+                                {% if form.config_json.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.config_json.errors }}
+                                    </div>
+                                {% endif %}
+                                {% if form.config_json.help_text %}
+                                    <div class="form-text">{{ form.config_json.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Speichern
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Felder basierend auf Schnittstellentyp ein-/ausblenden
+        function updateFieldVisibility() {
+            var interfaceType = $('#id_interface_type').find('option:selected').text().toLowerCase();
+            
+            // Alle Abschnitte ausblenden
+            $('.field-section').hide();
+            
+            // Relevante Abschnitte einblenden
+            if (interfaceType.includes('api') || interfaceType.includes('web')) {
+                $('#api-section').show();
+            } else if (interfaceType.includes('ftp') || interfaceType.includes('sftp')) {
+                $('#ftp-section').show();
+            } else if (interfaceType.includes('email')) {
+                $('#email-section').show();
+            }
+            
+            // Format-Abschnitt für XML- und CSV-Format anzeigen
+            var format = $('#id_order_format').val();
+            if (format === 'xml' || format === 'custom') {
+                $('#format-section').show();
+            } else {
+                $('#format-section').hide();
+            }
+        }
+        
+        // Initiale Sichtbarkeit setzen
+        updateFieldVisibility();
+        
+        // Bei Änderung des Schnittstellentyps
+        $('#id_interface_type').on('change', function() {
+            updateFieldVisibility();
+            
+            // AJAX-Anfrage, um relevante Felder für diesen Schnittstellentyp zu holen
+            var typeId = $(this).val();
+            
+            if (typeId) {
+                $.ajax({
+                    url: '{% url 'get_interface_fields' %}',
+                    data: { 'interface_type_id': typeId },
+                    dataType: 'json',
+                    success: function(data) {
+                        if (data.success) {
+                            // Vorausfüllen der Felder basierend auf dem Schnittstellentyp
+                            if (data.type_name.toLowerCase().includes('ftp') && !$('#id_port').val()) {
+                                $('#id_port').val(21);
+                            } else if (data.type_name.toLowerCase().includes('sftp') && !$('#id_port').val()) {
+                                $('#id_port').val(22);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+        
+        // Bei Änderung des Formats
+        $('#id_order_format').on('change', function() {
+            updateFieldVisibility();
+        });
+    });
+</script>
+{% endblock %}

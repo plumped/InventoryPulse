@@ -203,7 +203,7 @@
             </span>
         </div>
         <div class="card-body">
-            <form method="post" action="{% url 'test_interface' pk=interface.id %}">
+            <form method="post" action="{% url 'test_interface_connectivity' %}">
                 {% csrf_token %}
                 <div class="row">
                     <div class="col-md-6">

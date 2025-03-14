@@ -10,10 +10,11 @@ urlpatterns = [
     path('<int:pk>/delete/', views.interface_delete, name='interface_delete'),
     path('<int:pk>/toggle-active/', views.interface_toggle_active, name='interface_toggle_active'),
     path('<int:pk>/set-default/', views.interface_set_default, name='interface_set_default'),
-    path('<int:pk>/test/', views.test_interface, name='test_interface'),
-    
+    path('test-connectivity/', views.test_interface_connectivity, name='test_interface_connectivity'),
+
     # Übertragungsprotokolle
     path('logs/', views.interface_logs, name='interface_logs'),
+    path('logs/<int:interface_id>/', views.interface_logs, name='interface_logs'),
     path('logs/<int:pk>/', views.interface_log_detail, name='interface_log_detail'),
     path('logs/<int:log_id>/retry/', views.retry_failed_transmission, name='retry_failed_transmission'),
     

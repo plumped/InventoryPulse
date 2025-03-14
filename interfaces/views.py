@@ -142,10 +142,12 @@ def interface_create(request):
                 pass
         
         form = SupplierInterfaceForm(initial=initial)
+
     
     context = {
         'form': form,
-        'title': 'Neue Schnittstelle erstellen'
+        'title': 'Neue Schnittstelle erstellen',
+        'test_connectivity_url': reverse('test_interface_connectivity')
     }
     
     return render(request, 'interfaces/interface_form.html', context)
@@ -169,7 +171,8 @@ def interface_update(request, pk):
     context = {
         'form': form,
         'interface': interface,
-        'title': f'Schnittstelle "{interface.name}" bearbeiten'
+        'title': f'Schnittstelle "{interface.name}" bearbeiten',
+        'test_connectivity_url': reverse('test_interface_connectivity')
     }
     
     return render(request, 'interfaces/interface_form.html', context)
@@ -228,41 +231,120 @@ def interface_set_default(request, pk):
     return redirect('interface_detail', pk=interface.pk)
 
 
+# In views.py hinzufügen
 @login_required
-@permission_required('order', 'edit')
-@require_POST
-def test_interface(request, pk):
-    """Test einer Schnittstelle mit einer ausgewählten Bestellung."""
-    interface = get_object_or_404(SupplierInterface, pk=pk)
-    
-    form = InterfaceTestForm(request.POST)
-    if form.is_valid():
-        order = form.cleaned_data['order']
-        
-        # Prüfen, ob die Bestellung zum Lieferanten der Schnittstelle passt
-        if order.supplier != interface.supplier:
-            messages.error(request, 'Die ausgewählte Bestellung gehört nicht zum Lieferanten dieser Schnittstelle.')
-            return redirect('interface_detail', pk=interface.pk)
-        
-        try:
-            from .services import get_interface_service
-            
-            service = get_interface_service(interface)
-            result = service.send_order(order, user=request.user)
-            
-            if result:
-                messages.success(request, f'Bestellung {order.order_number} wurde erfolgreich über die Schnittstelle "{interface.name}" gesendet.')
-            else:
-                messages.warning(request, f'Bestellung {order.order_number} konnte nicht gesendet werden.')
-                
-        except InterfaceError as e:
-            messages.error(request, f'Fehler beim Testen der Schnittstelle: {str(e)}')
-        except Exception as e:
-            messages.error(request, f'Unerwarteter Fehler: {str(e)}')
-    else:
-        messages.error(request, 'Bitte wählen Sie eine gültige Bestellung aus.')
-    
-    return redirect('interface_detail', pk=interface.pk)
+@permission_required('supplier', 'edit')
+def test_interface_connectivity(request, pk=None):
+
+    """
+    AJAX-Endpunkt zum Testen der Konnektivität einer Schnittstellenkonfiguration.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Nur POST-Anfragen werden unterstützt.'})
+
+    # Formular mit den übermittelten Daten erstellen
+    form = SupplierInterfaceForm(request.POST)
+
+    if not form.is_valid():
+        return JsonResponse({
+            'success': False,
+            'message': 'Die Schnittstellenkonfiguration ist ungültig.',
+            'details': str(form.errors)
+        })
+
+    # Temporäre Instanz erstellen
+    interface = form.save(commit=False)
+    interface.created_by = request.user
+
+    # Schnittstelle testen ohne zu speichern
+    try:
+        # Je nach Schnittstellentyp unterschiedliche Tests durchführen
+        interface_type_code = interface.interface_type.code.lower()
+
+        if interface_type_code == 'email':
+            test_connectivity_email(interface)
+            return JsonResponse({
+                'success': True,
+                'message': "E-Mail-Konfiguration erfolgreich validiert.",
+                'details': f"E-Mail-Konfiguration überprüft:\n- Empfänger: {interface.email_to}\n- CC: {interface.email_cc or 'Nicht konfiguriert'}\n- Betreffvorlage: {interface.email_subject_template or 'Standard'}\n- Format: {interface.get_order_format_display()}"
+            })
+        elif interface_type_code == 'api':
+            test_connectivity_api(interface)
+            return JsonResponse({
+                'success': True,
+                'message': "API-Verbindung erfolgreich getestet.",
+                'details': f"API-Konfiguration überprüft:\n- URL: {interface.api_url}\n- Authentifizierung: {('Benutzername/Passwort' if interface.username else '') + (' & ' if interface.username and interface.api_key else '') + ('API-Schlüssel' if interface.api_key else '') or 'Keine'}\n- Format: {interface.get_order_format_display()}"
+            })
+        elif interface_type_code in ['ftp', 'sftp']:
+            test_connectivity_ftp(interface)
+            return JsonResponse({
+                'success': True,
+                'message': f"{interface_type_code.upper()}-Verbindung erfolgreich getestet.",
+                'details': f"{'SFTP' if interface_type_code == 'sftp' else 'FTP'}-Konfiguration überprüft:\n- Host: {interface.host}\n- Port: {interface.port or ('22' if interface_type_code == 'sftp' else '21')}\n- Remote-Pfad: {interface.remote_path or '/'}\n- Benutzername: {interface.username}\n- Format: {interface.get_order_format_display()}"
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': f'Schnittstellentyp {interface_type_code} wird nicht unterstützt.',
+                'details': f'Der Test für {interface_type_code} ist nicht implementiert.'
+            })
+
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            'success': False,
+            'message': f'Fehler beim Testen der Schnittstelle: {str(e)}',
+            'details': traceback.format_exc()
+        })
+
+
+def test_connectivity_email(interface):
+    """Testet die E-Mail-Konfiguration"""
+    if not interface.email_to:
+        raise ValueError("Keine E-Mail-Empfänger konfiguriert")
+
+    # Hier ggf. weitere E-Mail-Validierungen
+    # Z.B. E-Mail-Adressen prüfen oder E-Mail-Server-Verbindung testen
+
+
+def test_connectivity_api(interface):
+    """Testet die API-Konfiguration"""
+    if not interface.api_url:
+        raise ValueError("Keine API-URL konfiguriert")
+
+    # URL validieren
+    from urllib.parse import urlparse
+
+    parsed_url = urlparse(interface.api_url)
+    if not parsed_url.scheme or not parsed_url.netloc:
+        raise ValueError("Ungültige URL")
+
+    # DNS-Auflösung testen
+    import socket
+    socket.gethostbyname(parsed_url.netloc)
+
+
+def test_connectivity_ftp(interface):
+    """Testet die FTP/SFTP-Konfiguration"""
+    if not interface.host:
+        raise ValueError("Kein Host konfiguriert")
+
+    if not interface.username:
+        raise ValueError("Kein Benutzername konfiguriert")
+
+    # DNS-Auflösung testen
+    import socket
+    socket.gethostbyname(interface.host)
+
+    # Port-Verbindung testen
+    port = interface.port or (22 if interface.interface_type.code.lower() == 'sftp' else 21)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(5)
+
+    try:
+        sock.connect((interface.host, port))
+    finally:
+        sock.close()
 
 
 @login_required

@@ -3,18 +3,6 @@
 
 {% block title %}{{ title }}{% endblock %}
 
-{% block extra_head %}
-<style>
-    .field-section {
-        display: none;
-    }
-    .required-field label:after {
-        content: " *";
-        color: red;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -32,116 +20,151 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">Schnittstellenkonfiguration</h5>
-        </div>
-        <div class="card-body">
-            <form method="post" id="interface-form">
-                {% csrf_token %}
-                
-                <!-- Allgemeine Informationen -->
-                <div class="mb-4">
-                    <h4>Allgemeine Informationen</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3 required-field">
-                                <label for="id_supplier" class="form-label">Lieferant</label>
-                                {{ form.supplier }}
-                                {% if form.supplier.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.supplier.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.supplier.help_text %}
-                                    <div class="form-text">{{ form.supplier.help_text }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3 required-field">
-                                <label for="id_name" class="form-label">Schnittstellenname</label>
-                                {{ form.name }}
-                                {% if form.name.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.name.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.name.help_text %}
-                                    <div class="form-text">{{ form.name.help_text }}</div>
-                                {% endif %}
-                            </div>
+    <form method="post" id="interface-form">
+        {% csrf_token %}
+        <input type="hidden" name="form_action" value="save" id="form_action">
+
+        <!-- Allgemeine Informationen -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Allgemeine Informationen</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3 required-field">
+                            <label for="id_supplier" class="form-label">Lieferant</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.supplier.errors }}
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3 required-field">
-                                <label for="id_interface_type" class="form-label">Schnittstellentyp</label>
-                                {{ form.interface_type }}
-                                {% if form.interface_type.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.interface_type.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.interface_type.help_text %}
-                                    <div class="form-text">{{ form.interface_type.help_text }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="id_order_format" class="form-label">Bestellformat</label>
-                                {{ form.order_format }}
-                                {% if form.order_format.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.order_format.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.order_format.help_text %}
-                                    <div class="form-text">{{ form.order_format.help_text }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-check mb-3">
-                                {{ form.is_active }}
-                                <label class="form-check-label" for="id_is_active">
-                                    Schnittstelle ist aktiv
-                                </label>
-                                {% if form.is_active.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.is_active.errors }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-check mb-3">
-                                {{ form.is_default }}
-                                <label class="form-check-label" for="id_is_default">
-                                    Als Standard-Schnittstelle für diesen Lieferanten verwenden
-                                </label>
-                                {% if form.is_default.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.is_default.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.is_default.help_text %}
-                                    <div class="form-text">{{ form.is_default.help_text }}</div>
-                                {% endif %}
-                            </div>
+                    <div class="col-md-6">
+                        <div class="mb-3 required-field">
+                            <label for="id_name" class="form-label">Schnittstellenname</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors }}
+                                </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-                
-                <!-- API/Web-Konfiguration -->
-                <div id="api-section" class="field-section mb-4">
-                    <h4>API/Web-Konfiguration</h4>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3 required-field">
+                            <label for="id_interface_type" class="form-label">Schnittstellentyp</label>
+                            {{ form.interface_type }}
+                            {% if form.interface_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.interface_type.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="id_order_format" class="form-label">Bestellformat</label>
+                            {{ form.order_format }}
+                            {% if form.order_format.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.order_format.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check mb-3">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="id_is_active">
+                                Schnittstelle ist aktiv
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check mb-3">
+                            {{ form.is_default }}
+                            <label class="form-check-label" for="id_is_default">
+                                Als Standard-Schnittstelle für diesen Lieferanten verwenden
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamischer Bereich für Schnittstellenspezifische Konfiguration -->
+        <div id="dynamic-config-area">
+            <!-- Wird durch JS gefüllt -->
+        </div>
+
+        <!-- Testmodul -->
+        <div class="card mb-4" id="test-module">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Schnittstelle testen</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Hier können Sie die Verbindung zur konfigurierten Schnittstelle testen, bevor Sie sie speichern.
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <button type="button" id="btn-test-connectivity" class="btn btn-info mb-3">
+                            <i class="fas fa-network-wired me-2"></i> Verbindung testen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Testresultat-Bereich -->
+                <div class="mt-3" id="test-results" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Testergebnisse</h6>
+                        </div>
+                        <div class="card-body">
+                            <div id="test-spinner" class="text-center" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Wird getestet...</span>
+                                </div>
+                                <p class="mt-2">Test wird durchgeführt...</p>
+                            </div>
+                            <div id="test-output"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="text-end mb-4">
+            <button type="submit" class="btn btn-primary" id="btn-save">
+                <i class="fas fa-save"></i> Speichern
+            </button>
+        </div>
+    </form>
+
+    <!-- Templates für die verschiedenen Konfigurationen - nicht direkt angezeigt -->
+    <div id="template-container" style="display: none;">
+        <!-- API Konfiguration -->
+        <div id="api-template">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">API/Web-Konfiguration</h5>
+                </div>
+                <div class="card-body">
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="mb-3 api-required">
+                            <div class="mb-3 required-field">
                                 <label for="id_api_url" class="form-label">API-URL</label>
                                 {{ form.api_url }}
                                 {% if form.api_url.errors %}
@@ -149,39 +172,20 @@
                                         {{ form.api_url.errors }}
                                     </div>
                                 {% endif %}
-                                {% if form.api_url.help_text %}
-                                    <div class="form-text">{{ form.api_url.help_text }}</div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="id_username_dynamic" class="form-label">Benutzername</label>
-                                {{ form.username }}
-                                {% if form.username.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.username.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.username.help_text %}
-                                    <div class="form-text">{{ form.username.help_text }}</div>
-                                {% endif %}
+                                <label for="id_username_api" class="form-label">Benutzername</label>
+                                <input type="text" name="username" id="id_username_api" class="form-control" value="{{ form.username.value|default_if_none:'' }}" maxlength="100">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="id_password_dynamic" class="form-label">Passwort</label>
-                                {{ form.password }}
-                                {% if form.password.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.password.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.password.help_text %}
-                                    <div class="form-text">{{ form.password.help_text }}</div>
-                                {% endif %}
+                                <label for="id_password_api" class="form-label">Passwort</label>
+                                <input type="password" name="password" id="id_password_api" class="form-control" autocomplete="new-password" maxlength="100">
                             </div>
                         </div>
                     </div>
@@ -190,25 +194,23 @@
                             <div class="mb-3">
                                 <label for="id_api_key" class="form-label">API-Schlüssel</label>
                                 {{ form.api_key }}
-                                {% if form.api_key.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.api_key.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.api_key.help_text %}
-                                    <div class="form-text">{{ form.api_key.help_text }}</div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- FTP/SFTP-Konfiguration -->
-                <div id="ftp-section" class="field-section mb-4">
-                    <h4>FTP/SFTP-Konfiguration</h4>
+            </div>
+        </div>
+
+        <!-- FTP Konfiguration -->
+        <div id="ftp-template">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">FTP/SFTP-Konfiguration</h5>
+                </div>
+                <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
-                            <div class="mb-3 ftp-required">
+                            <div class="mb-3 required-field">
                                 <label for="id_host" class="form-label">Host</label>
                                 {{ form.host }}
                                 {% if form.host.errors %}
@@ -216,23 +218,12 @@
                                         {{ form.host.errors }}
                                     </div>
                                 {% endif %}
-                                {% if form.host.help_text %}
-                                    <div class="form-text">{{ form.host.help_text }}</div>
-                                {% endif %}
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="id_port" class="form-label">Port</label>
                                 {{ form.port }}
-                                {% if form.port.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.port.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.port.help_text %}
-                                    <div class="form-text">{{ form.port.help_text }}</div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -241,64 +232,43 @@
                             <div class="mb-3">
                                 <label for="id_remote_path" class="form-label">Remote-Pfad</label>
                                 {{ form.remote_path }}
-                                {% if form.remote_path.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.remote_path.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.remote_path.help_text %}
-                                    <div class="form-text">{{ form.remote_path.help_text }}</div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3 ftp-required">
-                                <label for="id_username_dynamic" class="form-label">Benutzername</label>
-                                {{ form.username }}
-                                {% if form.username.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.username.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.username.help_text %}
-                                    <div class="form-text">{{ form.username.help_text }}</div>
-                                {% endif %}
+                            <div class="mb-3 required-field">
+                                <label for="id_username_ftp" class="form-label">Benutzername</label>
+                                <input type="text" name="username" id="id_username_ftp" class="form-control" value="{{ form.username.value|default_if_none:'' }}" maxlength="100">
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3 ftp-required">
-                                <label for="id_password_dynamic" class="form-label">Passwort</label>
-                                {{ form.password }}
-                                {% if form.password.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.password.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.password.help_text %}
-                                    <div class="form-text">{{ form.password.help_text }}</div>
-                                {% endif %}
+                            <div class="mb-3 required-field">
+                                <label for="id_password_ftp" class="form-label">Passwort</label>
+                                <input type="password" name="password" id="id_password_ftp" class="form-control" autocomplete="new-password" maxlength="100">
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- E-Mail-Konfiguration -->
-                <div id="email-section" class="field-section mb-4">
-                    <h4>E-Mail-Konfiguration</h4>
+            </div>
+        </div>
+
+        <!-- Email Konfiguration -->
+        <div id="email-template">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">E-Mail-Konfiguration</h5>
+                </div>
+                <div class="card-body">
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="mb-3 email-required">
+                            <div class="mb-3 required-field">
                                 <label for="id_email_to" class="form-label">Empfänger</label>
                                 {{ form.email_to }}
                                 {% if form.email_to.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.email_to.errors }}
                                     </div>
-                                {% endif %}
-                                {% if form.email_to.help_text %}
-                                    <div class="form-text">{{ form.email_to.help_text }}</div>
                                 {% endif %}
                             </div>
                         </div>
@@ -308,14 +278,6 @@
                             <div class="mb-3">
                                 <label for="id_email_cc" class="form-label">CC</label>
                                 {{ form.email_cc }}
-                                {% if form.email_cc.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.email_cc.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.email_cc.help_text %}
-                                    <div class="form-text">{{ form.email_cc.help_text }}</div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -324,190 +286,207 @@
                             <div class="mb-3">
                                 <label for="id_email_subject_template" class="form-label">Betreffvorlage</label>
                                 {{ form.email_subject_template }}
-                                {% if form.email_subject_template.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.email_subject_template.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.email_subject_template.help_text %}
-                                    <div class="form-text">{{ form.email_subject_template.help_text }}</div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Formatierungsvorlagen -->
-                <div id="format-section" class="mb-4">
-                    <h4>Formatierungsvorlage</h4>
+            </div>
+        </div>
+
+        <!-- Format Konfiguration -->
+        <div id="format-template">
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="card-title mb-0">Formatierungsvorlage</h5>
+                </div>
+                <div class="card-body">
                     <div class="row">
                         <div class="col-md-12">
                             <div class="mb-3">
                                 <label for="id_template" class="form-label">Vorlage</label>
                                 {{ form.template }}
-                                {% if form.template.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.template.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.template.help_text %}
-                                    <div class="form-text">{{ form.template.help_text }}</div>
-                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Erweiterte Konfiguration -->
-                <div id="extended-config-section" class="field-section mb-4">
-                    <h4>Erweiterte Konfiguration</h4>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="id_config_json" class="form-label">Zusätzliche Konfiguration (JSON)</label>
-                                {{ form.config_json }}
-                                {% if form.config_json.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.config_json.errors }}
-                                    </div>
-                                {% endif %}
-                                {% if form.config_json.help_text %}
-                                    <div class="form-text">{{ form.config_json.help_text }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Speichern
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
-{% endblock %}
+
 
 {% block scripts %}
 <script>
-    $(document).ready(function() {
-    console.log('Document ready - initializing interface form script');
+document.addEventListener('DOMContentLoaded', function() {
+    var interfaceTypeSelect = document.getElementById('id_interface_type');
+    var orderFormatSelect = document.getElementById('id_order_format');
+    var dynamicConfigArea = document.getElementById('dynamic-config-area');
+    var btnTestConnectivity = document.getElementById('btn-test-connectivity');
+    var testResults = document.getElementById('test-results');
+    var testOutput = document.getElementById('test-output');
+    var testSpinner = document.getElementById('test-spinner');
+    var formAction = document.getElementById('form_action');
 
-    // Umfangreichere Debugging-Funktion
-    function updateFieldVisibility() {
-        console.group('Update Field Visibility');
-        
-        // Sicherstellen, dass jQuery korrekt funktioniert
-        if (!$) {
-            console.error('jQuery not loaded correctly');
+    // Templates
+    var apiTemplate = document.getElementById('api-template').innerHTML;
+    var ftpTemplate = document.getElementById('ftp-template').innerHTML;
+    var emailTemplate = document.getElementById('email-template').innerHTML;
+    var formatTemplate = document.getElementById('format-template').innerHTML;
+
+    // Funktion zum Aktualisieren des dynamischen Bereichs
+    function updateDynamicConfig() {
+        // Dynamischen Bereich leeren
+        dynamicConfigArea.innerHTML = '';
+
+        // Wenn kein Typ ausgewählt, nichts tun
+        if (!interfaceTypeSelect.value) {
             return;
         }
 
-        // Debug-Ausgaben für aktuellen Status
-        console.log('Interface Type Element:', $('#id_interface_type'));
-        console.log('Interface Type Value:', $('#id_interface_type').val());
-        
-        var $selectedOption = $('#id_interface_type').find('option:selected');
-        var interfaceType = $selectedOption.text().toLowerCase();
-        
-        console.log('Selected Option:', $selectedOption);
-        console.log('Selected Interface Type:', interfaceType);
+        // Den ausgewählten Text ermitteln
+        var selectedOption = interfaceTypeSelect.options[interfaceTypeSelect.selectedIndex];
+        var selectedText = selectedOption.textContent.toLowerCase();
 
-        // Zunächst ALLE Sektionen ausblenden
-        [
-            '#api-section', 
-            '#ftp-section', 
-            '#email-section', 
-            '#format-section', 
-            '#extended-config-section'
-        ].forEach(function(selector) {
-            console.log(`Hiding section: ${selector}`);
-            $(selector).hide();
-        });
+        // Je nach Typ den entsprechenden Template-Inhalt hinzufügen
+        if (selectedText.includes('api') || selectedText.includes('web')) {
+            dynamicConfigArea.innerHTML = apiTemplate;
+        }
+        else if (selectedText.includes('ftp') || selectedText.includes('sftp')) {
+            dynamicConfigArea.innerHTML = ftpTemplate;
 
-        // Pflichtfeld-Klassen entfernen
-        [
-            '.api-required', 
-            '.ftp-required', 
-            '.email-required'
-        ].forEach(function(selector) {
-            $(selector).removeClass('required-field');
-        });
-
-        // Wenn kein Typ ausgewählt, abbrechen
-        if (!$('#id_interface_type').val()) {
-            console.log('No interface type selected');
-            console.groupEnd();
-            return;
+            // Standard-Ports setzen
+            var portInput = document.getElementById('id_port');
+            if (portInput && !portInput.value) {
+                if (selectedText.includes('sftp')) {
+                    portInput.value = '22';
+                } else {
+                    portInput.value = '21';
+                }
+            }
+        }
+        else if (selectedText.includes('e-mail') || selectedText.includes('email') || selectedText.includes('mail')) {
+            dynamicConfigArea.innerHTML = emailTemplate;
         }
 
-        // Sektionen basierend auf Schnittstellentyp einblenden
-        if (interfaceType.includes('api') || interfaceType.includes('web')) {
-            console.log('Showing API sections');
-            $('#api-section, #extended-config-section').show();
-            $('.api-required').addClass('required-field');
-        } else if (interfaceType.includes('ftp') || interfaceType.includes('sftp')) {
-            console.log('Showing FTP sections');
-            $('#ftp-section, #extended-config-section').show();
-            $('.ftp-required').addClass('required-field');
-        } else if (interfaceType.includes('email')) {
-            console.log('Showing Email section');
-            $('#email-section').show();
-            $('.email-required').addClass('required-field');
-        }
-
-        // Format-Sektion für XML und Custom
-        var format = $('#id_order_format').val();
-        if (format === 'xml' || format === 'custom') {
-            console.log('Showing Format section');
-            $('#format-section').show();
-        }
-
-        console.groupEnd();
+        // Prüfen, ob Formatvorlage benötigt wird
+        updateFormatSection();
     }
 
-    // Ereignisse binden mit zusätzlichem Logging
-    $('#id_interface_type').on('change', function() {
-        console.log('Interface Type changed');
-        updateFieldVisibility();
-        
-        var typeId = $(this).val();
-        
-        if (typeId) {
-            $.ajax({
-                url: '{% url 'get_interface_fields' %}',
-                data: { 'interface_type_id': typeId },
-                dataType: 'json',
-                success: function(data) {
-                    console.log('Interface Fields Data:', data);
-                    if (data.success) {
-                        if (data.type_name.toLowerCase().includes('ftp') && !$('#id_port').val()) {
-                            $('#id_port').val(21);
-                        } else if (data.type_name.toLowerCase().includes('sftp') && !$('#id_port').val()) {
-                            $('#id_port').val(22);
-                        }
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX Error:', status, error);
-                }
-            });
+    // Funktion zur Aktualisierung der Formatsektion
+    function updateFormatSection() {
+        var formatValue = orderFormatSelect.value;
+        var formatSection = document.getElementById('format-section');
+
+        // Wenn bereits eine Formatsektion existiert, diese entfernen
+        if (formatSection) {
+            formatSection.remove();
         }
-    });
 
-    // Bei Änderung des Formats
-    $('#id_order_format').on('change', function() {
-        console.log('Order Format changed');
-        updateFieldVisibility();
-    });
+        // Formatvorlage hinzufügen, wenn nötig
+        if (formatValue === 'xml' || formatValue === 'custom') {
+            var formatDiv = document.createElement('div');
+            formatDiv.id = 'format-section';
+            formatDiv.innerHTML = formatTemplate;
+            dynamicConfigArea.appendChild(formatDiv);
+        }
+    }
 
-    // Initiale Sichtbarkeit setzen
-    updateFieldVisibility();
+    // Funktion zum Testen der Konnektivität
+    function testConnectivity() {
+    // Vorprüfung der Pflichtfelder
+    var supplier = document.getElementById('id_supplier').value;
+    var name = document.getElementById('id_name').value;
+    var interfaceType = document.getElementById('id_interface_type').value;
 
-    // Zusätzliche Initialisierungsdiagnose
-    console.log('Interface form script initialized successfully');
+    if (!supplier || !name || !interfaceType) {
+        testResults.style.display = 'block';
+        testOutput.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i> Bitte füllen Sie zuerst alle erforderlichen Felder aus (Lieferant, Name, Schnittstellentyp).
+            </div>
+        `;
+        return;
+    }
+
+    // Formular serialisieren
+    var formData = new FormData(document.getElementById('interface-form'));
+
+        // Test-Ergebnisbereich anzeigen und Spinner starten
+        testResults.style.display = 'block';
+        testSpinner.style.display = 'block';
+        testOutput.innerHTML = '';
+
+        // AJAX-Request senden
+        fetch('{% url "test_interface_connectivity" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Spinner ausblenden
+            testSpinner.style.display = 'none';
+
+            // Ergebnis anzeigen
+            if (data.success) {
+                testOutput.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i> ${data.message}
+                    </div>
+                    ${data.details ? `<div class="card mt-3">
+                        <div class="card-header">Details</div>
+                        <div class="card-body">
+                            <pre class="mb-0">${data.details}</pre>
+                        </div>
+                    </div>` : ''}
+                `;
+            } else {
+                testOutput.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i> ${data.message}
+                    </div>
+                    ${data.details ? `<div class="card mt-3">
+                        <div class="card-header">Fehlerdetails</div>
+                        <div class="card-body">
+                            <pre class="mb-0">${data.details}</pre>
+                        </div>
+                    </div>` : ''}
+                `;
+            }
+        })
+        .catch(error => {
+            // Spinner ausblenden
+            testSpinner.style.display = 'none';
+
+            // Fehler anzeigen
+            testOutput.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i> Fehler beim Testen der Schnittstelle: ${error.message}
+                </div>
+            `;
+        });
+    }
+
+    // Event-Listener für Änderungen am Schnittstellentyp
+    if (interfaceTypeSelect) {
+        interfaceTypeSelect.addEventListener('change', updateDynamicConfig);
+    }
+
+    // Event-Listener für Änderungen am Bestellformat
+    if (orderFormatSelect) {
+        orderFormatSelect.addEventListener('change', updateFormatSection);
+    }
+
+    // Event-Listener für den Test-Button
+    if (btnTestConnectivity) {
+        btnTestConnectivity.addEventListener('click', testConnectivity);
+    }
+
+    // Initial konfigurieren
+    updateDynamicConfig();
 });
 </script>
+{% endblock %}
 {% endblock %}

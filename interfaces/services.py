@@ -39,24 +39,34 @@ class InterfaceService:
     def send_order(self, order):
         """Sendet eine Bestellung über die Schnittstelle"""
         raise NotImplementedError("Subklassen müssen diese Methode implementieren")
-    
+
     def log_transmission(self, order, status, message="", request_data="", response_data="", user=None):
         """Protokolliert eine Übertragung"""
-        log = InterfaceLog.objects.create(
-            interface=self.interface,
-            order=order,
-            status=status,
-            message=message,
-            request_data=request_data,
-            response_data=response_data,
-            initiated_by=user
-        )
-        
-        # Aktualisiere den Zeitpunkt der letzten Verwendung der Schnittstelle
-        self.interface.last_used = timezone.now()
-        self.interface.save(update_fields=['last_used'])
-        
-        return log
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            log = InterfaceLog.objects.create(
+                interface=self.interface,
+                order=order,
+                status=status,
+                message=message,
+                request_data=request_data,
+                response_data=response_data,
+                initiated_by=user
+            )
+
+            logger.info(f"Created transmission log: ID={log.id}, Order={order.order_number}, Status={status}")
+
+            # Aktualisiere den Zeitpunkt der letzten Verwendung der Schnittstelle
+            self.interface.last_used = timezone.now()
+            self.interface.save(update_fields=['last_used'])
+
+            return log
+        except Exception as e:
+            logger.error(f"Failed to create transmission log: {str(e)}")
+            # Continue execution even if logging fails
+            return None
     
     def format_order_data(self, order):
         """Formatiert die Bestelldaten gemäß dem konfigurierten Format"""
@@ -352,7 +362,26 @@ class FTPInterfaceService(InterfaceService):
 
     def send_order(self, order, user=None):
         """Sendet eine Bestellung über FTP"""
+
         try:
+            import logging
+            logger = logging.getLogger(__name__)
+
+            # Check if this order has already been successfully sent through this interface
+            from .models import InterfaceLog
+            existing_log = InterfaceLog.objects.filter(
+                interface=self.interface,
+                order=order,
+                status='success'
+            ).exists()
+
+            if existing_log:
+                logger.warning(f"Order {order.order_number} has already been successfully sent through this interface")
+                # You could either return success (as it's already been sent) or raise an exception
+                raise InterfaceError(
+                    f"Bestellung {order.order_number} wurde bereits erfolgreich über diese Schnittstelle gesendet.")
+                # Alternatively: return True  # Consider it a success since it already exists
+
             # Host überprüfen
             if not self.interface.host:
                 raise InterfaceError("Kein FTP-Host konfiguriert")

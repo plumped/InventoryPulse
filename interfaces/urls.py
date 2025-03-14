@@ -17,9 +17,11 @@ urlpatterns = [
 
     # Übertragungsprotokolle
     path('logs/', views.interface_logs, name='interface_logs'),
-    path('logs/<int:interface_id>/', views.interface_logs, name='interface_logs'),
-    path('logs/<int:pk>/', views.interface_log_detail, name='interface_log_detail'),
-    path('logs/<int:log_id>/retry/', views.retry_failed_transmission, name='retry_failed_transmission'),
+    path('logs/for-interface/<int:interface_id>/', views.interface_logs, name='interface_logs_filtered'),
+    # Changed URL pattern
+    path('log/<int:pk>/', views.interface_log_detail, name='interface_log_detail'),  # Changed URL pattern
+    path('log/<int:log_id>/retry/', views.retry_failed_transmission, name='retry_failed_transmission'),
+    # Should also change for consistency
     
     # Schnittstellen für Lieferanten
     path('supplier/<int:supplier_id>/', views.interface_list, name='supplier_interfaces'),

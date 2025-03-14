@@ -400,11 +400,21 @@ def test_connectivity_ftp(interface):
 @permission_required('order', 'edit')
 def interface_logs(request, interface_id=None):
     """Liste der Übertragungsprotokolle, optional gefiltert nach Schnittstelle."""
+    # Add debugging
+    import logging
+    logger = logging.getLogger(__name__)
+
+    # Check total count first without filters
+    total_logs_count = InterfaceLog.objects.count()
+    logger.info(f"Total logs in database: {total_logs_count}")
+
     logs = InterfaceLog.objects.select_related('interface', 'order', 'initiated_by')
+    logger.info(f"Initial query count: {logs.count()}")
     
     # Filter nach Schnittstelle
     if interface_id:
         logs = logs.filter(interface_id=interface_id)
+        logger.info(f"After interface_id filter: {logs.count()}")
     
     # Filter nach Lieferant
     supplier_id = request.GET.get('supplier')
@@ -506,6 +516,20 @@ def send_order(self, order, user=None):
     try:
         import logging
         logger = logging.getLogger(__name__)
+        # Check if this order has already been successfully sent through this interface
+        from .models import InterfaceLog
+        existing_log = InterfaceLog.objects.filter(
+            interface=self.interface,
+            order=order,
+            status='success'
+        ).exists()
+
+        if existing_log:
+            logger.warning(f"Order {order.order_number} has already been successfully sent through this interface")
+            # You could either return success (as it's already been sent) or raise an exception
+            raise InterfaceError(
+                f"Bestellung {order.order_number} wurde bereits erfolgreich über diese Schnittstelle gesendet.")
+
         logger.info(f"Starting FTP order send to {self.interface.host}:{self.interface.port or 21}")
 
         # Host überprüfen

@@ -203,8 +203,20 @@
             </span>
         </div>
         <div class="card-body">
-            <form method="post" action="{% url 'test_interface_connectivity' %}">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <button type="button" id="btn-connection-test" class="btn btn-info" {% if not interface.is_active %}disabled{% endif %}>
+                        <i class="fas fa-network-wired me-2"></i> Nur Verbindung testen
+                    </button>
+                    <span class="text-muted ms-2">Testet nur die Verbindung ohne Daten zu senden</span>
+                </div>
+            </div>
+
+            <hr>
+
+            <form id="test-send-form">
                 {% csrf_token %}
+                <input type="hidden" name="interface_id" value="{{ interface.id }}">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -221,12 +233,25 @@
                         </div>
                     </div>
                     <div class="col-md-6 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary" {% if not interface.is_active %}disabled{% endif %}>
-                            <i class="fas fa-paper-plane"></i> Testübertragung starten
+                        <button type="button" id="btn-send-test" class="btn btn-primary" {% if not interface.is_active %}disabled{% endif %}>
+                            <i class="fas fa-paper-plane me-2"></i> Bestellung testweise senden
                         </button>
                     </div>
                 </div>
             </form>
+
+            <!-- Test Result Display -->
+            <div id="test-result" class="mt-4" style="display:none;">
+                <div class="alert" id="test-result-alert">
+                    <span id="test-result-message"></span>
+                </div>
+                <div class="card bg-light" id="test-result-details" style="display:none;">
+                    <div class="card-header">Details</div>
+                    <div class="card-body">
+                        <pre id="test-result-details-text"></pre>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -338,4 +363,141 @@
         </div>
     </div>
 </div>
+{% block scripts %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnConnectionTest = document.getElementById('btn-connection-test');
+    const btnSendTest = document.getElementById('btn-send-test');
+    const testResult = document.getElementById('test-result');
+    const testResultAlert = document.getElementById('test-result-alert');
+    const testResultMessage = document.getElementById('test-result-message');
+    const testResultDetails = document.getElementById('test-result-details');
+    const testResultDetailsText = document.getElementById('test-result-details-text');
+
+    // Connection test button
+    if (btnConnectionTest) {
+        btnConnectionTest.addEventListener('click', function() {
+            // Show loading state
+            btnConnectionTest.disabled = true;
+            btnConnectionTest.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Teste Verbindung...';
+
+            // Create form data with interface_id
+            const formData = new FormData();
+            formData.append('interface_id', '{{ interface.id }}');
+
+            // Send the request
+            fetch('{% url "test_interface_connectivity" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+
+            .then(response => response.json())
+            .then(data => {
+                // Display the result
+                testResult.style.display = 'block';
+                if (data.success) {
+                    testResultAlert.className = 'alert alert-success';
+                    testResultMessage.innerHTML = '<i class="fas fa-check-circle me-2"></i> ' + data.message;
+                } else {
+                    testResultAlert.className = 'alert alert-danger';
+                    testResultMessage.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> ' + data.message;
+                }
+
+                // Show details if available
+                if (data.details) {
+                    testResultDetails.style.display = 'block';
+                    testResultDetailsText.textContent = data.details;
+                } else {
+                    testResultDetails.style.display = 'none';
+                }
+
+                // Reset button
+                btnConnectionTest.disabled = false;
+                btnConnectionTest.innerHTML = '<i class="fas fa-network-wired me-2"></i> Nur Verbindung testen';
+            })
+            .catch(error => {
+                // Handle error
+                testResult.style.display = 'block';
+                testResultAlert.className = 'alert alert-danger';
+                testResultMessage.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> Fehler: ' + error.message;
+                testResultDetails.style.display = 'none';
+
+                // Reset button
+                btnConnectionTest.disabled = false;
+                btnConnectionTest.innerHTML = '<i class="fas fa-network-wired me-2"></i> Nur Verbindung testen';
+            });
+        });
+    }
+
+    // Send test button
+    if (btnSendTest) {
+        btnSendTest.addEventListener('click', function() {
+            const form = document.getElementById('test-send-form');
+            const formData = new FormData(form);
+
+            // Validate form
+            if (!formData.get('order')) {
+                testResult.style.display = 'block';
+                testResultAlert.className = 'alert alert-warning';
+                testResultMessage.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Bitte wählen Sie eine Bestellung aus.';
+                testResultDetails.style.display = 'none';
+                return;
+            }
+
+            // Show loading state
+            btnSendTest.disabled = true;
+            btnSendTest.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Sende Bestellung...';
+
+            // Send the request
+            fetch('{% url "test_send_order" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the result
+                testResult.style.display = 'block';
+                if (data.success) {
+                    testResultAlert.className = 'alert alert-success';
+                    testResultMessage.innerHTML = '<i class="fas fa-check-circle me-2"></i> ' + data.message;
+                } else {
+                    testResultAlert.className = 'alert alert-danger';
+                    testResultMessage.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> ' + data.message;
+                }
+
+                // Show details if available
+                if (data.details) {
+                    testResultDetails.style.display = 'block';
+                    testResultDetailsText.textContent = data.details;
+                } else {
+                    testResultDetails.style.display = 'none';
+                }
+
+                // Reset button
+                btnSendTest.disabled = false;
+                btnSendTest.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Bestellung testweise senden';
+            })
+            .catch(error => {
+                // Handle error
+                testResult.style.display = 'block';
+                testResultAlert.className = 'alert alert-danger';
+                testResultMessage.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> Fehler: ' + error.message;
+                testResultDetails.style.display = 'none';
+
+                // Reset button
+                btnSendTest.disabled = false;
+                btnSendTest.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Bestellung testweise senden';
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
 {% endblock %}

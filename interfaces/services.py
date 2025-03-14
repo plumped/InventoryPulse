@@ -349,17 +349,17 @@ class APIInterfaceService(InterfaceService):
 
 class FTPInterfaceService(InterfaceService):
     """Service für FTP-Schnittstellen"""
-    
+
     def send_order(self, order, user=None):
         """Sendet eine Bestellung über FTP"""
         try:
             # Host überprüfen
             if not self.interface.host:
                 raise InterfaceError("Kein FTP-Host konfiguriert")
-            
+
             # Formatieren der Bestelldaten
             order_data = self.format_order_data(order)
-            
+
             # Bestimme Dateiendung basierend auf dem Format
             format_to_extension = {
                 'csv': 'csv',
@@ -369,28 +369,35 @@ class FTPInterfaceService(InterfaceService):
                 'excel': 'xlsx'
             }
             ext = format_to_extension.get(self.interface.order_format, 'txt')
-            
+
             # Dateiname erstellen
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
             remote_filename = f"order_{order.order_number}_{timestamp}.{ext}"
-            
+
             # Remote-Pfad festlegen
             remote_path = self.interface.remote_path or '/'
             remote_path = remote_path.rstrip('/') + '/'
             full_remote_path = remote_path + remote_filename
-            
+
             # Port festlegen (Standard: 21)
             port = self.interface.port or 21
-            
+
             # FTP-Verbindung herstellen
             ftp = ftplib.FTP()
+            ftp.timeout = 30  # Increase timeout to 30 seconds
             ftp.connect(self.interface.host, port)
             ftp.login(self.interface.username, self.interface.password)
-            
+            ftp.set_pasv(True)  # Use passive mode which works better with firewalls
+
+            # Properly encode and prepare the data
+            from io import BytesIO
+            file_data = order_data.encode('utf-8')
+            data_stream = BytesIO(file_data)
+
             # Datei hochladen
-            ftp.storbinary(f'STOR {full_remote_path}', StringIO(order_data).read().encode('utf-8'))
+            ftp.storbinary(f'STOR {remote_filename}', data_stream)
             ftp.quit()
-            
+
             # Erfolgreich protokollieren
             self.log_transmission(
                 order=order,
@@ -399,14 +406,14 @@ class FTPInterfaceService(InterfaceService):
                 request_data=order_data,
                 user=user
             )
-            
+
             return True
-            
+
         except Exception as e:
             # Fehler protokollieren
             error_message = f"Fehler beim Senden der Bestellung per FTP: {str(e)}"
             logger.error(error_message)
-            
+
             self.log_transmission(
                 order=order,
                 status='failed',
@@ -414,7 +421,7 @@ class FTPInterfaceService(InterfaceService):
                 request_data=order_data if 'order_data' in locals() else "",
                 user=user
             )
-            
+
             raise InterfaceError(error_message)
 
 

@@ -11,6 +11,9 @@ urlpatterns = [
     path('<int:pk>/toggle-active/', views.interface_toggle_active, name='interface_toggle_active'),
     path('<int:pk>/set-default/', views.interface_set_default, name='interface_set_default'),
     path('test-connectivity/', views.test_interface_connectivity, name='test_interface_connectivity'),
+    path('test-send-order/', views.test_send_order, name='test_send_order'),
+
+
 
     # Übertragungsprotokolle
     path('logs/', views.interface_logs, name='interface_logs'),

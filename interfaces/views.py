@@ -1,3 +1,7 @@
+import ftplib
+import os
+from datetime import datetime
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -235,26 +239,78 @@ def interface_set_default(request, pk):
 @login_required
 @permission_required('supplier', 'edit')
 def test_interface_connectivity(request, pk=None):
-
     """
     AJAX-Endpunkt zum Testen der Konnektivität einer Schnittstellenkonfiguration.
     """
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Nur POST-Anfragen werden unterstützt.'})
 
-    # Formular mit den übermittelten Daten erstellen
-    form = SupplierInterfaceForm(request.POST)
+    # Check if we're testing an existing interface or a form
+    interface_id = request.POST.get('interface_id')
 
-    if not form.is_valid():
-        return JsonResponse({
-            'success': False,
-            'message': 'Die Schnittstellenkonfiguration ist ungültig.',
-            'details': str(form.errors)
-        })
+    if interface_id:
+        # Testing an existing interface
+        try:
+            interface = SupplierInterface.objects.get(pk=interface_id)
 
-    # Temporäre Instanz erstellen
-    interface = form.save(commit=False)
-    interface.created_by = request.user
+            # Use the same testing logic as for new interfaces
+            interface_type_code = interface.interface_type.code.lower()
+
+            try:
+                if interface_type_code == 'email':
+                    test_connectivity_email(interface)
+                    return JsonResponse({
+                        'success': True,
+                        'message': "E-Mail-Konfiguration erfolgreich validiert.",
+                        'details': f"E-Mail-Konfiguration überprüft:\n- Empfänger: {interface.email_to}\n- CC: {interface.email_cc or 'Nicht konfiguriert'}\n- Betreffvorlage: {interface.email_subject_template or 'Standard'}\n- Format: {interface.get_order_format_display()}"
+                    })
+                elif interface_type_code == 'api':
+                    test_connectivity_api(interface)
+                    return JsonResponse({
+                        'success': True,
+                        'message': "API-Verbindung erfolgreich getestet.",
+                        'details': f"API-Konfiguration überprüft:\n- URL: {interface.api_url}\n- Authentifizierung: {('Benutzername/Passwort' if interface.username else '') + (' & ' if interface.username and interface.api_key else '') + ('API-Schlüssel' if interface.api_key else '') or 'Keine'}\n- Format: {interface.get_order_format_display()}"
+                    })
+                elif interface_type_code in ['ftp', 'sftp']:
+                    test_connectivity_ftp(interface)
+                    return JsonResponse({
+                        'success': True,
+                        'message': f"{interface_type_code.upper()}-Verbindung erfolgreich getestet.",
+                        'details': f"{'SFTP' if interface_type_code == 'sftp' else 'FTP'}-Konfiguration überprüft:\n- Host: {interface.host}\n- Port: {interface.port or ('22' if interface_type_code == 'sftp' else '21')}\n- Remote-Pfad: {interface.remote_path or '/'}\n- Benutzername: {interface.username}\n- Format: {interface.get_order_format_display()}"
+                    })
+                else:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Schnittstellentyp {interface_type_code} wird nicht unterstützt.',
+                        'details': f'Der Test für {interface_type_code} ist nicht implementiert.'
+                    })
+            except Exception as e:
+                import traceback
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Fehler beim Testen der Schnittstelle: {str(e)}',
+                    'details': traceback.format_exc()
+                })
+
+        except SupplierInterface.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Die angegebene Schnittstelle wurde nicht gefunden.'
+            })
+    else:
+        # We're testing a form configuration
+        form = SupplierInterfaceForm(request.POST)
+
+        if not form.is_valid():
+            return JsonResponse({
+                'success': False,
+                'message': 'Die Schnittstellenkonfiguration ist ungültig.',
+                'details': str(form.errors)
+            })
+
+        # Temporäre Instanz erstellen
+        interface = form.save(commit=False)
+        interface.created_by = request.user
 
     # Schnittstelle testen ohne zu speichern
     try:
@@ -326,6 +382,11 @@ def test_connectivity_api(interface):
 
 def test_connectivity_ftp(interface):
     """Testet die FTP/SFTP-Konfiguration"""
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"Testing FTP connection to {interface.host}:{interface.port or 21}")
+
     if not interface.host:
         raise ValueError("Kein Host konfiguriert")
 
@@ -334,7 +395,13 @@ def test_connectivity_ftp(interface):
 
     # DNS-Auflösung testen
     import socket
-    socket.gethostbyname(interface.host)
+    try:
+        logger.info(f"Resolving hostname: {interface.host}")
+        ip_address = socket.gethostbyname(interface.host)
+        logger.info(f"Resolved to IP: {ip_address}")
+    except Exception as e:
+        logger.error(f"DNS resolution failed: {str(e)}")
+        raise ValueError(f"Hostname '{interface.host}' konnte nicht aufgelöst werden: {str(e)}")
 
     # Port-Verbindung testen
     port = interface.port or (22 if interface.interface_type.code.lower() == 'sftp' else 21)
@@ -342,9 +409,15 @@ def test_connectivity_ftp(interface):
     sock.settimeout(5)
 
     try:
+        logger.info(f"Connecting to {ip_address}:{port}")
         sock.connect((interface.host, port))
+        logger.info("Socket connection successful")
+    except Exception as e:
+        logger.error(f"Socket connection failed: {str(e)}")
+        raise ValueError(f"Verbindung zu {interface.host}:{port} fehlgeschlagen: {str(e)}")
     finally:
         sock.close()
+        logger.info("Socket closed")
 
 
 @login_required
@@ -452,47 +525,123 @@ def interface_log_detail(request, pk):
 
 @login_required
 @permission_required('order', 'edit')
-def send_order(request, order_id):
-    """Bestellung über die Standard-Schnittstelle des Lieferanten senden."""
-    order = get_object_or_404(PurchaseOrder, pk=order_id)
-    
-    # Nur genehmigte oder bereits gesendete Bestellungen können gesendet werden
-    if order.status not in ['approved', 'sent', 'partially_received']:
-        messages.error(request, f'Bestellung {order.order_number} kann nicht gesendet werden, da sie nicht genehmigt oder bereits gesendet ist.')
-        return redirect('purchase_order_detail', pk=order_id)
-    
+def send_order(self, order, user=None):
+    """Sendet eine Bestellung über FTP"""
     try:
-        # Standard-Schnittstelle des Lieferanten ermitteln
-        interface = SupplierInterface.objects.filter(
-            supplier=order.supplier,
-            is_default=True,
-            is_active=True
-        ).first()
-        
-        if not interface:
-            messages.error(request, f'Keine aktive Standard-Schnittstelle für Lieferant {order.supplier.name} gefunden.')
-            return redirect('purchase_order_detail', pk=order_id)
-        
-        # Bestellung senden
-        result = send_order_via_interface(order_id, interface.id, request.user)
-        
-        if result:
-            messages.success(request, f'Bestellung {order.order_number} wurde erfolgreich über die Schnittstelle "{interface.name}" gesendet.')
-            
-            # Bestellung als gesendet markieren, falls noch nicht geschehen
-            if order.status == 'approved':
-                order.status = 'sent'
-                order.save()
-                messages.info(request, f'Bestellung {order.order_number} wurde als gesendet markiert.')
-        else:
-            messages.warning(request, f'Bestellung {order.order_number} konnte nicht gesendet werden.')
-            
-    except InterfaceError as e:
-        messages.error(request, f'Fehler beim Senden der Bestellung: {str(e)}')
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Starting FTP order send to {self.interface.host}:{self.interface.port or 21}")
+
+        # Host überprüfen
+        if not self.interface.host:
+            raise InterfaceError("Kein FTP-Host konfiguriert")
+
+        # Formatieren der Bestelldaten
+        order_data = self.format_order_data(order)
+        logger.info(f"Order data formatted, size: {len(order_data)} bytes")
+
+        # Bestimme Dateiendung basierend auf dem Format
+        format_to_extension = {
+            'csv': 'csv',
+            'xml': 'xml',
+            'json': 'json',
+            'pdf': 'pdf',
+            'excel': 'xlsx'
+        }
+        ext = format_to_extension.get(self.interface.order_format, 'txt')
+
+        # Dateiname erstellen
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        remote_filename = f"order_{order.order_number}_{timestamp}.{ext}"
+
+        # Remote-Pfad festlegen
+        remote_path = self.interface.remote_path or '/'
+        remote_path = remote_path.rstrip('/') + '/'
+        full_remote_path = remote_path + remote_filename
+        logger.info(f"Will upload to path: {full_remote_path}")
+
+        # Port festlegen (Standard: 21)
+        port = self.interface.port or 21
+
+        # FTP-Verbindung herstellen
+        from io import BytesIO
+        import ftplib
+
+        ftp = ftplib.FTP()
+        ftp.timeout = 30
+
+        try:
+            logger.info(f"Connecting to {self.interface.host}:{port}")
+            ftp.connect(self.interface.host, port)
+            logger.info(f"Connected, attempting login with username: {self.interface.username}")
+            ftp.login(self.interface.username, self.interface.password)
+            logger.info("Login successful")
+
+            # Enable passive mode
+            logger.info("Setting passive mode")
+            ftp.set_pasv(True)
+
+            # Prepare file for upload
+            file_data = BytesIO(order_data.encode('utf-8'))
+
+            # If a specific remote path is required, try to navigate to it
+            if remote_path != '/':
+                try:
+                    logger.info(f"Changing to directory: {remote_path}")
+                    ftp.cwd(remote_path)
+                    # If the change is successful, just use the filename without the path
+                    logger.info(f"Changed to directory: {ftp.pwd()}")
+                    upload_filename = remote_filename
+                except Exception as e:
+                    logger.warning(f"Could not change to directory {remote_path}: {str(e)}")
+                    # Use the full path
+                    upload_filename = full_remote_path
+            else:
+                upload_filename = remote_filename
+
+            # Upload the file
+            logger.info(f"Uploading file: {upload_filename}")
+            ftp.storbinary(f'STOR {upload_filename}', file_data)
+            logger.info("File uploaded successfully")
+
+            # Close the connection
+            ftp.quit()
+            logger.info("FTP connection closed gracefully")
+
+        except Exception as e:
+            logger.error(f"FTP operation error: {str(e)}")
+            try:
+                # Try to close connection in case of error
+                ftp.close()
+            except:
+                pass
+            raise e
+
+        # Erfolgreich protokollieren
+        self.log_transmission(
+            order=order,
+            status='success',
+            message=f"Bestellung erfolgreich per FTP gesendet. Datei: {full_remote_path}",
+            request_data=order_data,
+            user=user
+        )
+
+        return True
+
     except Exception as e:
-        messages.error(request, f'Unerwarteter Fehler: {str(e)}')
-    
-    return redirect('purchase_order_detail', pk=order_id)
+        # Fehler protokollieren
+        error_message = f"Fehler beim Senden der Bestellung per FTP: {str(e)}"
+        logger.error(error_message)
+
+        self.log_transmission(
+            order=order,
+            status='failed',
+            message=error_message,
+            request_data=order_data if 'order_data' in locals() else "",
+            user=user
+        )
+
+        raise InterfaceError(error_message)
 
 
 @login_required
@@ -649,4 +798,71 @@ def get_interface_fields(request):
         return JsonResponse({
             'success': False,
             'message': str(e)
+        })
+
+
+@login_required
+@permission_required('supplier', 'edit')
+def test_send_order(request):
+    """
+    AJAX-Endpunkt zum Testen des Versands einer Bestellung über eine Schnittstelle.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Nur POST-Anfragen werden unterstützt.'})
+
+    interface_id = request.POST.get('interface_id')
+    order_id = request.POST.get('order')
+
+    if not interface_id or not order_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'Schnittstelle und Bestellung müssen angegeben werden.'
+        })
+
+    try:
+        # Bestellung über die Schnittstelle senden
+        result = send_order_via_interface(order_id, interface_id, request.user)
+
+        # Log abrufen, um Details zu erhalten
+        log = InterfaceLog.objects.filter(
+            interface_id=interface_id,
+            order_id=order_id
+        ).order_by('-timestamp').first()
+
+        if result:
+            return JsonResponse({
+                'success': True,
+                'message': 'Testübertragung der Bestellung erfolgreich durchgeführt.',
+                'details': log.message if log else "Die Bestellung wurde erfolgreich gesendet.",
+                'log_id': log.id if log else None
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Fehler bei der Testübertragung',
+                'details': log.message if log else "Unbekannter Fehler beim Senden der Bestellung."
+            })
+
+    except SupplierInterface.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Die angegebene Schnittstelle wurde nicht gefunden.'
+        })
+    except PurchaseOrder.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Die angegebene Bestellung wurde nicht gefunden.'
+        })
+    except InterfaceError as e:
+        return JsonResponse({
+            'success': False,
+            'message': 'Fehler bei der Testübertragung',
+            'details': str(e)
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            'success': False,
+            'message': f'Unerwarteter Fehler beim Senden der Bestellung: {str(e)}',
+            'details': traceback.format_exc()
         })

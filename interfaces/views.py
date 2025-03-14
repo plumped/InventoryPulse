@@ -248,58 +248,34 @@ def test_interface_connectivity(request, pk=None):
     # Check if we're testing an existing interface or a form
     interface_id = request.POST.get('interface_id')
 
+    # Variable to hold the interface we'll test
+    test_interface = None
+
     if interface_id:
         # Testing an existing interface
         try:
             interface = SupplierInterface.objects.get(pk=interface_id)
 
-            # Use the same testing logic as for new interfaces
-            interface_type_code = interface.interface_type.code.lower()
-
-            try:
-                if interface_type_code == 'email':
-                    test_connectivity_email(interface)
-                    return JsonResponse({
-                        'success': True,
-                        'message': "E-Mail-Konfiguration erfolgreich validiert.",
-                        'details': f"E-Mail-Konfiguration überprüft:\n- Empfänger: {interface.email_to}\n- CC: {interface.email_cc or 'Nicht konfiguriert'}\n- Betreffvorlage: {interface.email_subject_template or 'Standard'}\n- Format: {interface.get_order_format_display()}"
-                    })
-                elif interface_type_code == 'api':
-                    test_connectivity_api(interface)
-                    return JsonResponse({
-                        'success': True,
-                        'message': "API-Verbindung erfolgreich getestet.",
-                        'details': f"API-Konfiguration überprüft:\n- URL: {interface.api_url}\n- Authentifizierung: {('Benutzername/Passwort' if interface.username else '') + (' & ' if interface.username and interface.api_key else '') + ('API-Schlüssel' if interface.api_key else '') or 'Keine'}\n- Format: {interface.get_order_format_display()}"
-                    })
-                elif interface_type_code in ['ftp', 'sftp']:
-                    test_connectivity_ftp(interface)
-                    return JsonResponse({
-                        'success': True,
-                        'message': f"{interface_type_code.upper()}-Verbindung erfolgreich getestet.",
-                        'details': f"{'SFTP' if interface_type_code == 'sftp' else 'FTP'}-Konfiguration überprüft:\n- Host: {interface.host}\n- Port: {interface.port or ('22' if interface_type_code == 'sftp' else '21')}\n- Remote-Pfad: {interface.remote_path or '/'}\n- Benutzername: {interface.username}\n- Format: {interface.get_order_format_display()}"
-                    })
-                else:
-                    return JsonResponse({
-                        'success': False,
-                        'message': f'Schnittstellentyp {interface_type_code} wird nicht unterstützt.',
-                        'details': f'Der Test für {interface_type_code} ist nicht implementiert.'
-                    })
-            except Exception as e:
-                import traceback
-                return JsonResponse({
-                    'success': False,
-                    'message': f'Fehler beim Testen der Schnittstelle: {str(e)}',
-                    'details': traceback.format_exc()
-                })
-
+            # Use the provided interface directly for testing
+            test_interface = interface
         except SupplierInterface.DoesNotExist:
             return JsonResponse({
                 'success': False,
                 'message': 'Die angegebene Schnittstelle wurde nicht gefunden.'
             })
     else:
-        # We're testing a form configuration
+        # We're testing a form configuration (either for new or edit)
         form = SupplierInterfaceForm(request.POST)
+
+        # For edit operations, we may need to exclude the current interface from uniqueness checks
+        if 'pk' in request.POST and request.POST.get('pk'):
+            try:
+                existing_interface = SupplierInterface.objects.get(pk=request.POST.get('pk'))
+                # Create a form instance excluding this record from uniqueness validation
+                form = SupplierInterfaceForm(request.POST, instance=existing_interface)
+            except SupplierInterface.DoesNotExist:
+                # If not found, continue with standard validation
+                pass
 
         if not form.is_valid():
             return JsonResponse({
@@ -308,35 +284,35 @@ def test_interface_connectivity(request, pk=None):
                 'details': str(form.errors)
             })
 
-        # Temporäre Instanz erstellen
-        interface = form.save(commit=False)
-        interface.created_by = request.user
+        # Create temporary instance without saving to DB
+        test_interface = form.save(commit=False)
+        test_interface.created_by = request.user
 
     # Schnittstelle testen ohne zu speichern
     try:
         # Je nach Schnittstellentyp unterschiedliche Tests durchführen
-        interface_type_code = interface.interface_type.code.lower()
+        interface_type_code = test_interface.interface_type.code.lower()
 
         if interface_type_code == 'email':
-            test_connectivity_email(interface)
+            test_connectivity_email(test_interface)
             return JsonResponse({
                 'success': True,
                 'message': "E-Mail-Konfiguration erfolgreich validiert.",
-                'details': f"E-Mail-Konfiguration überprüft:\n- Empfänger: {interface.email_to}\n- CC: {interface.email_cc or 'Nicht konfiguriert'}\n- Betreffvorlage: {interface.email_subject_template or 'Standard'}\n- Format: {interface.get_order_format_display()}"
+                'details': f"E-Mail-Konfiguration überprüft:\n- Empfänger: {test_interface.email_to}\n- CC: {test_interface.email_cc or 'Nicht konfiguriert'}\n- Betreffvorlage: {test_interface.email_subject_template or 'Standard'}\n- Format: {test_interface.get_order_format_display()}"
             })
         elif interface_type_code == 'api':
-            test_connectivity_api(interface)
+            test_connectivity_api(test_interface)
             return JsonResponse({
                 'success': True,
                 'message': "API-Verbindung erfolgreich getestet.",
-                'details': f"API-Konfiguration überprüft:\n- URL: {interface.api_url}\n- Authentifizierung: {('Benutzername/Passwort' if interface.username else '') + (' & ' if interface.username and interface.api_key else '') + ('API-Schlüssel' if interface.api_key else '') or 'Keine'}\n- Format: {interface.get_order_format_display()}"
+                'details': f"API-Konfiguration überprüft:\n- URL: {test_interface.api_url}\n- Authentifizierung: {('Benutzername/Passwort' if test_interface.username else '') + (' & ' if test_interface.username and test_interface.api_key else '') + ('API-Schlüssel' if test_interface.api_key else '') or 'Keine'}\n- Format: {test_interface.get_order_format_display()}"
             })
         elif interface_type_code in ['ftp', 'sftp']:
-            test_connectivity_ftp(interface)
+            test_connectivity_ftp(test_interface)
             return JsonResponse({
                 'success': True,
                 'message': f"{interface_type_code.upper()}-Verbindung erfolgreich getestet.",
-                'details': f"{'SFTP' if interface_type_code == 'sftp' else 'FTP'}-Konfiguration überprüft:\n- Host: {interface.host}\n- Port: {interface.port or ('22' if interface_type_code == 'sftp' else '21')}\n- Remote-Pfad: {interface.remote_path or '/'}\n- Benutzername: {interface.username}\n- Format: {interface.get_order_format_display()}"
+                'details': f"{'SFTP' if interface_type_code == 'sftp' else 'FTP'}-Konfiguration überprüft:\n- Host: {test_interface.host}\n- Port: {test_interface.port or ('22' if interface_type_code == 'sftp' else '21')}\n- Remote-Pfad: {test_interface.remote_path or '/'}\n- Benutzername: {test_interface.username}\n- Format: {test_interface.get_order_format_display()}"
             })
         else:
             return JsonResponse({

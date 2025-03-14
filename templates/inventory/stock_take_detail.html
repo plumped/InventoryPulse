@@ -332,11 +332,11 @@
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="{% url 'product_detail' item.product.id %}" class="btn btn-sm btn-info" title="Produktdetails">
-                                    <i class="fas fa-eye"></i>
+                                    <i class="bi bi-eye"></i>
                                 </a>
                                 {% if stock_take.status == 'in_progress' %}
                                     <a href="{% url 'stock_take_item_count' stock_take.id item.id %}" class="btn btn-sm btn-primary" title="Zählen">
-                                        <i class="fas fa-clipboard-check"></i>
+                                        <i class="bi bi-clipboard-check"></i>
                                     </a>
                                 {% endif %}
                             </div>

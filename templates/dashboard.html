@@ -293,7 +293,7 @@
                                     <td>{{ stock_take.warehouse.name }}</td>
                                     <td>{{ stock_take.start_date|date:"d.m.Y" }}</td>
                                     <td>
-                                        <div class="progress" style="height: 10px;">
+                                        <div class="progress" style="height: 25px;">
                                             <div class="progress-bar bg-success" role="progressbar" style="width: {{ stock_take.get_completion_percentage }}%;"
                                                  aria-valuenow="{{ stock_take.get_completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
                                                  {{ stock_take.get_completion_percentage }}%

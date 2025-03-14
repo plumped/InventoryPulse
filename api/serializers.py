@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from core.models import (
     Product, Category, ProductWarehouse, ProductPhoto, ProductAttachment,
@@ -224,3 +225,31 @@ class OrderSuggestionSerializer(serializers.ModelSerializer):
             'minimum_stock', 'suggested_order_quantity', 'preferred_supplier',
             'preferred_supplier_name', 'last_calculated'
         ]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer für Benutzer mit eingeschränkten Informationen
+    """
+    full_name = serializers.SerializerMethodField()
+    departments = serializers.SerializerMethodField()
+    groups = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name',
+                  'full_name', 'is_active', 'is_staff', 'date_joined',
+                  'last_login', 'departments', 'groups']
+
+    def get_full_name(self, obj):
+        return obj.get_full_name() or obj.username
+
+    def get_departments(self, obj):
+        try:
+            departments = obj.profile.departments.all()
+            return [{'id': dept.id, 'name': dept.name} for dept in departments]
+        except:
+            return []
+
+    def get_groups(self, obj):
+        return [{'id': group.id, 'name': group.name} for group in obj.groups.all()]

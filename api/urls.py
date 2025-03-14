@@ -37,6 +37,7 @@ router.register(r'supplier-products', views.SupplierProductViewSet)
 router.register(r'purchase-orders', views.PurchaseOrderViewSet)
 router.register(r'purchase-order-items', views.PurchaseOrderItemViewSet)
 router.register(r'order-suggestions', views.OrderSuggestionViewSet)
+router.register(r'users', views.UserViewSet)  # Neuer Endpunkt für Benutzer
 
 urlpatterns = [
     # API-Endpunkte

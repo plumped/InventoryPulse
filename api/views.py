@@ -1,8 +1,9 @@
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, filters
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -14,6 +15,7 @@ from suppliers.models import Supplier, SupplierProduct
 from inventory.models import Warehouse, StockMovement, StockTake
 from order.models import PurchaseOrder, PurchaseOrderItem, OrderSuggestion
 from order.workflow import can_approve_order
+from . import permissions
 
 from .serializers import (
     ProductListSerializer, ProductDetailSerializer, CategorySerializer,
@@ -23,12 +25,21 @@ from .serializers import (
     ProductWarehouseSerializer, StockMovementSerializer, SupplierSerializer,
     SupplierProductSerializer, StockTakeListSerializer,
     PurchaseOrderListSerializer, PurchaseOrderDetailSerializer,
-    PurchaseOrderItemSerializer, OrderSuggestionSerializer
+    PurchaseOrderItemSerializer, OrderSuggestionSerializer, UserSerializer
 )
 from .permissions import (
     ProductPermission, InventoryPermission, SupplierPermission,
-    OrderPermission, OrderApprovePermission
+    OrderPermission, OrderApprovePermission, UserPermission
 )
+
+
+class ReadOnlyPermission(BasePermission):
+    """
+    Erlaubt nur Lesezugriff (GET, HEAD, OPTIONS)
+    """
+    def has_permission(self, request, view):
+        # Nur sichere Methoden erlauben (GET, HEAD, OPTIONS)
+        return request.method in permissions.SAFE_METHODS
 
 
 class ProductViewSet(viewsets.ModelViewSet):
@@ -464,3 +475,49 @@ class OrderSuggestionViewSet(viewsets.ModelViewSet):
             return Response({'message': f'{count} order suggestions generated', 'count': count})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Aktualisierte UserViewSet-Klasse für api/views.py:
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint für Benutzer.
+    Unterstützt nur Lesezugriff (GET).
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, UserPermission]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['username', 'email', 'first_name', 'last_name']
+    ordering_fields = ['username', 'date_joined', 'last_login', 'first_name', 'last_name']
+    ordering = ['username']
+
+    def get_queryset(self):
+        """Nur aktive Benutzer anzeigen, außer für Admins"""
+        queryset = User.objects.all()
+
+        # Wenn der Benutzer kein Admin ist, nur aktive Benutzer anzeigen
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(is_active=True)
+
+        return queryset
+
+    @action(detail=True, methods=['get'])
+    def departments(self, request, pk=None):
+        """Abteilungen eines Benutzers abrufen"""
+        user = self.get_object()
+        try:
+            departments = user.profile.departments.all()
+            # Einfache Serialisierung, wenn nötig durch eigenen DepartmentSerializer ersetzen
+            data = [{'id': d.id, 'name': d.name, 'code': d.code} for d in departments]
+            return Response(data)
+        except AttributeError:
+            return Response([])
+
+    @action(detail=True, methods=['get'])
+    def groups(self, request, pk=None):
+        """Gruppen eines Benutzers abrufen"""
+        user = self.get_object()
+        # Einfache Serialisierung, wenn nötig durch eigenen GroupSerializer ersetzen
+        data = [{'id': g.id, 'name': g.name} for g in user.groups.all()]
+        return Response(data)

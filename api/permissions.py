@@ -127,3 +127,24 @@ class OrderApprovePermission(permissions.BasePermission):
             return True
 
         return has_permission(request.user, 'order', 'approve')
+
+
+class UserPermission(permissions.BasePermission):
+    """
+    Permission für den User-API-Endpunkt.
+    Erlaubt nur Lesezugriff (keine Schreiboperation)
+    """
+
+    def has_permission(self, request, view):
+        # Superuser haben immer Zugriff
+        if request.user.is_superuser:
+            return True
+
+        # Nur sichere Methoden (GET, HEAD, OPTIONS) für alle anderen Benutzer erlauben
+        if request.method in permissions.SAFE_METHODS:
+            # Optional: Hier könnte man noch eine spezielle Berechtigung prüfen
+            # return has_permission(request.user, 'user', 'view')
+            return True
+
+        # Keine Schreiboperationen erlauben
+        return False

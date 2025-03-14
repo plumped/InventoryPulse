@@ -6,6 +6,12 @@ from suppliers.models import Supplier
 from .models import InterfaceLog, InterfaceType, SupplierInterface
 
 
+from django import forms
+from django.utils.translation import gettext_lazy as _
+from suppliers.models import Supplier
+from interfaces.models import InterfaceType
+from .models import SupplierInterface
+
 class SupplierInterfaceForm(forms.ModelForm):
     """Formular für Lieferantenschnittstellen."""
     
@@ -24,19 +30,19 @@ class SupplierInterfaceForm(forms.ModelForm):
             'interface_type': forms.Select(attrs={'class': 'form-select', 'id': 'id_interface_type'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'is_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'api_url': forms.URLInput(attrs={'class': 'form-control'}),
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'password': forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
-            'api_key': forms.TextInput(attrs={'class': 'form-control'}),
-            'host': forms.TextInput(attrs={'class': 'form-control'}),
-            'port': forms.NumberInput(attrs={'class': 'form-control'}),
-            'remote_path': forms.TextInput(attrs={'class': 'form-control'}),
-            'email_to': forms.TextInput(attrs={'class': 'form-control'}),
-            'email_cc': forms.TextInput(attrs={'class': 'form-control'}),
-            'email_subject_template': forms.TextInput(attrs={'class': 'form-control'}),
+            'api_url': forms.URLInput(attrs={'class': 'form-control', 'id': 'id_api_url'}),
+            'username': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_username_dynamic'}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control', 'id': 'id_password_dynamic', 'autocomplete': 'new-password'}),
+            'api_key': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_api_key'}),
+            'host': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_host'}),
+            'port': forms.NumberInput(attrs={'class': 'form-control', 'id': 'id_port'}),
+            'remote_path': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_remote_path'}),
+            'email_to': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_email_to'}),
+            'email_cc': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_email_cc'}),
+            'email_subject_template': forms.TextInput(attrs={'class': 'form-control', 'id': 'id_email_subject_template'}),
             'order_format': forms.Select(attrs={'class': 'form-select', 'id': 'id_order_format'}),
-            'template': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
-            'config_json': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'template': forms.Textarea(attrs={'class': 'form-control', 'rows': 10, 'id': 'id_template'}),
+            'config_json': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'id': 'id_config_json'}),
         }
         help_texts = {
             'api_url': _('Die URL der API, z.B. https://api.lieferant.de/orders'),
@@ -61,6 +67,11 @@ class SupplierInterfaceForm(forms.ModelForm):
         # Sortieren der Dropdown-Felder
         self.fields['supplier'].queryset = Supplier.objects.all().order_by('name')
         self.fields['interface_type'].queryset = InterfaceType.objects.filter(is_active=True).order_by('name')
+        
+        # Alle Felder optional machen, Validierung erfolgt später je nach Schnittstellentyp
+        for field_name in self.fields:
+            if field_name not in ['supplier', 'name', 'interface_type']:
+                self.fields[field_name].required = False
         
         # Initial-Port basierend auf Schnittstellentyp
         instance = kwargs.get('instance')
@@ -110,15 +121,15 @@ class SupplierInterfaceForm(forms.ModelForm):
                 if not host:
                     self.add_error('host', _('Für FTP/SFTP-Schnittstellen ist ein Host erforderlich'))
                 
-                # Nur beim Neuanlegen prüfen, ob Username/Passwort angegeben sind
+                if not username:
+                    self.add_error('username', _('Für FTP/SFTP-Schnittstellen ist ein Benutzername erforderlich'))
+                
+                # Nur beim Neuanlegen prüfen, ob ein Passwort angegeben ist
                 instance = getattr(self, 'instance', None)
                 is_new = not instance or not instance.pk
                 
-                if is_new and not username:
-                    self.add_error('username', _('Für FTP/SFTP-Schnittstellen ist ein Benutzername erforderlich'))
-                
                 if is_new and not password:
-                    self.add_error('password', _('Für FTP/SFTP-Schnittstellen ist ein Passwort erforderlich'))
+                    self.add_error('password', _('Für neue FTP/SFTP-Schnittstellen ist ein Passwort erforderlich'))
         
         return cleaned_data
 

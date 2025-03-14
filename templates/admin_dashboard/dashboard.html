@@ -82,7 +82,7 @@
     </div>
 </div>
 
-<!-- Statistik-Karte für Schnittstellen (in die Reihe der anderen Statistik-Karten einfügen) -->
+<!-- Statistik-Karte für Schnittstellen -->
 <div class="col-xl-3 col-md-6">
     <div class="card">
         <div class="card-body">
@@ -109,9 +109,14 @@
                         <i class="fas fa-check-circle"></i> {{ interface_stats.active }} aktiv
                     </span>
                 {% endif %}
-                <a href="{% url 'admin_interface_management' %}" class="text-primary">
-                    <i class="fas fa-cog"></i> Verwalten
-                </a>
+                <div class="mt-2">
+                    <a href="{% url 'admin_interface_management' %}" class="text-primary me-2">
+                        <i class="fas fa-cog"></i> Verwalten
+                    </a>
+                    <a href="{% url 'interface_list' %}" class="text-primary">
+                        <i class="fas fa-list"></i> Schnittstellen anzeigen
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -213,7 +218,7 @@
             </div>
         </div>
     </div>
-
+    
     <div class="col-lg-4 col-md-6 mb-4">
         <div class="card shadow">
             <div class="card-header py-3">
@@ -226,6 +231,23 @@
                 </a>
                 <a href="{% url 'warehouse_access_management' %}" class="btn btn-outline-primary btn-sm">
                     <i class="bi bi-key"></i> Lagerzugriff
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Lieferanten-Schnittstellen</h6>
+            </div>
+            <div class="card-body">
+                <p>Verwalten Sie Schnittstellen für die Kommunikation mit Lieferanten.</p>
+                <a href="{% url 'interface_list' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plug"></i> Schnittstellen anzeigen
+                </a>
+                <a href="{% url 'interface_logs' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-journal-text"></i> Übertragungsprotokolle
                 </a>
             </div>
         </div>

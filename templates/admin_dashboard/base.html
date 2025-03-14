@@ -67,8 +67,21 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <hr class="my-2">
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if section == 'interfaces' %}active bg-light{% endif %}" href="{% url 'admin_interface_management' %}">
-                                <i class="bi bi-diagram-3 me-2"></i> Schnittstellen
+                                <i class="bi bi-globe me-2"></i> Schnittstellen-Verwaltung
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'interface_list' %}">
+                                <i class="bi bi-plug me-2"></i> Lieferanten-Schnittstellen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'interface_logs' %}">
+                                <i class="bi bi-journal-text me-2"></i> Übertragungsprotokolle
                             </a>
                         </li>
                     </ul>

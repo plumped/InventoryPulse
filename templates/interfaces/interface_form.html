@@ -8,6 +8,10 @@
     .field-section {
         display: none;
     }
+    .required-field label:after {
+        content: " *";
+        color: red;
+    }
 </style>
 {% endblock %}
 
@@ -41,7 +45,7 @@
                     <h4>Allgemeine Informationen</h4>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-3 required-field">
                                 <label for="id_supplier" class="form-label">Lieferant</label>
                                 {{ form.supplier }}
                                 {% if form.supplier.errors %}
@@ -55,7 +59,7 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-3 required-field">
                                 <label for="id_name" class="form-label">Schnittstellenname</label>
                                 {{ form.name }}
                                 {% if form.name.errors %}
@@ -71,7 +75,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-3 required-field">
                                 <label for="id_interface_type" class="form-label">Schnittstellentyp</label>
                                 {{ form.interface_type }}
                                 {% if form.interface_type.errors %}
@@ -137,7 +141,7 @@
                     <h4>API/Web-Konfiguration</h4>
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="mb-3">
+                            <div class="mb-3 api-required">
                                 <label for="id_api_url" class="form-label">API-URL</label>
                                 {{ form.api_url }}
                                 {% if form.api_url.errors %}
@@ -154,7 +158,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="id_username" class="form-label">Benutzername</label>
+                                <label for="id_username_dynamic" class="form-label">Benutzername</label>
                                 {{ form.username }}
                                 {% if form.username.errors %}
                                     <div class="invalid-feedback d-block">
@@ -168,7 +172,7 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="id_password" class="form-label">Passwort</label>
+                                <label for="id_password_dynamic" class="form-label">Passwort</label>
                                 {{ form.password }}
                                 {% if form.password.errors %}
                                     <div class="invalid-feedback d-block">
@@ -204,7 +208,7 @@
                     <h4>FTP/SFTP-Konfiguration</h4>
                     <div class="row">
                         <div class="col-md-8">
-                            <div class="mb-3">
+                            <div class="mb-3 ftp-required">
                                 <label for="id_host" class="form-label">Host</label>
                                 {{ form.host }}
                                 {% if form.host.errors %}
@@ -250,8 +254,8 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="id_username" class="form-label">Benutzername</label>
+                            <div class="mb-3 ftp-required">
+                                <label for="id_username_dynamic" class="form-label">Benutzername</label>
                                 {{ form.username }}
                                 {% if form.username.errors %}
                                     <div class="invalid-feedback d-block">
@@ -264,8 +268,8 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="id_password" class="form-label">Passwort</label>
+                            <div class="mb-3 ftp-required">
+                                <label for="id_password_dynamic" class="form-label">Passwort</label>
                                 {{ form.password }}
                                 {% if form.password.errors %}
                                     <div class="invalid-feedback d-block">
@@ -285,7 +289,7 @@
                     <h4>E-Mail-Konfiguration</h4>
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="mb-3">
+                            <div class="mb-3 email-required">
                                 <label for="id_email_to" class="form-label">Empfänger</label>
                                 {{ form.email_to }}
                                 {% if form.email_to.errors %}
@@ -355,7 +359,7 @@
                 </div>
                 
                 <!-- Erweiterte Konfiguration -->
-                <div class="mb-4">
+                <div id="extended-config-section" class="field-section mb-4">
                     <h4>Erweiterte Konfiguration</h4>
                     <div class="row">
                         <div class="col-md-12">
@@ -389,64 +393,121 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
-        // Felder basierend auf Schnittstellentyp ein-/ausblenden
-        function updateFieldVisibility() {
-            var interfaceType = $('#id_interface_type').find('option:selected').text().toLowerCase();
-            
-            // Alle Abschnitte ausblenden
-            $('.field-section').hide();
-            
-            // Relevante Abschnitte einblenden
-            if (interfaceType.includes('api') || interfaceType.includes('web')) {
-                $('#api-section').show();
-            } else if (interfaceType.includes('ftp') || interfaceType.includes('sftp')) {
-                $('#ftp-section').show();
-            } else if (interfaceType.includes('email')) {
-                $('#email-section').show();
-            }
-            
-            // Format-Abschnitt für XML- und CSV-Format anzeigen
-            var format = $('#id_order_format').val();
-            if (format === 'xml' || format === 'custom') {
-                $('#format-section').show();
-            } else {
-                $('#format-section').hide();
-            }
-        }
+    console.log('Document ready - initializing interface form script');
+
+    // Umfangreichere Debugging-Funktion
+    function updateFieldVisibility() {
+        console.group('Update Field Visibility');
         
-        // Initiale Sichtbarkeit setzen
+        // Sicherstellen, dass jQuery korrekt funktioniert
+        if (!$) {
+            console.error('jQuery not loaded correctly');
+            return;
+        }
+
+        // Debug-Ausgaben für aktuellen Status
+        console.log('Interface Type Element:', $('#id_interface_type'));
+        console.log('Interface Type Value:', $('#id_interface_type').val());
+        
+        var $selectedOption = $('#id_interface_type').find('option:selected');
+        var interfaceType = $selectedOption.text().toLowerCase();
+        
+        console.log('Selected Option:', $selectedOption);
+        console.log('Selected Interface Type:', interfaceType);
+
+        // Zunächst ALLE Sektionen ausblenden
+        [
+            '#api-section', 
+            '#ftp-section', 
+            '#email-section', 
+            '#format-section', 
+            '#extended-config-section'
+        ].forEach(function(selector) {
+            console.log(`Hiding section: ${selector}`);
+            $(selector).hide();
+        });
+
+        // Pflichtfeld-Klassen entfernen
+        [
+            '.api-required', 
+            '.ftp-required', 
+            '.email-required'
+        ].forEach(function(selector) {
+            $(selector).removeClass('required-field');
+        });
+
+        // Wenn kein Typ ausgewählt, abbrechen
+        if (!$('#id_interface_type').val()) {
+            console.log('No interface type selected');
+            console.groupEnd();
+            return;
+        }
+
+        // Sektionen basierend auf Schnittstellentyp einblenden
+        if (interfaceType.includes('api') || interfaceType.includes('web')) {
+            console.log('Showing API sections');
+            $('#api-section, #extended-config-section').show();
+            $('.api-required').addClass('required-field');
+        } else if (interfaceType.includes('ftp') || interfaceType.includes('sftp')) {
+            console.log('Showing FTP sections');
+            $('#ftp-section, #extended-config-section').show();
+            $('.ftp-required').addClass('required-field');
+        } else if (interfaceType.includes('email')) {
+            console.log('Showing Email section');
+            $('#email-section').show();
+            $('.email-required').addClass('required-field');
+        }
+
+        // Format-Sektion für XML und Custom
+        var format = $('#id_order_format').val();
+        if (format === 'xml' || format === 'custom') {
+            console.log('Showing Format section');
+            $('#format-section').show();
+        }
+
+        console.groupEnd();
+    }
+
+    // Ereignisse binden mit zusätzlichem Logging
+    $('#id_interface_type').on('change', function() {
+        console.log('Interface Type changed');
         updateFieldVisibility();
         
-        // Bei Änderung des Schnittstellentyps
-        $('#id_interface_type').on('change', function() {
-            updateFieldVisibility();
-            
-            // AJAX-Anfrage, um relevante Felder für diesen Schnittstellentyp zu holen
-            var typeId = $(this).val();
-            
-            if (typeId) {
-                $.ajax({
-                    url: '{% url 'get_interface_fields' %}',
-                    data: { 'interface_type_id': typeId },
-                    dataType: 'json',
-                    success: function(data) {
-                        if (data.success) {
-                            // Vorausfüllen der Felder basierend auf dem Schnittstellentyp
-                            if (data.type_name.toLowerCase().includes('ftp') && !$('#id_port').val()) {
-                                $('#id_port').val(21);
-                            } else if (data.type_name.toLowerCase().includes('sftp') && !$('#id_port').val()) {
-                                $('#id_port').val(22);
-                            }
+        var typeId = $(this).val();
+        
+        if (typeId) {
+            $.ajax({
+                url: '{% url 'get_interface_fields' %}',
+                data: { 'interface_type_id': typeId },
+                dataType: 'json',
+                success: function(data) {
+                    console.log('Interface Fields Data:', data);
+                    if (data.success) {
+                        if (data.type_name.toLowerCase().includes('ftp') && !$('#id_port').val()) {
+                            $('#id_port').val(21);
+                        } else if (data.type_name.toLowerCase().includes('sftp') && !$('#id_port').val()) {
+                            $('#id_port').val(22);
                         }
                     }
-                });
-            }
-        });
-        
-        // Bei Änderung des Formats
-        $('#id_order_format').on('change', function() {
-            updateFieldVisibility();
-        });
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', status, error);
+                }
+            });
+        }
     });
+
+    // Bei Änderung des Formats
+    $('#id_order_format').on('change', function() {
+        console.log('Order Format changed');
+        updateFieldVisibility();
+    });
+
+    // Initiale Sichtbarkeit setzen
+    updateFieldVisibility();
+
+    // Zusätzliche Initialisierungsdiagnose
+    console.log('Interface form script initialized successfully');
+});
 </script>
 {% endblock %}

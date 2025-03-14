@@ -76,7 +76,8 @@ def interface_list(request):
         'interface_type_id': interface_type_id,
         'is_active': is_active,
         'search_query': search_query,
-        'order_by': order_by
+        'order_by': order_by,
+        'section': 'interface_list'  # Hinzugefügt für Navigations-Highlighting
     }
     
     return render(request, 'interfaces/interface_list.html', context)
@@ -302,6 +303,16 @@ def interface_logs(request, interface_id=None):
             Q(order__order_number__icontains=search_query)
         )
     
+    # Statistiken berechnen
+    total_count = logs.count()
+    success_count = logs.filter(status='success').count()
+    failed_count = logs.filter(status='failed').count()
+    
+    # Erfolgsrate berechnen
+    success_rate = 0
+    if total_count > 0:
+        success_rate = (success_count / total_count) * 100
+    
     # Sortierung
     logs = logs.order_by('-timestamp')
     
@@ -329,7 +340,13 @@ def interface_logs(request, interface_id=None):
         'status': status,
         'date_from': date_from,
         'date_to': date_to,
-        'search_query': search_query
+        'search_query': search_query,
+        'section': 'interface_logs',
+        # Statistiken zur Anzeige
+        'total_count': total_count,
+        'success_count': success_count,
+        'failed_count': failed_count,
+        'success_rate': success_rate
     }
     
     return render(request, 'interfaces/interface_logs.html', context)

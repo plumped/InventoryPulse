@@ -168,10 +168,10 @@
                                         <td>
                                             <div class="btn-group">
                                                 <a href="{% url 'admin_interface_type_edit' type_id=type.id %}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-edit"></i>
+                                                    <i class="bi bi-pencil"></i>
                                                 </a>
                                                 <a href="{% url 'admin_interface_type_delete' type_id=type.id %}" class="btn btn-sm btn-outline-danger">
-                                                    <i class="fas fa-trash"></i>
+                                                    <i class="bi bi-trash"></i>
                                                 </a>
                                             </div>
                                         </td>
@@ -179,10 +179,10 @@
                                 {% empty %}
                                     <tr>
                                         <td colspan="6" class="text-center py-3">
-                                            <i class="fas fa-info-circle text-info me-2"></i>
+                                            <i class="bi bi-info-circle text-info me-2"></i>
                                             Keine Schnittstellentypen definiert.
                                             <a href="{% url 'admin_interface_type_create' %}" class="btn btn-sm btn-primary ms-3">
-                                                <i class="fas fa-plus"></i> Ersten Typ erstellen
+                                                <i class="bi bi-plus"></i> Ersten Typ erstellen
                                             </a>
                                         </td>
                                     </tr>

@@ -22,6 +22,7 @@ from django.templatetags.static import static
 from django.utils import timezone
 from accessmanagement.decorators import permission_required
 from accessmanagement.models import WarehouseAccess
+from accessmanagement.permissions import PERMISSION_AREAS
 from inventory.models import StockMovement, Warehouse, Department, StockTake
 from order.models import PurchaseOrder, OrderSuggestion
 from suppliers.models import Supplier, SupplierProduct

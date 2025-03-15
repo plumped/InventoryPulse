@@ -2,180 +2,379 @@
 {% load static %}
 {% block title %}Dashboard - InventoryPulse{% endblock %}
 
+{% block extra_css %}
+<!-- Gridstack CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/7.3.0/gridstack.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/7.3.0/gridstack-extra.min.css" />
+<style>
+    .grid-stack-item-content {
+        padding: 0;
+        overflow: hidden;
+        border-radius: 0.375rem;
+        transition: box-shadow 0.2s ease;
+    }
+
+    .grid-stack-item-content:hover {
+        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.15);
+    }
+
+    .widget {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .widget-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background-color: rgba(0,0,0,0.03);
+        border-bottom: 1px solid rgba(0,0,0,0.125);
+    }
+
+    .widget-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .widget-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Wichtig, damit der Inhalt nicht überläuft */
+        padding: 1rem;
+    }
+
+    .widget-body .table-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .widget-footer {
+        padding: 0.5rem 1rem;
+        background-color: rgba(0,0,0,0.03);
+        border-top: 1px solid rgba(0,0,0,0.125);
+        display: none; /* Verstecke den Footer standardmäßig */
+    }
+
+    .widget-controls {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .stat-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 100%;
+        cursor: pointer; /* Mauszeiger als Hand anzeigen */
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+        transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1);
+    }
+
+    .table-container {
+        overflow: auto;
+        max-height: 100%; /* Statt fester 300px */
+        height: 100%;
+    }
+
+    #dashboard-controls {
+        margin-bottom: 1rem;
+    }
+
+    .badge-custom-color {
+        background-color: var(--badge-color);
+        color: var(--badge-text);
+    }
+
+    /* Stile für den Bearbeitungs-/Anzeigemodus */
+    .edit-mode .grid-stack-item {
+        cursor: move;
+    }
+
+    .view-mode .grid-stack-item {
+        cursor: default;
+    }
+
+    .view-mode .widget-controls {
+        display: none;
+    }
+
+    .edit-mode .widget-link {
+    pointer-events: none;
+}
+
+    .edit-mode .grid-stack-placeholder {
+        background-color: rgba(100, 100, 255, 0.2);
+        border: 1px dashed #8080FF;
+    }
+
+    /* Badges für den Modus-Wechsel */
+    .badge-edit-mode {
+        background-color: #ff5722;
+        color: white;
+    }
+
+    .badge-view-mode {
+        background-color: #4caf50;
+        color: white;
+    }
+
+    /* Widget-Link für Klickbarkeit */
+    .widget-link {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+    }
+
+    /* Verstecke Layout-Steuerelemente im Anzeige-Modus */
+    .view-mode .edit-control {
+        display: none;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">Dashboard</h1>
-        </div>
+<div id="dashboard-controls" class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Dashboard</h1>
+    <div class="btn-group">
+        <button id="toggle-mode-btn" class="btn btn-outline-primary">
+            <i class="bi bi-pin-angle"></i> <span id="mode-text">Layout fixieren</span>
+            <span id="mode-badge" class="badge badge-edit-mode ms-2">Bearbeitungsmodus</span>
+        </button>
+        <button id="add-widget-btn" class="btn btn-outline-primary edit-control" data-bs-toggle="modal" data-bs-target="#widgetModal">
+            <i class="bi bi-plus-lg"></i> Widget hinzufügen
+        </button>
+        <button id="save-layout-btn" class="btn btn-primary edit-control">
+            <i class="bi bi-save"></i> Layout speichern
+        </button>
+        <button id="reset-layout-btn" class="btn btn-outline-danger edit-control">
+            <i class="bi bi-arrow-counterclockwise"></i> Zurücksetzen
+        </button>
     </div>
+</div>
 
-    <div class="row mb-4">
-        <!-- Produktstatistik -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="card-title">Produkte</h5>
-                            <h2 class="mb-0">{{ total_products }}</h2>
-                        </div>
-                        <i class="bi bi-box-seam fs-1"></i>
-                    </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{% url 'product_list' %}">Details anzeigen</a>
-                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
+<!-- Grid Stack Container -->
+<div class="grid-stack view-mode"></div>
+
+<!-- Widget Modal -->
+<div class="modal fade" id="widgetModal" tabindex="-1" aria-labelledby="widgetModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="widgetModalLabel">Widget hinzufügen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="list-group">
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="products">
+                        <i class="bi bi-box-seam"></i> Produkte
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="categories">
+                        <i class="bi bi-tags"></i> Kategorien
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="warehouses">
+                        <i class="bi bi-building"></i> Lager
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="low_stock">
+                        <i class="bi bi-exclamation-triangle"></i> Kritische Bestände
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="suppliers">
+                        <i class="bi bi-truck"></i> Lieferanten
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="departments">
+                        <i class="bi bi-people"></i> Abteilungen
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="stock_takes">
+                        <i class="bi bi-clipboard-check"></i> Laufende Inventuren
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="stock_movements">
+                        <i class="bi bi-arrow-left-right"></i> Bestandsbewegungen
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="low_stock_items">
+                        <i class="bi bi-exclamation-circle"></i> Kritische Bestände Liste
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="active_stock_takes">
+                        <i class="bi bi-clipboard-check"></i> Aktive Inventuren
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="warehouses_list">
+                        <i class="bi bi-building"></i> Lagerübersicht
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="purchase_orders">
+                        <i class="bi bi-box-seam"></i> Bestellübersicht
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="quick_actions">
+                        <i class="bi bi-lightning"></i> Schnellaktionen
+                    </button>
                 </div>
             </div>
-        </div>
-
-        <!-- Kategorie-Statistik -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card bg-success text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="card-title">Kategorien</h5>
-                            <h2 class="mb-0">{{ total_categories }}</h2>
-                        </div>
-                        <i class="bi bi-tags fs-1"></i>
-                    </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{% url 'category_list' %}">Details anzeigen</a>
-                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lager-Statistik -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card bg-info text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="card-title">Lager</h5>
-                            <h2 class="mb-0">{{ total_warehouses }}</h2>
-                        </div>
-                        <i class="bi bi-building fs-1"></i>
-                    </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{% url 'warehouse_list' %}">Details anzeigen</a>
-                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kritische Produkte -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card bg-danger text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="card-title">Kritische Bestände</h5>
-                            <h2 class="mb-0">{{ low_stock_count }}</h2>
-                        </div>
-                        <i class="bi bi-exclamation-triangle fs-1"></i>
-                    </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{% url 'low_stock_list' %}">Details anzeigen</a>
-                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<!-- Gridstack JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/7.3.0/gridstack-all.min.js"></script>
 
-    <div class="row mb-4">
-        <!-- Lieferanten-Statistik -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card bg-secondary text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="card-title">Lieferanten</h5>
-                            <h2 class="mb-0">{{ total_suppliers }}</h2>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Widget templates mit Links
+        const widgetTemplates = {
+            products: {
+                w: 3, h: 2, title: "Produkte",
+                color: "primary",
+                link: "{% url 'product_list' %}",
+                content: `
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <div class="stat-value">{{ total_products }}</div>
+                            <div class="stat-label">Produkte</div>
                         </div>
-                        <i class="bi bi-truck fs-1"></i>
-                    </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{% url 'supplier_list' %}">Details anzeigen</a>
-                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Abteilungen-Statistik -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card bg-warning text-dark h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="card-title">Abteilungen</h5>
-                            <h2 class="mb-0">{{ total_departments }}</h2>
+                        <div class="stat-icon">
+                            <i class="bi bi-box-seam"></i>
                         </div>
-                        <i class="bi bi-people fs-1"></i>
                     </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-dark stretched-link" href="{% url 'department_management' %}">Details anzeigen</a>
-                    <div class="small text-dark"><i class="bi bi-chevron-right"></i></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Laufende Inventuren -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card bg-primary text-white h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="card-title">Laufende Inventuren</h5>
-                            <h2 class="mb-0">{{ active_stock_takes_count }}</h2>
+                `
+            },
+            categories: {
+                w: 3, h: 2, title: "Kategorien",
+                color: "success",
+                link: "{% url 'category_list' %}",
+                content: `
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <div class="stat-value">{{ total_categories }}</div>
+                            <div class="stat-label">Kategorien</div>
                         </div>
-                        <i class="bi bi-clipboard-check fs-1"></i>
+                        <div class="stat-icon">
+                            <i class="bi bi-tags"></i>
+                        </div>
                     </div>
-                </div>
-                <div class="card-footer d-flex align-items-center justify-content-between">
-                    <a class="small text-white stretched-link" href="{% url 'stock_take_list' %}">Details anzeigen</a>
-                    <div class="small text-white"><i class="bi bi-chevron-right"></i></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Aktionen -->
-        <div class="col-md-3 col-sm-6 mb-3">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">Schnellaktionen</h5>
-                </div>
-                <div class="card-body d-flex flex-column gap-2">
-                    <a href="{% url 'bulk_warehouse_transfer' %}?source={{ warehouse.id }}" class="btn btn-outline-success">
-                        <i class="bi bi-arrow-left-right"></i> Lagerverschiebung
-                    </a>
-                    <a href="{% url 'stock_take_create' %}" class="btn btn-outline-success">
-                        <i class="bi bi-clipboard-check"></i> Neue Inventur
-                    </a>
-                    <a href="{% url 'product_create' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-plus-circle"></i> Neues Produkt
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Letzte Bestandsbewegungen -->
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Letzte Bestandsbewegungen</h5>
-                    <a href="{% url 'stock_movement_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
+                `
+            },
+            warehouses: {
+                w: 3, h: 2, title: "Lager",
+                color: "info",
+                link: "{% url 'warehouse_list' %}",
+                content: `
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <div class="stat-value">{{ total_warehouses }}</div>
+                            <div class="stat-label">Lager</div>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="bi bi-building"></i>
+                        </div>
+                    </div>
+                `
+            },
+            low_stock: {
+                w: 3, h: 2, title: "Kritische Bestände",
+                color: "danger",
+                link: "{% url 'low_stock_list' %}",
+                content: `
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <div class="stat-value">{{ low_stock_count }}</div>
+                            <div class="stat-label">Kritische Bestände</div>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                `
+            },
+            suppliers: {
+                w: 3, h: 2, title: "Lieferanten",
+                color: "secondary",
+                link: "{% url 'supplier_list' %}",
+                content: `
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <div class="stat-value">{{ total_suppliers }}</div>
+                            <div class="stat-label">Lieferanten</div>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                    </div>
+                `
+            },
+            departments: {
+                w: 3, h: 2, title: "Abteilungen",
+                color: "warning",
+                textColor: "dark",
+                link: "{% url 'department_management' %}",
+                content: `
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <div class="stat-value">{{ total_departments }}</div>
+                            <div class="stat-label">Abteilungen</div>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                `
+            },
+            stock_takes: {
+                w: 3, h: 2, title: "Laufende Inventuren",
+                color: "primary",
+                link: "{% url 'stock_take_list' %}",
+                content: `
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <div class="stat-value">{{ active_stock_takes_count }}</div>
+                            <div class="stat-label">Laufende Inventuren</div>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                    </div>
+                `
+            },
+            stock_movements: {
+                w: 6, h: 6, title: "Letzte Bestandsbewegungen",
+                link: "{% url 'stock_movement_list' %}",
+                content: `
+                    <div class="table-container">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -211,19 +410,13 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kritische Produkte Liste -->
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-exclamation-circle me-2"></i>Kritische Bestände</h5>
-                    <a href="{% url 'low_stock_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
+                `
+            },
+            low_stock_items: {
+                w: 6, h: 6, title: "Kritische Bestände",
+                link: "{% url 'low_stock_list' %}",
+                content: `
+                    <div class="table-container">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -261,21 +454,13 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <!-- Aktive Inventuren -->
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Aktive Inventuren</h5>
-                    <a href="{% url 'stock_take_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
+                `
+            },
+            active_stock_takes: {
+                w: 6, h: 6, title: "Aktive Inventuren",
+                link: "{% url 'stock_take_list' %}",
+                content: `
+                    <div class="table-container">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -319,19 +504,13 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lagerübersicht -->
-        <div class="col-lg-6">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-building me-2"></i>Lagerübersicht</h5>
-                    <a href="{% url 'warehouse_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
+                `
+            },
+            warehouses_list: {
+                w: 6, h: 6, title: "Lagerübersicht",
+                link: "{% url 'warehouse_list' %}",
+                content: `
+                    <div class="table-container">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -369,112 +548,78 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bestellungs-Widget als neue Zeile -->
-    <div class="row">
-        <div class="col-12">
-            <!-- Bestellungs-Widget -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-box-seam me-2"></i>Bestellübersicht</h5>
-                    <a href="{% url 'purchase_order_list' %}" class="btn btn-sm btn-primary">Alle anzeigen</a>
-                </div>
-                <div class="card-body">
-                    <!-- Bestellstatus-Kacheln -->
-                    <div class="row mb-4">
-                        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
-                            <div class="card bg-warning text-dark h-100">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">Genehmigung ausstehend</h6>
-                                            <h2 class="mb-0">{{ pending_count }}</h2>
-                                        </div>
-                                        <div class="ms-3">
-                                            <i class="bi bi-hourglass fs-3"></i>
+                `
+            },
+            purchase_orders: {
+                w: 6, h: 6, title: "Bestellübersicht",
+                link: "{% url 'purchase_order_list' %}",
+                content: `
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="card bg-warning text-dark h-100">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <div>Genehmigung ausstehend</div>
+                                                <h4 class="mb-0">{{ pending_count }}</h4>
+                                            </div>
+                                            <div class="ms-2">
+                                                <i class="bi bi-hourglass fs-3"></i>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="card-footer p-2">
-                                    <a href="{% url 'purchase_order_list' %}?status=pending" class="stretched-link text-reset text-decoration-none small">
-                                        <span class="fw-bold">Genehmigungen anzeigen</span>
-                                        <i class="bi bi-chevron-right float-end"></i>
-                                    </a>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
-                            <div class="card bg-primary text-white h-100">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">Bestellte Artikel</h6>
-                                            <h2 class="mb-0">{{ sent_count }}</h2>
-                                        </div>
-                                        <div class="ms-3">
-                                            <i class="bi bi-truck fs-3"></i>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="card bg-primary text-white h-100">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <div>Bestellte Artikel</div>
+                                                <h4 class="mb-0">{{ sent_count }}</h4>
+                                            </div>
+                                            <div class="ms-2">
+                                                <i class="bi bi-truck fs-3"></i>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="card-footer p-2">
-                                    <a href="{% url 'purchase_order_list' %}?status=sent" class="stretched-link text-reset text-decoration-none small">
-                                        <span class="fw-bold">Bestellte Artikel anzeigen</span>
-                                        <i class="bi bi-chevron-right float-end"></i>
-                                    </a>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6 mb-3 mb-md-0">
-                            <div class="card bg-info text-dark h-100">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">Teillieferungen</h6>
-                                            <h2 class="mb-0">{{ partial_count }}</h2>
-                                        </div>
-                                        <div class="ms-3">
-                                            <i class="bi bi-box fs-3"></i>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="card bg-info text-dark h-100">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <div>Teillieferungen</div>
+                                                <h4 class="mb-0">{{ partial_count }}</h4>
+                                            </div>
+                                            <div class="ms-2">
+                                                <i class="bi bi-box fs-3"></i>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="card-footer p-2">
-                                    <a href="{% url 'purchase_order_list' %}?status=partially_received" class="stretched-link text-reset text-decoration-none small">
-                                        <span class="fw-bold">Teillieferungen anzeigen</span>
-                                        <i class="bi bi-chevron-right float-end"></i>
-                                    </a>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-sm-6">
-                            <div class="card bg-success text-white h-100">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">Bestellvorschläge</h6>
-                                            <h2 class="mb-0">{{ suggestion_count }}</h2>
-                                        </div>
-                                        <div class="ms-3">
-                                            <i class="bi bi-lightbulb fs-3"></i>
+                            <div class="col-md-3 col-sm-6 mb-2">
+                                <div class="card bg-success text-white h-100">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-grow-1">
+                                                <div>Bestellvorschläge</div>
+                                                <h4 class="mb-0">{{ suggestion_count }}</h4>
+                                            </div>
+                                            <div class="ms-2">
+                                                <i class="bi bi-lightbulb fs-3"></i>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="card-footer p-2">
-                                    <a href="{% url 'order_suggestions' %}" class="stretched-link text-reset text-decoration-none small">
-                                        <span class="fw-bold">Bestellvorschläge anzeigen</span>
-                                        <i class="bi bi-chevron-right float-end"></i>
-                                    </a>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Letzte Bestellungen -->
-                    <h6 class="mb-3">Letzte Bestellungen</h6>
-                    <div class="table-responsive">
+                    <div class="table-container">
                         <table class="table table-sm table-hover">
                             <thead class="table-light">
                                 <tr>
@@ -483,7 +628,6 @@
                                     <th>Datum</th>
                                     <th>Status</th>
                                     <th>Wert</th>
-                                    <th>Aktionen</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -512,22 +656,10 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ order.total|floatformat:2 }} €</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            {% if order.status == 'sent' or order.status == 'partially_received' %}
-                                            <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-outline-primary">
-                                                <i class="bi bi-box-seam"></i>
-                                            </a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6" class="text-center py-3">
+                                    <td colspan="5" class="text-center py-3">
                                         <span class="text-muted">Keine Bestellungen vorhanden</span>
                                     </td>
                                 </tr>
@@ -535,17 +667,350 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="d-flex justify-content-between mt-3">
-                        <a href="{% url 'order_suggestions' %}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-lightbulb me-1"></i>Bestellvorschläge
+                `
+            },
+            quick_actions: {
+                w: 3, h: 5, title: "Schnellaktionen",
+                content: `
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'bulk_warehouse_transfer' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-left-right me-2"></i>Lagerverschiebung
                         </a>
-                        <a href="{% url 'purchase_order_create' %}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-circle me-1"></i>Neue Bestellung
+                        <a href="{% url 'stock_take_create' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-clipboard-check me-2"></i>Neue Inventur
+                        </a>
+                        <a href="{% url 'product_create' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Neues Produkt
+                        </a>
+                        <a href="{% url 'purchase_order_create' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-cart-plus me-2"></i>Neue Bestellung
+                        </a>
+                        <a href="{% url 'supplier_create' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-truck me-2"></i>Neuer Lieferant
+                        </a>
+                        <a href="{% url 'category_create' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-tags me-2"></i>Neue Kategorie
                         </a>
                     </div>
+                `
+            }
+        };
+
+        // Default layout configuration
+        const defaultLayout = [
+            { x: 0, y: 0, w: 3, h: 2, id: 'products' },
+            { x: 3, y: 0, w: 3, h: 2, id: 'categories' },
+            { x: 6, y: 0, w: 3, h: 2, id: 'warehouses' },
+            { x: 9, y: 0, w: 3, h: 2, id: 'low_stock' },
+            { x: 0, y: 2, w: 3, h: 2, id: 'suppliers' },
+            { x: 3, y: 2, w: 3, h: 2, id: 'departments' },
+            { x: 6, y: 2, w: 3, h: 2, id: 'stock_takes' },
+            { x: 9, y: 2, w: 3, h: 5, id: 'quick_actions' },
+            { x: 0, y: 4, w: 6, h: 6, id: 'stock_movements' },
+            { x: 6, y: 4, w: 6, h: 6, id: 'low_stock_items' },
+            { x: 0, y: 10, w: 6, h: 6, id: 'active_stock_takes' },
+            { x: 6, y: 10, w: 6, h: 6, id: 'purchase_orders' }
+        ];
+        // Variablen zur Verwaltung des Modus
+        let isEditMode = false;
+        const gridContainer = document.querySelector('.grid-stack');
+        const modeText = document.getElementById('mode-text');
+        const modeBadge = document.getElementById('mode-badge');
+
+        // Initialize GridStack
+        const grid = GridStack.init({
+            cellHeight: 80,
+            margin: 10,
+            disableOneColumnMode: false,
+            float: true,
+            animate: true,
+            draggable: {
+                handle: '.widget-header',
+            },
+            resizable: {
+                handles: 'e,se,s,sw,w',
+                autoHide: false
+            }
+        });
+        grid.disable();
+
+        // Function to create widget HTML
+        function createWidgetHTML(id) {
+            const template = widgetTemplates[id];
+            if (!template) return null;
+
+            // Set default background and text colors based on widget.color
+            let bgClass = template.color ? `bg-${template.color}` : '';
+            let textClass = template.textColor ? `text-${template.textColor}` : (template.color ? 'text-white' : '');
+
+            // For warning and info colors, default text color is dark
+            if ((template.color === 'warning' || template.color === 'info') && !template.textColor) {
+                textClass = 'text-dark';
+            }
+
+            // Erstelle HTML mit einem Link-Button für die gesamte Kachel
+            return `
+                <div class="widget card">
+                    ${template.link ? `<a href="${template.link}" class="widget-link"></a>` : ''}
+                    <div class="widget-header ${bgClass} ${textClass}">
+                        <h5 class="widget-title">${template.title}</h5>
+                        <div class="widget-controls">
+                            <button class="btn btn-sm btn-${template.color ? template.color : 'light'} btn-reload" title="Aktualisieren">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                            <button class="btn btn-sm btn-${template.color ? template.color : 'light'} btn-remove" title="Entfernen">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="widget-body ${bgClass} ${textClass}">
+                        ${template.content}
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            `;
+        }
+
+        // Function to add a new widget to the grid
+        function addWidget(id, x, y, w, h) {
+            const widgetHTML = createWidgetHTML(id);
+            if (!widgetHTML) return;
+
+            const widget = {
+                x: x !== undefined ? x : null,
+                y: y !== undefined ? y : null,
+                w: w || widgetTemplates[id].w,
+                h: h || widgetTemplates[id].h,
+                id: id,
+                content: widgetHTML
+            };
+
+            grid.addWidget(widget);
+            setupWidgetEventListeners(id);
+
+            // Widget-Optionen aktualisieren
+            updateWidgetOptions();
+        }
+
+        // Function to setup event listeners for widget controls
+        function setupWidgetEventListeners(id) {
+            // Get the newly added widget
+            const widgetElement = document.querySelector(`.grid-stack-item[gs-id="${id}"]`);
+            if (!widgetElement) return;
+
+            // Setup remove button
+            const removeBtn = widgetElement.querySelector('.btn-remove');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        grid.removeWidget(widgetElement);
+                        saveLayout();
+
+                        // Widget-Optionen aktualisieren
+                        updateWidgetOptions();
+                    });
+                }
+
+            // Setup reload button
+            const reloadBtn = widgetElement.querySelector('.btn-reload');
+            if (reloadBtn) {
+                reloadBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    location.reload();
+                });
+            }
+        }
+
+        // Function to toggle between edit and view modes
+        function toggleEditMode() {
+            isEditMode = !isEditMode;
+
+            if (isEditMode) {
+                // Switch to edit mode
+                gridContainer.classList.remove('view-mode');
+                gridContainer.classList.add('edit-mode');
+                modeText.textContent = 'Layout fixieren';
+                modeBadge.textContent = 'Bearbeitungsmodus';
+                modeBadge.classList.remove('badge-view-mode');
+                modeBadge.classList.add('badge-edit-mode');
+
+                // Enable grid editing
+                grid.enable();
+
+                // Show edit controls
+                document.querySelectorAll('.edit-control').forEach(el => {
+                    el.style.display = 'inline-block';
+                });
+            } else {
+                // Switch to view mode
+                gridContainer.classList.remove('edit-mode');
+                gridContainer.classList.add('view-mode');
+                modeText.textContent = 'Layout bearbeiten';
+                modeBadge.textContent = 'Anzeigemodus';
+                modeBadge.classList.remove('badge-edit-mode');
+                modeBadge.classList.add('badge-view-mode');
+
+                // Disable grid editing
+                grid.disable();
+
+                // Hide edit controls
+                document.querySelectorAll('.edit-control').forEach(el => {
+                    el.style.display = 'none';
+                });
+
+                // Save the layout when fixing it
+                saveLayout();
+            }
+        }
+
+        // Function to save the current layout to localStorage
+        function saveLayout() {
+            const serializedLayout = grid.save();
+            localStorage.setItem('dashboardLayout', JSON.stringify(serializedLayout));
+
+            // Show confirmation message
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed top-0 end-0 p-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header">
+                        <strong class="me-auto">Dashboard</strong>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">
+                        Layout wurde gespeichert.
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            // Remove toast after 3 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Function to load layout from localStorage
+        function loadLayout() {
+            modeText.textContent = 'Layout bearbeiten';
+            modeBadge.textContent = 'Anzeigemodus';
+            modeBadge.classList.remove('badge-edit-mode');
+            modeBadge.classList.add('badge-view-mode');
+
+            // Edit-Steuerelemente ausblenden
+            document.querySelectorAll('.edit-control').forEach(el => {
+                el.style.display = 'none';
+            });
+            // Remove all existing widgets
+            grid.removeAll();
+
+            try {
+                const savedLayout = localStorage.getItem('dashboardLayout');
+
+                if (savedLayout) {
+                    // Parse saved layout
+                    const layout = JSON.parse(savedLayout);
+
+                    // Loop through layout and add widgets
+                    layout.forEach(widget => {
+                        if (widget.id && widgetTemplates[widget.id]) {
+                            addWidget(widget.id, widget.x, widget.y, widget.w, widget.h);
+                        }
+                    });
+                } else {
+                    // Load default layout if no saved layout exists
+                    defaultLayout.forEach(widget => {
+                        addWidget(widget.id, widget.x, widget.y, widget.w, widget.h);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading layout:', error);
+                // Fallback to default layout if there's an error
+                defaultLayout.forEach(widget => {
+                    addWidget(widget.id, widget.x, widget.y, widget.w, widget.h);
+                });
+            }
+        }
+
+        function updateWidgetOptions() {
+            // Alle vorhandenen Widget-IDs sammeln
+            const existingWidgets = [];
+            const gridItems = document.querySelectorAll('.grid-stack-item');
+            gridItems.forEach(item => {
+                const widgetId = item.getAttribute('gs-id');
+                if (widgetId) {
+                    existingWidgets.push(widgetId);
+                }
+            });
+
+            // Optionen im Modal aktualisieren
+            document.querySelectorAll('.widget-option').forEach(option => {
+                const widgetId = option.dataset.widget;
+                if (existingWidgets.includes(widgetId)) {
+                    // Widget bereits vorhanden - ausgrauen
+                    option.classList.add('disabled');
+                    option.style.opacity = '0.5';
+                    option.style.cursor = 'not-allowed';
+                } else {
+                    // Widget nicht vorhanden - aktivieren
+                    option.classList.remove('disabled');
+                    option.style.opacity = '1';
+                    option.style.cursor = 'pointer';
+                }
+            });
+        }
+
+        // Load layout when the page loads
+        loadLayout();
+
+        // Setup event listeners
+        document.getElementById('toggle-mode-btn').addEventListener('click', toggleEditMode);
+        document.getElementById('save-layout-btn').addEventListener('click', saveLayout);
+        document.getElementById('reset-layout-btn').addEventListener('click', function() {
+            if (confirm('Möchten Sie das Layout wirklich zurücksetzen? Alle Änderungen gehen verloren.')) {
+                localStorage.removeItem('dashboardLayout');
+                loadLayout();
+            }
+        });
+        // Event-Listener für das Widget-Modal hinzufügen
+        document.getElementById('widgetModal').addEventListener('show.bs.modal', function() {
+            updateWidgetOptions();
+        });
+
+        // Setup widget modal event listeners
+        // Setup widget modal event listeners
+        document.querySelectorAll('.widget-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Prüfen, ob das Widget deaktiviert ist
+                if (this.classList.contains('disabled')) {
+                    return; // Nichts tun, wenn das Widget bereits existiert
+                }
+
+                const widgetId = this.dataset.widget;
+                addWidget(widgetId);
+
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('widgetModal'));
+                modal.hide();
+
+                // Save the layout
+                saveLayout();
+            });
+        });
+
+        // Listen for changes to the grid
+        grid.on('change', function() {
+            // This event fires when widgets are moved or resized
+            // We don't save automatically to avoid too many writes
+        });
+
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
 {% endblock %}

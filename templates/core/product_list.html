@@ -80,27 +80,27 @@
                         <td>{{ product.category.name|default:"Keine Kategorie" }}</td>
                         <td>
                             {% if product.accessible_stock <= product.minimum_stock and product.accessible_stock > 0 %}
-                                <span class="badge bg-warning">{{ product.accessible_stock }} {{ product.unit }}</span>
+                                <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ product.accessible_stock }} {{ product.unit }}</span>
                             {% elif product.accessible_stock == 0 %}
-                                <span class="badge bg-danger">{{ product.accessible_stock }} {{ product.unit }}</span>
+                                <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ product.accessible_stock }} {{ product.unit }}</span>
                             {% else %}
-                                <span class="badge bg-success">{{ product.accessible_stock }} {{ product.unit }}</span>
+                                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ product.accessible_stock }} {{ product.unit }}</span>
                             {% endif %}
                         </td>
                         <td>{{ product.minimum_stock }} {{ product.unit }}</td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-info">
-                                    <i class="fas fa-eye"></i>
+                                <a href="{% url 'product_detail' product.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
                                 </a>
                                 {% if user|has_perm:'product:edit' %}
-                                <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i>
+                                <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
                                 </a>
                                 {% endif %}
                                 {% if user|has_perm:'inventory:edit' %}
-                                <a href="{% url 'bulk_warehouse_transfer' %}?product={{ product.id }}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-exchange-alt"></i>
+                                <a href="{% url 'bulk_warehouse_transfer' %}?product={{ product.id }}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-arrow-left-right"></i>
                                 </a>
                                 {% endif %}
                             </div>

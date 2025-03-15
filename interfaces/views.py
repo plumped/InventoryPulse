@@ -649,52 +649,52 @@ def send_order(self, order, user=None):
 def select_interface(request, order_id):
     """Bestellung über eine ausgewählte Schnittstelle senden."""
     order = get_object_or_404(PurchaseOrder, pk=order_id)
-    
-    # Nur genehmigte oder bereits gesendete Bestellungen können gesendet werden
-    if order.status not in ['approved', 'sent', 'partially_received']:
-        messages.error(request, f'Bestellung {order.order_number} kann nicht gesendet werden, da sie nicht genehmigt oder bereits gesendet ist.')
+
+    # Nur genehmigte Bestellungen können gesendet werden
+    if order.status != 'approved':
+        messages.error(request,
+                       f'Bestellung {order.order_number} kann nicht gesendet werden, da sie nicht genehmigt ist.')
         return redirect('purchase_order_detail', pk=order_id)
-    
+
     # Verfügbare Schnittstellen für diesen Lieferanten
     interfaces = SupplierInterface.objects.filter(
         supplier=order.supplier,
         is_active=True
     ).select_related('interface_type')
-    
+
     if not interfaces:
         messages.error(request, f'Keine aktiven Schnittstellen für Lieferant {order.supplier.name} gefunden.')
         return redirect('purchase_order_detail', pk=order_id)
-    
+
     if request.method == 'POST':
         interface_id = request.POST.get('interface')
-        
+
         try:
             # Bestellung senden
             result = send_order_via_interface(order_id, interface_id, request.user)
-            
+
             if result:
-                messages.success(request, f'Bestellung {order.order_number} wurde erfolgreich gesendet.')
-                
-                # Bestellung als gesendet markieren, falls noch nicht geschehen
-                if order.status == 'approved':
-                    order.status = 'sent'
-                    order.save()
-                    messages.info(request, f'Bestellung {order.order_number} wurde als gesendet markiert.')
+                # Bestellung als gesendet markieren (automatisch)
+                order.status = 'sent'
+                order.save()
+
+                messages.success(request,
+                                 f'Bestellung {order.order_number} wurde erfolgreich gesendet und als "Bestellt" markiert.')
             else:
                 messages.warning(request, f'Bestellung {order.order_number} konnte nicht gesendet werden.')
-                
+
         except InterfaceError as e:
             messages.error(request, f'Fehler beim Senden der Bestellung: {str(e)}')
         except Exception as e:
             messages.error(request, f'Unerwarteter Fehler: {str(e)}')
-        
+
         return redirect('purchase_order_detail', pk=order_id)
-    
+
     context = {
         'order': order,
         'interfaces': interfaces
     }
-    
+
     return render(request, 'interfaces/select_interface.html', context)
 
 

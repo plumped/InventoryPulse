@@ -112,7 +112,38 @@ def purchase_order_detail(request, pk):
 
     # Wareneingangshistorie abrufen
     receipts = order.receipts.select_related('received_by').prefetch_related('items__order_item__product',
-                                                                           'items__warehouse')
+                                                                             'items__warehouse')
+
+    # Verfügbare Schnittstellen für diesen Lieferanten abrufen (für das Modal)
+    interfaces = []
+    if order.status == 'approved':
+        from interfaces.models import SupplierInterface
+        interfaces = SupplierInterface.objects.filter(
+            supplier=order.supplier,
+            is_active=True
+        ).select_related('interface_type')
+
+    # Bei POST-Request (direkt aus dem Modal)
+    if request.method == 'POST' and order.status == 'approved' and request.user.has_perm('order.edit'):
+        interface_id = request.POST.get('interface_id')
+        if interface_id:
+            try:
+                # Bestellung über die gewählte Schnittstelle senden
+                from interfaces.services import send_order_via_interface
+                result = send_order_via_interface(order.id, interface_id, request.user)
+
+                if result:
+                    # Bestellung als gesendet markieren
+                    order.status = 'sent'
+                    order.save(update_fields=['status'])
+
+                    messages.success(request,
+                                     f'Bestellung {order.order_number} wurde erfolgreich gesendet und als "Bestellt" markiert.')
+                    return redirect('purchase_order_detail', pk=order.id)
+                else:
+                    messages.warning(request, f'Bestellung {order.order_number} konnte nicht gesendet werden.')
+            except Exception as e:
+                messages.error(request, f'Fehler beim Senden der Bestellung: {str(e)}')
 
     context = {
         'order': order,
@@ -120,6 +151,7 @@ def purchase_order_detail(request, pk):
         'can_approve': can_approve,
         'can_receive': can_receive,
         'receipts': receipts,
+        'interfaces': interfaces,
     }
 
     return render(request, 'order/purchase_order_detail.html', context)
@@ -1000,3 +1032,67 @@ def get_supplier_product_price(request):
             'success': False,
             'message': f'Fehler: {str(e)}'
         })
+
+@login_required
+@permission_required('order', 'edit')
+def bulk_send_orders(request):
+    """Sendet mehrere ausgewählte Bestellungen über die jeweiligen Standard-Schnittstellen."""
+    if request.method != 'POST':
+        return redirect('purchase_order_list')
+
+    # Ausgewählte Bestellungen abrufen
+    selected_ids = request.POST.getlist('selected_orders')
+
+    if not selected_ids:
+        messages.warning(request, 'Keine Bestellungen ausgewählt.')
+        return redirect('purchase_order_list')
+
+    # Nur genehmigte Bestellungen filtern
+    orders = PurchaseOrder.objects.filter(
+        id__in=selected_ids,
+        status='approved'
+    )
+
+    # Ergebnisse verfolgen
+    results = {
+        'success': [],
+        'failed': []
+    }
+
+    # Jede Bestellung über ihre Standard-Schnittstelle senden
+    for order in orders:
+        try:
+            from interfaces.services import send_order_via_interface
+
+            # Versuch, die Bestellung über die Standard-Schnittstelle zu senden
+            result = send_order_via_interface(order.id, None, request.user)  # None = use default interface
+
+            if result:  # Nur bei erfolgreichem Versand als gesendet markieren
+                # Bestellung als gesendet markieren
+                order.status = 'sent'
+                order.save(update_fields=['status'])  # Nur das geänderte Feld aktualisieren
+                results['success'].append(order)
+            else:
+                results['failed'].append((order, 'Unbekannter Fehler beim Senden'))
+
+        except Exception as e:
+            results['failed'].append((order, str(e)))
+
+    # Erfolgsmeldungen
+    if results['success']:
+        order_numbers = ', '.join([o.order_number for o in results['success']])
+        messages.success(
+            request,
+            f"{len(results['success'])} Bestellung{'en' if len(results['success']) != 1 else ''} erfolgreich gesendet: {order_numbers}"
+        )
+
+    # Fehlermeldungen
+    if results['failed']:
+        error_messages = '<br>'.join([f"{o[0].order_number}: {o[1]}" for o in results['failed']])
+        messages.error(
+            request,
+            f"{len(results['failed'])} Bestellung{'en' if len(results['failed']) != 1 else ''} konnten nicht gesendet werden:<br>{error_messages}",
+            extra_tags='safe'
+        )
+
+    return redirect('purchase_order_list')

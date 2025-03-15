@@ -28,7 +28,6 @@ urlpatterns = [
     
     # Bestellungsversand
     path('order/<int:order_id>/send/', views.send_order, name='send_order'),
-    path('order/<int:order_id>/select-interface/', views.select_interface, name='select_interface'),
     
     # AJAX-Endpunkte
     path('api/get-supplier-interfaces/', views.get_supplier_interfaces, name='get_supplier_interfaces'),

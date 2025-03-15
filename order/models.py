@@ -1,6 +1,8 @@
 # order/models.py
 from django.db import models
 from django.contrib.auth.models import User
+from model_utils import FieldTracker
+
 from core.models import Product, Tax
 from suppliers.models import Supplier
 
@@ -34,6 +36,7 @@ class PurchaseOrder(models.Model):
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    tracker = FieldTracker(['status'])
 
     def update_totals(self):
         """Aktualisiert alle Summen basierend auf den Bestellpositionen"""

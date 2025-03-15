@@ -26,9 +26,6 @@ urlpatterns = [
     # Bestellung ablehnen
     path('<int:pk>/reject/', views.purchase_order_reject, name='purchase_order_reject'),
 
-    # Bestellung als bestellt markieren
-    path('<int:pk>/mark-sent/', views.purchase_order_mark_sent, name='purchase_order_mark_sent'),
-
     # Wareneingang erfassen
     path('<int:pk>/receive/', views.purchase_order_receive, name='purchase_order_receive'),
 
@@ -49,4 +46,6 @@ urlpatterns = [
 
     # AJAX-Endpunkt für Lieferantenproduktpreis
     path('get-supplier-product-price/', views.get_supplier_product_price, name='get_supplier_product_price'),
+    path('bulk-send/', views.bulk_send_orders, name='bulk_send_orders'),
+
 ]

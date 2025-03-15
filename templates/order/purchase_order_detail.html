@@ -38,9 +38,9 @@
                     <i class="bi bi-x-circle"></i> Ablehnen
                 </a>
                 {% elif order.status == 'approved' %}
-                <a href="{% url 'purchase_order_mark_sent' order.id %}" class="btn btn-primary">
-                    <i class="bi bi-send"></i> Als bestellt markieren
-                </a>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendOrderModal">
+                    <i class="bi bi-send"></i> Bestellung versenden
+                </button>
                 {% elif order.status in 'sent,partially_received' and can_receive %}
                 <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-primary">
                     <i class="bi bi-box-seam"></i> Wareneingang erfassen
@@ -339,4 +339,76 @@
         </div>
     </div>
 </div>
+
+<!-- Modal für die Schnittstellenauswahl -->
+{% if order.status == 'approved' %}
+<div class="modal fade" id="sendOrderModal" tabindex="-1" aria-labelledby="sendOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sendOrderModalLabel">Bestellung {{ order.order_number }} versenden</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        {% if interfaces %}
+        <p>Wählen Sie eine Schnittstelle aus, um die Bestellung an {{ order.supplier.name }} zu senden:</p>
+
+        <form method="post" action="">
+            {% csrf_token %}
+
+            <div class="list-group mb-3">
+                {% for interface in interfaces %}
+                    <label class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <input type="radio" name="interface_id" value="{{ interface.id }}" class="form-check-input me-3"
+                                       {% if interface.is_default %}checked{% endif %}>
+                                <strong>{{ interface.name }}</strong>
+                                {% if interface.is_default %}
+                                    <span class="badge bg-primary ms-2">Standard</span>
+                                {% endif %}
+
+                                <div class="small text-muted ms-4 mt-1">
+                                    <i class="{% if interface.interface_type.code == 'email' %}bi bi-envelope
+                                              {% elif interface.interface_type.code == 'api' %}bi bi-cloud
+                                              {% elif interface.interface_type.code == 'ftp' %}bi bi-server
+                                              {% elif interface.interface_type.code == 'sftp' %}bi bi-lock
+                                              {% else %}bi bi-arrow-repeat{% endif %} me-1"></i>
+                                    Typ: {{ interface.interface_type.name }}
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                {% endfor %}
+            </div>
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i> Bei erfolgreicher Übertragung wird die Bestellung automatisch als "Bestellt" markiert.
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send me-2"></i> Bestellung senden
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Es sind keine aktiven Schnittstellen für den Lieferanten {{ order.supplier.name }} konfiguriert.
+        </div>
+
+        <div class="mt-3">
+            <p>Um Bestellungen an diesen Lieferanten senden zu können, müssen Sie zuerst eine Schnittstelle konfigurieren:</p>
+            <a href="{% url 'interface_create' %}?supplier={{ order.supplier.id }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> Schnittstelle für {{ order.supplier.name }} erstellen
+            </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

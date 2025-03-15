@@ -401,11 +401,11 @@
                                     <td>{{ movement.warehouse.name }}</td>
                                     <td>
                                         {% if movement.movement_type == 'in' %}
-                                            <span class="badge bg-success">Zugang</span>
+                                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Zugang</span>
                                         {% elif movement.movement_type == 'out' %}
-                                            <span class="badge bg-danger">Abgang</span>
+                                            <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">Abgang</span>
                                         {% else %}
-                                            <span class="badge bg-warning">Korrektur</span>
+                                            <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">Korrektur</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ movement.quantity }}</td>
@@ -443,9 +443,9 @@
                                     <td>{{ product_warehouse.warehouse.name }}</td>
                                     <td>
                                         {% if product_warehouse.quantity < product_warehouse.product.minimum_stock %}
-                                            <span class="badge bg-danger">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
+                                            <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
                                         {% else %}
-                                            <span class="badge bg-warning">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
+                                            <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ product_warehouse.product.minimum_stock }} {{ product_warehouse.product.unit }}</td>
@@ -538,9 +538,9 @@
                                     <td>{{ warehouse.product_count }}</td>
                                     <td>
                                         {% if warehouse.is_active %}
-                                            <span class="badge bg-success">Aktiv</span>
+                                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Aktiv</span>
                                         {% else %}
-                                            <span class="badge bg-danger">Inaktiv</span>
+                                            <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">Inaktiv</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -567,14 +567,14 @@
                         <div class="row">
                             <div class="col-md-3 col-sm-6 mb-2">
                                 <a href="{% url 'purchase_order_list' %}?status=pending" class="stat-card-link">
-                                    <div class="card bg-warning text-dark h-100">
+                                    <div class="card border-warning h-100" style="background: transparent;">
                                         <div class="card-body p-2">
                                             <div class="d-flex align-items-center">
                                                 <div class="flex-grow-1">
                                                     <div>Genehmigung ausstehend</div>
-                                                    <h4 class="mb-0">{{ pending_count }}</h4>
+                                                    <h4 class="mb-0 text-warning">{{ pending_count }}</h4>
                                                 </div>
-                                                <div class="ms-2">
+                                                <div class="ms-2 text-warning">
                                                     <i class="bi bi-hourglass fs-3"></i>
                                                 </div>
                                             </div>
@@ -584,14 +584,14 @@
                             </div>
                             <div class="col-md-3 col-sm-6 mb-2">
                                 <a href="{% url 'purchase_order_list' %}?status=sent" class="stat-card-link">
-                                    <div class="card bg-primary text-white h-100">
+                                    <div class="card border-primary h-100" style="background: transparent;">
                                         <div class="card-body p-2">
                                             <div class="d-flex align-items-center">
                                                 <div class="flex-grow-1">
                                                     <div>Bestellte Artikel</div>
-                                                    <h4 class="mb-0">{{ sent_count }}</h4>
+                                                    <h4 class="mb-0 text-primary">{{ sent_count }}</h4>
                                                 </div>
-                                                <div class="ms-2">
+                                                <div class="ms-2 text-primary">
                                                     <i class="bi bi-truck fs-3"></i>
                                                 </div>
                                             </div>
@@ -601,14 +601,14 @@
                             </div>
                             <div class="col-md-3 col-sm-6 mb-2">
                                 <a href="{% url 'purchase_order_list' %}?status=partially_received" class="stat-card-link">
-                                    <div class="card bg-info text-dark h-100">
+                                    <div class="card border-info h-100" style="background: transparent;">
                                         <div class="card-body p-2">
                                             <div class="d-flex align-items-center">
                                                 <div class="flex-grow-1">
                                                     <div>Teillieferungen</div>
-                                                    <h4 class="mb-0">{{ partial_count }}</h4>
+                                                    <h4 class="mb-0 text-info">{{ partial_count }}</h4>
                                                 </div>
-                                                <div class="ms-2">
+                                                <div class="ms-2 text-info">
                                                     <i class="bi bi-box fs-3"></i>
                                                 </div>
                                             </div>
@@ -618,14 +618,14 @@
                             </div>
                             <div class="col-md-3 col-sm-6 mb-2">
                                 <a href="{% url 'order_suggestions' %}" class="stat-card-link">
-                                    <div class="card bg-success text-white h-100">
+                                    <div class="card border-success h-100" style="background: transparent;">
                                         <div class="card-body p-2">
                                             <div class="d-flex align-items-center">
                                                 <div class="flex-grow-1">
                                                     <div>Bestellvorschläge</div>
-                                                    <h4 class="mb-0">{{ suggestion_count }}</h4>
+                                                    <h4 class="mb-0 text-success">{{ suggestion_count }}</h4>
                                                 </div>
-                                                <div class="ms-2">
+                                                <div class="ms-2 text-success">
                                                     <i class="bi bi-lightbulb fs-3"></i>
                                                 </div>
                                             </div>
@@ -657,19 +657,19 @@
                                     <td>{{ order.order_date|date:"d.m.Y" }}</td>
                                     <td>
                                         {% if order.status == 'draft' %}
-                                        <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'pending' %}
-                                        <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                        <span class="badge bg-dark-subtle border border-dark-subtle text-dark-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'approved' %}
-                                        <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                        <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'sent' %}
-                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                        <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'partially_received' %}
-                                        <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                        <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'received' %}
-                                        <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'cancelled' %}
-                                        <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                        <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
                             {% endif %}
                         </td>
                         <td>{{ order.total|floatformat:2 }} €</td>
@@ -756,31 +756,28 @@
             const template = widgetTemplates[id];
             if (!template) return null;
 
-            // Set default background and text colors based on widget.color
-            let bgClass = template.color ? `bg-${template.color}` : '';
-            let textClass = template.textColor ? `text-${template.textColor}` : (template.color ? 'text-white' : '');
+            // Ersetzen von Hintergrundfarben durch Rahmenfarben
+            let borderClass = template.color ? `border-${template.color}` : '';
+            let textClass = template.color ? `text-${template.color}` : '';
 
-            // For warning and info colors, default text color is dark
-            if ((template.color === 'warning' || template.color === 'info') && !template.textColor) {
-                textClass = 'text-dark';
-            }
+            // WICHTIG: Kein Hintergrund (bg-* Klasse) mehr verwenden
 
             // Erstelle HTML mit einem Link-Button für die gesamte Kachel
             return `
-                <div class="widget card">
+                <div class="widget card ${borderClass}" style="background: transparent;">
                     ${template.link ? `<a href="${template.link}" class="widget-link"></a>` : ''}
-                    <div class="widget-header ${bgClass} ${textClass}">
-                        <h5 class="widget-title">${template.title}</h5>
+                    <div class="widget-header">
+                        <h5 class="widget-title ${textClass}">${template.title}</h5>
                         <div class="widget-controls">
-                            <button class="btn btn-sm btn-${template.color ? template.color : 'light'} btn-reload" title="Aktualisieren">
+                            <button class="btn btn-sm btn-outline-${template.color ? template.color : 'secondary'} btn-reload" title="Aktualisieren">
                                 <i class="bi bi-arrow-clockwise"></i>
                             </button>
-                            <button class="btn btn-sm btn-${template.color ? template.color : 'light'} btn-remove" title="Entfernen">
+                            <button class="btn btn-sm btn-outline-${template.color ? template.color : 'secondary'} btn-remove" title="Entfernen">
                                 <i class="bi bi-x-lg"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="widget-body ${bgClass} ${textClass}">
+                    <div class="widget-body">
                         ${template.content}
                     </div>
                 </div>

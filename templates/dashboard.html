@@ -165,6 +165,15 @@
     .view-mode .edit-control {
         display: none;
     }
+
+    .stat-card-link {
+        position: relative;
+        z-index: 20; /* Höher als widget-link (z-index: 10) */
+        display: block;
+        text-decoration: none;
+        color: inherit;
+    }
+
 </style>
 {% endblock %}
 
@@ -557,64 +566,72 @@
                     <div class="mb-3">
                         <div class="row">
                             <div class="col-md-3 col-sm-6 mb-2">
-                                <div class="card bg-warning text-dark h-100">
-                                    <div class="card-body p-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <div>Genehmigung ausstehend</div>
-                                                <h4 class="mb-0">{{ pending_count }}</h4>
-                                            </div>
-                                            <div class="ms-2">
-                                                <i class="bi bi-hourglass fs-3"></i>
+                                <a href="{% url 'purchase_order_list' %}?status=pending" class="stat-card-link">
+                                    <div class="card bg-warning text-dark h-100">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-grow-1">
+                                                    <div>Genehmigung ausstehend</div>
+                                                    <h4 class="mb-0">{{ pending_count }}</h4>
+                                                </div>
+                                                <div class="ms-2">
+                                                    <i class="bi bi-hourglass fs-3"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                             <div class="col-md-3 col-sm-6 mb-2">
-                                <div class="card bg-primary text-white h-100">
-                                    <div class="card-body p-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <div>Bestellte Artikel</div>
-                                                <h4 class="mb-0">{{ sent_count }}</h4>
-                                            </div>
-                                            <div class="ms-2">
-                                                <i class="bi bi-truck fs-3"></i>
+                                <a href="{% url 'purchase_order_list' %}?status=sent" class="stat-card-link">
+                                    <div class="card bg-primary text-white h-100">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-grow-1">
+                                                    <div>Bestellte Artikel</div>
+                                                    <h4 class="mb-0">{{ sent_count }}</h4>
+                                                </div>
+                                                <div class="ms-2">
+                                                    <i class="bi bi-truck fs-3"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                             <div class="col-md-3 col-sm-6 mb-2">
-                                <div class="card bg-info text-dark h-100">
-                                    <div class="card-body p-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <div>Teillieferungen</div>
-                                                <h4 class="mb-0">{{ partial_count }}</h4>
-                                            </div>
-                                            <div class="ms-2">
-                                                <i class="bi bi-box fs-3"></i>
+                                <a href="{% url 'purchase_order_list' %}?status=partially_received" class="stat-card-link">
+                                    <div class="card bg-info text-dark h-100">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-grow-1">
+                                                    <div>Teillieferungen</div>
+                                                    <h4 class="mb-0">{{ partial_count }}</h4>
+                                                </div>
+                                                <div class="ms-2">
+                                                    <i class="bi bi-box fs-3"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                             <div class="col-md-3 col-sm-6 mb-2">
-                                <div class="card bg-success text-white h-100">
-                                    <div class="card-body p-2">
-                                        <div class="d-flex align-items-center">
-                                            <div class="flex-grow-1">
-                                                <div>Bestellvorschläge</div>
-                                                <h4 class="mb-0">{{ suggestion_count }}</h4>
-                                            </div>
-                                            <div class="ms-2">
-                                                <i class="bi bi-lightbulb fs-3"></i>
+                                <a href="{% url 'order_suggestions' %}" class="stat-card-link">
+                                    <div class="card bg-success text-white h-100">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-grow-1">
+                                                    <div>Bestellvorschläge</div>
+                                                    <h4 class="mb-0">{{ suggestion_count }}</h4>
+                                                </div>
+                                                <div class="ms-2">
+                                                    <i class="bi bi-lightbulb fs-3"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -653,22 +670,22 @@
                                         <span class="badge bg-success">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'cancelled' %}
                                         <span class="badge bg-danger">{{ order.get_status_display }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ order.total|floatformat:2 }} €</td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="5" class="text-center py-3">
-                                        <span class="text-muted">Keine Bestellungen vorhanden</span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                `
-            },
+                            {% endif %}
+                        </td>
+                        <td>{{ order.total|floatformat:2 }} €</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-3">
+                            <span class="text-muted">Keine Bestellungen vorhanden</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    `
+},
             quick_actions: {
                 w: 3, h: 5, title: "Schnellaktionen",
                 content: `

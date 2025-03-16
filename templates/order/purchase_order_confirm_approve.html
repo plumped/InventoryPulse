@@ -110,7 +110,7 @@
                 <h5>Artikelpositionen</h5>
                 <div class="table-responsive">
                     <table class="table table-sm">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
                                 <th>Artikel</th>
                                 <th>Artikel-Nr.</th>
@@ -142,7 +142,7 @@
                             </tr>
                             {% endfor %}
                         </tbody>
-                        <tfoot class="table-light">
+                        <tfoot>
                             <tr>
                                 <td colspan="5" class="text-end"><strong>Zwischensumme:</strong></td>
                                 <td class="text-end">{{ order.subtotal|floatformat:2 }} €</td>

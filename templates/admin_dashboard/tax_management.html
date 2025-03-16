@@ -3,12 +3,12 @@
 
 {% block title %}Mehrwertsteuersätze verwalten{% endblock %}
 
-{% block content %}
+{% block admin_content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Mehrwertsteuersätze verwalten</h1>
-        <a href="{% url 'admin_tax_create' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Neuen Steuersatz erstellen
+        <a href="{% url 'admin_tax_create' %}" class="btn btn-outline-primary">
+            <i class="bi bi-plus-circle"></i> Neuen Steuersatz erstellen
         </a>
     </div>
 
@@ -53,10 +53,10 @@
                             </td>
                             <td>{{ tax.updated_at|date:"d.m.Y H:i" }}</td>
                             <td>
-                                <a href="{% url 'admin_tax_edit' tax.id %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'admin_tax_edit' tax.id %}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="{% url 'admin_tax_delete' tax.id %}" class="btn btn-sm btn-danger">
+                                <a href="{% url 'admin_tax_delete' tax.id %}" class="btn btn-sm btn-outline-danger">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </td>

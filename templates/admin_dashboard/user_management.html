@@ -4,7 +4,7 @@
 
 {% block content_actions %}
 <div class="btn-group">
-    <a href="{% url 'admin_user_create' %}" class="btn btn-sm btn-primary">
+    <a href="{% url 'admin_user_create' %}" class="btn btn-sm btn-outline-primary">
         <i class="bi bi-plus-circle"></i> Neuen Benutzer anlegen
     </a>
 </div>
@@ -95,28 +95,28 @@
                         <td>{{ user.email|default:"-" }}</td>
                         <td>
                             {% for group in user.groups.all %}
-                            <span class="badge bg-primary">{{ group.name }}</span>
+                            <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">{{ group.name }}</span>
                             {% empty %}
-                            <span class="badge bg-secondary">Keine</span>
+                            <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">Keine</span>
                             {% endfor %}
                         </td>
                         <td>
                             {% if user.is_active %}
-                            <span class="badge bg-success">Aktiv</span>
+                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Aktiv</span>
                             {% else %}
-                            <span class="badge bg-danger">Inaktiv</span>
+                            <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">Inaktiv</span>
                             {% endif %}
                         </td>
                         <td>{{ user.last_login|date:"d.m.Y H:i"|default:"Nie" }}</td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{% url 'admin_user_edit' user.id %}" class="btn btn-primary">
+                                <a href="{% url 'admin_user_edit' user.id %}" class="btn btn-outline-primary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button type="button" class="btn btn-info btn-details" data-user-id="{{ user.id }}">
+                                <button type="button" class="btn btn-outline-info btn-details" data-user-id="{{ user.id }}">
                                     <i class="bi bi-info-circle"></i>
                                 </button>
-                                <a href="{% url 'admin_user_delete' user.id %}" class="btn btn-danger">
+                                <a href="{% url 'admin_user_delete' user.id %}" class="btn btn-outline-danger">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>

@@ -450,7 +450,7 @@
                                     </td>
                                     <td>{{ product_warehouse.product.minimum_stock }} {{ product_warehouse.product.unit }}</td>
                                     <td>
-                                        <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-info">
+                                        <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-outline-info">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </td>
@@ -544,7 +544,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{% url 'warehouse_detail' warehouse.id %}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{% url 'warehouse_detail' warehouse.id %}" class="btn btn-sm btn-outline-info">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </td>

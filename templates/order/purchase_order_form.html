@@ -126,7 +126,7 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Bestellpositionen</h5>
                         {% if not form.instance.pk or form.instance.status == 'draft' %}
-                        <button type="button" class="btn btn-sm btn-success" id="addItemButton">
+                        <button type="button" class="btn btn-sm btn-outline-success" id="addItemButton">
                             <i class="bi bi-plus-circle"></i> Position hinzufügen
                         </button>
                         {% endif %}
@@ -134,7 +134,7 @@
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover" id="itemsTable">
-                                <thead class="table-light">
+                                <thead>
                                     <tr>
                                         <th>Produkt</th>
                                         <th>Lieferant-SKU</th>
@@ -208,7 +208,7 @@
                                     {% endfor %}
                                     {% endif %}
                                 </tbody>
-                                <tfoot class="table-light">
+                                <tfoot>
                                     <tr>
                                         <td colspan="6" class="text-end"><strong>Zwischensumme:</strong></td>
                                         <td class="text-end"><span id="subtotal">{{ form.instance.subtotal|default:"0.00" }}</span> €</td>
@@ -257,7 +257,7 @@
             <div class="col-12 d-flex justify-content-between">
                 <a href="{% url 'purchase_order_list' %}" class="btn btn-outline-secondary">Abbrechen</a>
                 {% if not form.instance.pk or form.instance.status == 'draft' %}
-                <button type="submit" class="btn btn-primary">Speichern</button>
+                <button type="submit" class="btn btn-outline-primary">Speichern</button>
                 {% endif %}
             </div>
         </div>

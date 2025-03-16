@@ -11,7 +11,7 @@
     <div class="card-header py-3 d-flex justify-content-between align-items-center">
         <h6 class="m-0 font-weight-bold text-primary">Währungsverwaltung</h6>
         {% if perms.core.create %}
-        <a href="{% url 'currency_create' %}" class="btn btn-sm btn-primary">
+        <a href="{% url 'currency_create' %}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-plus-circle me-1"></i> Neue Währung
         </a>
         {% endif %}
@@ -51,12 +51,12 @@
                         <td>{{ currency.exchange_rate }}</td>
                         <td>
                             {% if currency.is_default %}
-                            <span class="badge bg-primary">Standard</span>
+                            <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis">Standard</span>
                             {% endif %}
                             {% if currency.is_active %}
-                            <span class="badge bg-success">Aktiv</span>
+                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis">Aktiv</span>
                             {% else %}
-                            <span class="badge bg-secondary">Inaktiv</span>
+                            <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis">Inaktiv</span>
                             {% endif %}
                         </td>
                         <td>

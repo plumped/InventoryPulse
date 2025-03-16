@@ -25,7 +25,6 @@ from .services import generate_order_suggestions
 from .workflow import get_initial_order_status, check_auto_approval, can_approve_order
 
 
-
 @login_required
 @permission_required('order', 'view')
 def purchase_order_list(request):
@@ -62,6 +61,19 @@ def purchase_order_list(request):
     # Sortierung
     queryset = queryset.order_by('-order_date')
 
+    # Systemwährung ermitteln
+    from core.models import Currency
+    system_currency = Currency.get_default_currency()
+
+    # Umgerechnete Beträge berechnen
+    for order in queryset:
+        if order.supplier and order.supplier.default_currency and order.supplier.default_currency != system_currency:
+            exchange_rate = order.supplier.default_currency.exchange_rate
+            order.converted_total = order.total * exchange_rate
+            order.system_currency = system_currency
+        else:
+            order.converted_total = None
+
     # Paginierung
     paginator = Paginator(queryset, 20)  # 20 Bestellungen pro Seite
     page = request.GET.get('page')
@@ -90,6 +102,7 @@ def purchase_order_list(request):
         'date_from': date_from,
         'date_to': date_to,
         'search': search,
+        'system_currency': system_currency
     }
 
     return render(request, 'order/purchase_order_list.html', context)
@@ -101,7 +114,7 @@ def purchase_order_detail(request, pk):
     """Detailansicht einer Bestellung."""
     order = get_object_or_404(
         PurchaseOrder.objects.select_related('supplier', 'created_by', 'approved_by')
-        .prefetch_related('items__product', 'receipts'),
+        .prefetch_related('items__product', 'receipts', 'items__tax'),
         pk=pk
     )
 
@@ -122,6 +135,37 @@ def purchase_order_detail(request, pk):
             supplier=order.supplier,
             is_active=True
         ).select_related('interface_type')
+
+    # Systemwährung ermitteln
+    from core.models import Currency
+    system_currency = Currency.get_default_currency()
+
+    # Die Währung für diese Bestellung (vom Lieferanten)
+    supplier_currency = order.supplier.default_currency if order.supplier and order.supplier.default_currency else system_currency
+
+    # Berechnen von umgerechneten Werten, wenn die Lieferantenwährung nicht die Systemwährung ist
+    show_conversion = False
+    if supplier_currency and supplier_currency != system_currency:
+        show_conversion = True
+        exchange_rate = supplier_currency.exchange_rate
+
+        # Umrechnung der Bestellsummen
+        order.converted_subtotal = order.subtotal * exchange_rate
+        order.converted_total = order.total * exchange_rate
+        order.converted_shipping_cost = order.shipping_cost * exchange_rate if order.shipping_cost else 0
+
+        # Umrechnung der einzelnen Positionen
+        for item in order.items.all():
+            item.converted_unit_price = item.unit_price * exchange_rate
+            item.converted_line_total = item.line_total * exchange_rate
+            # Steuer pro Position umrechnen, falls vorhanden
+            if hasattr(item, 'line_tax') and item.line_tax is not None:
+                item.converted_line_tax = item.line_tax * exchange_rate
+
+    # Prüfen, ob Produkte mit Chargen- oder Verfallsdatenverfolgung vorhanden sind
+    product_ids = [item.product.id for item in order.items.all()]
+    has_batch_products = Product.objects.filter(id__in=product_ids, has_batch_tracking=True).exists()
+    has_expiry_products = Product.objects.filter(id__in=product_ids, has_expiry_tracking=True).exists()
 
     # Bei POST-Request (direkt aus dem Modal)
     if request.method == 'POST' and order.status == 'approved' and request.user.has_perm('order.edit'):
@@ -152,6 +196,11 @@ def purchase_order_detail(request, pk):
         'can_receive': can_receive,
         'receipts': receipts,
         'interfaces': interfaces,
+        'supplier_currency': supplier_currency,
+        'system_currency': system_currency,
+        'show_conversion': show_conversion,
+        'has_batch_products': has_batch_products,
+        'has_expiry_products': has_expiry_products
     }
 
     return render(request, 'order/purchase_order_detail.html', context)

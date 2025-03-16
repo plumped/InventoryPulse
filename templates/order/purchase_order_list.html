@@ -88,6 +88,7 @@
                                 <th>Erw. Liefertermin</th>
                                 <th>Status</th>
                                 <th>Wert</th>
+                                <th>Umgerechnet</th>  <!-- Neue Spalte -->
                                 <th>Positionen</th>
                                 <th>Erstellt von</th>
                                 <th style="width: 120px;">Aktionen</th>
@@ -131,7 +132,20 @@
                                     <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ order.total|floatformat:2 }} €</td>
+                                <td>{{ order.total|floatformat:2 }}
+                                    {% if order.supplier.default_currency %}
+                                        {{ order.supplier.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if order.converted_total %}
+                                        {{ order.converted_total|floatformat:2 }} {{ order.system_currency.symbol }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ order.items.count }}</td>
                                 <td>{{ order.created_by.username }}</td>
                                 <td>

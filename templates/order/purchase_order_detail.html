@@ -107,6 +107,20 @@
                             <a href="{% url 'supplier_detail' order.supplier.id %}">{{ order.supplier.name }}</a>
                         </dd>
 
+                        {% if supplier_currency %}
+                        <dt class="col-sm-5">Währung:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-light text-dark">
+                                {{ supplier_currency.code }} ({{ supplier_currency.symbol }})
+                            </span>
+                            {% if show_conversion %}
+                            <small class="d-block text-muted mt-1">
+                                Kurs: 1:{{ supplier_currency.exchange_rate|floatformat:4 }} ({{ system_currency.code }})
+                            </small>
+                            {% endif %}
+                        </dd>
+                        {% endif %}
+
                         <dt class="col-sm-5">Bestelldatum:</dt>
                         <dd class="col-sm-7">{{ order.order_date|date:"d.m.Y" }}</dd>
 
@@ -164,6 +178,9 @@
                                     <th>Einzelpreis</th>
                                     <th>MwSt</th>
                                     <th>Gesamt</th>
+                                    {% if show_conversion %}
+                                    <th>Umgerechnet</th>
+                                    {% endif %}
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,7 +207,7 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ item.product.unit }}</td>
-                                    <td>{{ item.unit_price|floatformat:2 }} CHF</td>
+                                    <td>{{ item.unit_price|floatformat:2 }} {{ supplier_currency.symbol }}</td>
                                     <td>
                                         {% if item.tax %}
                                         {{ item.tax.rate }}%
@@ -198,11 +215,14 @@
                                         0%
                                         {% endif %}
                                     </td>
-                                    <td>{{ item.line_total|floatformat:2 }} CHF</td>
+                                    <td>{{ item.line_total|floatformat:2 }} {{ supplier_currency.symbol }}</td>
+                                    {% if show_conversion %}
+                                    <td>{{ item.converted_line_total|floatformat:2 }} {{ system_currency.symbol }}</td>
+                                    {% endif %}
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="8" class="text-center py-3">Keine Positionen vorhanden</td>
+                                    <td colspan="{% if show_conversion %}9{% else %}8{% endif %}" class="text-center py-3">Keine Positionen vorhanden</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -219,43 +239,77 @@
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered">
-                            <tr>
-                                <th>Zwischensumme (ohne MwSt)</th>
-                                <td class="text-end">{{ order.subtotal|floatformat:2 }} CHF</td>
-                            </tr>
+                            <thead>
+                                {% if show_conversion %}
+                                <tr class="table-light">
+                                    <th></th>
+                                    <th class="text-center">{{ supplier_currency.code }}</th>
+                                    <th class="text-center">{{ system_currency.code }}</th>
+                                </tr>
+                                {% endif %}
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>Zwischensumme (ohne MwSt)</th>
+                                    <td class="text-end">{{ order.subtotal|floatformat:2 }} {{ supplier_currency.symbol }}</td>
+                                    {% if show_conversion %}
+                                    <td class="text-end">{{ order.converted_subtotal|floatformat:2 }} {{ system_currency.symbol }}</td>
+                                    {% endif %}
+                                </tr>
 
-                            <!-- Gruppierte Steuersätze -->
-                            {% regroup order.items.all by tax as tax_groups %}
-                            {% for tax_group in tax_groups %}
-                            {% if tax_group.grouper %}
-                            <tr>
-                                <th>MwSt ({{ tax_group.grouper.name }} - {{ tax_group.grouper.rate }}%)</th>
-                                <td class="text-end">
-                                    {% with tax_sum=0 %}
-                                        {% for item in tax_group.list %}
-                                            {% with current_sum=tax_sum|add:item.line_tax %}
-                                                {% if forloop.last %}
-                                                    {{ current_sum|floatformat:2 }} CHF
-                                                {% endif %}
-                                                {% with tax_sum=current_sum %}{% endwith %}
-                                            {% endwith %}
-                                        {% endfor %}
-                                    {% endwith %}
-                                </td>
-                            </tr>
-                            {% endif %}
-                            {% endfor %}
+                                <!-- Gruppierte Steuersätze -->
+                                {% regroup order.items.all by tax as tax_groups %}
+                                {% for tax_group in tax_groups %}
+                                {% if tax_group.grouper %}
+                                <tr>
+                                    <th>MwSt ({{ tax_group.grouper.name }} - {{ tax_group.grouper.rate }}%)</th>
+                                    <td class="text-end">
+                                        {% with tax_sum=0 %}
+                                            {% for item in tax_group.list %}
+                                                {% with current_sum=tax_sum|add:item.line_tax %}
+                                                    {% if forloop.last %}
+                                                        {{ current_sum|floatformat:2 }} {{ supplier_currency.symbol }}
+                                                    {% endif %}
+                                                    {% with tax_sum=current_sum %}{% endwith %}
+                                                {% endwith %}
+                                            {% endfor %}
+                                        {% endwith %}
+                                    </td>
+                                    {% if show_conversion %}
+                                    <td class="text-end">
+                                        {% with tax_sum=0 %}
+                                            {% for item in tax_group.list %}
+                                                {% with current_sum=tax_sum|add:item.converted_line_tax %}
+                                                    {% if forloop.last %}
+                                                        {{ current_sum|floatformat:2 }} {{ system_currency.symbol }}
+                                                    {% endif %}
+                                                    {% with tax_sum=current_sum %}{% endwith %}
+                                                {% endwith %}
+                                            {% endfor %}
+                                        {% endwith %}
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
 
-                            {% if order.shipping_cost > 0 %}
-                            <tr>
-                                <th>Versandkosten</th>
-                                <td class="text-end">{{ order.shipping_cost|floatformat:2 }} CHF</td>
-                            </tr>
-                            {% endif %}
-                            <tr class="table-active">
-                                <th>Gesamtsumme</th>
-                                <td class="text-end fw-bold">{{ order.total|floatformat:2 }} CHF</td>
-                            </tr>
+                                {% if order.shipping_cost > 0 %}
+                                <tr>
+                                    <th>Versandkosten</th>
+                                    <td class="text-end">{{ order.shipping_cost|floatformat:2 }} {{ supplier_currency.symbol }}</td>
+                                    {% if show_conversion %}
+                                    <td class="text-end">{{ order.converted_shipping_cost|floatformat:2 }} {{ system_currency.symbol }}</td>
+                                    {% endif %}
+                                </tr>
+                                {% endif %}
+                                <tr class="table-active">
+                                    <th>Gesamtsumme</th>
+                                    <td class="text-end fw-bold">{{ order.total|floatformat:2 }} {{ supplier_currency.symbol }}</td>
+                                    {% if show_conversion %}
+                                    <td class="text-end fw-bold">{{ order.converted_total|floatformat:2 }} {{ system_currency.symbol }}</td>
+                                    {% endif %}
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>

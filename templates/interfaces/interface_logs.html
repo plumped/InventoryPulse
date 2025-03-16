@@ -8,8 +8,8 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Übertragungsprotokolle</h1>
         <div>
-            <a href="{% url 'interface_list' %}" class="btn btn-secondary">
-                <i class="fas fa-plug"></i> Schnittstellen
+            <a href="{% url 'interface_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-plug"></i> Lieferanten-Schnittstellen
             </a>
         </div>
     </div>
@@ -65,8 +65,8 @@
                     <input type="text" name="search" id="search" class="form-control" placeholder="Nachricht, Bestellnummer, Schnittstelle..." value="{{ search_query }}">
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Suchen
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Suchen
                     </button>
                 </div>
             </form>
@@ -79,13 +79,13 @@
             <h5 class="card-title mb-0">Protokolle</h5>
             <div>
                 {% if interface_id %}
-                    <span class="badge bg-info">Gefiltert nach Schnittstelle</span>
+                    <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">Gefiltert nach Schnittstelle</span>
                 {% endif %}
                 {% if supplier_id %}
-                    <span class="badge bg-info">Gefiltert nach Lieferant</span>
+                    <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">Gefiltert nach Lieferant</span>
                 {% endif %}
                 {% if status %}
-                    <span class="badge {% if status == 'success' %}bg-success{% elif status == 'failed' %}bg-danger{% else %}bg-warning{% endif %}">
+                    <span class="badge {% if status == 'success' %}bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill{% elif status == 'failed' %}bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill{% else %}bg-warning{% endif %}">
                         Gefiltert nach Status: {{ status }}
                     </span>
                 {% endif %}
@@ -117,11 +117,11 @@
                                     <a href="{% url 'purchase_order_detail' pk=log.order.id %}">{{ log.order.order_number }}</a>
                                 </td>
                                 <td>
-                                    <span class="badge {% if log.status == 'success' %}bg-success{% elif log.status == 'failed' %}bg-danger{% elif log.status == 'pending' %}bg-warning{% elif log.status == 'in_progress' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    <span class="badge {% if log.status == 'success' %}bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill{% elif log.status == 'failed' %}bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill{% elif log.status == 'pending' %}bg-warning{% elif log.status == 'in_progress' %}bg-info{% else %}bg-secondary{% endif %}">
                                         {{ log.get_status_display }}
                                     </span>
                                     {% if log.attempt_count > 1 %}
-                                        <span class="badge bg-secondary">{{ log.attempt_count }} Versuche</span>
+                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ log.attempt_count }} Versuche</span>
                                     {% endif %}
                                 </td>
                                 <td>

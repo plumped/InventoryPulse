@@ -10,10 +10,10 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h1 class="h3 mb-0">Schnittstellen-Verwaltung</h1>
                 <div>
-                    <a href="{% url 'admin_interface_type_management' %}" class="btn btn-primary">
+                    <a href="{% url 'admin_interface_type_management' %}" class="btn btn-outline-primary">
                         <i class="fas fa-cogs"></i> Schnittstellentypen verwalten
                     </a>
-                    <a href="{% url 'interface_list' %}" class="btn btn-secondary">
+                    <a href="{% url 'interface_list' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-list"></i> Alle Schnittstellen anzeigen
                     </a>
                 </div>
@@ -160,7 +160,7 @@
                                         <td><code>{{ type.code }}</code></td>
                                         <td>{{ type.description|truncatechars:50 }}</td>
                                         <td>
-                                            <span class="badge {% if type.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            <span class="badge {% if type.is_active %}bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill{% else %}bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill{% endif %}">
                                                 {% if type.is_active %}Aktiv{% else %}Inaktiv{% endif %}
                                             </span>
                                         </td>
@@ -216,7 +216,7 @@
                                 <li><strong>Webservice</strong> - Bestellungen über einen SOAP- oder anderen Webservice senden</li>
                             </ul>
                             <p>
-                                <a href="{% url 'admin_interface_type_management' %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'admin_interface_type_management' %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-cogs"></i> Schnittstellentypen verwalten
                                 </a>
                             </p>
@@ -234,7 +234,7 @@
                                 <li>Markieren Sie eine Schnittstelle als Standard für automatische Übertragungen</li>
                             </ul>
                             <p>
-                                <a href="{% url 'interface_create' %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'interface_create' %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-plus"></i> Neue Schnittstelle anlegen
                                 </a>
                             </p>

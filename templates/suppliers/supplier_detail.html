@@ -15,11 +15,8 @@
         <h1>{{ supplier.name }}</h1>
     </div>
     <div class="btn-group" role="group">
-        <a href="{% url 'supplier_update' supplier.id %}" class="btn btn-primary">
-            <i class="fas fa-edit"></i> Bearbeiten
-        </a>
-        <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-success">
-            <i class="fas fa-plus"></i> Produkt hinzufügen
+        <a href="{% url 'supplier_update' supplier.id %}" class="btn btn-outline-primary">
+            <i class="bi bi-pencil"></i> Bearbeiten
         </a>
     </div>
 </div>
@@ -78,7 +75,7 @@
                     <div class="col-md-5 fw-bold">Standardwährung:</div>
                     <div class="col-md-7">
                         {% if supplier.default_currency %}
-                            <span class="badge bg-primary">{{ supplier.default_currency.code }} ({{ supplier.default_currency.symbol }})</span>
+                            <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis">{{ supplier.default_currency.code }} ({{ supplier.default_currency.symbol }})</span>
                         {% else %}
                             <span class="text-muted">Nicht angegeben</span>
                         {% endif %}
@@ -90,9 +87,9 @@
                     <div class="col-md-5 fw-bold">Versandkosten:</div>
                     <div class="col-md-7">
                         {% if supplier.shipping_cost > 0 %}
-                            <span class="badge bg-info">{{ supplier.shipping_cost }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
+                            <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis">{{ supplier.shipping_cost }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
                         {% else %}
-                            <span class="badge bg-success">Kostenlos</span>
+                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Kostenlos</span>
                         {% endif %}
                     </div>
                 </div>
@@ -100,9 +97,9 @@
                     <div class="col-md-5 fw-bold">Mindestbestellwert:</div>
                     <div class="col-md-7">
                         {% if supplier.minimum_order_value > 0 %}
-                            <span class="badge bg-warning">{{ supplier.minimum_order_value }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
+                            <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis">{{ supplier.minimum_order_value }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
                         {% else %}
-                            <span class="badge bg-success">Kein Minimum</span>
+                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis">Kein Minimum</span>
                         {% endif %}
                     </div>
                 </div>
@@ -115,13 +112,13 @@
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="{% url 'supplier_update' supplier.id %}" class="btn btn-primary">
+                    <a href="{% url 'supplier_update' supplier.id %}" class="btn btn-outline-primary">
                         <i class="fas fa-edit me-2"></i>Lieferant bearbeiten
                     </a>
-                    <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-success">
+                    <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-outline-success">
                         <i class="fas fa-plus me-2"></i>Produkt hinzufügen
                     </a>
-                    <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-info">
+                    <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-outline-info">
                         <i class="fas fa-shopping-cart me-2"></i>Neue Bestellung
                     </a>
                     <a href="#" class="btn btn-outline-secondary">
@@ -137,8 +134,8 @@
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-box me-2"></i>Produkte dieses Lieferanten</h5>
-                <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-plus"></i> Produkt hinzufügen
+                <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus-circle"></i> Produkt hinzufügen
                 </a>
             </div>
             <div class="card-body">
@@ -166,7 +163,7 @@
                                     {% if sp.currency %}
                                         {{ sp.currency.symbol }}
                                         {% if sp.currency != supplier.default_currency %}
-                                            <span class="badge bg-info" title="Abweichende Währung">{{ sp.currency.code }}</span>
+                                            <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill" title="Abweichende Währung">{{ sp.currency.code }}</span>
                                         {% endif %}
                                     {% else %}
                                         {{ supplier.default_currency.symbol }}
@@ -175,17 +172,17 @@
                                 <td>{{ sp.lead_time_days }} Tage</td>
                                 <td>
                                     {% if sp.is_preferred %}
-                                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
+                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"><i class="bi bi-check"></i></span>
                                     {% else %}
-                                        <span class="badge bg-secondary"><i class="fas fa-times"></i></span>
+                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill"><i class="fas fa-times"></i></span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="{% url 'supplier_product_update' sp.id %}" class="btn btn-sm btn-primary">
+                                        <a href="{% url 'supplier_product_update' sp.id %}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="{% url 'supplier_product_delete' sp.id %}" class="btn btn-sm btn-danger">
+                                        <a href="{% url 'supplier_product_delete' sp.id %}" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </a>
                                     </div>
@@ -205,7 +202,7 @@
         <!-- Aktuelle Bestellungen -->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-shipping-fast me-2"></i>Aktuelle Bestellungen</h5>
+                <h5 class="mb-0"><i class="bi bi-truck me-2"></i>Aktuelle Bestellungen</h5>
             </div>
             <div class="card-body">
                 <!-- Hier kann später eine Liste der aktuellen Bestellungen angezeigt werden -->

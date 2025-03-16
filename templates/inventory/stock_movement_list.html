@@ -56,7 +56,7 @@
                 <input type="date" name="date_to" id="date_to" class="form-control" value="{{ date_to|default:'' }}">
             </div>
             <div class="col-12 text-end mt-3">
-                <button type="submit" class="btn btn-primary">Filtern</button>
+                <button type="submit" class="btn btn-outline-primary">Filtern</button>
                 <a href="{% url 'stock_movement_list' %}" class="btn btn-outline-secondary">Filter zurücksetzen</a>
             </div>
         </form>
@@ -68,7 +68,7 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Datum/Zeit</th>
                         <th>Produkt</th>
@@ -92,18 +92,18 @@
                         </td>
                         <td>
                             {% if movement.movement_type == 'in' %}
-                                <span class="badge bg-success">Zugang</span>
+                                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Zugang</span>
                             {% elif movement.movement_type == 'out' %}
-                                <span class="badge bg-danger">Abgang</span>
+                                <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">Abgang</span>
                             {% else %}
-                                <span class="badge bg-warning">Korrektur</span>
+                                <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">Korrektur</span>
                             {% endif %}
                         </td>
                         <td>{{ movement.quantity }} {{ movement.product.unit }}</td>
                         <td>{{ movement.reference|default:"-" }}</td>
                         <td>{{ movement.created_by.username }}</td>
                         <td>
-                            <a href="{% url 'product_detail' movement.product.id %}" class="btn btn-sm btn-info">
+                            <a href="{% url 'product_detail' movement.product.id %}" class="btn btn-sm btn-outline-info">
                                 <i class="bi bi-eye"></i>
                             </a>
                         </td>
@@ -126,20 +126,20 @@
         {% if movements.has_previous %}
         <li class="page-item">
             <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                <i class="fas fa-angle-double-left"></i>
+                <i class="bi bi-chevron-double-left"></i>
             </a>
         </li>
         <li class="page-item">
             <a class="page-link" href="?page={{ movements.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                <i class="fas fa-angle-left"></i>
+                <i class="bi bi-chevron-left"></i>
             </a>
         </li>
         {% else %}
         <li class="page-item disabled">
-            <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+            <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
         </li>
         <li class="page-item disabled">
-            <span class="page-link"><i class="fas fa-angle-left"></i></span>
+            <span class="page-link"><i class="bi bi-chevron-left"></i></span>
         </li>
         {% endif %}
 
@@ -160,20 +160,20 @@
         {% if movements.has_next %}
         <li class="page-item">
             <a class="page-link" href="?page={{ movements.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                <i class="fas fa-angle-right"></i>
+                <i class="bi bi-chevron-right"></i>
             </a>
         </li>
         <li class="page-item">
             <a class="page-link" href="?page={{ movements.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                <i class="fas fa-angle-double-right"></i>
+                <i class="bi bi-chevron-double-right"></i>
             </a>
         </li>
         {% else %}
         <li class="page-item disabled">
-            <span class="page-link"><i class="fas fa-angle-right"></i></span>
+            <span class="page-link"><i class="bi bi-chevron-right"></i></span>
         </li>
         <li class="page-item disabled">
-            <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+            <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
         </li>
         {% endif %}
     </ul>

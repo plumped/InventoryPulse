@@ -163,7 +163,7 @@
                                                     {{ product_item.name }}
                                                     </a>
                                                     {% if product_item.has_batch_tracking %}
-                                                    <span class="badge bg-info">Chargen</span>
+                                                        <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">Chargen</span>
                                                     {% endif %}
                                                 </td>
                                                 <td>{{ product_item.sku }}</td>
@@ -200,7 +200,7 @@
                             </div>
                         </div>
                         <div class="card-footer text-end">
-                            <button type="submit" class="btn btn-primary">Produkte verschieben</button>
+                            <button type="submit" class="btn btn-outline-primary">Produkte verschieben</button>
                         </div>
                     </div>
                 {% else %}

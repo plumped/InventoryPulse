@@ -8,8 +8,8 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Lieferanten-Schnittstellen</h1>
         <div>
-            <a href="{% url 'interface_create' %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Neue Schnittstelle
+            <a href="{% url 'interface_create' %}" class="btn btn-outline-primary">
+                <i class="bi bi-plus-circle"></i> Neue Schnittstelle
             </a>
         </div>
     </div>
@@ -52,7 +52,9 @@
                     <input type="text" name="search" id="search" class="form-control" placeholder="Schnittstellenname, Lieferant..." value="{{ search_query }}">
                 </div>
                 <div class="col-md-1 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Suchen</button>
+                    <button type="submit" class="btn btn-outline-primary w-100">
+                        <i class="bi bi-search"></i> Suchen
+                    </button>
                 </div>
             </form>
         </div>
@@ -84,13 +86,13 @@
                                 <td>{{ interface.supplier.name }}</td>
                                 <td>{{ interface.interface_type.name }}</td>
                                 <td>
-                                    <span class="badge {% if interface.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    <span class="badge {% if interface.is_active %}bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill{% else %}bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill{% endif %}">
                                         {% if interface.is_active %}Aktiv{% else %}Inaktiv{% endif %}
                                     </span>
                                 </td>
                                 <td>
                                     {% if interface.is_default %}
-                                        <span class="badge bg-primary">Standard</span>
+                                        <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">Standard</span>
                                     {% endif %}
                                 </td>
                                 <td>

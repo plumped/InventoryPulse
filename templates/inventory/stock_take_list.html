@@ -5,8 +5,8 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Inventuren</h1>
-    <a href="{% url 'stock_take_create' %}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Neue Inventur
+    <a href="{% url 'stock_take_create' %}" class="btn btn-outline-primary">
+        <i class="bi bi-plus-circle"></i> Neue Inventur
     </a>
 </div>
 
@@ -31,7 +31,7 @@
                 {{ filter_form.search }}
             </div>
             <div class="col-12 text-end">
-                <button type="submit" class="btn btn-primary">Filtern</button>
+                <button type="submit" class="btn btn-outline-primary">Filtern</button>
                 <a href="{% url 'stock_take_list' %}" class="btn btn-outline-secondary">Filter zurücksetzen</a>
             </div>
         </form>
@@ -61,16 +61,16 @@
                             <td>{{ stock_take.warehouse.name }}</td>
                             <td>
                                 {% if stock_take.inventory_type == 'full' %}
-                                    <span class="badge bg-info">Komplett</span>
+                                    <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">Komplett</span>
                                 {% elif stock_take.inventory_type == 'rolling' %}
-                                    <span class="badge bg-warning">Rollierend</span>
+                                    <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">Rollierend</span>
                                     {% if stock_take.cycle_count_category %}
                                         <span class="badge bg-secondary">{{ stock_take.cycle_count_category }}</span>
                                     {% endif %}
                                 {% elif stock_take.inventory_type == 'blind' %}
-                                    <span class="badge bg-dark">Blind</span>
+                                    <span class="badge bg-dark-subtle border border-dark-subtle text-dark-emphasis rounded-pill">Blind</span>
                                 {% elif stock_take.inventory_type == 'sample' %}
-                                    <span class="badge bg-secondary">Stichprobe</span>
+                                    <span class="badge bg-light-subtle border border-light-subtle text-light-emphasis rounded-pill">Stichprobe</span>
                                 {% endif %}
 
                                 {% if not stock_take.display_expected_quantity %}
@@ -79,13 +79,13 @@
                             </td>
                             <td>
                                 {% if stock_take.status == 'draft' %}
-                                    <span class="badge bg-secondary">{{ stock_take.get_status_display }}</span>
+                                    <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ stock_take.get_status_display }}</span>
                                 {% elif stock_take.status == 'in_progress' %}
-                                    <span class="badge bg-primary">{{ stock_take.get_status_display }}</span>
+                                    <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">{{ stock_take.get_status_display }}</span>
                                 {% elif stock_take.status == 'completed' %}
-                                    <span class="badge bg-success">{{ stock_take.get_status_display }}</span>
+                                    <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ stock_take.get_status_display }}</span>
                                 {% else %}
-                                    <span class="badge bg-danger">{{ stock_take.get_status_display }}</span>
+                                    <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ stock_take.get_status_display }}</span>
                                 {% endif %}
                             </td>
                             <td>

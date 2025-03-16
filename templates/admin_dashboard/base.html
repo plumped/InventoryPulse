@@ -48,11 +48,6 @@
                                 <i class="bi bi-key me-2"></i> Lagerzugriff
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'taxes' %}active bg-light{% endif %}" href="{% url 'admin_tax_management' %}">
-                                <i class="bi bi-percent me-2"></i> Mehrwertsteuersätze
-                            </a>
-                        </li>
 
                         <li class="nav-item">
                             <div class="card-header py-3">
@@ -68,6 +63,16 @@
                         <li class="nav-item">
                             <a class="nav-link {% if section == 'workflow_settings' %}active bg-light{% endif %}" href="{% url 'admin_workflow_settings' %}">
                                 <i class="bi bi-diagram-3 me-2"></i> Workflow-Einstellungen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'taxes' %}active bg-light{% endif %}" href="{% url 'admin_tax_management' %}">
+                                <i class="bi bi-percent me-2"></i> Mehrwertsteuersätze
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'taxes' %}active bg-light{% endif %}" href="">
+                                <i class="bi bi-bank me-2"></i> Währungen
                             </a>
                         </li>
 

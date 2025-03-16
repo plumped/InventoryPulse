@@ -53,9 +53,13 @@
                                 <i class="bi bi-percent me-2"></i> Mehrwertsteuersätze
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <hr class="my-2">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Systemeinstellungen</h6>
+                            </div>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link {% if section == 'system_settings' %}active bg-light{% endif %}" href="{% url 'admin_system_settings' %}">
                                 <i class="bi bi-gear me-2"></i> Systemeinstellungen
@@ -66,9 +70,13 @@
                                 <i class="bi bi-diagram-3 me-2"></i> Workflow-Einstellungen
                             </a>
                         </li>
+
                         <li class="nav-item">
-                            <hr class="my-2">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Schnittstellen-Verwaltung</h6>
+                            </div>
                         </li>
+
                         <li class="nav-item">
                             <a class="nav-link {% if section == 'interfaces' %}active bg-light{% endif %}" href="{% url 'admin_interface_management' %}">
                                 <i class="bi bi-globe me-2"></i> Schnittstellen-Verwaltung

@@ -235,32 +235,46 @@ def supplier_product_delete(request, pk):
 
     return render(request, 'suppliers/supplier_product_confirm_delete.html', context)
 
+
 @login_required
 def get_supplier_data(request):
     """AJAX-Endpunkt zum Abrufen der Lieferantendaten inkl. Versandkosten und Mindestbestellwert."""
     supplier_id = request.GET.get('supplier_id')
 
     if not supplier_id:
-        return JsonResponse(
-            {'success': False, 'message': 'Lieferanten-ID erforderlich'})
+        return JsonResponse({'success': False, 'message': 'Lieferanten-ID erforderlich'})
 
     try:
         # Lieferanten-Informationen abrufen
         supplier = Supplier.objects.get(pk=supplier_id)
 
+        # Get the currency information
+        currency_data = {}
+        if supplier.default_currency:
+            currency_data = {
+                'currency_symbol': supplier.default_currency.symbol,
+                'currency_code': supplier.default_currency.code,
+                'exchange_rate': float(supplier.default_currency.exchange_rate)
+            }
+        else:
+            # Fallback to system default currency
+            from core.models import Currency
+            default_currency = Currency.get_default_currency()
+            if default_currency:
+                currency_data = {
+                    'currency_symbol': default_currency.symbol,
+                    'currency_code': default_currency.code,
+                    'exchange_rate': float(default_currency.exchange_rate)
+                }
+
         return JsonResponse({
             'success': True,
             'shipping_cost': float(supplier.shipping_cost),
             'minimum_order_value': float(supplier.minimum_order_value),
-            'name': supplier.name
+            'name': supplier.name,
+            **currency_data  # Include currency data in the response
         })
     except Supplier.DoesNotExist:
-        return JsonResponse({
-            'success': False,
-            'message': 'Lieferant nicht gefunden'
-        })
+        return JsonResponse({'success': False, 'message': 'Lieferant nicht gefunden'})
     except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Fehler: {str(e)}'
-        })
+        return JsonResponse({'success': False, 'message': f'Fehler: {str(e)}'})

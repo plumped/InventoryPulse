@@ -1,5 +1,6 @@
 <!-- templates/order/purchase_order_form.html -->
 {% extends 'base.html' %}
+{% load core_tags %}
 
 {% block title %}{% if form.instance.pk %}Bestellung bearbeiten{% else %}Neue Bestellung{% endif %} - InventoryPulse{% endblock %}
 
@@ -59,6 +60,8 @@
             </div>
         </div>
     </div>
+
+    {% get_default_currency as default_currency %}
 
     <form method="post" id="purchase-order-form">
         {% csrf_token %}
@@ -211,17 +214,17 @@
                                 <tfoot>
                                     <tr>
                                         <td colspan="6" class="text-end"><strong>Zwischensumme:</strong></td>
-                                        <td class="text-end"><span id="subtotal">{{ form.instance.subtotal|default:"0.00" }}</span> €</td>
+                                        <td class="text-end"><span id="subtotal">{{ form.instance.subtotal|default:"0.00" }}</span> <span id="currencySymbol">{{ default_currency.symbol }}</span></td>
                                         <td></td>
                                     </tr>
                                     <tr>
                                         <td colspan="6" class="text-end">Steuern:</td>
                                         <td class="text-end">
                                             {% if form.instance.status == 'draft' or not form.instance.pk %}
-                                            <span id="taxDisplay">{{ form.instance.tax|default:"0.00" }}</span> €
+                                            <span id="taxDisplay">{{ form.instance.tax|default:"0.00" }}</span> <span id="currencySymbol2">{{ default_currency.symbol }}</span>
                                             <input type="hidden" name="tax" id="taxInput" value="{{ form.instance.tax|default:0 }}">
                                             {% else %}
-                                            {{ form.instance.tax }} €
+                                            {{ form.instance.tax }} {{ default_currency.symbol }}
                                             <input type="hidden" name="tax" value="{{ form.instance.tax }}">
                                             {% endif %}
                                         </td>
@@ -231,10 +234,10 @@
                                         <td colspan="6" class="text-end">Versandkosten:</td>
                                         <td class="text-end">
                                             {% if form.instance.status == 'draft' or not form.instance.pk %}
-                                            <span id="shippingDisplay">{{ form.instance.shipping_cost|default:"0.00" }}</span> €
+                                            <span id="shippingDisplay">{{ form.instance.shipping_cost|default:"0.00" }}</span> <span id="currencySymbol3">{{ default_currency.symbol }}</span>
                                             <input type="hidden" name="shipping_cost" id="shippingInput" value="{{ form.instance.shipping_cost|default:0 }}">
                                             {% else %}
-                                            {{ form.instance.shipping_cost }} €
+                                            {{ form.instance.shipping_cost }} {{ default_currency.symbol }}
                                             <input type="hidden" name="shipping_cost" value="{{ form.instance.shipping_cost }}">
                                             {% endif %}
                                         </td>
@@ -242,7 +245,7 @@
                                     </tr>
                                     <tr>
                                         <td colspan="6" class="text-end"><strong>Gesamtsumme:</strong></td>
-                                        <td class="text-end"><strong><span id="total">{{ form.instance.total|default:"0.00" }}</span> €</strong></td>
+                                        <td class="text-end"><strong><span id="total">{{ form.instance.total|default:"0.00" }}</span> <span id="currencySymbol4">{{ default_currency.symbol }}</span></strong></td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -304,6 +307,9 @@ $(document).ready(function() {
     let itemIndex = 0;
     let supplierShippingCost = 0;
     let supplierMinimumOrderValue = 0;
+    let currencySymbol = '{{ default_currency.symbol }}';
+    let currencyCode = '{{ default_currency.code }}';
+    let exchangeRate = 1.0;
 
     // Initialize product selections
     initializeProductSelects();
@@ -333,9 +339,22 @@ $(document).ready(function() {
                     supplierShippingCost = parseFloat(data.shipping_cost);
                     supplierMinimumOrderValue = parseFloat(data.minimum_order_value);
 
+                    // Update currency information if available
+                    if (data.currency_symbol) {
+                        currencySymbol = data.currency_symbol;
+                        currencyCode = data.currency_code;
+                        exchangeRate = parseFloat(data.exchange_rate || 1.0);
+
+                        // Update all currency symbols in the page
+                        $('[id^="currencySymbol"]').text(currencySymbol);
+                    }
+
                     console.log('Supplier data loaded:', {
                         supplierShippingCost: supplierShippingCost,
-                        supplierMinimumOrderValue: supplierMinimumOrderValue
+                        supplierMinimumOrderValue: supplierMinimumOrderValue,
+                        currencySymbol: currencySymbol,
+                        currencyCode: currencyCode,
+                        exchangeRate: exchangeRate
                     });
 
                     // If a minimum order value exists and is greater than 0
@@ -344,10 +363,10 @@ $(document).ready(function() {
                         if (!$('#minimum-order-warning').length) {
                             $('<div id="minimum-order-warning" class="alert alert-warning mt-3">' +
                               '<i class="bi bi-exclamation-triangle me-2"></i>' +
-                              'Mindestbestellwert für diesen Lieferanten: <strong>' + data.minimum_order_value + ' €</strong>' +
+                              'Mindestbestellwert für diesen Lieferanten: <strong>' + data.minimum_order_value + ' ' + currencySymbol + '</strong>' +
                               '</div>').insertAfter('#itemsTable');
                         } else {
-                            $('#minimum-order-warning strong').text(data.minimum_order_value + ' €');
+                            $('#minimum-order-warning strong').text(data.minimum_order_value + ' ' + currencySymbol);
                         }
                     } else {
                         // Remove notice if no minimum order value
@@ -471,6 +490,21 @@ $(document).ready(function() {
                     }
                 }
 
+                // Update currency information if available
+                if (data.currency && data.currency.id) {
+                    // Create or update hidden field for currency_id
+                    const itemId = $row.data('item-id');
+                    let $currencyIdField = $row.find('.item-currency-id');
+                    if ($currencyIdField.length === 0) {
+                        $currencyIdField = $('<input>')
+                            .attr('type', 'hidden')
+                            .addClass('item-currency-id')
+                            .attr('name', 'item_currency_id_' + itemId)
+                            .appendTo($row);
+                    }
+                    $currencyIdField.val(data.currency.id);
+                }
+
                 // Update row total
                 updateRowTotal($row);
             } else {
@@ -566,8 +600,8 @@ $(document).ready(function() {
                 if ($('#minimum-order-warning').length) {
                     $('#minimum-order-warning').html(
                         '<i class="bi bi-exclamation-triangle me-2"></i>' +
-                        'Mindestbestellwert für diesen Lieferanten: <strong>' + supplierMinimumOrderValue.toFixed(2) + ' €</strong><br>' +
-                        'Noch <strong>' + remainingForFreeShipping.toFixed(2) + ' €</strong> bis zum kostenlosen Versand'
+                        'Mindestbestellwert für diesen Lieferanten: <strong>' + supplierMinimumOrderValue.toFixed(2) + ' ' + currencySymbol + '</strong><br>' +
+                        'Noch <strong>' + remainingForFreeShipping.toFixed(2) + ' ' + currencySymbol + '</strong> bis zum kostenlosen Versand'
                     );
                 }
             } else {

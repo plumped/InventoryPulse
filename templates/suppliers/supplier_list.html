@@ -5,7 +5,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Lieferanten</h1>
-    <a href="{% url 'supplier_create' %}" class="btn btn-primary">
+    <a href="{% url 'supplier_create' %}" class="btn btn-outline-primary">
         <i class="fas fa-plus"></i> Neuer Lieferant
     </a>
 </div>
@@ -22,7 +22,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <button type="submit" class="btn btn-primary w-100">Suchen</button>
+                <button type="submit" class="btn btn-outline-primary w-100">Suchen</button>
             </div>
         </form>
     </div>
@@ -33,7 +33,7 @@
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-hover">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Name</th>
                         <th>Kontaktperson</th>
@@ -59,17 +59,21 @@
                         </td>
                         <td>{{ item.supplier.phone|default:"-" }}</td>
                         <td>
-                            <span class="badge bg-info">{{ item.product_count }}</span>
+                            {% if item.product_count > 0 %}
+                                <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">{{ item.product_count }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ item.product_count }}</span>
+                            {% endif %}
                         </td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a href="{% url 'supplier_detail' item.supplier.id %}" class="btn btn-sm btn-info">
+                                <a href="{% url 'supplier_detail' item.supplier.id %}" class="btn btn-sm btn-outline-info">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{% url 'supplier_update' item.supplier.id %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'supplier_update' item.supplier.id %}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="{% url 'supplier_product_add' %}?supplier={{ item.supplier.id }}" class="btn btn-sm btn-success">
+                                <a href="{% url 'supplier_product_add' %}?supplier={{ item.supplier.id }}" class="btn btn-sm btn-outline-success">
                                     <i class="bi bi-plus"></i>
                                 </a>
                             </div>

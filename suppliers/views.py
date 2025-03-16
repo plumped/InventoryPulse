@@ -54,9 +54,28 @@ def supplier_detail(request, pk):
     # Produkte dieses Lieferanten
     supplier_products = SupplierProduct.objects.filter(supplier=supplier).select_related('product')
 
+    # Systemwährung ermitteln
+    from core.models import Currency
+    system_currency = Currency.get_default_currency()
+
+    # Umgerechnete Preise berechnen
+    for sp in supplier_products:
+        # Die effektive Währung für dieses Produkt ermitteln
+        product_currency = sp.currency if sp.currency else supplier.default_currency
+
+        # Wenn die Währung nicht die Systemwährung ist, den Preis umrechnen
+        if product_currency and product_currency != system_currency:
+            # Wechselkurs aus dem Produkt- oder Lieferantenwährungsmodell übernehmen
+            exchange_rate = product_currency.exchange_rate
+            sp.converted_price = sp.purchase_price * exchange_rate
+            sp.system_currency = system_currency
+        else:
+            sp.converted_price = None
+
     context = {
         'supplier': supplier,
         'supplier_products': supplier_products,
+        'system_currency': system_currency,
     }
 
     return render(request, 'suppliers/supplier_detail.html', context)

@@ -4,6 +4,27 @@
     {% if form.instance.pk %}Produktzuordnung bearbeiten{% else %}Produkt zu Lieferant hinzufügen{% endif %} - InventoryPulse
 {% endblock %}
 
+{% block extra_css %}
+{{ form.media.css }}
+<style>
+    /* Anpassung für das Produktsuchfeld */
+    #{{ form.product.id_for_label }},
+    .select2-container--default .select2-selection--single {
+        height: calc(1.5em + 0.75rem + 2px) !important; /* Bootstrap Standard Input-Höhe */
+        line-height: 1.5;
+    }
+
+    /* Falls es sich um ein Select2-Widget handelt */
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: calc(1.5em + 0.75rem);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: calc(1.5em + 0.75rem) !important;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -48,9 +69,7 @@
                                 {% for choice in form.supplier.field.choices %}
                                     {% if choice.0 %}
                                         <option value="{{ choice.0 }}"
-                                                {% if preselected_supplier_id and preselected_supplier_id == choice.0|stringformat:"s" %}selected{% elif form.supplier.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}
-                                                data-currency-id="{% if choice.1.default_currency %}{{ choice.1.default_currency.id }}{% endif %}"
-                                                data-currency-symbol="{% if choice.1.default_currency %}{{ choice.1.default_currency.symbol }}{% endif %}">
+                                                {% if preselected_supplier_id and preselected_supplier_id == choice.0|stringformat:"s" %}selected{% elif form.supplier.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
                                             {{ choice.1 }}
                                         </option>
                                     {% endif %}
@@ -66,22 +85,7 @@
                         </div>
                         <div class="col-md-6">
                             <label for="{{ form.product.id_for_label }}" class="form-label">Produkt*</label>
-                            <select name="{{ form.product.name }}"
-                                    id="{{ form.product.id_for_label }}"
-                                    class="form-select {% if form.product.errors %}is-invalid{% endif %}"
-                                    required {% if preselected_product_id %}readonly{% endif %}>
-                                {% if not preselected_product_id %}
-                                    <option value="">-- Produkt wählen --</option>
-                                {% endif %}
-                                {% for choice in form.product.field.choices %}
-                                    {% if choice.0 %}
-                                        <option value="{{ choice.0 }}"
-                                                {% if preselected_product_id and preselected_product_id == choice.0|stringformat:"s" %}selected{% elif form.product.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
-                                            {{ choice.1 }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
+                            {{ form.product }}
                             {% if form.product.errors %}
                                 <div class="invalid-feedback">
                                     {% for error in form.product.errors %}
@@ -118,9 +122,7 @@
                                        value="{{ form.purchase_price.value|default:'' }}" step="0.01" min="0" required>
                                 <span class="input-group-text">
                                     <span id="currency-symbol">
-                                        {% if form.currency.value %}
-                                            {{ form.currency.value.symbol }}
-                                        {% elif supplier.default_currency %}
+                                        {% if supplier.default_currency %}
                                             {{ supplier.default_currency.symbol }}
                                         {% else %}
                                             €
@@ -145,33 +147,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="{{ form.currency.id_for_label }}" class="form-label">Abweichende Währung</label>
-                            <select name="{{ form.currency.name }}"
-                                    id="{{ form.currency.id_for_label }}"
-                                    class="form-select {% if form.currency.errors %}is-invalid{% endif %}">
-                                <option value="">-- Lieferantenstandard verwenden --</option>
-                                {% for choice in form.currency.field.choices %}
-                                    {% if choice.0 %}
-                                        <option value="{{ choice.0 }}"
-                                                {% if form.currency.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}
-                                                data-symbol="{{ choice.1.symbol }}">
-                                            {{ choice.1 }}
-                                        </option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                            {% if form.currency.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.currency.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <div class="form-text">{{ form.currency.help_text }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            <label for="{{ form.lead_time_days.id_for_label }}" class="form-label">Lieferzeit (Tage)*</label>
+                            <label for="{{ form.lead_time_days.id_for_label }}" class="form-label">Ungefähre Lieferzeit (Tage)*</label>
                             <input type="number" name="{{ form.lead_time_days.name }}"
                                    id="{{ form.lead_time_days.id_for_label }}"
                                    class="form-control {% if form.lead_time_days.errors %}is-invalid{% endif %}"
@@ -183,6 +159,9 @@
                                     {% endfor %}
                                 </div>
                             {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Leerer Platz, wo vorher die abweichende Währung war -->
                         </div>
                     </div>
 
@@ -240,7 +219,6 @@
                 <ul>
                     <li><strong>Artikelnr. des Lieferanten:</strong> Die Nummer, unter der der Lieferant das Produkt führt.</li>
                     <li><strong>Einkaufspreis:</strong> Der aktuelle Preis des Produkts bei diesem Lieferanten.</li>
-                    <li><strong>Abweichende Währung:</strong> Optional, nur wenn dieses Produkt nicht in der Standardwährung des Lieferanten abgerechnet wird.</li>
                     <li><strong>Lieferzeit:</strong> Die durchschnittliche Lieferzeit in Tagen.</li>
                     <li><strong>Bevorzugter Lieferant:</strong> Markieren Sie diese Option, wenn dies Ihr bevorzugter Lieferant für dieses Produkt ist.</li>
                 </ul>
@@ -249,7 +227,10 @@
     </div>
 </div>
 
+{% endblock %}
+
 {% block extra_js %}
+{{ form.media.js }}
 <script>
     $(document).ready(function() {
         // Wenn Lieferant vorausgewählt ist, die Auswahl deaktivieren
@@ -265,7 +246,7 @@
 
         // Wenn Produkt vorausgewählt ist, die Auswahl deaktivieren
         {% if preselected_product_id %}
-            $('#{{ form.product.id_for_label }}').prop('disabled', true);
+            $('.select2-widget').prop('disabled', true);
             // Verstecktes Feld mit dem Produkt-ID hinzufügen, damit es dennoch übermittelt wird
             $('<input>').attr({
                 type: 'hidden',
@@ -273,50 +254,6 @@
                 value: '{{ preselected_product_id }}'
             }).appendTo('form');
         {% endif %}
-
-        // Funktion zum Aktualisieren des Währungssymbols
-        function updateCurrencyInfo() {
-            var selectedCurrency = $('#{{ form.currency.id_for_label }}').find('option:selected');
-            var selectedSupplier = $('#{{ form.supplier.id_for_label }}').find('option:selected');
-
-            // Wenn eine abweichende Währung ausgewählt ist
-            if(selectedCurrency.val()) {
-                $('#currency-symbol').text(selectedCurrency.data('symbol'));
-                $('#supplier-currency-info').html('<span class="text-warning">Abweichende Währung ausgewählt</span>');
-            }
-            // Sonst Lieferantenstandardwährung verwenden
-            else if(selectedSupplier.val()) {
-                var currencySymbol = selectedSupplier.data('currency-symbol') || '€';
-                $('#currency-symbol').text(currencySymbol);
-
-                // Info zur Lieferantenwährung anzeigen
-                var message = "Standardwährung des Lieferanten wird verwendet";
-                var currencyId = selectedSupplier.data('currency-id');
-                if(currencyId) {
-                    var currencyText = $('#{{ form.currency.id_for_label }} option[value="' + currencyId + '"]').text();
-                    message = "Standardwährung des Lieferanten wird verwendet";
-                }
-                $('#supplier-currency-info').text(message);
-            }
-        }
-
-        // Währungssymbol aktualisieren, wenn Währung geändert wird
-        $('#{{ form.currency.id_for_label }}').change(function() {
-            updateCurrencyInfo();
-        });
-
-        // Währungssymbol aktualisieren, wenn Lieferant geändert wird
-        $('#{{ form.supplier.id_for_label }}').change(function() {
-            // Wenn ein Lieferant gewählt wurde und die abweichende Währung leer ist,
-            // wird automatisch die Standardwährung des Lieferanten verwendet
-            if($(this).val() && !$('#{{ form.currency.id_for_label }}').val()) {
-                updateCurrencyInfo();
-            }
-        });
-
-        // Initial aktualisieren
-        updateCurrencyInfo();
     });
 </script>
-{% endblock %}
 {% endblock %}

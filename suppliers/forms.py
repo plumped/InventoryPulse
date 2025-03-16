@@ -1,4 +1,5 @@
 from django import forms
+from django_select2 import forms as s2forms
 from .models import Supplier, SupplierProduct
 from core.models import Product
 
@@ -52,6 +53,20 @@ class SupplierForm(forms.ModelForm):
         return name
 
 
+# Widget für die Produktsuche
+class ProductWidget(s2forms.ModelSelect2Widget):
+    search_fields = [
+        'name__icontains',
+        'sku__icontains',
+    ]
+
+    def get_queryset(self):
+        return Product.objects.all().order_by('name')
+
+    def label_from_instance(self, obj):
+        return f"{obj.name} (SKU: {obj.sku})"
+
+
 class SupplierProductForm(forms.ModelForm):
     """Form for linking products to suppliers."""
 
@@ -59,6 +74,13 @@ class SupplierProductForm(forms.ModelForm):
         model = SupplierProduct
         fields = ['supplier', 'product', 'supplier_sku', 'purchase_price',
                   'currency', 'lead_time_days', 'is_preferred', 'notes']
+        widgets = {
+            'product': ProductWidget(attrs={
+                'data-placeholder': 'Nach Produktname oder SKU suchen...',
+                'data-minimum-input-length': 2,
+                'class': 'form-select select2-widget',
+            }),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

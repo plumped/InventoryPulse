@@ -146,6 +146,7 @@
                                 <th>Produkt</th>
                                 <th>Artikelnr. Lieferant</th>
                                 <th>Einkaufspreis</th>
+                                <th>Wechselkurs</th>
                                 <th>Lieferzeit</th>
                                 <th>Bevorzugt</th>
                                 <th>Aktionen</th>
@@ -169,12 +170,19 @@
                                         {{ supplier.default_currency.symbol }}
                                     {% endif %}
                                 </td>
+                                <td>
+                                    {% if sp.converted_price %}
+                                        {{ sp.converted_price|floatformat:2 }} {{ sp.system_currency.symbol }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
                                 <td>{{ sp.lead_time_days }} Tage</td>
                                 <td>
                                     {% if sp.is_preferred %}
                                         <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"><i class="bi bi-check"></i></span>
                                     {% else %}
-                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill"><i class="fas fa-times"></i></span>
+                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill"><i class="bi bi-x"></i></span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -190,7 +198,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="6" class="text-center">Keine Produkte für diesen Lieferanten</td>
+                                <td colspan="7" class="text-center">Keine Produkte für diesen Lieferanten</td>
                             </tr>
                             {% endfor %}
                         </tbody>

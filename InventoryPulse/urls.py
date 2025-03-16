@@ -151,4 +151,6 @@ urlpatterns = [
         path('logs/export/', core_views.export_import_logs, name='export_import_logs'),
         path('logs/<int:log_id>/download-errors/', core_views.download_error_file, name='download_error_file'),
     ])),
+
+    path('select2/', include('django_select2.urls')),
 ]

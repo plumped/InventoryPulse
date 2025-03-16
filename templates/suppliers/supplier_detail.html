@@ -73,12 +73,24 @@
                     </div>
                 </div>
 
-                <!-- Neue Felder für Versandkosten und Mindestbestellwert -->
+                <!-- Standardwährung des Lieferanten -->
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Standardwährung:</div>
+                    <div class="col-md-7">
+                        {% if supplier.default_currency %}
+                            <span class="badge bg-primary">{{ supplier.default_currency.code }} ({{ supplier.default_currency.symbol }})</span>
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Felder für Versandkosten und Mindestbestellwert -->
                 <div class="row mb-3">
                     <div class="col-md-5 fw-bold">Versandkosten:</div>
                     <div class="col-md-7">
                         {% if supplier.shipping_cost > 0 %}
-                            <span class="badge bg-info">{{ supplier.shipping_cost }} €</span>
+                            <span class="badge bg-info">{{ supplier.shipping_cost }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
                         {% else %}
                             <span class="badge bg-success">Kostenlos</span>
                         {% endif %}
@@ -88,7 +100,7 @@
                     <div class="col-md-5 fw-bold">Mindestbestellwert:</div>
                     <div class="col-md-7">
                         {% if supplier.minimum_order_value > 0 %}
-                            <span class="badge bg-warning">{{ supplier.minimum_order_value }} €</span>
+                            <span class="badge bg-warning">{{ supplier.minimum_order_value }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
                         {% else %}
                             <span class="badge bg-success">Kein Minimum</span>
                         {% endif %}
@@ -149,7 +161,17 @@
                                     <a href="{% url 'product_detail' sp.product.id %}">{{ sp.product.name }}</a>
                                 </td>
                                 <td>{{ sp.supplier_sku|default:"-" }}</td>
-                                <td>{{ sp.purchase_price }} €</td>
+                                <td>
+                                    {{ sp.purchase_price }}
+                                    {% if sp.currency %}
+                                        {{ sp.currency.symbol }}
+                                        {% if sp.currency != supplier.default_currency %}
+                                            <span class="badge bg-info" title="Abweichende Währung">{{ sp.currency.code }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {{ supplier.default_currency.symbol }}
+                                    {% endif %}
+                                </td>
                                 <td>{{ sp.lead_time_days }} Tage</td>
                                 <td>
                                     {% if sp.is_preferred %}

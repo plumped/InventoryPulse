@@ -75,6 +75,11 @@ class PurchaseOrderItem(models.Model):
     quantity_received = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 
+    # Add currency field to capture the currency at time of order
+    currency = models.ForeignKey('core.Currency', on_delete=models.PROTECT, null=True,
+                                 verbose_name="Währung",
+                                 help_text="Die Währung, in der der Artikel bestellt wird")
+
     # Optional: Lieferantenartikelnummer
     supplier_sku = models.CharField(max_length=100, blank=True)
 
@@ -128,6 +133,12 @@ class PurchaseOrderItem(models.Model):
         # Wenn neu erstellt und kein Steuersatz gesetzt ist, den Produktsteuersatz verwenden
         if not self.pk and not self.tax and self.product and self.product.tax:
             self.tax = self.product.tax
+
+        # Wenn keine Währung gesetzt ist, die Standardwährung verwenden
+        if not self.currency:
+            from core.models import Currency
+            self.currency = Currency.get_default_currency()
+
         super().save(*args, **kwargs)
 
 

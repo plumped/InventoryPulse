@@ -66,7 +66,11 @@
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Einkaufspreis:</div>
-                    <div class="col-md-8">{{ supplier_product.purchase_price }} €</div>
+                    <div class="col-md-8">{{ supplier_product.purchase_price }} {{ supplier_product.currency.symbol }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4 fw-bold">Währung:</div>
+                    <div class="col-md-8">{{ supplier_product.currency.name }} ({{ supplier_product.currency.code }})</div>
                 </div>
                 <div class="row mb-3">
                     <div class="col-md-4 fw-bold">Lieferzeit:</div>

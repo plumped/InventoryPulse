@@ -1,0 +1,128 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content_title %}{{ title }}{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Währungsdaten</h6>
+    </div>
+    <div class="card-body">
+        {% if messages %}
+        <div class="messages mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="{{ form.code.id_for_label }}" class="form-label">Code (ISO 4217)</label>
+                    {{ form.code }}
+                    {% if form.code.errors %}
+                    <div class="text-danger mt-1">{{ form.code.errors }}</div>
+                    {% endif %}
+                    <div class="form-text text-muted">z.B. EUR, USD, GBP (3 Buchstaben)</div>
+                </div>
+                <div class="col-md-8">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="text-danger mt-1">{{ form.name.errors }}</div>
+                    {% endif %}
+                    <div class="form-text text-muted">z.B. Euro, US-Dollar</div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="{{ form.symbol.id_for_label }}" class="form-label">Symbol</label>
+                    {{ form.symbol }}
+                    {% if form.symbol.errors %}
+                    <div class="text-danger mt-1">{{ form.symbol.errors }}</div>
+                    {% endif %}
+                    <div class="form-text text-muted">z.B. €, $, £</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.decimal_places.id_for_label }}" class="form-label">Dezimalstellen</label>
+                    {{ form.decimal_places }}
+                    {% if form.decimal_places.errors %}
+                    <div class="text-danger mt-1">{{ form.decimal_places.errors }}</div>
+                    {% endif %}
+                    <div class="form-text text-muted">In der Regel 2</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ form.exchange_rate.id_for_label }}" class="form-label">Wechselkurs</label>
+                    {{ form.exchange_rate }}
+                    {% if form.exchange_rate.errors %}
+                    <div class="text-danger mt-1">{{ form.exchange_rate.errors }}</div>
+                    {% endif %}
+                    <div class="form-text text-muted">Relativ zur Standardwährung</div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="form-check">
+                        {{ form.is_default }}
+                        <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                            Als Standardwährung festlegen
+                        </label>
+                        {% if form.is_default.errors %}
+                        <div class="text-danger mt-1">{{ form.is_default.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                            Aktiv
+                        </label>
+                        {% if form.is_active.errors %}
+                        <div class="text-danger mt-1">{{ form.is_active.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'currency_list' %}" class="btn btn-secondary">Abbrechen</a>
+                <button type="submit" class="btn btn-primary">Speichern</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Hinweise</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-6">
+                <p>
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>ISO 4217 Code:</strong> Der internationale Standardcode für Währungen besteht aus drei Buchstaben.
+                </p>
+            </div>
+            <div class="col-lg-6">
+                <p>
+                    <i class="bi bi-currency-exchange me-2"></i>
+                    <strong>Wechselkurs:</strong> Geben Sie den Wechselkurs relativ zur Standardwährung an. Die Standardwährung selbst hat immer den Wechselkurs 1.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -11,7 +11,7 @@ from .models import (
     BatchNumber,
     ImportLog,
     ImportError,
-    UserProfile, Tax
+    UserProfile, Tax, Currency
 )
 
 
@@ -197,3 +197,34 @@ class TaxAdminAutocomplete(TaxAdmin):
 
 admin.site.unregister(Tax)
 admin.site.register(Tax, TaxAdminAutocomplete)
+
+
+class CurrencyAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', 'symbol', 'exchange_rate', 'is_default', 'is_active', 'updated_at')
+    list_filter = ('is_active', 'is_default')
+    search_fields = ('code', 'name')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('code', 'name', 'symbol', 'decimal_places')
+        }),
+        ('Exchange Rate', {
+            'fields': ('exchange_rate',)
+        }),
+        ('Status', {
+            'fields': ('is_default', 'is_active')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+admin.site.register(Currency, CurrencyAdmin)
+
+# For autocomplete support
+class CurrencyAdminAutocomplete(CurrencyAdmin):
+    search_fields = ['code', 'name']
+
+admin.site.unregister(Currency)
+admin.site.register(Currency, CurrencyAdminAutocomplete)

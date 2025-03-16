@@ -9,7 +9,7 @@ class SupplierForm(forms.ModelForm):
     class Meta:
         model = Supplier
         fields = ['name', 'contact_person', 'email', 'phone', 'address',
-                  'shipping_cost', 'minimum_order_value']
+                  'shipping_cost', 'minimum_order_value', 'default_currency']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'contact_person': forms.TextInput(attrs={'class': 'form-control'}),
@@ -18,7 +18,21 @@ class SupplierForm(forms.ModelForm):
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'shipping_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'minimum_order_value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'default_currency': forms.Select(attrs={'class': 'form-select'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Währungen nach Code sortieren
+        from core.models import Currency
+        self.fields['default_currency'].queryset = Currency.objects.filter(is_active=True).order_by('code')
+
+        # Wenn keine Standardwährung gesetzt ist (neue Instanz), setze die Systemstandardwährung
+        if not self.instance.pk:
+            default_currency = Currency.get_default_currency()
+            if default_currency:
+                self.initial['default_currency'] = default_currency
 
     def clean_name(self):
         """Ensure supplier name is unique."""
@@ -44,7 +58,7 @@ class SupplierProductForm(forms.ModelForm):
     class Meta:
         model = SupplierProduct
         fields = ['supplier', 'product', 'supplier_sku', 'purchase_price',
-                  'lead_time_days', 'is_preferred', 'notes']
+                  'currency', 'lead_time_days', 'is_preferred', 'notes']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -53,10 +67,35 @@ class SupplierProductForm(forms.ModelForm):
         self.fields['supplier'].queryset = Supplier.objects.all().order_by('name')
         self.fields['product'].queryset = Product.objects.all().order_by('name')
 
+        # Currency field - abweichende Währung ist optional
+        from core.models import Currency
+        self.fields['currency'].queryset = Currency.objects.filter(is_active=True).order_by('code')
+        self.fields[
+            'currency'].required = False  # Wichtig: Nicht erforderlich, da die Lieferantenwährung verwendet wird
+
+        # Wenn ein vorausgewählter Lieferant existiert oder ein bestehender Datensatz bearbeitet wird,
+        # versuche die Standardwährung des Lieferanten zu ermitteln
+        supplier = None
+        if 'supplier' in self.initial:
+            try:
+                supplier = Supplier.objects.get(pk=self.initial['supplier'])
+            except Supplier.DoesNotExist:
+                pass
+        elif self.instance.pk:
+            supplier = self.instance.supplier
+
+        # Standardwährung des Lieferanten ermitteln
+        if supplier and supplier.default_currency:
+            # Das Feld currency bleibt leer (None), damit die Standardwährung des Lieferanten verwendet wird
+            # Das Formular zeigt aber eine Beschreibung an, welche Währung verwendet wird
+            self.fields[
+                'currency'].help_text = f"Optional. Standardmäßig wird die Währung des Lieferanten verwendet: {supplier.default_currency.name} ({supplier.default_currency.code})"
+
         # Labels und Hilfe-Texte
         self.fields['supplier_sku'].label = "Artikelnummer des Lieferanten"
         self.fields['supplier_sku'].help_text = "Die Artikelnummer, unter der der Lieferant das Produkt führt"
         self.fields['purchase_price'].label = "Einkaufspreis"
+        self.fields['currency'].label = "Abweichende Währung"
         self.fields['lead_time_days'].label = "Lieferzeit (Tage)"
         self.fields['is_preferred'].label = "Bevorzugter Lieferant"
         self.fields[

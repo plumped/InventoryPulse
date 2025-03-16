@@ -21,6 +21,15 @@ urlpatterns = [
     # Dashboard
     path('', core_views.dashboard, name='dashboard'),
 
+    # Currencies
+    path('currencies/', include([
+
+        path('', core_views.currency_list, name='currency_list'),
+        path('currencies/create/', core_views.currency_create, name='currency_create'),
+        path('currencies/<int:pk>/update/', core_views.currency_update, name='currency_update'),
+        path('currencies/<int:pk>/delete/', core_views.currency_delete, name='currency_delete'),
+    ])),
+
     # Core app
     path('products/', include([
         path('', core_views.product_list, name='product_list'),

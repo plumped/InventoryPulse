@@ -39,6 +39,7 @@
                         <th>Kontaktperson</th>
                         <th>E-Mail</th>
                         <th>Telefon</th>
+                        <th>Standardwährung</th>
                         <th>Produkte</th>
                         <th>Aktionen</th>
                     </tr>
@@ -58,6 +59,13 @@
                             {% endif %}
                         </td>
                         <td>{{ item.supplier.phone|default:"-" }}</td>
+                        <td>
+                            {% if item.supplier.default_currency %}
+                                <span class="badge bg-primary">{{ item.supplier.default_currency.code }} ({{ item.supplier.default_currency.symbol }})</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Standard</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if item.product_count > 0 %}
                                 <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">{{ item.product_count }}</span>
@@ -81,7 +89,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center">Keine Lieferanten gefunden</td>
+                        <td colspan="7" class="text-center">Keine Lieferanten gefunden</td>
                     </tr>
                     {% endfor %}
                 </tbody>

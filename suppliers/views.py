@@ -113,10 +113,32 @@ def supplier_product_add(request):
     preselected_product_id = request.GET.get('product', None)
     preselected_supplier_id = request.GET.get('supplier', None)
 
+    # Initialdaten für das Formular vorbereiten
+    initial_data = {}
+    supplier = None
+    product = None
+
+    if preselected_product_id:
+        initial_data['product'] = preselected_product_id
+        product = get_object_or_404(Product, pk=preselected_product_id)
+
+    if preselected_supplier_id:
+        initial_data['supplier'] = preselected_supplier_id
+        supplier = get_object_or_404(Supplier, pk=preselected_supplier_id)
+
     if request.method == 'POST':
-        form = SupplierProductForm(request.POST)
+        form = SupplierProductForm(request.POST, initial=initial_data)
         if form.is_valid():
-            supplier_product = form.save()
+            supplier_product = form.save(commit=False)
+
+            # Sicherstellen, dass die Standardwährung des Lieferanten verwendet wird,
+            # wenn keine abweichende Währung angegeben ist
+            if not supplier_product.currency and supplier_product.supplier.default_currency:
+                # Bei Submit wird keine Währung explizit gesetzt - die effective_currency-Methode
+                # des Modells wird automatisch die Lieferantenwährung verwenden
+                pass
+
+            supplier_product.save()
 
             # Wenn dieses Produkt als bevorzugt markiert ist, andere Zuordnungen dieses Produkts auf nicht bevorzugt setzen
             if supplier_product.is_preferred:
@@ -139,25 +161,15 @@ def supplier_product_add(request):
             else:
                 return redirect('supplier_list')
     else:
-        initial_data = {}
-        if preselected_product_id:
-            initial_data['product'] = preselected_product_id
-        if preselected_supplier_id:
-            initial_data['supplier'] = preselected_supplier_id
-
         form = SupplierProductForm(initial=initial_data)
 
     context = {
         'form': form,
         'preselected_product_id': preselected_product_id,
         'preselected_supplier_id': preselected_supplier_id,
+        'supplier': supplier,
+        'product': product,
     }
-
-    # Produkt- oder Lieferanteninformationen für die Anzeige
-    if preselected_product_id:
-        context['product'] = get_object_or_404(Product, pk=preselected_product_id)
-    if preselected_supplier_id:
-        context['supplier'] = get_object_or_404(Supplier, pk=preselected_supplier_id)
 
     return render(request, 'suppliers/supplier_product_form.html', context)
 

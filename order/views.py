@@ -303,6 +303,7 @@ def process_order_items(post_data, order):
             price_key = f'item_price_{item_id}'
             supplier_sku_key = f'item_supplier_sku_{item_id}'
             tax_id_key = f'item_tax_id_{item_id}'
+            currency_id_key = f'item_currency_id_{item_id}'
 
             if quantity_key in post_data and price_key in post_data:
                 quantity = Decimal(post_data[quantity_key])
@@ -311,6 +312,9 @@ def process_order_items(post_data, order):
 
                 # Steuersatz ID, falls vorhanden
                 tax_id = post_data.get(tax_id_key, None)
+
+                # Währungs ID, falls vorhanden
+                currency_id = post_data.get(currency_id_key, None)
 
                 # Produkt abrufen
                 product = get_object_or_404(Product, pk=product_id)
@@ -328,6 +332,30 @@ def process_order_items(post_data, order):
                     # Fallback zum Produkt-Steuersatz
                     tax = product.tax
 
+                # Währung bestimmen
+                from core.models import Currency
+                currency = None
+                if currency_id:
+                    try:
+                        currency = Currency.objects.get(pk=currency_id)
+                    except Currency.DoesNotExist:
+                        # Fallback zur Standardwährung
+                        currency = Currency.get_default_currency()
+                else:
+                    # Fallback zur Standardwährung
+                    currency = Currency.get_default_currency()
+
+                    # Falls ein Lieferantenprodukt mit einer bestimmten Währung existiert, diese verwenden
+                    try:
+                        supplier_product = SupplierProduct.objects.get(
+                            supplier=order.supplier,
+                            product=product
+                        )
+                        if supplier_product.currency:
+                            currency = supplier_product.currency
+                    except SupplierProduct.DoesNotExist:
+                        pass
+
                 if item_id.startswith('new_'):
                     # Neue Position erstellen mit der Steuer vom Produkt oder explizit gesetzter Steuer
                     PurchaseOrderItem.objects.create(
@@ -336,7 +364,8 @@ def process_order_items(post_data, order):
                         quantity_ordered=quantity,
                         unit_price=price,
                         supplier_sku=supplier_sku,
-                        tax=tax  # Steuersatz explizit setzen
+                        tax=tax,  # Steuersatz explizit setzen
+                        currency=currency  # Währung explizit setzen
                     )
                 else:
                     # Bestehende Position aktualisieren
@@ -353,6 +382,9 @@ def process_order_items(post_data, order):
 
                             # Explizit den Steuersatz aktualisieren
                             item.tax = tax
+
+                            # Explizit die Währung aktualisieren
+                            item.currency = currency
 
                             item.save()
                             processed_ids.add(item_id_int)
@@ -1000,19 +1032,41 @@ def get_supplier_product_price(request):
         # Produkt-Informationen für Steuersatz abrufen
         product = Product.objects.get(pk=product_id)
 
+        # Währungs-Informationen abrufen
+        from core.models import Currency
+        default_currency = Currency.get_default_currency()
+        currency_info = {
+            'id': supplier_product.currency.id if supplier_product.currency else (
+                default_currency.id if default_currency else None),
+            'code': supplier_product.currency.code if supplier_product.currency else (
+                default_currency.code if default_currency else ''),
+            'symbol': supplier_product.currency.symbol if supplier_product.currency else (
+                default_currency.symbol if default_currency else '')
+        }
+
         return JsonResponse({
             'success': True,
             'price': float(supplier_product.purchase_price),
             'supplier_sku': supplier_product.supplier_sku,
             'tax_rate': float(product.get_tax_rate) if hasattr(product, 'get_tax_rate') else 0,
             'tax_id': product.tax.id if product.tax else None,
-            'unit': product.unit
+            'unit': product.unit,
+            'currency': currency_info
         })
     except SupplierProduct.DoesNotExist:
         # Wenn keine spezifische Lieferanten-Produkt-Beziehung existiert,
         # geben wir trotzdem die Produktinformationen zurück
         try:
             product = Product.objects.get(pk=product_id)
+            # Standardwährung abrufen
+            from core.models import Currency
+            default_currency = Currency.get_default_currency()
+            currency_info = {
+                'id': default_currency.id if default_currency else None,
+                'code': default_currency.code if default_currency else '',
+                'symbol': default_currency.symbol if default_currency else ''
+            }
+
             return JsonResponse({
                 'success': True,
                 'price': None,  # Kein spezifischer Preis vorhanden
@@ -1020,6 +1074,7 @@ def get_supplier_product_price(request):
                 'tax_rate': float(product.get_tax_rate) if hasattr(product, 'get_tax_rate') else 0,
                 'tax_id': product.tax.id if product.tax else None,
                 'unit': product.unit,
+                'currency': currency_info,
                 'message': 'Keine spezifischen Lieferanteninformationen gefunden'
             })
         except Product.DoesNotExist:

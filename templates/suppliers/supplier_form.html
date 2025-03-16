@@ -103,9 +103,9 @@
                         {% endif %}
                     </div>
 
-                    <!-- Neue Felder für Versandkosten und Mindestbestellwert -->
+                    <!-- Neue Felder für Versandkosten, Mindestbestellwert und Standardwährung -->
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="{{ form.shipping_cost.id_for_label }}" class="form-label">Versandkosten</label>
                             <div class="input-group">
                                 <input type="number" name="{{ form.shipping_cost.name }}"
@@ -123,7 +123,7 @@
                             {% endif %}
                             <div class="form-text">Standard-Versandkosten für diesen Lieferanten</div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label for="{{ form.minimum_order_value.id_for_label }}" class="form-label">Mindestbestellwert</label>
                             <div class="input-group">
                                 <input type="number" name="{{ form.minimum_order_value.name }}"
@@ -140,6 +140,31 @@
                                 </div>
                             {% endif %}
                             <div class="form-text">Mindestbestellwert für Bestellungen bei diesem Lieferanten</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.default_currency.id_for_label }}" class="form-label">Standardwährung*</label>
+                            <select name="{{ form.default_currency.name }}"
+                                    id="{{ form.default_currency.id_for_label }}"
+                                    class="form-select {% if form.default_currency.errors %}is-invalid{% endif %}"
+                                    required>
+                                <option value="">-- Währung wählen --</option>
+                                {% for choice in form.default_currency.field.choices %}
+                                    {% if choice.0 %}
+                                        <option value="{{ choice.0 }}"
+                                                {% if form.default_currency.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                                            {{ choice.1 }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            {% if form.default_currency.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.default_currency.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Währung, in der dieser Lieferant standardmäßig abrechnet</div>
                         </div>
                     </div>
 
@@ -165,6 +190,7 @@
                     <li><strong>E-Mail & Telefon:</strong> Kontaktmöglichkeiten für Bestellungen und Anfragen.</li>
                     <li><strong>Versandkosten:</strong> Standardkosten für Lieferungen.</li>
                     <li><strong>Mindestbestellwert:</strong> Erforderlicher Mindestwert für Bestellungen.</li>
+                    <li><strong>Standardwährung:</strong> Die Währung, in der der Lieferant normalerweise abrechnet.</li>
                 </ul>
             </div>
         </div>

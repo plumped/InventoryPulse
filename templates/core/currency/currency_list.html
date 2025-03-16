@@ -1,0 +1,108 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}Währungen{% endblock %}
+
+{% block content_title %}Währungen{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Währungsverwaltung</h6>
+        {% if perms.core.create %}
+        <a href="{% url 'currency_create' %}" class="btn btn-sm btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Neue Währung
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if messages %}
+        <div class="messages mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if currencies %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Name</th>
+                        <th>Symbol</th>
+                        <th>Dezimalstellen</th>
+                        <th>Wechselkurs</th>
+                        <th>Status</th>
+                        <th>Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for currency in currencies %}
+                    <tr>
+                        <td>{{ currency.code }}</td>
+                        <td>{{ currency.name }}</td>
+                        <td>{{ currency.symbol }}</td>
+                        <td>{{ currency.decimal_places }}</td>
+                        <td>{{ currency.exchange_rate }}</td>
+                        <td>
+                            {% if currency.is_default %}
+                            <span class="badge bg-primary">Standard</span>
+                            {% endif %}
+                            {% if currency.is_active %}
+                            <span class="badge bg-success">Aktiv</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inaktiv</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if perms.core.edit %}
+                            <a href="{% url 'currency_update' currency.pk %}" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if perms.core.delete and not currency.is_default %}
+                            <a href="{% url 'currency_delete' currency.pk %}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-info-circle me-2"></i> Keine Währungen vorhanden.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Information</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-6">
+                <p>
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Standardwährung:</strong> Eine Währung muss als Standard festgelegt sein. Die Standardwährung kann nicht gelöscht werden.
+                </p>
+            </div>
+            <div class="col-lg-6">
+                <p>
+                    <i class="bi bi-currency-exchange me-2"></i>
+                    <strong>Wechselkurse:</strong> Alle Wechselkurse werden relativ zur Standardwährung angegeben.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

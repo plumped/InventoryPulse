@@ -1,0 +1,470 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}{{ template.name }} | XML-Standardvorlage{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ template.name }}</h1>
+        <div>
+            <button id="copy-template-btn" class="btn btn-success me-2">
+                <i class="fas fa-clipboard"></i> In Zwischenablage kopieren
+            </button>
+            <a href="{% url 'list_xml_templates' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> Alle XML-Vorlagen
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Template Info -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Informationen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Name</h6>
+                        <p>{{ template.name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Branche</h6>
+                        <p>{{ template.industry }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Code</h6>
+                        <p>{{ template.code }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Version</h6>
+                        <p>{{ template.version }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Beschreibung</h6>
+                        <p>{{ template.description }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Erstellt am</h6>
+                        <p>{{ template.created_at|date:"d.m.Y" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="fw-bold mb-1">Aktualisiert am</h6>
+                        <p>{{ template.updated_at|date:"d.m.Y" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Verwendung</h5>
+                </div>
+                <div class="card-body">
+                    <p>Sie können diese XML-Vorlage verwenden, indem Sie:</p>
+                    <ol>
+                        <li>Eine <a href="{% url 'interface_create' %}">neue Schnittstelle erstellen</a></li>
+                        <li>Als Bestellformat "<strong>XML</strong>" auswählen</li>
+                        <li>Diese Vorlage im Dropdown-Menü "<strong>XML-Standard</strong>" auswählen</li>
+                    </ol>
+                    <p>Oder kopieren Sie die Vorlage manuell mit dem Button oben.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template-Vorschau -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Vorlage</h5>
+                    <div class="btn-group">
+                        <button id="show-preview-btn" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> Vorschau
+                        </button>
+                        <button id="download-template-btn" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-download"></i> Herunterladen
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <pre><code class="language-xml">{{ template.template }}</code></pre>
+                </div>
+            </div>
+
+            <!-- Vorschau-Bereich -->
+            <div id="preview-container" class="card mb-4" style="display: none;">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Vorschau mit Beispieldaten</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center my-4" id="preview-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Vorschau wird geladen...</span>
+                        </div>
+                        <p class="mt-2">Vorschau wird generiert...</p>
+                    </div>
+                    <div id="preview-content" style="display: none;">
+                        <div class="bg-light p-3 rounded">
+                            <pre><code class="language-xml" id="preview-code"></code></pre>
+                        </div>
+                    </div>
+                    <div id="preview-error" class="alert alert-danger mt-3" style="display: none;">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <span id="error-message"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verfügbare Variablen -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Verfügbare Variablen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Variable</th>
+                                    <th>Beschreibung</th>
+                                    <th>Beispiel</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Bestellungskopf -->
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.order_number {% templatetag closevariable %}</code></td>
+                                    <td>Bestellnummer</td>
+                                    <td>B2025-00123</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.id {% templatetag closevariable %}</code></td>
+                                    <td>Interne ID der Bestellung</td>
+                                    <td>123</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.order_date|date:"Y-m-d" {% templatetag closevariable %}</code></td>
+                                    <td>Bestelldatum (formatiert)</td>
+                                    <td>2025-03-16</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.expected_delivery|date:"Y-m-d" {% templatetag closevariable %}</code></td>
+                                    <td>Liefertermin (formatiert)</td>
+                                    <td>2025-04-01</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.status {% templatetag closevariable %}</code></td>
+                                    <td>Status der Bestellung</td>
+                                    <td>approved</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.notes {% templatetag closevariable %}</code></td>
+                                    <td>Anmerkungen zur Bestellung</td>
+                                    <td>Bitte bis 12 Uhr anliefern</td>
+                                </tr>
+
+                                <!-- Bestellungstotals -->
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.subtotal {% templatetag closevariable %}</code></td>
+                                    <td>Zwischensumme</td>
+                                    <td>1470.00</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.tax {% templatetag closevariable %}</code></td>
+                                    <td>Steuer</td>
+                                    <td>279.30</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.shipping_cost {% templatetag closevariable %}</code></td>
+                                    <td>Versandkosten</td>
+                                    <td>15.00</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.total {% templatetag closevariable %}</code></td>
+                                    <td>Gesamtsumme</td>
+                                    <td>1764.30</td>
+                                </tr>
+
+                                <!-- Unternehmensinfos -->
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} settings.COMPANY_NAME|default:"Ihre Firma GmbH" {% templatetag closevariable %}</code></td>
+                                    <td>Name des bestellenden Unternehmens</td>
+                                    <td>Musterfirma GmbH</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.shipping_address {% templatetag closevariable %}</code></td>
+                                    <td>Lieferadresse</td>
+                                    <td>Musterstraße 123, 12345 Musterstadt</td>
+                                </tr>
+
+                                <!-- Benutzer und Abteilungen -->
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.created_by.username {% templatetag closevariable %}</code></td>
+                                    <td>Erstellt von (Benutzername)</td>
+                                    <td>max.mustermann</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} order.approved_by.username {% templatetag closevariable %}</code></td>
+                                    <td>Genehmigt von (Benutzername)</td>
+                                    <td>erika.musterfrau</td>
+                                </tr>
+
+                                <!-- Lieferanteninfos -->
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} supplier.name {% templatetag closevariable %}</code></td>
+                                    <td>Name des Lieferanten</td>
+                                    <td>Beispiellieferant AG</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} supplier.id {% templatetag closevariable %}</code></td>
+                                    <td>ID des Lieferanten</td>
+                                    <td>SUPP001</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} supplier.contact_person {% templatetag closevariable %}</code></td>
+                                    <td>Ansprechpartner beim Lieferanten</td>
+                                    <td>Max Mustermann</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} supplier.email {% templatetag closevariable %}</code></td>
+                                    <td>E-Mail des Lieferanten</td>
+                                    <td>info@beispiellieferant.de</td>
+                                </tr>
+
+                                <!-- Bestellpositionen -->
+                                <tr>
+                                    <td><code>{% templatetag openblock %} for item in items {% templatetag closeblock %}</code></td>
+                                    <td>Beginn der Schleife für Bestellpositionen</td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} forloop.counter {% templatetag closevariable %}</code></td>
+                                    <td>Laufende Nummer in der Schleife</td>
+                                    <td>1, 2, 3...</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} item.product.sku {% templatetag closevariable %}</code></td>
+                                    <td>Artikelnummer</td>
+                                    <td>P12345</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} item.product.name {% templatetag closevariable %}</code></td>
+                                    <td>Artikelbezeichnung</td>
+                                    <td>Hochwertige Komponente A</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} item.supplier_sku {% templatetag closevariable %}</code></td>
+                                    <td>Lieferanten-Artikelnummer</td>
+                                    <td>S-A1234</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} item.quantity_ordered {% templatetag closevariable %}</code></td>
+                                    <td>Bestellmenge</td>
+                                    <td>5</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} item.unit_price {% templatetag closevariable %}</code></td>
+                                    <td>Einheitspreis</td>
+                                    <td>120.00</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} item.line_total {% templatetag closevariable %}</code></td>
+                                    <td>Positionssumme</td>
+                                    <td>600.00</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} item.product.unit {% templatetag closevariable %}</code></td>
+                                    <td>Mengeneinheit</td>
+                                    <td>Stück</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openblock %} endfor {% templatetag closeblock %}</code></td>
+                                    <td>Ende der Schleife für Bestellpositionen</td>
+                                    <td>-</td>
+                                </tr>
+
+                                <!-- Hilfreiche Filter -->
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} value|date:"Y-m-d" {% templatetag closevariable %}</code></td>
+                                    <td>Datum formatieren</td>
+                                    <td>2025-03-16</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} value|default:"Standardwert" {% templatetag closevariable %}</code></td>
+                                    <td>Standardwert bei fehlendem Wert</td>
+                                    <td>Standardwert</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} value|floatformat:2 {% templatetag closevariable %}</code></td>
+                                    <td>Zahl mit 2 Dezimalstellen formatieren</td>
+                                    <td>123.45</td>
+                                </tr>
+                                <tr>
+                                    <td><code>{% templatetag openvariable %} items|length {% templatetag closevariable %}</code></td>
+                                    <td>Anzahl der Bestellpositionen</td>
+                                    <td>3</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Highlight.js initialisieren, falls vorhanden
+    if (typeof hljs !== 'undefined') {
+        document.querySelectorAll('pre code').forEach(block => {
+            hljs.highlightElement(block);
+        });
+    }
+
+    // Kopieren-Button
+    document.getElementById('copy-template-btn').addEventListener('click', function() {
+        var templateText = `{{ template.template|escapejs }}`;
+
+        navigator.clipboard.writeText(templateText)
+            .then(() => {
+                // Feedback anzeigen
+                var originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Kopiert!';
+
+                // Nach 2 Sekunden zurücksetzen
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Fehler beim Kopieren: ', err);
+                alert('Fehler beim Kopieren in die Zwischenablage');
+            });
+    });
+
+    // Download-Button
+    document.getElementById('download-template-btn').addEventListener('click', function() {
+        var templateText = `{{ template.template|escapejs }}`;
+        var filename = '{{ template.code }}.xml';
+
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/xml;charset=utf-8,' + encodeURIComponent(templateText));
+        element.setAttribute('download', filename);
+        element.style.display = 'none';
+
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    });
+
+    // Vorschau-Button
+    document.getElementById('show-preview-btn').addEventListener('click', function() {
+        var previewContainer = document.getElementById('preview-container');
+        var previewSpinner = document.getElementById('preview-spinner');
+        var previewContent = document.getElementById('preview-content');
+        var previewError = document.getElementById('preview-error');
+        var previewCode = document.getElementById('preview-code');
+
+        // Vorschau-Container anzeigen
+        previewContainer.style.display = 'block';
+        previewSpinner.style.display = 'block';
+        previewContent.style.display = 'none';
+        previewError.style.display = 'none';
+
+        // Vorschauscroll zum Vorschaubereich
+        previewContainer.scrollIntoView({ behavior: 'smooth' });
+
+        // Vorschaudaten
+        var sampleData = {
+            template: `{{ template.template|escapejs }}`,
+            order: {
+                order_number: "B2025-00123",
+                order_date: "2025-03-16T10:30:00",
+                company_name: "Musterfirma GmbH",
+                company_id: "DE12345678",
+                subtotal: 1470.00,
+                tax: 279.30,
+                shipping_cost: 15.00,
+                total: 1764.30,
+                notes: "Bitte bis 12 Uhr anliefern"
+            },
+            supplier: {
+                id: "SUPP001",
+                name: "Beispiellieferant AG",
+                contact_name: "Max Mustermann"
+            },
+            items: [
+                {
+                    id: 1,
+                    product: {
+                        sku: "P12345",
+                        name: "Hochwertige Komponente A"
+                    },
+                    supplier_sku: "S-A1234",
+                    quantity_ordered: 5,
+                    unit_price: 120.00,
+                    line_total: 600.00
+                },
+                {
+                    id: 2,
+                    product: {
+                        sku: "P67890",
+                        name: "Präzisionsteil B"
+                    },
+                    supplier_sku: "S-B5678",
+                    quantity_ordered: 10,
+                    unit_price: 45.00,
+                    line_total: 450.00
+                },
+                {
+                    id: 3,
+                    product: {
+                        sku: "P24680",
+                        name: "Industrieelement C"
+                    },
+                    supplier_sku: "S-C9012",
+                    quantity_ordered: 7,
+                    unit_price: 60.00,
+                    line_total: 420.00
+                }
+            ]
+        };
+
+        // AJAX-Anfrage für die Vorschau
+        fetch('/interfaces/api/preview-xml-template/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify(sampleData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            previewSpinner.style.display = 'none';
+
+            if (data.success) {
+                previewCode.textContent = data.rendered_template;
+                previewContent.style.display = 'block';
+
+                // Syntax-Highlighting (optional, wenn Sie highlight.js verwenden)
+                if (typeof hljs !== 'undefined') {
+                    hljs.highlightElement(previewCode);
+                }
+            } else {
+                document.getElementById('error-message').textContent = data.message;
+                previewError.style.display = 'block';
+            }
+        })
+        .catch(error => {
+            previewSpinner.style.display = 'none';
+            document.getElementById('error-message').textContent = 'Fehler bei der Vorschau: ' + error.message;
+            previewError.style.display = 'block';
+        });
+    });
+});
+</script>
+{% endblock %}

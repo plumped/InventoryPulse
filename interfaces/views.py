@@ -1,4 +1,5 @@
 import ftplib
+import json
 import os
 from datetime import datetime
 
@@ -9,13 +10,14 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.http import JsonResponse
 from django.urls import reverse
+from django.template import Template, Context
 from django.views.decorators.http import require_POST
 
 from accessmanagement.decorators import permission_required
 from order.models import PurchaseOrder
 from suppliers.models import Supplier
 
-from .models import InterfaceType, SupplierInterface, InterfaceLog
+from .models import InterfaceType, SupplierInterface, InterfaceLog, XMLStandardTemplate
 from .services import send_order_via_interface, InterfaceError
 from .forms import SupplierInterfaceForm, InterfaceTestForm
 
@@ -132,8 +134,9 @@ def interface_create(request):
             interface = form.save(commit=False)
             interface.created_by = request.user
             interface.save()
-            
-            messages.success(request, f'Schnittstelle "{interface.name}" für {interface.supplier.name} wurde erfolgreich erstellt.')
+
+            messages.success(request,
+                             f'Schnittstelle "{interface.name}" für {interface.supplier.name} wurde erfolgreich erstellt.')
             return redirect('interface_detail', pk=interface.pk)
     else:
         # Vorauswahl des Lieferanten, falls aus Lieferantendetails aufgerufen
@@ -144,16 +147,19 @@ def interface_create(request):
                 initial['supplier'] = Supplier.objects.get(pk=supplier_id)
             except Supplier.DoesNotExist:
                 pass
-        
+
         form = SupplierInterfaceForm(initial=initial)
 
-    
+    # XML-Standardvorlagen für das Formular laden
+    xml_templates = XMLStandardTemplate.objects.filter(is_active=True).order_by('name')
+
     context = {
         'form': form,
         'title': 'Neue Schnittstelle erstellen',
-        'test_connectivity_url': reverse('test_interface_connectivity')
+        'test_connectivity_url': reverse('test_interface_connectivity'),
+        'xml_templates': xml_templates  # Hier hinzugefügt
     }
-    
+
     return render(request, 'interfaces/interface_form.html', context)
 
 
@@ -162,7 +168,7 @@ def interface_create(request):
 def interface_update(request, pk):
     """Schnittstelle bearbeiten."""
     interface = get_object_or_404(SupplierInterface, pk=pk)
-    
+
     if request.method == 'POST':
         form = SupplierInterfaceForm(request.POST, instance=interface)
         if form.is_valid():
@@ -171,14 +177,18 @@ def interface_update(request, pk):
             return redirect('interface_detail', pk=interface.pk)
     else:
         form = SupplierInterfaceForm(instance=interface)
-    
+
+    # XML-Standardvorlagen für das Formular laden
+    xml_templates = XMLStandardTemplate.objects.filter(is_active=True).order_by('name')
+
     context = {
         'form': form,
         'interface': interface,
         'title': f'Schnittstelle "{interface.name}" bearbeiten',
-        'test_connectivity_url': reverse('test_interface_connectivity')
+        'test_connectivity_url': reverse('test_interface_connectivity'),
+        'xml_templates': xml_templates  # Hier hinzugefügt
     }
-    
+
     return render(request, 'interfaces/interface_form.html', context)
 
 
@@ -866,3 +876,114 @@ def test_send_order(request):
             'message': f'Unerwarteter Fehler beim Senden der Bestellung: {str(e)}',
             'details': traceback.format_exc()
         })
+
+
+@login_required
+@permission_required('supplier', 'view')
+def get_xml_template(request, template_id):
+    """AJAX-Endpunkt zum Abrufen einer XML-Standardvorlage"""
+    try:
+        template = XMLStandardTemplate.objects.get(pk=template_id, is_active=True)
+        return JsonResponse({
+            'success': True,
+            'template': template.template,
+            'name': template.name,
+            'description': template.description
+        })
+    except XMLStandardTemplate.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'XML-Vorlage nicht gefunden'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=500)
+
+
+@login_required
+@permission_required('supplier', 'view')
+def preview_xml_template(request):
+    """AJAX-Endpunkt zur Vorschau einer XML-Vorlage mit Beispieldaten"""
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'message': 'Nur POST-Anfragen werden unterstützt'
+        }, status=405)
+
+    try:
+        # JSON-Daten aus dem Request-Body lesen
+        data = json.loads(request.body)
+        template_str = data.get('template', '')
+        sample_data = data
+
+        if not template_str:
+            return JsonResponse({
+                'success': False,
+                'message': 'Keine Vorlage angegeben'
+            }, status=400)
+
+        # Django-Template erstellen und rendern
+        template = Template(template_str)
+        context = Context(sample_data)
+        rendered_template = template.render(context)
+
+        return JsonResponse({
+            'success': True,
+            'rendered_template': rendered_template
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+            'details': traceback.format_exc()
+        }, status=500)
+
+
+@login_required
+@permission_required('supplier', 'view')
+def list_xml_templates(request):
+    """Listet alle verfügbaren XML-Standardvorlagen auf"""
+    templates = XMLStandardTemplate.objects.filter(is_active=True).order_by('industry', 'name')
+
+    # Nach Branche filtern
+    industry = request.GET.get('industry', '')
+    if industry:
+        templates = templates.filter(industry=industry)
+
+    # Suche
+    search_query = request.GET.get('search', '')
+    if search_query:
+        templates = templates.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(industry__icontains=search_query)
+        )
+
+    # Branchen für Filter
+    industries = XMLStandardTemplate.objects.filter(is_active=True).values_list(
+        'industry', flat=True).distinct().order_by('industry')
+
+    context = {
+        'templates': templates,
+        'industries': industries,
+        'industry': industry,
+        'search_query': search_query
+    }
+
+    return render(request, 'interfaces/xml_templates.html', context)
+
+
+@login_required
+@permission_required('supplier', 'view')
+def xml_template_detail(request, template_id):
+    """Zeigt die Details einer XML-Standardvorlage an"""
+    template = get_object_or_404(XMLStandardTemplate, pk=template_id, is_active=True)
+
+    context = {
+        'template': template
+    }
+
+    return render(request, 'interfaces/xml_template_detail.html', context)

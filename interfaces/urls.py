@@ -32,4 +32,10 @@ urlpatterns = [
     # AJAX-Endpunkte
     path('api/get-supplier-interfaces/', views.get_supplier_interfaces, name='get_supplier_interfaces'),
     path('api/get-interface-fields/', views.get_interface_fields, name='get_interface_fields'),
+    path('xml-templates/', views.list_xml_templates, name='list_xml_templates'),
+    path('xml-templates/<int:template_id>/', views.xml_template_detail, name='xml_template_detail'),
+
+    # AJAX-Endpunkte für XML-Vorlagen
+    path('api/get-xml-template/<int:template_id>/', views.get_xml_template, name='get_xml_template'),
+    path('api/preview-xml-template/', views.preview_xml_template, name='preview_xml_template'),
 ]

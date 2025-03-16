@@ -235,3 +235,54 @@ class InterfaceLog(models.Model):
         verbose_name = _("Schnittstellen-Log")
         verbose_name_plural = _("Schnittstellen-Logs")
         ordering = ['-timestamp']
+
+
+class XMLStandardTemplate(models.Model):
+    """Vordefinierte XML-Standards für Bestellungen"""
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name=_("Name")
+    )
+    code = models.CharField(
+        max_length=50,
+        unique=True,
+        verbose_name=_("Code")
+    )
+    description = models.TextField(
+        blank=True,
+        verbose_name=_("Beschreibung")
+    )
+    template = models.TextField(
+        verbose_name=_("XML-Vorlage")
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Aktiv")
+    )
+    industry = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name=_("Branche")
+    )
+    version = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name=_("Version")
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("Erstellt am")
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_("Aktualisiert am")
+    )
+
+    def __str__(self):
+        return f"{self.name} ({self.version})"
+
+    class Meta:
+        verbose_name = _("XML-Standardvorlage")
+        verbose_name_plural = _("XML-Standardvorlagen")
+        ordering = ['name', 'version']

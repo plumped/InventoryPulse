@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.conf import settings
 
-from .models import InterfaceType, SupplierInterface, InterfaceLog
+from .models import InterfaceType, SupplierInterface, InterfaceLog, XMLStandardTemplate
 
 
 @admin.register(InterfaceType)
@@ -170,3 +170,43 @@ class InterfaceLogAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('interface', 'order', 'initiated_by')
+
+
+@admin.register(XMLStandardTemplate)
+class XMLStandardTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'industry', 'version', 'is_active')
+    list_filter = ('is_active', 'industry')
+    search_fields = ('name', 'code', 'description', 'industry')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'code', 'is_active')
+        }),
+        (_('Metadaten'), {
+            'fields': ('industry', 'version', 'description')
+        }),
+        (_('XML-Vorlage'), {
+            'fields': ('template',),
+            'classes': ('wide',)
+        }),
+        (_('System-Informationen'), {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        """Stellt sicher, dass die Vorlage wohlgeformtes XML ist"""
+        import xml.dom.minidom
+        from django.core.exceptions import ValidationError
+
+        try:
+            # Versuchen, das XML zu parsen
+            xml_template = obj.template.strip()
+            if xml_template:
+                xml.dom.minidom.parseString(xml_template)
+        except Exception as e:
+            # Fehlermeldung für ungültiges XML
+            raise ValidationError(f"Die XML-Vorlage ist nicht wohlgeformt: {str(e)}")
+
+        super().save_model(request, obj, form, change)

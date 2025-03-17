@@ -6,66 +6,112 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}InventoryPulse{% endblock %}</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <!-- Bulma CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-<!--    <link rel="stylesheet" href="{% static 'css/style.css' %}">-->
-
     <style>
-        /* Dark Mode Variablen */
+        /* Dark Mode Variables */
         :root {
-            --bs-body-color: #212529;
-            --bs-body-bg: #f8f9fa;
+            --text-color: #4a4a4a;
+            --bg-color: #f5f5f5;
             --card-bg: #fff;
-            --border-color: rgba(0,0,0,.125);
-            --footer-bg: #f8f9fa;
+            --border-color: #dbdbdb;
+            --navbar-bg: #3273dc;
+            --navbar-item-color: rgba(255, 255, 255, 0.7);
+            --navbar-item-hover-color: white;
+            --footer-bg: #f5f5f5;
         }
 
-        [data-bs-theme="dark"] {
-            --bs-body-color: #e9ecef;
-            --bs-body-bg: #212529;
-            --card-bg: #2c3034;
-            --border-color: rgba(255,255,255,.125);
-            --footer-bg: #343a40;
+        [data-theme="dark"] {
+            --text-color: #e6e6e6;
+            --bg-color: #121212;
+            --card-bg: #1c1c1c;
+            --border-color: #333;
+            --navbar-bg: #1a1a2e;
+            --navbar-item-color: rgba(255, 255, 255, 0.7);
+            --navbar-item-hover-color: white;
+            --footer-bg: #1a1a1a;
         }
 
         body {
-            background-color: var(--bs-body-bg);
-            color: var(--bs-body-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
             transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .card, .modal-content {
+        .card {
             background-color: var(--card-bg);
-            border-color: var(--border-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .navbar {
+            background-color: var(--navbar-bg);
+        }
+
+        .navbar-item, .navbar-link {
+            color: var(--navbar-item-color) !important;
+        }
+
+        .navbar-item:hover, .navbar-link:hover {
+            color: var(--navbar-item-hover-color) !important;
+            background-color: rgba(0, 0, 0, 0.1) !important;
         }
 
         .footer {
-            background-color: var(--footer-bg) !important;
+            background-color: var(--footer-bg);
+            margin-top: auto;
+            padding: 2rem 1.5rem;
         }
 
-        [data-bs-theme="dark"] .footer .text-muted {
-            color: #adb5bd !important;
+        /* Dropdown menu in dark mode */
+        [data-theme="dark"] .navbar-dropdown {
+            background-color: #252525;
+            border-color: #333;
         }
 
-        [data-bs-theme="dark"] .dropdown-menu {
-            background-color: #343a40;
-            border-color: rgba(255,255,255,0.15);
+        [data-theme="dark"] .navbar-dropdown .navbar-item:hover {
+            background-color: #333 !important;
         }
 
-        [data-bs-theme="dark"] .dropdown-item {
-            color: #e9ecef;
+        /* Active state for navbar items */
+        .navbar-item.is-active {
+            background-color: rgba(0, 0, 0, 0.2) !important;
+            color: white !important;
         }
 
-        [data-bs-theme="dark"] .dropdown-item:hover {
-            background-color: #495057;
+        /* Container for main content with padding */
+        .main-container {
+            padding: 2rem 1.5rem;
+            flex: 1;
         }
 
-        /* Smooth transitions */
-        body, .card, .navbar, .dropdown-menu, .footer {
+        /* Custom badge colors */
+        .badge {
+            display: inline-block;
+            font-size: 0.75em;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 9999px;
+            padding: 0.25em 0.75em;
+        }
+
+        /* Smooth transitions for theme switching */
+        body, .card, .navbar, .footer, .navbar-dropdown, .navbar-item {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Icon spacing in navbar and menu items */
+        .icon-spacing {
+            margin-right: 0.5rem;
         }
     </style>
 
@@ -73,375 +119,300 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">
-                <i class="bi bi-boxes"></i> InventoryPulse
+    <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="{% url 'dashboard' %}">
+                <i class="fas fa-boxes icon-spacing"></i> InventoryPulse
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-                           href="{% url 'dashboard' %}">
-                           <i class="bi bi-speedometer2"></i> Dashboard
+            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+            </a>
+        </div>
+
+        <div id="navbarMenu" class="navbar-menu">
+            <div class="navbar-start">
+                <a class="navbar-item {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}"
+                   href="{% url 'dashboard' %}">
+                   <i class="fas fa-tachometer-alt icon-spacing"></i> Dashboard
+                </a>
+
+                <!-- Admin Dashboard für Benutzer mit Admin-Rechten -->
+                {% if user.is_superuser or user|has_perm:'admin_dashboard:admin' %}
+                <a class="navbar-item {% if 'admin-dashboard' in request.path %}is-active{% endif %}"
+                   href="{% url 'admin_dashboard' %}">
+                   <i class="fas fa-sliders-h icon-spacing"></i> Admin-Dashboard
+                </a>
+                {% endif %}
+
+                <!-- Produkt-Dropdown -->
+                {% if user|has_perm:'product:view' %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link {% if 'product' in request.path or 'serialnumber' in request.path or 'category' in request.path %}is-active{% endif %}">
+                        <i class="fas fa-box icon-spacing"></i> Produkte
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item {% if 'product' in request.path and not 'serialnumber' in request.path and not 'category' in request.path %}is-active{% endif %}"
+                           href="{% url 'product_list' %}">
+                            <i class="fas fa-box icon-spacing"></i>Produktübersicht
                         </a>
-                    </li>
-
-                    <!-- Admin Dashboard für Benutzer mit Admin-Rechten -->
-                    {% if user.is_superuser or user|has_perm:'admin_dashboard:admin' %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'admin-dashboard' in request.path %}active{% endif %}"
-                           href="{% url 'admin_dashboard' %}">
-                           <i class="bi bi-sliders"></i> Admin-Dashboard
+                        {% if user|has_perm:'product:create' %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'product_create' %}is-active{% endif %}"
+                           href="{% url 'product_create' %}">
+                            <i class="fas fa-plus-circle icon-spacing"></i>Produkt hinzufügen
                         </a>
-                    </li>
-                    {% endif %}
-
-                    <!-- Produkt-Dropdown -->
-                    {% if user|has_perm:'product:view' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'product' in request.path or 'serialnumber' in request.path or 'category' in request.path %}active{% endif %}"
-                           href="#" id="productDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-box-seam"></i> Produkte
+                        {% endif %}
+                        <a class="navbar-item {% if 'low-stock' in request.path %}is-active{% endif %}"
+                           href="{% url 'low_stock_list' %}">
+                            <i class="fas fa-exclamation-triangle icon-spacing"></i>Kritische Bestände
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="productDropdown">
-                            <li>
-                                <a class="dropdown-item {% if 'product' in request.path and not 'serialnumber' in request.path and not 'category' in request.path %}active{% endif %}"
-                                   href="{% url 'product_list' %}">
-                                    <i class="bi bi-box-seam me-2"></i>Produktübersicht
-                                </a>
-                            </li>
-                            {% if user|has_perm:'product:create' %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}"
-                                   href="{% url 'product_create' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Produkt hinzufügen
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item {% if 'low-stock' in request.path %}active{% endif %}"
-                                   href="{% url 'low_stock_list' %}">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>Kritische Bestände
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if 'category' in request.path %}active{% endif %}"
-                                   href="{% url 'category_list' %}">
-                                    <i class="bi bi-tags me-2"></i>Kategorien
-                                </a>
-                            </li>
-                            {% if user|has_perm:'product:view' %}
-                            <li>
-                                <a class="dropdown-item {% if 'expiry' in request.path %}active{% endif %}"
-                                   href="{% url 'expiry_management' %}">
-                                    <i class="bi bi-calendar-check me-2"></i>Verfallsdaten
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'variant_type_list' %}active{% endif %}"
-                                   href="{% url 'variant_type_list' %}">
-                                    <i class="bi bi-grid-3x3-gap me-2"></i>Variantentypen
-                                </a>
-                            </li>
-                            {% endif %}
-
-                            {% if user|has_perm:'serialnumber:view' %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_list' %}active{% endif %}"
-                                   href="{% url 'serialnumber_list' %}">
-                                    <i class="bi bi-upc-scan me-2"></i>Seriennummern-Übersicht
-                                </a>
-                            </li>
-                            {% if user|has_perm:'serialnumber:add' %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_add' %}active{% endif %}"
-                                   href="{% url 'serialnumber_add' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Seriennummer hinzufügen
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if user|has_perm:'serialnumber:transfer' %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_transfer' %}active{% endif %}"
-                                   href="{% url 'serialnumber_transfer' %}">
-                                    <i class="bi bi-arrow-left-right me-2"></i>Seriennummer transferieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if user|has_perm:'serialnumber:import' %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_import' %}active{% endif %}"
-                                   href="{% url 'serialnumber_import' %}">
-                                    <i class="bi bi-file-earmark-arrow-down me-2"></i>Seriennummern importieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if user|has_perm:'serialnumber:export' %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_export' %}active{% endif %}"
-                                   href="{% url 'serialnumber_export' %}">
-                                    <i class="bi bi-file-earmark-arrow-up me-2"></i>Seriennummern exportieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% endif %}
-                        </ul>
-                    </li>
-                    {% endif %}
-
-                    <!-- Lagerverwaltung Dropdown -->
-                    {% if user|has_perm:'inventory:view' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'warehouse' in request.path or 'movement' in request.path or 'stock-take' in request.path %}active{% endif %}"
-                           href="#" id="warehouseDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-building"></i> Lagerverwaltung
+                        <a class="navbar-item {% if 'category' in request.path %}is-active{% endif %}"
+                           href="{% url 'category_list' %}">
+                            <i class="fas fa-tags icon-spacing"></i>Kategorien
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="warehouseDropdown">
-                            <li>
-                                <a class="dropdown-item {% if 'warehouse' in request.path and not 'access' in request.path %}active{% endif %}"
-                                   href="{% url 'warehouse_list' %}">
-                                    <i class="bi bi-building me-2"></i>Lager
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if 'bulk-transfer' in request.path %}active{% endif %}"
-                                   href="{% url 'bulk_warehouse_transfer' %}">
-                                    <i class="bi bi-arrows-move me-2"></i>Lagerverschiebung
-                                </a>
-                            </li>
-
-                            <li><hr class="dropdown-divider"></li>
-                            <li class="dropdown-header">Bestandsverwaltung</li>
-
-                            <li>
-                                <a class="dropdown-item {% if 'movement' in request.path %}active{% endif %}"
-                                   href="{% url 'stock_movement_list' %}">
-                                    <i class="bi bi-arrow-left-right me-2"></i>Bestandsbewegungen
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if 'stock-take' in request.path %}active{% endif %}"
-                                   href="{% url 'stock_take_list' %}">
-                                    <i class="bi bi-clipboard-check me-2"></i>Inventuren
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% endif %}
-
-                    <!-- Bestellwesen Dropdown -->
-                    {% if user|has_perm:'order:view' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'order' in request.path %}active{% endif %}"
-                           href="#" id="orderDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-cart"></i> Bestellwesen
+                        {% if user|has_perm:'product:view' %}
+                        <a class="navbar-item {% if 'expiry' in request.path %}is-active{% endif %}"
+                           href="{% url 'expiry_management' %}">
+                            <i class="fas fa-calendar-check icon-spacing"></i>Verfallsdaten
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="orderDropdown">
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_list' %}active{% endif %}"
-                                   href="{% url 'purchase_order_list' %}">
-                                    <i class="bi bi-list-ul me-2"></i>Bestellungsübersicht
-                                </a>
-                            </li>
-                            {% if user|has_perm:'order:create' %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_create' %}active{% endif %}"
-                                   href="{% url 'purchase_order_create' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Neue Bestellung
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'order_suggestions' %}active{% endif %}"
-                                   href="{% url 'order_suggestions' %}">
-                                    <i class="bi bi-lightbulb me-2"></i>Bestellvorschläge
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% endif %}
-
-                    <!-- Lieferanten -->
-                    {% if user|has_perm:'supplier:view' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'supplier' in request.path %}active{% endif %}"
-                           href="#" id="supplierDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-truck"></i> Lieferanten
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'variant_type_list' %}is-active{% endif %}"
+                           href="{% url 'variant_type_list' %}">
+                            <i class="fas fa-th icon-spacing"></i>Variantentypen
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="supplierDropdown">
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}"
-                                   href="{% url 'supplier_list' %}">
-                                    <i class="bi bi-list-ul me-2"></i>Lieferantenübersicht
-                                </a>
-                            </li>
-                            {% if user|has_perm:'supplier:create' %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_create' %}active{% endif %}"
-                                   href="{% url 'supplier_create' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Lieferant hinzufügen
-                                </a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </li>
-                    {% endif %}
+                        {% endif %}
 
-                    <!-- Import Dropdown -->
-                    {% if user|has_perm:'import:view' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'import' in request.path %}active{% endif %}"
-                           href="#" id="importDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-file-earmark-arrow-down"></i> Import
+                        {% if user|has_perm:'serialnumber:view' %}
+                        <hr class="navbar-divider">
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'serialnumber_list' %}is-active{% endif %}"
+                           href="{% url 'serialnumber_list' %}">
+                            <i class="fas fa-barcode icon-spacing"></i>Seriennummern-Übersicht
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="importDropdown">
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_dashboard' %}active{% endif %}"
-                                   href="{% url 'import_dashboard' %}">
-                                    <i class="bi bi-speedometer2 me-2"></i>Import-Dashboard
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            {% if user|has_perm:'import:create' %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_products' %}active{% endif %}"
-                                   href="{% url 'import_products' %}">
-                                    <i class="bi bi-box-seam me-2"></i>Produkte importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_categories' %}active{% endif %}"
-                                   href="{% url 'import_categories' %}">
-                                    <i class="bi bi-tags me-2"></i>Kategorien importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouses' %}active{% endif %}"
-                                   href="{% url 'import_warehouses' %}">
-                                    <i class="bi bi-building me-2"></i>Lager importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouse_products' %}active{% endif %}"
-                                   href="{% url 'import_warehouse_products' %}">
-                                    <i class="bi bi-diagram-3 me-2"></i>Produkt-Lager-Bestände importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_suppliers' %}active{% endif %}"
-                                   href="{% url 'import_suppliers' %}">
-                                    <i class="bi bi-truck me-2"></i>Lieferanten importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_supplier_products' %}active{% endif %}"
-                                   href="{% url 'import_supplier_products' %}">
-                                    <i class="bi bi-link me-2"></i>Produkt-Lieferanten importieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_log_list' %}active{% endif %}"
-                                   href="{% url 'import_log_list' %}">
-                                    <i class="bi bi-clock-history me-2"></i>Import-Logs
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% endif %}
+                        {% if user|has_perm:'serialnumber:add' %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'serialnumber_add' %}is-active{% endif %}"
+                           href="{% url 'serialnumber_add' %}">
+                            <i class="fas fa-plus-circle icon-spacing"></i>Seriennummer hinzufügen
+                        </a>
+                        {% endif %}
+                        {% if user|has_perm:'serialnumber:transfer' %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'serialnumber_transfer' %}is-active{% endif %}"
+                           href="{% url 'serialnumber_transfer' %}">
+                            <i class="fas fa-exchange-alt icon-spacing"></i>Seriennummer transferieren
+                        </a>
+                        {% endif %}
+                        {% if user|has_perm:'serialnumber:import' %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'serialnumber_import' %}is-active{% endif %}"
+                           href="{% url 'serialnumber_import' %}">
+                            <i class="fas fa-file-import icon-spacing"></i>Seriennummern importieren
+                        </a>
+                        {% endif %}
+                        {% if user|has_perm:'serialnumber:export' %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'serialnumber_export' %}is-active{% endif %}"
+                           href="{% url 'serialnumber_export' %}">
+                            <i class="fas fa-file-export icon-spacing"></i>Seriennummern exportieren
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
 
-                    <!-- Export Dropdown -->
-                    {% if user|has_perm:'report:view' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'export' in request.path %}active{% endif %}"
-                           href="#" id="exportDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-file-earmark-arrow-up"></i> Export
+                <!-- Lagerverwaltung Dropdown -->
+                {% if user|has_perm:'inventory:view' %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link {% if 'warehouse' in request.path or 'movement' in request.path or 'stock-take' in request.path %}is-active{% endif %}">
+                        <i class="fas fa-building icon-spacing"></i> Lagerverwaltung
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item {% if 'warehouse' in request.path and not 'access' in request.path %}is-active{% endif %}"
+                           href="{% url 'warehouse_list' %}">
+                            <i class="fas fa-building icon-spacing"></i>Lager
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'export_import_logs' %}?format=csv">
-                                    <i class="bi bi-filetype-csv me-2"></i>Import-Logs (CSV)
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'export_import_logs' %}?format=xlsx">
-                                    <i class="bi bi-filetype-xlsx me-2"></i>Import-Logs (Excel)
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-box-seam me-2"></i>Produktliste
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-building me-2"></i>Lagerbestand
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {% endif %}
+                        <a class="navbar-item {% if 'bulk-transfer' in request.path %}is-active{% endif %}"
+                           href="{% url 'bulk_warehouse_transfer' %}">
+                            <i class="fas fa-arrows-alt icon-spacing"></i>Lagerverschiebung
+                        </a>
+                        <hr class="navbar-divider">
+                        <p class="navbar-item is-size-7 has-text-grey">Bestandsverwaltung</p>
+                        <a class="navbar-item {% if 'movement' in request.path %}is-active{% endif %}"
+                           href="{% url 'stock_movement_list' %}">
+                            <i class="fas fa-exchange-alt icon-spacing"></i>Bestandsbewegungen
+                        </a>
+                        <a class="navbar-item {% if 'stock-take' in request.path %}is-active{% endif %}"
+                           href="{% url 'stock_take_list' %}">
+                            <i class="fas fa-clipboard-check icon-spacing"></i>Inventuren
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
 
-                </ul>
-                <ul class="navbar-nav">
-                    <!-- Dark Mode Toggle -->
-                    <li class="nav-item me-2">
-                        <button id="theme-toggle" class="btn btn-outline-light border-0">
-                            <i class="bi bi-moon-fill"></i>
-                        </button>
-                    </li>
-                    {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                <!-- Bestellwesen Dropdown -->
+                {% if user|has_perm:'order:view' %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link {% if 'order' in request.path %}is-active{% endif %}">
+                        <i class="fas fa-shopping-cart icon-spacing"></i> Bestellwesen
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'purchase_order_list' %}is-active{% endif %}"
+                           href="{% url 'purchase_order_list' %}">
+                            <i class="fas fa-list icon-spacing"></i>Bestellungsübersicht
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profil</a></li>
-                            {% if user.is_staff %}
-                            <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2"></i>Django Admin</a></li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                              <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
-                                {% csrf_token %}
-                                <button type="submit" class="dropdown-item" style="background: none; border: none;">
-                                  <i class="bi bi-box-arrow-right me-2"></i>Abmelden
-                                </button>
-                              </form>
-                            </li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Anmelden</a>
-                    </li>
-                    {% endif %}
-                </ul>
+                        {% if user|has_perm:'order:create' %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'purchase_order_create' %}is-active{% endif %}"
+                           href="{% url 'purchase_order_create' %}">
+                            <i class="fas fa-plus-circle icon-spacing"></i>Neue Bestellung
+                        </a>
+                        {% endif %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'order_suggestions' %}is-active{% endif %}"
+                           href="{% url 'order_suggestions' %}">
+                            <i class="fas fa-lightbulb icon-spacing"></i>Bestellvorschläge
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Lieferanten -->
+                {% if user|has_perm:'supplier:view' %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link {% if 'supplier' in request.path %}is-active{% endif %}">
+                        <i class="fas fa-truck icon-spacing"></i> Lieferanten
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'supplier_list' %}is-active{% endif %}"
+                           href="{% url 'supplier_list' %}">
+                            <i class="fas fa-list icon-spacing"></i>Lieferantenübersicht
+                        </a>
+                        {% if user|has_perm:'supplier:create' %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'supplier_create' %}is-active{% endif %}"
+                           href="{% url 'supplier_create' %}">
+                            <i class="fas fa-plus-circle icon-spacing"></i>Lieferant hinzufügen
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Import Dropdown -->
+                {% if user|has_perm:'import:view' %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link {% if 'import' in request.path %}is-active{% endif %}">
+                        <i class="fas fa-file-import icon-spacing"></i> Import
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'import_dashboard' %}is-active{% endif %}"
+                           href="{% url 'import_dashboard' %}">
+                            <i class="fas fa-tachometer-alt icon-spacing"></i>Import-Dashboard
+                        </a>
+                        <hr class="navbar-divider">
+                        {% if user|has_perm:'import:create' %}
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'import_products' %}is-active{% endif %}"
+                           href="{% url 'import_products' %}">
+                            <i class="fas fa-box icon-spacing"></i>Produkte importieren
+                        </a>
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'import_categories' %}is-active{% endif %}"
+                           href="{% url 'import_categories' %}">
+                            <i class="fas fa-tags icon-spacing"></i>Kategorien importieren
+                        </a>
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'import_warehouses' %}is-active{% endif %}"
+                           href="{% url 'import_warehouses' %}">
+                            <i class="fas fa-building icon-spacing"></i>Lager importieren
+                        </a>
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'import_warehouse_products' %}is-active{% endif %}"
+                           href="{% url 'import_warehouse_products' %}">
+                            <i class="fas fa-sitemap icon-spacing"></i>Produkt-Lager-Bestände importieren
+                        </a>
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'import_suppliers' %}is-active{% endif %}"
+                           href="{% url 'import_suppliers' %}">
+                            <i class="fas fa-truck icon-spacing"></i>Lieferanten importieren
+                        </a>
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'import_supplier_products' %}is-active{% endif %}"
+                           href="{% url 'import_supplier_products' %}">
+                            <i class="fas fa-link icon-spacing"></i>Produkt-Lieferanten importieren
+                        </a>
+                        {% endif %}
+                        <hr class="navbar-divider">
+                        <a class="navbar-item {% if request.resolver_match.url_name == 'import_log_list' %}is-active{% endif %}"
+                           href="{% url 'import_log_list' %}">
+                            <i class="fas fa-history icon-spacing"></i>Import-Logs
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Export Dropdown -->
+                {% if user|has_perm:'report:view' %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link {% if 'export' in request.path %}is-active{% endif %}">
+                        <i class="fas fa-file-export icon-spacing"></i> Export
+                    </a>
+                    <div class="navbar-dropdown">
+                        <a class="navbar-item" href="{% url 'export_import_logs' %}?format=csv">
+                            <i class="fas fa-file-csv icon-spacing"></i>Import-Logs (CSV)
+                        </a>
+                        <a class="navbar-item" href="{% url 'export_import_logs' %}?format=xlsx">
+                            <i class="fas fa-file-excel icon-spacing"></i>Import-Logs (Excel)
+                        </a>
+                        <hr class="navbar-divider">
+                        <a class="navbar-item" href="#">
+                            <i class="fas fa-box icon-spacing"></i>Produktliste
+                        </a>
+                        <a class="navbar-item" href="#">
+                            <i class="fas fa-building icon-spacing"></i>Lagerbestand
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="navbar-end">
+                <!-- Dark Mode Toggle -->
+                <div class="navbar-item">
+                    <button id="theme-toggle" class="button is-small is-rounded is-ghost">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+
+                {% if user.is_authenticated %}
+                <div class="navbar-item has-dropdown is-hoverable">
+                    <a class="navbar-link">
+                        <i class="fas fa-user-circle icon-spacing"></i> {{ user.username }}
+                    </a>
+                    <div class="navbar-dropdown is-right">
+                        <a class="navbar-item" href="{% url 'profile' %}">
+                            <i class="fas fa-user icon-spacing"></i>Profil
+                        </a>
+                        {% if user.is_staff %}
+                        <a class="navbar-item" href="{% url 'admin:index' %}">
+                            <i class="fas fa-cog icon-spacing"></i>Django Admin
+                        </a>
+                        {% endif %}
+                        <hr class="navbar-divider">
+                        <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
+                            {% csrf_token %}
+                            <button type="submit" class="navbar-item button is-white is-fullwidth has-text-left">
+                                <i class="fas fa-sign-out-alt icon-spacing"></i>Abmelden
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="navbar-item">
+                    <a class="button is-light" href="{% url 'login' %}">
+                        <i class="fas fa-sign-in-alt icon-spacing"></i> Anmelden
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container-fluid py-4">
+    <div class="main-container">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <div class="notification {% if message.tags == 'success' %}is-success{% elif message.tags == 'error' %}is-danger{% elif message.tags == 'warning' %}is-warning{% elif message.tags == 'info' %}is-info{% endif %}">
+                    <button class="delete"></button>
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         {% endif %}
@@ -450,51 +421,71 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">© {% now "Y" %} InventoryPulse - Smartes Lagerbestandsmanagement</span>
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p>© {% now "Y" %} InventoryPulse - Smartes Lagerbestandsmanagement</p>
         </div>
     </footer>
 
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Custom JavaScript -->
-{#    <script src="{% static 'js/main.js' %}"></script>#}
-    {% block extra_js %}{% endblock %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = themeToggle.querySelector('i');
-
-        // Theme aus localStorage holen oder Standard (light) verwenden
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
-            document.documentElement.setAttribute('data-bs-theme', 'dark');
-            themeIcon.classList.remove('bi-moon-fill');
-            themeIcon.classList.add('bi-sun-fill');
-        }
-
-        // Dark Mode Toggle Funktion
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-            // Umschalten zwischen Moon und Sun Icon
-            if (newTheme === 'dark') {
-                themeIcon.classList.remove('bi-moon-fill');
-                themeIcon.classList.add('bi-sun-fill');
-            } else {
-                themeIcon.classList.remove('bi-sun-fill');
-                themeIcon.classList.add('bi-moon-fill');
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navbar burger menu for mobile
+            const navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+            if (navbarBurgers.length > 0) {
+                navbarBurgers.forEach(el => {
+                    el.addEventListener('click', () => {
+                        const target = document.getElementById(el.dataset.target);
+                        el.classList.toggle('is-active');
+                        target.classList.toggle('is-active');
+                    });
+                });
             }
 
-            // Theme setzen und speichern
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
+            // Close notification messages
+            (document.querySelectorAll('.notification .delete') || []).forEach(($delete) => {
+                const $notification = $delete.parentNode;
+                $delete.addEventListener('click', () => {
+                    $notification.remove();
+                });
+            });
+
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = themeToggle.querySelector('i');
+
+            // Get saved theme or use default (light)
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            }
+
+            // Toggle between light and dark themes
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = document.body.getAttribute('data-theme') || 'light';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+                // Toggle icon
+                if (newTheme === 'dark') {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                } else {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                }
+
+                // Apply theme and save preference
+                document.body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+            });
         });
-    });
-</script>
+    </script>
+
+    <!-- jQuery (if needed) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

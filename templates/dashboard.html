@@ -10,12 +10,12 @@
     .grid-stack-item-content {
         padding: 0;
         overflow: hidden;
-        border-radius: 0.375rem;
+        border-radius: 6px;
         transition: box-shadow 0.2s ease;
     }
 
     .grid-stack-item-content:hover {
-        box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.15);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
     .widget {
@@ -30,21 +30,20 @@
         justify-content: space-between;
         align-items: center;
         padding: 0.75rem 1rem;
-        background-color: rgba(0,0,0,0.03);
-        border-bottom: 1px solid rgba(0,0,0,0.125);
+        border-bottom: 1px solid var(--border-color);
     }
 
     .widget-title {
         margin: 0;
-        font-size: 1rem;
-        font-weight: 500;
+        font-size: 1.1rem;
+        font-weight: 600;
     }
 
     .widget-body {
         flex: 1;
         display: flex;
         flex-direction: column;
-        overflow: hidden; /* Wichtig, damit der Inhalt nicht überläuft */
+        overflow: hidden;
         padding: 1rem;
     }
 
@@ -52,13 +51,6 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-    }
-
-    .widget-footer {
-        padding: 0.5rem 1rem;
-        background-color: rgba(0,0,0,0.03);
-        border-top: 1px solid rgba(0,0,0,0.125);
-        display: none; /* Verstecke den Footer standardmäßig */
     }
 
     .widget-controls {
@@ -71,7 +63,7 @@
         justify-content: space-between;
         align-items: center;
         height: 100%;
-        cursor: pointer; /* Mauszeiger als Hand anzeigen */
+        cursor: pointer;
     }
 
     .stat-info {
@@ -80,18 +72,19 @@
     }
 
     .stat-value {
-        font-size: 2rem;
-        font-weight: bold;
+        font-size: 2.5rem;
+        font-weight: 700;
         line-height: 1;
     }
 
     .stat-label {
         font-size: 1rem;
         opacity: 0.9;
+        margin-top: 0.25rem;
     }
 
     .stat-icon {
-        font-size: 2.5rem;
+        font-size: 3rem;
         opacity: 0.8;
         transition: transform 0.2s ease;
     }
@@ -102,20 +95,15 @@
 
     .table-container {
         overflow: auto;
-        max-height: 100%; /* Statt fester 300px */
+        max-height: 100%;
         height: 100%;
     }
 
     #dashboard-controls {
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
 
-    .badge-custom-color {
-        background-color: var(--badge-color);
-        color: var(--badge-text);
-    }
-
-    /* Stile für den Bearbeitungs-/Anzeigemodus */
+    /* Styles for edit/view mode */
     .edit-mode .grid-stack-item {
         cursor: move;
     }
@@ -129,26 +117,16 @@
     }
 
     .edit-mode .widget-link {
-    pointer-events: none;
-}
+        pointer-events: none;
+    }
 
     .edit-mode .grid-stack-placeholder {
-        background-color: rgba(100, 100, 255, 0.2);
-        border: 1px dashed #8080FF;
+        background-color: rgba(72, 199, 142, 0.2);
+        border: 1px dashed #48c78e;
+        border-radius: 6px;
     }
 
-    /* Badges für den Modus-Wechsel */
-    .badge-edit-mode {
-        background-color: #ff5722;
-        color: white;
-    }
-
-    .badge-view-mode {
-        background-color: #4caf50;
-        color: white;
-    }
-
-    /* Widget-Link für Klickbarkeit */
+    /* Widget-Link for clickable tiles */
     .widget-link {
         position: absolute;
         top: 0;
@@ -161,38 +139,122 @@
         border: none;
     }
 
-    /* Verstecke Layout-Steuerelemente im Anzeige-Modus */
+    /* Hide layout controls in view mode */
     .view-mode .edit-control {
         display: none;
     }
 
     .stat-card-link {
         position: relative;
-        z-index: 20; /* Höher als widget-link (z-index: 10) */
+        z-index: 20;
         display: block;
         text-decoration: none;
         color: inherit;
     }
 
+    /* Bulma specific styles for the dashboard */
+    .button.is-edit-mode {
+        background-color: #ff7675;
+        color: white;
+    }
+
+    .button.is-view-mode {
+        background-color: #48c78e;
+        color: white;
+    }
+
+    /* Colored borders for widget cards */
+    .card.is-primary-border {
+        border-top: 3px solid #3e8ed0;
+    }
+
+    .card.is-success-border {
+        border-top: 3px solid #48c78e;
+    }
+
+    .card.is-info-border {
+        border-top: 3px solid #3e8ed0;
+    }
+
+    .card.is-warning-border {
+        border-top: 3px solid #ffe08a;
+    }
+
+    .card.is-danger-border {
+        border-top: 3px solid #f14668;
+    }
+
+    .card.is-dark-border {
+        border-top: 3px solid #363636;
+    }
+
+    /* Badges for Bulma */
+    .tag.is-rounded {
+        border-radius: 9999px;
+        padding-left: 0.75em;
+        padding-right: 0.75em;
+    }
+
+    /* Progress bars */
+    .progress-container {
+        width: 100%;
+    }
+
+    /* Toast notification */
+    .toast-container {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 9999;
+    }
+
+    .toast {
+        min-width: 250px;
+        margin-bottom: 1rem;
+        animation: fadeIn 0.3s, fadeOut 0.5s 2.5s forwards;
+    }
+
+    @keyframes fadeIn {
+        from {opacity: 0;}
+        to {opacity: 1;}
+    }
+
+    @keyframes fadeOut {
+        from {opacity: 1;}
+        to {opacity: 0; display: none;}
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="dashboard-controls" class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Dashboard</h1>
-    <div class="btn-group">
-        <button id="toggle-mode-btn" class="btn btn-outline-primary">
-            <i class="bi bi-pin-angle"></i> <span id="mode-text">Layout fixieren</span>
-            <span id="mode-badge" class="badge badge-edit-mode ms-2">Bearbeitungsmodus</span>
+<!-- Dashboard Header with Controls -->
+<div id="dashboard-controls" class="is-flex is-justify-content-space-between is-align-items-center mb-5">
+    <h1 class="title is-3">Dashboard</h1>
+    <div class="buttons">
+        <button id="toggle-mode-btn" class="button">
+            <span class="icon">
+                <i class="fas fa-thumbtack"></i>
+            </span>
+            <span id="mode-text">Layout fixieren</span>
+            <span id="mode-badge" class="tag is-edit-mode ml-2">Bearbeitungsmodus</span>
         </button>
-        <button id="add-widget-btn" class="btn btn-outline-primary edit-control" data-bs-toggle="modal" data-bs-target="#widgetModal">
-            <i class="bi bi-plus-lg"></i> Widget hinzufügen
+        <button id="add-widget-btn" class="button is-primary edit-control" data-target="widgetModal">
+            <span class="icon">
+                <i class="fas fa-plus"></i>
+            </span>
+            <span>Widget hinzufügen</span>
         </button>
-        <button id="save-layout-btn" class="btn btn-primary edit-control">
-            <i class="bi bi-save"></i> Layout speichern
+        <button id="save-layout-btn" class="button is-info edit-control">
+            <span class="icon">
+                <i class="fas fa-save"></i>
+            </span>
+            <span>Layout speichern</span>
         </button>
-        <button id="reset-layout-btn" class="btn btn-outline-danger edit-control">
-            <i class="bi bi-arrow-counterclockwise"></i> Zurücksetzen
+        <button id="reset-layout-btn" class="button is-danger is-light edit-control">
+            <span class="icon">
+                <i class="fas fa-undo"></i>
+            </span>
+            <span>Zurücksetzen</span>
         </button>
     </div>
 </div>
@@ -201,70 +263,137 @@
 <div class="grid-stack view-mode"></div>
 
 <!-- Widget Modal -->
-<div class="modal fade" id="widgetModal" tabindex="-1" aria-labelledby="widgetModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="widgetModalLabel">Widget hinzufügen</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div id="widgetModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Widget hinzufügen</p>
+            <button class="delete" aria-label="close"></button>
+        </header>
+        <section class="modal-card-body">
+            <div class="menu">
+                <ul class="menu-list">
+                    <li>
+                        <a class="widget-option" data-widget="products">
+                            <span class="icon">
+                                <i class="fas fa-box"></i>
+                            </span>
+                            <span>Produkte</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="categories">
+                            <span class="icon">
+                                <i class="fas fa-tags"></i>
+                            </span>
+                            <span>Kategorien</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="warehouses">
+                            <span class="icon">
+                                <i class="fas fa-building"></i>
+                            </span>
+                            <span>Lager</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="low_stock">
+                            <span class="icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </span>
+                            <span>Kritische Bestände</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="suppliers">
+                            <span class="icon">
+                                <i class="fas fa-truck"></i>
+                            </span>
+                            <span>Lieferanten</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="departments">
+                            <span class="icon">
+                                <i class="fas fa-users"></i>
+                            </span>
+                            <span>Abteilungen</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="stock_takes">
+                            <span class="icon">
+                                <i class="fas fa-clipboard-check"></i>
+                            </span>
+                            <span>Laufende Inventuren</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="stock_movements">
+                            <span class="icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </span>
+                            <span>Bestandsbewegungen</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="low_stock_items">
+                            <span class="icon">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </span>
+                            <span>Kritische Bestände Liste</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="active_stock_takes">
+                            <span class="icon">
+                                <i class="fas fa-clipboard-list"></i>
+                            </span>
+                            <span>Aktive Inventuren</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="warehouses_list">
+                            <span class="icon">
+                                <i class="fas fa-warehouse"></i>
+                            </span>
+                            <span>Lagerübersicht</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="purchase_orders">
+                            <span class="icon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </span>
+                            <span>Bestellübersicht</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="widget-option" data-widget="quick_actions">
+                            <span class="icon">
+                                <i class="fas fa-bolt"></i>
+                            </span>
+                            <span>Schnellaktionen</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
-            <div class="modal-body">
-                <div class="list-group">
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="products">
-                        <i class="bi bi-box-seam"></i> Produkte
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="categories">
-                        <i class="bi bi-tags"></i> Kategorien
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="warehouses">
-                        <i class="bi bi-building"></i> Lager
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="low_stock">
-                        <i class="bi bi-exclamation-triangle"></i> Kritische Bestände
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="suppliers">
-                        <i class="bi bi-truck"></i> Lieferanten
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="departments">
-                        <i class="bi bi-people"></i> Abteilungen
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="stock_takes">
-                        <i class="bi bi-clipboard-check"></i> Laufende Inventuren
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="stock_movements">
-                        <i class="bi bi-arrow-left-right"></i> Bestandsbewegungen
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="low_stock_items">
-                        <i class="bi bi-exclamation-circle"></i> Kritische Bestände Liste
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="active_stock_takes">
-                        <i class="bi bi-clipboard-check"></i> Aktive Inventuren
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="warehouses_list">
-                        <i class="bi bi-building"></i> Lagerübersicht
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="purchase_orders">
-                        <i class="bi bi-box-seam"></i> Bestellübersicht
-                    </button>
-                    <button type="button" class="list-group-item list-group-item-action widget-option" data-widget="quick_actions">
-                        <i class="bi bi-lightning"></i> Schnellaktionen
-                    </button>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
-            </div>
-        </div>
+        </section>
+        <footer class="modal-card-foot">
+            <button class="button is-dark modal-close-btn">Abbrechen</button>
+        </footer>
     </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <!-- Gridstack JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/7.3.0/gridstack-all.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Widget templates mit Links
+        // Widget templates with links
         const widgetTemplates = {
             products: {
                 w: 3, h: 2, title: "Produkte",
@@ -273,11 +402,11 @@
                 content: `
                     <div class="stat-card">
                         <div class="stat-info">
-                            <div class="stat-value">{{ total_products }}</div>
+                            <div class="stat-value has-text-primary">{{ total_products }}</div>
                             <div class="stat-label">Produkte</div>
                         </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-box-seam"></i>
+                        <div class="stat-icon has-text-primary">
+                            <i class="fas fa-box"></i>
                         </div>
                     </div>
                 `
@@ -289,11 +418,11 @@
                 content: `
                     <div class="stat-card">
                         <div class="stat-info">
-                            <div class="stat-value">{{ total_categories }}</div>
+                            <div class="stat-value has-text-success">{{ total_categories }}</div>
                             <div class="stat-label">Kategorien</div>
                         </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-tags"></i>
+                        <div class="stat-icon has-text-success">
+                            <i class="fas fa-tags"></i>
                         </div>
                     </div>
                 `
@@ -305,11 +434,11 @@
                 content: `
                     <div class="stat-card">
                         <div class="stat-info">
-                            <div class="stat-value">{{ total_warehouses }}</div>
+                            <div class="stat-value has-text-info">{{ total_warehouses }}</div>
                             <div class="stat-label">Lager</div>
                         </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-building"></i>
+                        <div class="stat-icon has-text-info">
+                            <i class="fas fa-building"></i>
                         </div>
                     </div>
                 `
@@ -321,27 +450,27 @@
                 content: `
                     <div class="stat-card">
                         <div class="stat-info">
-                            <div class="stat-value">{{ low_stock_count }}</div>
+                            <div class="stat-value has-text-danger">{{ low_stock_count }}</div>
                             <div class="stat-label">Kritische Bestände</div>
                         </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-exclamation-triangle"></i>
+                        <div class="stat-icon has-text-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
                     </div>
                 `
             },
             suppliers: {
                 w: 3, h: 2, title: "Lieferanten",
-                color: "secondary",
+                color: "dark",
                 link: "{% url 'supplier_list' %}",
                 content: `
                     <div class="stat-card">
                         <div class="stat-info">
-                            <div class="stat-value">{{ total_suppliers }}</div>
+                            <div class="stat-value has-text-dark">{{ total_suppliers }}</div>
                             <div class="stat-label">Lieferanten</div>
                         </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-truck"></i>
+                        <div class="stat-icon has-text-dark">
+                            <i class="fas fa-truck"></i>
                         </div>
                     </div>
                 `
@@ -349,42 +478,42 @@
             departments: {
                 w: 3, h: 2, title: "Abteilungen",
                 color: "warning",
-                textColor: "dark",
                 link: "{% url 'department_management' %}",
                 content: `
                     <div class="stat-card">
                         <div class="stat-info">
-                            <div class="stat-value">{{ total_departments }}</div>
+                            <div class="stat-value has-text-warning-dark">{{ total_departments }}</div>
                             <div class="stat-label">Abteilungen</div>
                         </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-people"></i>
+                        <div class="stat-icon has-text-warning">
+                            <i class="fas fa-users"></i>
                         </div>
                     </div>
                 `
             },
             stock_takes: {
                 w: 3, h: 2, title: "Laufende Inventuren",
-                color: "primary",
+                color: "link",
                 link: "{% url 'stock_take_list' %}",
                 content: `
                     <div class="stat-card">
                         <div class="stat-info">
-                            <div class="stat-value">{{ active_stock_takes_count }}</div>
+                            <div class="stat-value has-text-link">{{ active_stock_takes_count }}</div>
                             <div class="stat-label">Laufende Inventuren</div>
                         </div>
-                        <div class="stat-icon">
-                            <i class="bi bi-clipboard-check"></i>
+                        <div class="stat-icon has-text-link">
+                            <i class="fas fa-clipboard-check"></i>
                         </div>
                     </div>
                 `
             },
             stock_movements: {
                 w: 6, h: 6, title: "Letzte Bestandsbewegungen",
+                color: "link",
                 link: "{% url 'stock_movement_list' %}",
                 content: `
                     <div class="table-container">
-                        <table class="table table-hover">
+                        <table class="table is-fullwidth is-hoverable">
                             <thead>
                                 <tr>
                                     <th>Produkt</th>
@@ -401,11 +530,11 @@
                                     <td>{{ movement.warehouse.name }}</td>
                                     <td>
                                         {% if movement.movement_type == 'in' %}
-                                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Zugang</span>
+                                            <span class="tag is-success is-light is-rounded">Zugang</span>
                                         {% elif movement.movement_type == 'out' %}
-                                            <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">Abgang</span>
+                                            <span class="tag is-danger is-light is-rounded">Abgang</span>
                                         {% else %}
-                                            <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">Korrektur</span>
+                                            <span class="tag is-warning is-light is-rounded">Korrektur</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ movement.quantity }}</td>
@@ -413,7 +542,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center">Keine Bestandsbewegungen vorhanden</td>
+                                    <td colspan="5" class="has-text-centered">Keine Bestandsbewegungen vorhanden</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -423,10 +552,11 @@
             },
             low_stock_items: {
                 w: 6, h: 6, title: "Kritische Bestände",
+                color: "danger",
                 link: "{% url 'low_stock_list' %}",
                 content: `
                     <div class="table-container">
-                        <table class="table table-hover">
+                        <table class="table is-fullwidth is-hoverable">
                             <thead>
                                 <tr>
                                     <th>Produkt</th>
@@ -443,21 +573,21 @@
                                     <td>{{ product_warehouse.warehouse.name }}</td>
                                     <td>
                                         {% if product_warehouse.quantity < product_warehouse.product.minimum_stock %}
-                                            <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
+                                            <span class="tag is-danger is-light is-rounded">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
                                         {% else %}
-                                            <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
+                                            <span class="tag is-warning is-light is-rounded">{{ product_warehouse.quantity }} {{ product_warehouse.product.unit }}</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ product_warehouse.product.minimum_stock }} {{ product_warehouse.product.unit }}</td>
                                     <td>
-                                        <a href="{% url 'product_detail' product_warehouse.product.id %}" class="btn btn-sm btn-outline-info">
-                                            <i class="bi bi-eye"></i>
+                                        <a href="{% url 'product_detail' product_warehouse.product.id %}" class="button is-small is-info is-light">
+                                            <span class="icon"><i class="fas fa-eye"></i></span>
                                         </a>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center">Keine kritischen Bestände vorhanden</td>
+                                    <td colspan="5" class="has-text-centered">Keine kritischen Bestände vorhanden</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -467,10 +597,11 @@
             },
             active_stock_takes: {
                 w: 6, h: 6, title: "Aktive Inventuren",
+                color: "link",
                 link: "{% url 'stock_take_list' %}",
                 content: `
                     <div class="table-container">
-                        <table class="table table-hover">
+                        <table class="table is-fullwidth is-hoverable">
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -487,27 +618,31 @@
                                     <td>{{ stock_take.warehouse.name }}</td>
                                     <td>{{ stock_take.start_date|date:"d.m.Y" }}</td>
                                     <td>
-                                        <div class="progress" style="height: 25px;">
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ stock_take.get_completion_percentage }}%;"
-                                                 aria-valuenow="{{ stock_take.get_completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
-                                                 {{ stock_take.get_completion_percentage }}%
-                                            </div>
+                                        <div class="progress-container">
+                                            <progress class="progress is-success"
+                                                      value="{{ stock_take.get_completion_percentage }}"
+                                                      max="100">
+                                                {{ stock_take.get_completion_percentage }}%
+                                            </progress>
+                                            <span class="is-size-7 has-text-centered is-block">
+                                                {{ stock_take.get_completion_percentage }}%
+                                            </span>
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            <a href="{% url 'stock_take_detail' stock_take.id %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
+                                        <div class="buttons are-small">
+                                            <a href="{% url 'stock_take_detail' stock_take.id %}" class="button is-info is-light">
+                                                <span class="icon"><i class="fas fa-eye"></i></span>
                                             </a>
-                                            <a href="{% url 'stock_take_count_items' stock_take.id %}" class="btn btn-sm btn-outline-success">
-                                                <i class="bi bi-check2-square"></i>
+                                            <a href="{% url 'stock_take_count_items' stock_take.id %}" class="button is-success is-light">
+                                                <span class="icon"><i class="fas fa-check-square"></i></span>
                                             </a>
                                         </div>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center">Keine aktiven Inventuren vorhanden</td>
+                                    <td colspan="5" class="has-text-centered">Keine aktiven Inventuren vorhanden</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -517,10 +652,11 @@
             },
             warehouses_list: {
                 w: 6, h: 6, title: "Lagerübersicht",
+                color: "info",
                 link: "{% url 'warehouse_list' %}",
                 content: `
                     <div class="table-container">
-                        <table class="table table-hover">
+                        <table class="table is-fullwidth is-hoverable">
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -538,20 +674,20 @@
                                     <td>{{ warehouse.product_count }}</td>
                                     <td>
                                         {% if warehouse.is_active %}
-                                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Aktiv</span>
+                                            <span class="tag is-success is-light is-rounded">Aktiv</span>
                                         {% else %}
-                                            <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">Inaktiv</span>
+                                            <span class="tag is-dark is-light is-rounded">Inaktiv</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{% url 'warehouse_detail' warehouse.id %}" class="btn btn-sm btn-outline-info">
-                                            <i class="bi bi-eye"></i>
+                                        <a href="{% url 'warehouse_detail' warehouse.id %}" class="button is-small is-info is-light">
+                                            <span class="icon"><i class="fas fa-eye"></i></span>
                                         </a>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="text-center">Keine Lager vorhanden</td>
+                                    <td colspan="5" class="has-text-centered">Keine Lager vorhanden</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -561,72 +697,81 @@
             },
             purchase_orders: {
                 w: 6, h: 6, title: "Bestellübersicht",
+                color: "link",
                 link: "{% url 'purchase_order_list' %}",
                 content: `
-                    <div class="mb-3">
-                        <div class="row">
-                            <div class="col-md-3 col-sm-6 mb-2">
+                    <div class="mb-4">
+                        <div class="columns">
+                            <div class="column is-3">
                                 <a href="{% url 'purchase_order_list' %}?status=pending" class="stat-card-link">
-                                    <div class="card border-warning h-100" style="background: transparent;">
-                                        <div class="card-body p-2">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-grow-1">
-                                                    <div>Genehmigung ausstehend</div>
-                                                    <h4 class="mb-0 text-warning">{{ pending_count }}</h4>
+                                    <div class="card has-background-white-bis">
+                                        <div class="card-content p-3">
+                                            <div class="is-flex is-align-items-center">
+                                                <div class="is-flex-grow-1">
+                                                    <div class="is-size-7">Genehmigung ausstehend</div>
+                                                    <div class="has-text-warning has-text-weight-bold is-size-4">{{ pending_count }}</div>
                                                 </div>
-                                                <div class="ms-2 text-warning">
-                                                    <i class="bi bi-hourglass fs-3"></i>
+                                                <div class="ml-2 has-text-warning">
+                                                    <span class="icon is-large">
+                                                        <i class="fas fa-hourglass fa-lg"></i>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="column is-3">
                                 <a href="{% url 'purchase_order_list' %}?status=sent" class="stat-card-link">
-                                    <div class="card border-primary h-100" style="background: transparent;">
-                                        <div class="card-body p-2">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-grow-1">
-                                                    <div>Bestellte Artikel</div>
-                                                    <h4 class="mb-0 text-primary">{{ sent_count }}</h4>
+                                    <div class="card has-background-white-bis">
+                                        <div class="card-content p-3">
+                                            <div class="is-flex is-align-items-center">
+                                                <div class="is-flex-grow-1">
+                                                    <div class="is-size-7">Bestellte Artikel</div>
+                                                    <div class="has-text-primary has-text-weight-bold is-size-4">{{ sent_count }}</div>
                                                 </div>
-                                                <div class="ms-2 text-primary">
-                                                    <i class="bi bi-truck fs-3"></i>
+                                                <div class="ml-2 has-text-primary">
+                                                    <span class="icon is-large">
+                                                        <i class="fas fa-truck fa-lg"></i>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="column is-3">
                                 <a href="{% url 'purchase_order_list' %}?status=partially_received" class="stat-card-link">
-                                    <div class="card border-info h-100" style="background: transparent;">
-                                        <div class="card-body p-2">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-grow-1">
-                                                    <div>Teillieferungen</div>
-                                                    <h4 class="mb-0 text-info">{{ partial_count }}</h4>
+                                    <div class="card has-background-white-bis">
+                                        <div class="card-content p-3">
+                                            <div class="is-flex is-align-items-center">
+                                                <div class="is-flex-grow-1">
+                                                    <div class="is-size-7">Teillieferungen</div>
+                                                    <div class="has-text-info has-text-weight-bold is-size-4">{{ partial_count }}</div>
                                                 </div>
-                                                <div class="ms-2 text-info">
-                                                    <i class="bi bi-box fs-3"></i>
+                                                <div class="ml-2 has-text-info">
+                                                    <span class="icon is-large">
+                                                        <i class="fas fa-box fa-lg"></i>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </a>
                             </div>
-                            <div class="col-md-3 col-sm-6 mb-2">
+                            <div class="column is-3">
                                 <a href="{% url 'order_suggestions' %}" class="stat-card-link">
-                                    <div class="card border-success h-100" style="background: transparent;">
-                                        <div class="card-body p-2">
-                                            <div class="d-flex align-items-center">
-                                                <div class="flex-grow-1">
-                                                    <div>Bestellvorschläge</div>
-                                                    <h4 class="mb-0 text-success">{{ suggestion_count }}</h4>
+                                    <div class="card has-background-white-bis">
+                                        <div class="card-content p-3">
+                                            <div class="is-flex is-align-items-center">
+                                                <div class="is-flex-grow-1">
+                                                    <div class="is-size-7">Bestellvorschläge</div>
+                                                    <div class="has-text-success has-text-weight-bold is-size-4">{{ suggestion_count }}</div>
                                                 </div>
-                                                <div class="ms-2 text-success">
-                                                    <i class="bi bi-lightbulb fs-3"></i>
+                                                <div class="ml-2 has-text-success">
+                                                    <span class="icon is-large">
+                                                        <i class="fas fa-lightbulb fa-lg"></i>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -637,7 +782,7 @@
                     </div>
 
                     <div class="table-container">
-                        <table class="table table-sm table-hover">
+                        <table class="table is-fullwidth is-hoverable is-size-7">
                             <thead>
                                 <tr>
                                     <th>Bestellnr.</th>
@@ -657,60 +802,67 @@
                                     <td>{{ order.order_date|date:"d.m.Y" }}</td>
                                     <td>
                                         {% if order.status == 'draft' %}
-                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        <span class="tag is-dark is-light is-rounded">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'pending' %}
-                                        <span class="badge bg-dark-subtle border border-dark-subtle text-dark-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        <span class="tag is-warning is-light is-rounded">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'approved' %}
-                                        <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        <span class="tag is-info is-light is-rounded">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'sent' %}
-                                        <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        <span class="tag is-primary is-light is-rounded">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'partially_received' %}
-                                        <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        <span class="tag is-warning is-light is-rounded">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'received' %}
-                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        <span class="tag is-success is-light is-rounded">{{ order.get_status_display }}</span>
                                         {% elif order.status == 'cancelled' %}
-                                        <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ order.total|floatformat:2 }} €</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center py-3">
-                            <span class="text-muted">Keine Bestellungen vorhanden</span>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    `
-},
+                                        <span class="tag is-danger is-light is-rounded">{{ order.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.total|floatformat:2 }} €</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="has-text-centered py-3">
+                                        <span class="has-text-grey">Keine Bestellungen vorhanden</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                `
+            },
             quick_actions: {
                 w: 3, h: 5, title: "Schnellaktionen",
+                color: "link",
                 content: `
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'bulk_warehouse_transfer' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-arrow-left-right me-2"></i>Lagerverschiebung
+                    <div class="buttons are-normal is-flex is-flex-direction-column">
+                        <a href="{% url 'bulk_warehouse_transfer' %}" class="button is-fullwidth is-outlined is-primary">
+                            <span class="icon"><i class="fas fa-exchange-alt"></i></span>
+                            <span>Lagerverschiebung</span>
                         </a>
-                        <a href="{% url 'stock_take_create' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-clipboard-check me-2"></i>Neue Inventur
+                        <a href="{% url 'stock_take_create' %}" class="button is-fullwidth is-outlined is-primary">
+                            <span class="icon"><i class="fas fa-clipboard-check"></i></span>
+                            <span>Neue Inventur</span>
                         </a>
-                        <a href="{% url 'product_create' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-plus-circle me-2"></i>Neues Produkt
+                        <a href="{% url 'product_create' %}" class="button is-fullwidth is-outlined is-primary">
+                            <span class="icon"><i class="fas fa-plus-circle"></i></span>
+                            <span>Neues Produkt</span>
                         </a>
-                        <a href="{% url 'purchase_order_create' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-cart-plus me-2"></i>Neue Bestellung
+                        <a href="{% url 'purchase_order_create' %}" class="button is-fullwidth is-outlined is-primary">
+                            <span class="icon"><i class="fas fa-cart-plus"></i></span>
+                            <span>Neue Bestellung</span>
                         </a>
-                        <a href="{% url 'supplier_create' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-truck me-2"></i>Neuer Lieferant
+                        <a href="{% url 'supplier_create' %}" class="button is-fullwidth is-outlined is-primary">
+                            <span class="icon"><i class="fas fa-truck"></i></span>
+                            <span>Neuer Lieferant</span>
                         </a>
-                        <a href="{% url 'category_create' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-tags me-2"></i>Neue Kategorie
+                        <a href="{% url 'category_create' %}" class="button is-fullwidth is-outlined is-primary">
+                            <span class="icon"><i class="fas fa-tags"></i></span>
+                            <span>Neue Kategorie</span>
                         </a>
                     </div>
                 `
-            }
+            },
         };
 
         // Default layout configuration
@@ -728,11 +880,35 @@
             { x: 0, y: 10, w: 6, h: 6, id: 'active_stock_takes' },
             { x: 6, y: 10, w: 6, h: 6, id: 'purchase_orders' }
         ];
-        // Variablen zur Verwaltung des Modus
+
+        // Variables for mode management
         let isEditMode = false;
         const gridContainer = document.querySelector('.grid-stack');
         const modeText = document.getElementById('mode-text');
         const modeBadge = document.getElementById('mode-badge');
+
+        // Modal functionality
+        function setupModal() {
+            // Open modal
+            const modalTriggers = document.querySelectorAll('[data-target]');
+            modalTriggers.forEach(trigger => {
+                const modalId = trigger.dataset.target;
+                const modal = document.getElementById(modalId);
+
+                trigger.addEventListener('click', () => {
+                    modal.classList.add('is-active');
+                });
+            });
+
+            // Close modal
+            const modalClosers = document.querySelectorAll('.modal .delete, .modal-close-btn, .modal-background');
+            modalClosers.forEach(closer => {
+                closer.addEventListener('click', () => {
+                    const modal = closer.closest('.modal');
+                    modal.classList.remove('is-active');
+                });
+            });
+        }
 
         // Initialize GridStack
         const grid = GridStack.init({
@@ -751,29 +927,34 @@
         });
         grid.disable();
 
+        // Setup modal
+        setupModal();
+
         // Function to create widget HTML
         function createWidgetHTML(id) {
             const template = widgetTemplates[id];
             if (!template) return null;
 
-            // Ersetzen von Hintergrundfarben durch Rahmenfarben
-            let borderClass = template.color ? `border-${template.color}` : '';
-            let textClass = template.color ? `text-${template.color}` : '';
+            // Create Bulma card with appropriate colors
+            let borderClass = template.color ? `is-${template.color}-border` : '';
+            let titleClass = template.color ? `has-text-${template.color}` : '';
 
-            // WICHTIG: Kein Hintergrund (bg-* Klasse) mehr verwenden
-
-            // Erstelle HTML mit einem Link-Button für die gesamte Kachel
+            // Create HTML with a link button for the entire card
             return `
-                <div class="widget card ${borderClass}" style="background: transparent;">
+                <div class="widget card ${borderClass}">
                     ${template.link ? `<a href="${template.link}" class="widget-link"></a>` : ''}
                     <div class="widget-header">
-                        <h5 class="widget-title ${textClass}">${template.title}</h5>
+                        <h5 class="widget-title ${titleClass} is-size-5">${template.title}</h5>
                         <div class="widget-controls">
-                            <button class="btn btn-sm btn-outline-${template.color ? template.color : 'secondary'} btn-reload" title="Aktualisieren">
-                                <i class="bi bi-arrow-clockwise"></i>
+                            <button class="button is-small is-${template.color || 'light'} is-light btn-reload" title="Aktualisieren">
+                                <span class="icon is-small">
+                                    <i class="fas fa-sync-alt"></i>
+                                </span>
                             </button>
-                            <button class="btn btn-sm btn-outline-${template.color ? template.color : 'secondary'} btn-remove" title="Entfernen">
-                                <i class="bi bi-x-lg"></i>
+                            <button class="button is-small is-${template.color || 'light'} is-light btn-remove" title="Entfernen">
+                                <span class="icon is-small">
+                                    <i class="fas fa-times"></i>
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -801,7 +982,7 @@
             grid.addWidget(widget);
             setupWidgetEventListeners(id);
 
-            // Widget-Optionen aktualisieren
+            // Update widget options
             updateWidgetOptions();
         }
 
@@ -813,17 +994,17 @@
 
             // Setup remove button
             const removeBtn = widgetElement.querySelector('.btn-remove');
-                if (removeBtn) {
-                    removeBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        grid.removeWidget(widgetElement);
-                        saveLayout();
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    grid.removeWidget(widgetElement);
+                    saveLayout();
 
-                        // Widget-Optionen aktualisieren
-                        updateWidgetOptions();
-                    });
-                }
+                    // Update widget options
+                    updateWidgetOptions();
+                });
+            }
 
             // Setup reload button
             const reloadBtn = widgetElement.querySelector('.btn-reload');
@@ -846,8 +1027,8 @@
                 gridContainer.classList.add('edit-mode');
                 modeText.textContent = 'Layout fixieren';
                 modeBadge.textContent = 'Bearbeitungsmodus';
-                modeBadge.classList.remove('badge-view-mode');
-                modeBadge.classList.add('badge-edit-mode');
+                modeBadge.classList.remove('is-view-mode');
+                modeBadge.classList.add('is-edit-mode');
 
                 // Enable grid editing
                 grid.enable();
@@ -862,8 +1043,8 @@
                 gridContainer.classList.add('view-mode');
                 modeText.textContent = 'Layout bearbeiten';
                 modeBadge.textContent = 'Anzeigemodus';
-                modeBadge.classList.remove('badge-edit-mode');
-                modeBadge.classList.add('badge-view-mode');
+                modeBadge.classList.remove('is-edit-mode');
+                modeBadge.classList.add('is-view-mode');
 
                 // Disable grid editing
                 grid.disable();
@@ -883,22 +1064,24 @@
             const serializedLayout = grid.save();
             localStorage.setItem('dashboardLayout', JSON.stringify(serializedLayout));
 
-            // Show confirmation message
+            // Show confirmation message with Bulma notification
             const toast = document.createElement('div');
-            toast.className = 'position-fixed top-0 end-0 p-3';
-            toast.style.zIndex = '9999';
+            toast.className = 'toast-container';
             toast.innerHTML = `
-                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header">
-                        <strong class="me-auto">Dashboard</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                    <div class="toast-body">
-                        Layout wurde gespeichert.
-                    </div>
+                <div class="notification is-success is-light toast">
+                    <button class="delete"></button>
+                    <strong>Dashboard</strong>: Layout wurde gespeichert.
                 </div>
             `;
             document.body.appendChild(toast);
+
+            // Add event listener to close button
+            const closeBtn = toast.querySelector('.delete');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    toast.remove();
+                });
+            }
 
             // Remove toast after 3 seconds
             setTimeout(() => {
@@ -910,13 +1093,14 @@
         function loadLayout() {
             modeText.textContent = 'Layout bearbeiten';
             modeBadge.textContent = 'Anzeigemodus';
-            modeBadge.classList.remove('badge-edit-mode');
-            modeBadge.classList.add('badge-view-mode');
+            modeBadge.classList.remove('is-edit-mode');
+            modeBadge.classList.add('is-view-mode');
 
-            // Edit-Steuerelemente ausblenden
+            // Hide edit controls
             document.querySelectorAll('.edit-control').forEach(el => {
                 el.style.display = 'none';
             });
+
             // Remove all existing widgets
             grid.removeAll();
 
@@ -949,7 +1133,7 @@
         }
 
         function updateWidgetOptions() {
-            // Alle vorhandenen Widget-IDs sammeln
+            // Collect all existing widget IDs
             const existingWidgets = [];
             const gridItems = document.querySelectorAll('.grid-stack-item');
             gridItems.forEach(item => {
@@ -959,19 +1143,21 @@
                 }
             });
 
-            // Optionen im Modal aktualisieren
+            // Update options in modal
             document.querySelectorAll('.widget-option').forEach(option => {
                 const widgetId = option.dataset.widget;
                 if (existingWidgets.includes(widgetId)) {
-                    // Widget bereits vorhanden - ausgrauen
-                    option.classList.add('disabled');
+                    // Widget already exists - gray it out
+                    option.classList.add('is-disabled');
                     option.style.opacity = '0.5';
                     option.style.cursor = 'not-allowed';
+                    option.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
                 } else {
-                    // Widget nicht vorhanden - aktivieren
-                    option.classList.remove('disabled');
+                    // Widget does not exist - enable it
+                    option.classList.remove('is-disabled');
                     option.style.opacity = '1';
                     option.style.cursor = 'pointer';
+                    option.style.backgroundColor = '';
                 }
             });
         }
@@ -988,26 +1174,26 @@
                 loadLayout();
             }
         });
-        // Event-Listener für das Widget-Modal hinzufügen
-        document.getElementById('widgetModal').addEventListener('show.bs.modal', function() {
+
+        // Open modal and update widget options when adding widgets
+        document.getElementById('add-widget-btn').addEventListener('click', function() {
             updateWidgetOptions();
         });
 
-        // Setup widget modal event listeners
-        // Setup widget modal event listeners
+        // Setup widget option event listeners
         document.querySelectorAll('.widget-option').forEach(option => {
             option.addEventListener('click', function() {
-                // Prüfen, ob das Widget deaktiviert ist
-                if (this.classList.contains('disabled')) {
-                    return; // Nichts tun, wenn das Widget bereits existiert
+                // Check if widget is disabled
+                if (this.classList.contains('is-disabled')) {
+                    return; // Do nothing if widget already exists
                 }
 
                 const widgetId = this.dataset.widget;
                 addWidget(widgetId);
 
                 // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('widgetModal'));
-                modal.hide();
+                const modal = document.getElementById('widgetModal');
+                modal.classList.remove('is-active');
 
                 // Save the layout
                 saveLayout();
@@ -1020,11 +1206,8 @@
             // We don't save automatically to avoid too many writes
         });
 
-        // Initialize tooltips
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
+        // Initialize tooltips for Bulma (would require a tooltip plugin or custom implementation)
+        // For now, we'll use the built-in title attribute
     });
 </script>
 {% endblock %}

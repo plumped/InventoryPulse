@@ -16,6 +16,8 @@ urlpatterns = [
     path('templates/<int:pk>/', views.template_detail, name='template_detail'),
     path('templates/<int:pk>/edit/', views.template_edit, name='template_edit'),
     path('templates/<int:pk>/delete/', views.template_delete, name='template_delete'),
+    path('<int:pk>/match-to-template/<int:template_id>/', views.match_document_to_template,
+         name='match_document_to_template'),
 
     # Template fields
     path('templates/<int:template_id>/fields/add/', views.field_create, name='field_create'),

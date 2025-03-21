@@ -18,7 +18,8 @@ from django.db.models import Q
 
 from .models import Document, DocumentTemplate, TemplateField, DocumentType, DocumentMatch
 from .forms import DocumentUploadForm, DocumentTemplateForm, TemplateFieldForm, DocumentMatchForm
-from .utils import process_document_with_ocr, extract_field_from_document, log_processing_event
+from .utils import process_document_with_ocr, extract_field_from_document, log_processing_event, \
+    extract_fields_from_document
 from .tasks import process_document_ocr
 
 
@@ -687,3 +688,35 @@ def get_field_suggestions(request):
         'document_type_code': document_type_code,
         'suggestions': suggestions
     })
+
+
+@login_required
+def match_document_to_template(request, pk, template_id):
+    """View für manuelles Zuordnen eines Dokuments zu einem Template."""
+    document = get_object_or_404(Document, pk=pk)
+    template = get_object_or_404(DocumentTemplate, pk=template_id)
+
+    if request.method == 'POST':
+        # Dokument mit Template verknüpfen
+        document.matched_template = template
+
+        # Daten aus dem Template extrahieren
+        extracted_data = extract_fields_from_document(document, template)
+        document.extracted_data = extracted_data
+
+        # Konfidenz auf 100% setzen (manuelle Zuordnung)
+        document.confidence_score = 1.0
+
+        # Status aktualisieren
+        document.processing_status = 'processed'
+        document.save(update_fields=['matched_template', 'extracted_data', 'confidence_score', 'processing_status'])
+
+        # Ereignis protokollieren
+        log_processing_event(
+            document, 'info',
+            f"Dokument manuell mit Template '{template.name}' verknüpft durch {request.user.username}"
+        )
+
+        messages.success(request, _('Dokument erfolgreich mit Template verknüpft.'))
+
+    return redirect('document_detail', pk=document.pk)

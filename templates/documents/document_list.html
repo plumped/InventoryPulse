@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Documents - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .badge-matched {
+        background-color: #28a745;
+    }
+
+    .badge-processed {
+        background-color: #007bff;
+    }
+
+    .badge-processing {
+        background-color: #17a2b8;
+    }
+
+    .badge-pending {
+        background-color: #6c757d;
+    }
+
+    .badge-error {
+        background-color: #dc3545;
+    }
+
+    .document-card {
+        transition: transform 0.2s;
+    }
+
+    .document-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Documents</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Document Management</h1>
+            <a href="{% url 'document_upload' %}" class="btn btn-primary">
+                <i class="bi bi-cloud-upload"></i> Upload Document
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="document_type" class="form-label">Document Type</label>
+                    <select class="form-select" id="document_type" name="document_type">
+                        <option value="">All Types</option>
+                        {% for document_type in document_types %}
+                        <option value="{{ document_type.id }}" {% if selected_document_type == document_type.id|stringformat:"s" %}selected{% endif %}>
+                            {{ document_type.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="supplier" class="form-label">Supplier</label>
+                    <select class="form-select" id="supplier" name="supplier">
+                        <option value="">All Suppliers</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}" {% if selected_supplier == supplier.id|stringformat:"s" %}selected{% endif %}>
+                            {{ supplier.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}" {% if selected_status == status_code %}selected{% endif %}>
+                            {{ status_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search" name="search" value="{{ search_query }}" placeholder="Search documents...">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="row">
+        {% for document in documents %}
+        <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 document-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">{{ document.title }}</h6>
+                    <span class="badge bg-{{ document.processing_status }}">
+                        {{ document.get_processing_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Type:</strong>
+                        {% if document.document_type %}
+                        {{ document.document_type.name }}
+                        {% else %}
+                        <span class="text-muted">Not specified</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Supplier:</strong>
+                        {% if document.supplier %}
+                        {{ document.supplier.name }}
+                        {% else %}
+                        <span class="text-muted">Not specified</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Uploaded:</strong> {{ document.upload_date|date:"d.m.Y H:i" }}
+                    </div>
+                    {% if document.document_number %}
+                    <div class="mb-2">
+                        <strong>Document Number:</strong> {{ document.document_number }}
+                    </div>
+                    {% endif %}
+                    {% if document.document_date %}
+                    <div class="mb-2">
+                        <strong>Document Date:</strong> {{ document.document_date|date:"d.m.Y" }}
+                    </div>
+                    {% endif %}
+                    {% if document.matched_order %}
+                    <div class="mb-2">
+                        <strong>Matched Order:</strong>
+                        <a href="{% url 'purchase_order_detail' document.matched_order.id %}">
+                            {{ document.matched_order.order_number }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100">
+                        <a href="{% url 'document_detail' document.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> View
+                        </a>
+                        {% if document.file %}
+                        <a href="{{ document.file.url }}" class="btn btn-outline-secondary" target="_blank">
+                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                        </a>
+                        {% endif %}
+                        {% if document.is_processed and not document.matched_order %}
+                        <a href="{% url 'document_match' document.id %}" class="btn btn-outline-success">
+                            <i class="bi bi-link"></i> Match
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No documents found.
+                <a href="{% url 'document_upload' %}" class="alert-link">Upload your first document</a>.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if documents.has_other_pages %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if documents.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ documents.previous_page_number }}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in documents.paginator.page_range %}
+                {% if documents.number == num %}
+                <li class="page-item active" aria-current="page">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > documents.number|add:'-3' and num < documents.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if documents.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ documents.next_page_number }}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

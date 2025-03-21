@@ -1,0 +1,458 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Field Mapping Editor - {{ template.name }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'documents/css/field_editor.css' %}">
+<style>
+    .template-info-card {
+        position: sticky;
+        top: 1rem;
+    }
+
+    #field-editor {
+        min-height: 600px;
+    }
+
+    .field-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .field-badge {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_list' %}">Templates</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_detail' template.id %}">{{ template.name }}</a></li>
+                    <li class="breadcrumb-item active">Field Mapping Editor</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Field Mapping Editor</h1>
+            <div>
+                <a href="{% url 'template_detail' template.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                <a href="{% url 'field_create' template.id %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Field Manually
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-9">
+            <!-- Field Editor -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Document Preview</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="field-editor"
+                         data-document-id="{{ reference_document.id }}"
+                         data-template-id="{{ template.id }}">
+                        <!-- Editor will be initialized via JavaScript -->
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="text-muted">
+                        <small>
+                            <i class="bi bi-info-circle"></i>
+                            Draw rectangles on the document to create fields. Click on existing fields to edit them.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <!-- Template Info -->
+            <div class="card mb-4 template-info-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Name:</strong> {{ template.name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Supplier:</strong> {{ template.supplier.name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Document Type:</strong> {{ template.document_type.name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Reference Document:</strong>
+                        <a href="{% url 'document_detail' reference_document.id %}" target="_blank">
+                            {{ reference_document.title }}
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Fields:</strong> {{ fields.count }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Field List -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Fields</h5>
+                    <button class="btn btn-sm btn-outline-primary" id="add-field-btn">
+                        <i class="bi bi-plus-sm"></i> Add
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="field-list">
+                        <ul class="list-group list-group-flush">
+                            {% for field in fields %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="field-badge" style="background-color: {{ field.field_type|field_color }}"></span>
+                                    {{ field.name }}
+                                    <small class="text-muted">{{ field.field_type }}</small>
+                                </div>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-sm btn-outline-primary edit-field-btn" data-field-id="{{ field.id }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <a href="{% url 'field_delete' template.id field.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-center py-4">
+                                <div class="text-muted">
+                                    <i class="bi bi-info-circle"></i><br>
+                                    No fields defined yet.<br>
+                                    Draw rectangles on the document to create fields.
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Field Type Legend -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Field Types</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <span class="field-badge" style="background-color: #28a745;"></span> Text
+                        </div>
+                        <div class="col-6 mb-2">
+                            <span class="field-badge" style="background-color: #dc3545;"></span> Number
+                        </div>
+                        <div class="col-6 mb-2">
+                            <span class="field-badge" style="background-color: #fd7e14;"></span> Date
+                        </div>
+                        <div class="col-6 mb-2">
+                            <span class="field-badge" style="background-color: #6f42c1;"></span> Currency
+                        </div>
+                        <div class="col-6 mb-2">
+                            <span class="field-badge" style="background-color: #20c997;"></span> Boolean
+                        </div>
+                        <div class="col-6 mb-2">
+                            <span class="field-badge" style="background-color: #17a2b8;"></span> List
+                        </div>
+                        <div class="col-6 mb-2">
+                            <span class="field-badge" style="background-color: #6610f2;"></span> Table
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Field Creation Modal -->
+<div class="modal fade" id="field-modal" tabindex="-1" aria-labelledby="field-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="field-modal-label">Add Field</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="field-form">
+                    <div class="mb-3">
+                        <label for="field-name" class="form-label">Field Name</label>
+                        <input type="text" class="form-control" id="field-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="field-code" class="form-label">Field Code</label>
+                        <input type="text" class="form-control" id="field-code">
+                        <small class="form-text text-muted">Unique identifier for this field. Leave blank for automatic generation.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="field-type" class="form-label">Field Type</label>
+                        <select class="form-select" id="field-type" required>
+                            <option value="text">Text</option>
+                            <option value="number">Number</option>
+                            <option value="date">Date</option>
+                            <option value="currency">Currency</option>
+                            <option value="boolean">Boolean</option>
+                            <option value="list">List</option>
+                            <option value="table">Table</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="extraction-method" class="form-label">Extraction Method</label>
+                        <select class="form-select" id="extraction-method">
+                            <option value="exact">Exact Position</option>
+                            <option value="label_based">Based on Label</option>
+                            <option value="regex">Regular Expression</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="search-pattern" class="form-label">Search Pattern</label>
+                        <input type="text" class="form-control" id="search-pattern">
+                        <small class="form-text text-muted">Label text or regex pattern to find the field</small>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is-key-field">
+                        <label class="form-check-label" for="is-key-field">Key field for document matching</label>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is-required">
+                        <label class="form-check-label" for="is-required">Required field</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="save-field-btn">Save Field</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add CSRF Token meta tag -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<!-- Field Editor JS -->
+<script src="{% static 'documents/js/field_editor.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize field editor
+        const editorContainer = document.getElementById('field-editor');
+        if (!editorContainer) return;
+
+        // Get existing fields data
+        const fieldsData = [
+            {% for field in fields %}
+            {
+                id: {{ field.id }},
+                name: "{{ field.name }}",
+                code: "{{ field.code }}",
+                field_type: "{{ field.field_type }}",
+                extraction_method: "{{ field.extraction_method }}",
+                search_pattern: "{{ field.search_pattern|escapejs }}",
+                is_key_field: {% if field.is_key_field %}true{% else %}false{% endif %},
+                is_required: {% if field.is_required %}true{% else %}false{% endif %},
+                x1: {{ field.x1 }},
+                y1: {{ field.y1 }},
+                x2: {{ field.x2 }},
+                y2: {{ field.y2 }},
+                page: 1 // Assume all fields are on page 1 for now
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        // Initialize editor with fields data
+        const editor = new FieldEditor('field-editor', {
+            documentId: editorContainer.dataset.documentId,
+            templateId: editorContainer.dataset.templateId,
+            fields: fieldsData,
+            csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            ajaxUrls: {
+                getDocumentImage: '{% url "get_document_image" 0 %}'.replace('0', editorContainer.dataset.documentId),
+                getDocumentOcrData: '{% url "get_document_ocr_data" 0 %}'.replace('0', editorContainer.dataset.documentId),
+                saveFieldCoordinates: '{% url "save_field_coordinates" %}',
+                extractFieldValue: '{% url "extract_field_value" %}'
+            },
+            onFieldSaved: function(data) {
+                // Reload the page to show the updated field list
+                window.location.reload();
+            }
+        });
+
+        // Add Field button click handler
+        document.getElementById('add-field-btn').addEventListener('click', function() {
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('field-modal'));
+            modal.show();
+        });
+
+        // Save Field button click handler
+        document.getElementById('save-field-btn').addEventListener('click', function() {
+            // Get form values
+            const name = document.getElementById('field-name').value;
+            const code = document.getElementById('field-code').value;
+            const fieldType = document.getElementById('field-type').value;
+            const extractionMethod = document.getElementById('extraction-method').value;
+            const searchPattern = document.getElementById('search-pattern').value;
+            const isKeyField = document.getElementById('is-key-field').checked;
+            const isRequired = document.getElementById('is-required').checked;
+
+            // Create field via API
+            const payload = {
+                template_id: editorContainer.dataset.templateId,
+                field_id: null, // New field
+                field_name: name,
+                field_code: code,
+                field_type: fieldType,
+                extraction_method: extractionMethod,
+                search_pattern: searchPattern,
+                is_key_field: isKeyField,
+                is_required: isRequired,
+                coordinates: {
+                    x1: 0.1,
+                    y1: 0.1,
+                    x2: 0.2,
+                    y2: 0.2
+                }
+            };
+
+            // Send to server
+            fetch('{% url "save_field_coordinates" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error saving field:', data.error);
+                    return;
+                }
+
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('field-modal'));
+                modal.hide();
+
+                // Reload the page to show the updated field list
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error saving field:', error);
+            });
+        });
+
+        // Edit field buttons
+        document.querySelectorAll('.edit-field-btn').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const fieldId = button.dataset.fieldId;
+                if (!fieldId) return;
+
+                // Find field data
+                const field = fieldsData.find(f => f.id == fieldId);
+                if (!field) return;
+
+                // Populate form
+                document.getElementById('field-name').value = field.name;
+                document.getElementById('field-code').value = field.code;
+                document.getElementById('field-type').value = field.field_type;
+                document.getElementById('extraction-method').value = field.extraction_method;
+                document.getElementById('search-pattern').value = field.search_pattern;
+                document.getElementById('is-key-field').checked = field.is_key_field;
+                document.getElementById('is-required').checked = field.is_required;
+
+                // Update modal title
+                document.getElementById('field-modal-label').textContent = 'Edit Field';
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('field-modal'));
+                modal.show();
+
+                // Update save button handler
+                document.getElementById('save-field-btn').onclick = function() {
+                    // Get form values
+                    field.name = document.getElementById('field-name').value;
+                    field.code = document.getElementById('field-code').value;
+                    field.field_type = document.getElementById('field-type').value;
+                    field.extraction_method = document.getElementById('extraction-method').value;
+                    field.search_pattern = document.getElementById('search-pattern').value;
+                    field.is_key_field = document.getElementById('is-key-field').checked;
+                    field.is_required = document.getElementById('is-required').checked;
+
+                    // Create payload
+                    const payload = {
+                        template_id: editorContainer.dataset.templateId,
+                        field_id: field.id,
+                        field_name: field.name,
+                        field_code: field.code,
+                        field_type: field.field_type,
+                        extraction_method: field.extraction_method,
+                        search_pattern: field.search_pattern,
+                        is_key_field: field.is_key_field,
+                        is_required: field.is_required,
+                        coordinates: {
+                            x1: field.x1,
+                            y1: field.y1,
+                            x2: field.x2,
+                            y2: field.y2
+                        }
+                    };
+
+                    // Send to server
+                    fetch('{% url "save_field_coordinates" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            console.error('Error updating field:', data.error);
+                            return;
+                        }
+
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('field-modal'));
+                        modal.hide();
+
+                        // Reload the page to show the updated field list
+                        window.location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Error updating field:', error);
+                    });
+                };
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django_filters',  # Für Filterfunktionalität
     'api',
     'interfaces',
+    'documents',
 ]
 
 MIDDLEWARE = [
@@ -177,4 +178,8 @@ SIMPLE_JWT = {
 }
 
 SELECT2_CACHE_BACKEND = "default"
+
+# Tesseract configuration
+TESSERACT_CMD = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Windows path
+
 

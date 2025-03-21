@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Document - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .upload-area {
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .upload-area:hover, .upload-area.highlight {
+        border-color: #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .upload-icon {
+        font-size: 60px;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+
+    .upload-area:hover .upload-icon, .upload-area.highlight .upload-icon {
+        color: #007bff;
+    }
+
+    .custom-file-input:focus ~ .custom-file-label {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    #file-preview {
+        margin-top: 20px;
+    }
+
+    .preview-card {
+        margin-bottom: 20px;
+    }
+
+    .preview-card img {
+        max-height: 200px;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'document_list' %}">Documents</a></li>
+                    <li class="breadcrumb-item active">Upload Document</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Upload Document</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Upload Document</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="upload-form">
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Document Title</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.document_type.id_for_label }}" class="form-label">Document Type</label>
+                            {{ form.document_type }}
+                            {% if form.document_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.document_type.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.supplier.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <!-- File upload area -->
+                            <div class="upload-area" id="upload-area">
+                                <input type="file" class="d-none" id="{{ form.file.id_for_label }}" name="{{ form.file.html_name }}" accept=".pdf">
+                                <i class="bi bi-cloud-upload upload-icon"></i>
+                                <h5>Drag & Drop PDF here</h5>
+                                <p class="text-muted">or click to browse</p>
+                            </div>
+                            {% if form.file.errors %}
+                            <div class="invalid-feedback d-block mt-2">
+                                {% for error in form.file.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- File Preview -->
+                        <div id="file-preview" class="d-none">
+                            <div class="card preview-card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0" id="file-name"></h6>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="remove-file">
+                                        <i class="bi bi-x-lg"></i> Remove
+                                    </button>
+                                </div>
+                                <div class="card-body text-center">
+                                    <img src="" alt="PDF Preview" id="pdf-preview" class="img-fluid">
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted" id="file-size"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.notes.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="upload-btn" disabled>
+                                <i class="bi bi-cloud-upload"></i> Upload Document
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Supported Document Types</h6>
+                    <p>Currently, only PDF documents are supported.</p>
+
+                    <h6>Processing Information</h6>
+                    <p>After uploading, your document will be:</p>
+                    <ol>
+                        <li>Processed with OCR to extract text</li>
+                        <li>Analyzed to identify document type and supplier</li>
+                        <li>Matched to a template if available</li>
+                        <li>Field values will be extracted</li>
+                        <li>Document will be matched to a purchase order if possible</li>
+                    </ol>
+
+                    <h6>Tips for Best Results</h6>
+                    <ul>
+                        <li>Ensure your document is clearly scanned</li>
+                        <li>Select the correct document type</li>
+                        <li>Specify the supplier if known</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('{{ form.file.id_for_label }}');
+        const filePreview = document.getElementById('file-preview');
+        const fileName = document.getElementById('file-name');
+        const fileSize = document.getElementById('file-size');
+        const pdfPreview = document.getElementById('pdf-preview');
+        const removeFileBtn = document.getElementById('remove-file');
+        const uploadBtn = document.getElementById('upload-btn');
+
+        // Set up drag and drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            uploadArea.classList.add('highlight');
+        }
+
+        function unhighlight() {
+            uploadArea.classList.remove('highlight');
+        }
+
+        // Handle file drop
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelected();
+            }
+        }
+
+        // Handle file selection via click
+        uploadArea.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', handleFileSelected);
+
+        function handleFileSelected() {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+
+                // Check if it's a PDF
+                if (file.type !== 'application/pdf') {
+                    alert('Please select a PDF file.');
+                    fileInput.value = '';
+                    return;
+                }
+
+                // Show file preview
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                filePreview.classList.remove('d-none');
+
+                // Enable upload button
+                uploadBtn.disabled = false;
+
+                // Generate PDF thumbnail
+                generatePDFThumbnail(file);
+            }
+        }
+
+        // Remove file
+        removeFileBtn.addEventListener('click', function() {
+            fileInput.value = '';
+            filePreview.classList.add('d-none');
+            uploadBtn.disabled = true;
+        });
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Generate PDF thumbnail
+        function generatePDFThumbnail(file) {
+            const fileReader = new FileReader();
+
+            fileReader.onload = function(e) {
+                const typedarray = new Uint8Array(e.target.result);
+
+                // Initialize PDF.js
+                const loadingTask = pdfjsLib.getDocument(typedarray);
+                loadingTask.promise.then(function(pdf) {
+                    // Get the first page
+                    pdf.getPage(1).then(function(page) {
+                        // Set scale for thumbnail
+                        const viewport = page.getViewport({ scale: 0.5 });
+
+                        // Create canvas for rendering
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        // Render the page into the canvas
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+
+                        page.render(renderContext).promise.then(function() {
+                            // Convert canvas to image
+                            pdfPreview.src = canvas.toDataURL();
+                        });
+                    });
+                }).catch(function(error) {
+                    console.error('Error generating PDF thumbnail:', error);
+                    // Show generic PDF icon if thumbnail generation fails
+                    pdfPreview.src = "{% static 'images/pdf_icon.png' %}";
+                });
+            };
+
+            fileReader.readAsArrayBuffer(file);
+        }
+    });
+</script>
+{% endblock %}

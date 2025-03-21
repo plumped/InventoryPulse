@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Match Document - {{ document.title }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .document-preview {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .document-preview img {
+        width: 100%;
+        height: auto;
+    }
+
+    .match-form-card {
+        position: sticky;
+        top: 1rem;
+    }
+
+    .order-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .order-item {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .order-item:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .order-item.selected {
+        background-color: rgba(0, 123, 255, 0.1);
+        border-left: 3px solid #007bff;
+    }
+
+    .badge-result {
+        animation: fade-in 0.5s;
+    }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'document_list' %}">Documents</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'document_detail' document.id %}">{{ document.title }}</a></li>
+                    <li class="breadcrumb-item active">Match to Order</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Match Document to Order</h1>
+            <a href="{% url 'document_detail' document.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Document
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <!-- Document Preview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Document Preview</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="document-preview">
+                        {% if document.file %}
+                        <img id="document-image" src="#" alt="Document preview">
+                        <div class="text-center my-3" id="page-controls" style="display: none;">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="prev-page-btn">
+                                    <i class="bi bi-chevron-left"></i> Previous
+                                </button>
+                                <span class="btn btn-outline-secondary btn-sm disabled" id="page-indicator">
+                                    Page 1 of 1
+                                </span>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="next-page-btn">
+                                    Next <i class="bi bi-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning m-3">
+                            <i class="bi bi-exclamation-triangle"></i> No document file available for preview.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extracted Data -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Extracted Information</h5>
+                </div>
+                <div class="card-body">
+                    {% if document.extracted_data %}
+                    <div class="row">
+                        {% for key, value in document.extracted_data.items %}
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <strong>{{ key }}:</strong> {{ value }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No extracted data available.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <!-- Match Form -->
+            <div class="card mb-4 match-form-card">
+                <div class="card-header">
+                    <h5 class="mb-0">Match to Purchase Order</h5>
+                </div>
+                <div class="card-body">
+                    <div id="document-matcher" data-document-id="{{ document.id }}">
+                        <form method="post" action="{% url 'document_match' document.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="purchase-order-select" class="form-label">Purchase Order</label>
+                                {{ form.purchase_order }}
+                                <small class="form-text text-muted">Select a purchase order to match this document to.</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="match-notes" class="form-label">Notes</label>
+                                {{ form.notes }}
+                                <small class="form-text text-muted">Add any additional notes about this match.</small>
+                            </div>
+                            <button type="button" class="btn btn-primary w-100" id="match-document-button">
+                                <i class="bi bi-link"></i> Match Document
+                            </button>
+                        </form>
+                        <div id="match-result" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Orders -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Available Purchase Orders</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="order-list">
+                        <div class="list-group list-group-flush" id="order-list">
+                            <!-- Orders will be populated dynamically -->
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add CSRF Token meta tag -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<!-- Document Matcher JS -->
+<script src="{% static 'documents/js/document_matcher.js' %}"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Document preview functionality
+        const documentImage = document.getElementById('document-image');
+        const pageControls = document.getElementById('page-controls');
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+        const pageIndicator = document.getElementById('page-indicator');
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Function to load document page
+        function loadDocumentPage(page) {
+            fetch(`{% url 'get_document_image' document.id %}?page=${page}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error loading document image:', data.error);
+                        return;
+                    }
+
+                    // Update image source
+                    documentImage.src = data.image;
+
+                    // Update page controls
+                    currentPage = data.page;
+                    totalPages = data.total_pages;
+
+                    if (totalPages > 1) {
+                        pageControls.style.display = 'block';
+                        pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+
+                        // Enable/disable prev/next buttons
+                        prevPageBtn.disabled = currentPage <= 1;
+                        nextPageBtn.disabled = currentPage >= totalPages;
+                    } else {
+                        pageControls.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching document image:', error);
+                });
+        }
+
+        // Initialize with first page
+        if (documentImage) {
+            loadDocumentPage(1);
+
+            // Add event listeners for page navigation
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    loadDocumentPage(currentPage - 1);
+                }
+            });
+
+            nextPageBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    loadDocumentPage(currentPage + 1);
+                }
+            });
+        }
+
+        // Load available purchase orders
+        const orderList = document.getElementById('order-list');
+        const purchaseOrderSelect = document.getElementById('purchase-order-select');
+
+        function loadAvailableOrders() {
+            // In a real application, this would be an AJAX call to get orders
+            // For now, we'll use the options from the select element
+            const options = Array.from(purchaseOrderSelect.options).filter(option => option.value);
+
+            // Clear loading indicator
+            orderList.innerHTML = '';
+
+            if (options.length === 0) {
+                orderList.innerHTML = `
+                    <div class="list-group-item text-center py-4">
+                        <div class="text-muted">
+                            <i class="bi bi-info-circle"></i><br>
+                            No purchase orders available.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Add order items
+            options.forEach(option => {
+                const orderItem = document.createElement('div');
+                orderItem.className = 'list-group-item order-item';
+                orderItem.dataset.orderId = option.value;
+                orderItem.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-1">${option.text}</h6>
+                        <span class="badge bg-primary">Select</span>
+                    </div>
+                `;
+
+                // Add click handler
+                orderItem.addEventListener('click', () => {
+                    // Update select element
+                    purchaseOrderSelect.value = option.value;
+
+                    // Update UI
+                    document.querySelectorAll('.order-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    orderItem.classList.add('selected');
+                });
+
+                orderList.appendChild(orderItem);
+            });
+        }
+
+        // Load orders after a short delay
+        setTimeout(loadAvailableOrders, 500);
+    });
+</script>
+{% endblock %}

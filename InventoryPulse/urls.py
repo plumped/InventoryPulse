@@ -122,6 +122,7 @@ urlpatterns = [
     path('admin-dashboard/', include('admin_dashboard.urls')),
     path('access/', include('accessmanagement.urls')),
     path('interfaces/', include('interfaces.urls')),
+    path('documents/', include('documents.urls')),  # New documents app URLs
 
     # === API Endpoints ===
     path('api/v1/', include('api.urls')),

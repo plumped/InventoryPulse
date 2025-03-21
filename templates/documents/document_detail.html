@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ document.title }} - Document Detail - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .document-preview {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        max-height: 800px;
+        overflow-y: auto;
+    }
+
+    .document-preview img {
+        width: 100%;
+        height: auto;
+    }
+
+    .document-meta {
+        margin-bottom: 30px;
+    }
+
+    .badge-matched {
+        background-color: #28a745;
+    }
+
+    .badge-processed {
+        background-color: #007bff;
+    }
+
+    .badge-processing {
+        background-color: #17a2b8;
+    }
+
+    .badge-pending {
+        background-color: #6c757d;
+    }
+
+    .badge-error {
+        background-color: #dc3545;
+    }
+
+    .log-entry {
+        border-left: 3px solid #ddd;
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
+
+    .log-info {
+        border-left-color: #17a2b8;
+    }
+
+    .log-warning {
+        border-left-color: #ffc107;
+    }
+
+    .log-error {
+        border-left-color: #dc3545;
+    }
+
+    .log-debug {
+        border-left-color: #6c757d;
+    }
+
+    .extracted-field {
+        margin-bottom: 8px;
+        padding: 8px;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+    }
+
+    .extracted-field:hover {
+        background-color: #e9ecef;
+    }
+
+    .field-label {
+        font-weight: bold;
+    }
+
+    .field-value {
+        word-break: break-all;
+    }
+
+    .nav-tabs .nav-link {
+        border-top-left-radius: 0.25rem;
+        border-top-right-radius: 0.25rem;
+    }
+
+    .tab-content {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        padding: 20px;
+        border-bottom-left-radius: 0.25rem;
+        border-bottom-right-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'document_list' %}">Documents</a></li>
+                    <li class="breadcrumb-item active">{{ document.title }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Document Detail</h1>
+            <div class="btn-group">
+                {% if document.file %}
+                <a href="{{ document.file.url }}" class="btn btn-outline-primary" target="_blank">
+                    <i class="bi bi-file-earmark-pdf"></i> View PDF
+                </a>
+                {% endif %}
+                {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
+                <a href="{% url 'document_process' document.id %}" class="btn btn-primary">
+                    <i class="bi bi-arrow-repeat"></i> Process Document
+                </a>
+                {% endif %}
+                {% if document.is_processed and not document.matched_order %}
+                <a href="{% url 'document_match' document.id %}" class="btn btn-success">
+                    <i class="bi bi-link"></i> Match to Order
+                </a>
+                {% endif %}
+                <a href="{% url 'document_delete' document.id %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-4 col-xl-3">
+            <!-- Document Metadata -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Document Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="document-meta">
+                        <div class="mb-3">
+                            <strong>Title:</strong> {{ document.title }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Status:</strong>
+                            <span class="badge bg-{{ document.processing_status }}">
+                                {{ document.get_processing_status_display }}
+                            </span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Upload Date:</strong> {{ document.upload_date|date:"d.m.Y H:i" }}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Uploaded By:</strong>
+                            {% if document.uploaded_by %}
+                            {{ document.uploaded_by.username }}
+                            {% else %}
+                            <span class="text-muted">Unknown</span>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Document Type:</strong>
+                            {% if document.document_type %}
+                            {{ document.document_type.name }}
+                            {% else %}
+                            <span class="text-muted">Not specified</span>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <strong>Supplier:</strong>
+                            {% if document.supplier %}
+                            {{ document.supplier.name }}
+                            {% else %}
+                            <span class="text-muted">Not specified</span>
+                            {% endif %}
+                        </div>
+                        {% if document.document_number %}
+                        <div class="mb-3">
+                            <strong>Document Number:</strong> {{ document.document_number }}
+                        </div>
+                        {% endif %}
+                        {% if document.document_date %}
+                        <div class="mb-3">
+                            <strong>Document Date:</strong> {{ document.document_date|date:"d.m.Y" }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if document.matched_template %}
+                    <div class="mb-3">
+                        <strong>Matched Template:</strong>
+                        <a href="{% url 'template_detail' document.matched_template.id %}">
+                            {{ document.matched_template.name }}
+                        </a>
+                        <div class="small text-muted">
+                            Confidence: {{ document.confidence_score|floatformat:1 }}%
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if document.matched_order %}
+                    <div class="mb-3">
+                        <strong>Matched Order:</strong>
+                        <a href="{% url 'purchase_order_detail' document.matched_order.id %}">
+                            {{ document.matched_order.order_number }}
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if document.notes %}
+                    <div class="mb-3">
+                        <strong>Notes:</strong>
+                        <p>{{ document.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Matching Templates -->
+            {% if matching_templates %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Matching Templates</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for template in matching_templates %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                {{ template.name }}
+                                {% if document.matched_template == template %}
+                                <span class="badge bg-success ms-2">Matched</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{% url 'template_detail' template.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                {% if document.is_processed and not document.matched_template %}
+                                <form method="post" action="{% url 'match_document_to_template' document.id template.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-link"></i> Match
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'template_create' %}?reference_document={{ document.id }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle"></i> Create Template from This Document
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Match Form -->
+            {% if match_form and not document.matched_order %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Match to Order</h5>
+                </div>
+                <div class="card-body">
+                    <div id="document-matcher" data-document-id="{{ document.id }}">
+                        <form method="post" action="{% url 'document_match' document.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="purchase-order-select" class="form-label">Purchase Order</label>
+                                {{ match_form.purchase_order }}
+                            </div>
+                            <div class="mb-3">
+                                <label for="match-notes" class="form-label">Notes</label>
+                                {{ match_form.notes }}
+                            </div>
+                            <button type="button" class="btn btn-primary" id="match-document-button">
+                                <i class="bi bi-link"></i> Match Document
+                            </button>
+                        </form>
+                        <div id="match-result"></div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-8 col-xl-9">
+            <!-- Document Content Tabs -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="documentTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview" type="button" role="tab" aria-controls="preview" aria-selected="true">
+                                Preview
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="extracted-tab" data-bs-toggle="tab" data-bs-target="#extracted" type="button" role="tab" aria-controls="extracted" aria-selected="false">
+                                Extracted Data
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ocr-tab" data-bs-toggle="tab" data-bs-target="#ocr" type="button" role="tab" aria-controls="ocr" aria-selected="false">
+                                OCR Text
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button" role="tab" aria-controls="logs" aria-selected="false">
+                                Processing Logs
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-0">
+                    <div class="tab-content" id="documentTabsContent">
+                        <!-- Preview Tab -->
+                        <div class="tab-pane fade show active" id="preview" role="tabpanel" aria-labelledby="preview-tab">
+                            <div class="document-preview">
+                                {% if document.file %}
+                                <img id="document-image" src="#" alt="Document preview">
+                                <div class="text-center my-3" id="page-controls" style="display: none;">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="prev-page-btn">
+                                            <i class="bi bi-chevron-left"></i> Previous
+                                        </button>
+                                        <span class="btn btn-outline-secondary btn-sm disabled" id="page-indicator">
+                                            Page 1 of 1
+                                        </span>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" id="next-page-btn">
+                                            Next <i class="bi bi-chevron-right"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="alert alert-warning m-3">
+                                    <i class="bi bi-exclamation-triangle"></i> No document file available for preview.
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Extracted Data Tab -->
+                        <div class="tab-pane fade" id="extracted" role="tabpanel" aria-labelledby="extracted-tab">
+                            {% if document.extracted_data %}
+                            <div class="row">
+                                {% for key, value in document.extracted_data.items %}
+                                <div class="col-lg-6">
+                                    <div class="extracted-field">
+                                        <div class="field-label">{{ key }}</div>
+                                        <div class="field-value">{{ value }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No extracted data available.
+                                {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
+                                <a href="{% url 'document_process' document.id %}" class="alert-link">Process the document</a> to extract data.
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- OCR Text Tab -->
+                        <div class="tab-pane fade" id="ocr" role="tabpanel" aria-labelledby="ocr-tab">
+                            {% if document.ocr_text %}
+                            <pre class="p-3" style="white-space: pre-wrap; font-size: 0.9rem; max-height: 500px; overflow-y: auto;">{{ document.ocr_text }}</pre>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No OCR text available.
+                                {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
+                                <a href="{% url 'document_process' document.id %}" class="alert-link">Process the document</a> to extract text.
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Processing Logs Tab -->
+                        <div class="tab-pane fade" id="logs" role="tabpanel" aria-labelledby="logs-tab">
+                            {% if processing_logs %}
+                            <div class="log-timeline">
+                                {% for log in processing_logs %}
+                                <div class="log-entry log-{{ log.level }}">
+                                    <div class="d-flex justify-content-between">
+                                        <span class="badge bg-{{ log.level }}">{{ log.get_level_display }}</span>
+                                        <small>{{ log.timestamp|date:"d.m.Y H:i:s" }}</small>
+                                    </div>
+                                    <div class="log-message mt-1">{{ log.message }}</div>
+                                    {% if log.details %}
+                                    <div class="log-details mt-2">
+                                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#log-details-{{ log.id }}">
+                                            <i class="bi bi-chevron-down"></i> Details
+                                        </button>
+                                        <div class="collapse mt-2" id="log-details-{{ log.id }}">
+                                            <pre class="bg-light p-2" style="font-size: 0.8rem;">{{ log.details|pprint }}</pre>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> No processing logs available.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'documents/js/document_matcher.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Document preview functionality
+        const documentImage = document.getElementById('document-image');
+        const pageControls = document.getElementById('page-controls');
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+        const pageIndicator = document.getElementById('page-indicator');
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Function to load document page
+        function loadDocumentPage(page) {
+            fetch(`{% url 'get_document_image' document.id %}?page=${page}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error loading document image:', data.error);
+                        return;
+                    }
+
+                    // Update image source
+                    documentImage.src = data.image;
+
+                    // Update page controls
+                    currentPage = data.page;
+                    totalPages = data.total_pages;
+
+                    if (totalPages > 1) {
+                        pageControls.style.display = 'block';
+                        pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+
+                        // Enable/disable prev/next buttons
+                        prevPageBtn.disabled = currentPage <= 1;
+                        nextPageBtn.disabled = currentPage >= totalPages;
+                    } else {
+                        pageControls.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching document image:', error);
+                });
+        }
+
+        // Initialize with first page
+        if (documentImage) {
+            loadDocumentPage(1);
+
+            // Add event listeners for page navigation
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    loadDocumentPage(currentPage - 1);
+                }
+            });
+
+            nextPageBtn.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    loadDocumentPage(currentPage + 1);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

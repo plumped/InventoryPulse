@@ -95,57 +95,86 @@ def process_document_with_ocr(document):
         ocr_text = ""
 
         for i, img in enumerate(images):
-            # Get OCR data with word bounding boxes
-            page_data = pytesseract.image_to_data(
-                img,
-                output_type=pytesseract.Output.DICT,
-                config='--psm 1'
-            )
+            try:
+                # Get OCR data with word bounding boxes
+                page_data = pytesseract.image_to_data(
+                    img,
+                    output_type=pytesseract.Output.DICT,
+                    config='--psm 1'
+                )
 
-            # Extract full text for this page
-            page_text = pytesseract.image_to_string(img)
-            ocr_text += f"\n--- Page {i + 1} ---\n" + page_text
+                # Validate page_data before processing
+                if not isinstance(page_data, dict):
+                    log_processing_event(
+                        document, 'warning',
+                        f"Unexpected page data type for page {i+1}: {type(page_data)}",
+                        {'page_data': page_data}
+                    )
+                    continue
 
-            # Add page number to results
-            page_data['page_num'] = i + 1
+                # Safety checks for expected dictionary keys
+                expected_keys = ['text', 'conf', 'left', 'top', 'width', 'height']
+                if not all(key in page_data for key in expected_keys):
+                    log_processing_event(
+                        document, 'warning',
+                        f"Missing keys in page data for page {i+1}",
+                        {'page_data_keys': list(page_data.keys())}
+                    )
+                    continue
 
-            # Calculate relative coordinates (0-1) instead of pixel coordinates
-            width, height = img.size
-            page_data['width'] = width
-            page_data['height'] = height
+                # Extract full text for this page
+                page_text = pytesseract.image_to_string(img)
+                ocr_text += f"\n--- Page {i + 1} ---\n" + page_text
 
-            # Store the word bounding boxes with normalized coordinates
-            words_with_coords = []
-            for j in range(len(page_data['text'])):
-                if page_data['text'][j].strip():  # Only include non-empty text
-                    words_with_coords.append({
-                        'text': page_data['text'][j],
-                        'conf': page_data['conf'][j],
-                        'x': page_data['left'][j] / width,
-                        'y': page_data['top'][j] / height,
-                        'w': page_data['width'][j] / width,
-                        'h': page_data['height'][j] / height,
-                        'page': i + 1,
-                        # Include original pixel coordinates for reference
-                        'orig_x': page_data['left'][j],
-                        'orig_y': page_data['top'][j],
-                        'orig_w': page_data['width'][j],
-                        'orig_h': page_data['height'][j],
-                    })
+                # Calculate relative coordinates (0-1) instead of pixel coordinates
+                width, height = img.size
 
-            ocr_results.append({
-                'page': i + 1,
-                'width': width,
-                'height': height,
-                'words': words_with_coords
-            })
+                # Store the word bounding boxes with normalized coordinates
+                words_with_coords = []
+                for j in range(len(page_data['text'])):
+                    if page_data['text'][j].strip():  # Only include non-empty text
+                        words_with_coords.append({
+                            'text': page_data['text'][j],
+                            'conf': page_data['conf'][j],
+                            'x': page_data['left'][j] / width,
+                            'y': page_data['top'][j] / height,
+                            'w': page_data['width'][j] / width,
+                            'h': page_data['height'][j] / height,
+                            'page': i + 1,
+                            # Include original pixel coordinates for reference
+                            'orig_x': page_data['left'][j],
+                            'orig_y': page_data['top'][j],
+                            'orig_w': page_data['width'][j],
+                            'orig_h': page_data['height'][j],
+                        })
+
+                ocr_results.append({
+                    'page': i + 1,
+                    'width': width,
+                    'height': height,
+                    'words': words_with_coords
+                })
+
+            except Exception as page_err:
+                log_processing_event(
+                    document, 'error',
+                    f"Error processing page {i+1}: {str(page_err)}",
+                    {'page_number': i+1, 'exception': str(page_err)}
+                )
 
         # Update document with OCR results
         document.ocr_text = ocr_text
         document.ocr_data = {'pages': ocr_results}
-        document.processing_status = 'processed'
-        document.is_processed = True
+        document.processing_status = 'processed' if ocr_results else 'error'
+        document.is_processed = bool(ocr_results)
         document.save(update_fields=['ocr_text', 'ocr_data', 'processing_status', 'is_processed'])
+
+        if not ocr_results:
+            log_processing_event(
+                document, 'error',
+                "No pages were successfully processed by OCR"
+            )
+            return False
 
         log_processing_event(
             document, 'info',
@@ -161,7 +190,7 @@ def process_document_with_ocr(document):
         log_processing_event(
             document, 'error',
             f"OCR processing failed: {str(e)}",
-            {'exception': str(e)}
+            {'exception': str(e), 'exception_type': type(e).__name__}
         )
         document.processing_status = 'error'
         document.save(update_fields=['processing_status'])

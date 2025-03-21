@@ -269,17 +269,28 @@ def template_list(request):
 @login_required
 def template_create(request):
     """View for creating a new document template."""
+    # Get reference document ID from query params
+    reference_doc_id = request.GET.get('reference_document')
+    reference_doc = None
+
+    # Try to load the reference document
+    if reference_doc_id:
+        try:
+            reference_doc = Document.objects.get(pk=reference_doc_id)
+        except Document.DoesNotExist:
+            messages.error(request, _('Reference document not found.'))
+
     if request.method == 'POST':
         form = DocumentTemplateForm(request.POST)
         if form.is_valid():
             template = form.save(commit=False)
             template.created_by = request.user
 
-            # Make sure reference document is set
-            reference_doc_id = request.POST.get('reference_document')
-            if reference_doc_id:
+            # Get reference document ID from form (hidden field)
+            post_ref_doc_id = request.POST.get('reference_document')
+            if post_ref_doc_id:
                 try:
-                    template.reference_document = Document.objects.get(pk=reference_doc_id)
+                    template.reference_document = Document.objects.get(pk=post_ref_doc_id)
                 except Document.DoesNotExist:
                     pass
 
@@ -287,32 +298,27 @@ def template_create(request):
 
             messages.success(request, _('Template created successfully.'))
 
-            # If reference document is provided, redirect to field mapping editor
-            if request.POST.get('reference_document'):
+            # If "Save & Define Fields" button was clicked
+            if 'save_and_map' in request.POST:
                 return redirect('field_mapping_editor', template_id=template.pk)
 
             return redirect('template_detail', pk=template.pk)
     else:
-        # Pre-select reference document if provided
-        reference_doc_id = request.GET.get('reference_document')
+        # Pre-populate form with reference document data if available
         initial = {}
-
-        if reference_doc_id:
-            try:
-                reference_doc = Document.objects.get(pk=reference_doc_id)
-                initial = {
-                    'supplier': reference_doc.supplier,
-                    'document_type': reference_doc.document_type,
-                    'reference_document': reference_doc,
-                }
-            except Document.DoesNotExist:
-                pass
-
+        if reference_doc:
+            initial = {
+                'supplier': reference_doc.supplier,
+                'document_type': reference_doc.document_type,
+            }
         form = DocumentTemplateForm(initial=initial)
 
+    # Add reference_doc and reference_doc_id to context
     context = {
         'form': form,
         'title': _('Create Document Template'),
+        'reference_doc': reference_doc,
+        'reference_doc_id': reference_doc_id if reference_doc else '',
     }
 
     return render(request, 'documents/template_create.html', context)

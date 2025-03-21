@@ -40,7 +40,7 @@ class FieldEditor {
         this.state = {
             currentPage: 1,
             totalPages: 1,
-            scale: 1,
+            scale: 1,  // Dies wird später angepasst
             drawing: false,
             currentField: null,
             fields: options.fields || [],
@@ -343,6 +343,8 @@ class FieldEditor {
                 // Load image
                 const img = this.elements.imageLayer.querySelector('img');
                 img.onload = () => {
+                    // Auto-fit to container width at initial load
+                    this.fitToContainer();
                     this.resizeCanvas();
                     this.drawFields();
 
@@ -358,6 +360,23 @@ class FieldEditor {
                 this.showError(`Failed to load document: ${error.message}`);
             });
     }
+    /**
+ * Fit document to container width (initial scaling)
+ */
+fitToContainer() {
+    // Get container width
+    const containerWidth = this.container.clientWidth;
+
+    // Scale document to fit container width with some margin
+    this.state.scale = (containerWidth - 40) / this.documentDimensions.width;
+
+    // Ensure minimum scale
+    if (this.state.scale < 0.2) this.state.scale = 0.2;
+    // Ensure maximum scale
+    if (this.state.scale > 1.0) this.state.scale = 1.0;
+
+    console.log(`Auto-fitting to container: Scale set to ${this.state.scale.toFixed(2)}`);
+}
 
     /**
      * Show error message in the editor
@@ -462,34 +481,34 @@ showMessage(message, type = "info") {
      * Resize the canvas to match the image dimensions
      */
     resizeCanvas() {
-        const img = this.elements.imageLayer.querySelector('img');
-        if (!img) return;
+    const img = this.elements.imageLayer.querySelector('img');
+    if (!img) return;
 
-        const scale = this.state.scale;
-        const width = this.documentDimensions.width * scale;
-        const height = this.documentDimensions.height * scale;
+    const scale = this.state.scale;
+    const width = this.documentDimensions.width * scale;
+    const height = this.documentDimensions.height * scale;
 
-        // Set canvas dimensions
-        this.elements.canvas.width = width;
-        this.elements.canvas.height = height;
+    // Set canvas dimensions to actual pixels
+    this.elements.canvas.width = width;
+    this.elements.canvas.height = height;
 
-        // Set container dimensions
-        this.elements.canvasContainer.style.width = `${width}px`;
-        this.elements.canvasContainer.style.height = `${height}px`;
+    // Set container dimensions to match
+    this.elements.canvasContainer.style.minWidth = `${width}px`;
+    this.elements.canvasContainer.style.minHeight = `${height}px`;
 
-        // Set image dimensions
-        img.style.width = `${width}px`;
-        img.style.height = `${height}px`;
+    // Set image dimensions
+    img.style.width = `${width}px`;
+    img.style.height = `${height}px`;
 
-        // Update zoom indicator
-        const zoomIndicator = this.elements.zoomControls.querySelector('.zoom-indicator');
-        if (zoomIndicator) {
-            zoomIndicator.textContent = `${Math.round(scale * 100)}%`;
-        }
-
-        // Redraw fields
-        this.drawFields();
+    // Update zoom indicator
+    const zoomIndicator = this.elements.zoomControls.querySelector('.zoom-indicator');
+    if (zoomIndicator) {
+        zoomIndicator.textContent = `${Math.round(scale * 100)}%`;
     }
+
+    // Redraw fields
+    this.drawFields();
+}
 
     /**
      * Draw fields on the canvas
@@ -644,24 +663,18 @@ showMessage(message, type = "info") {
      */
     handleMouseDown(e) {
     console.log("Mouse down event on canvas", e);
-    console.log("Current editor mode:", this.state.mode);
 
     // Only allow drawing in create mode
     if (this.state.mode !== 'create') {
-        console.log("Not in create mode, ignoring click");
         return;
     }
 
     this.state.drawing = true;
-    console.log("Started drawing");
 
-    // Get mouse position relative to canvas
-    const rect = this.elements.canvas.getBoundingClientRect();
-    const scaleX = this.elements.canvas.width / rect.width;
-    const scaleY = this.elements.canvas.height / rect.height;
-
-    const x = (e.clientX - rect.left) * scaleX / this.state.scale;
-    const y = (e.clientY - rect.top) * scaleY / this.state.scale;
+    // Verwenden Sie offsetX/offsetY für direktere Koordinaten
+    // Diese sind relativ zum Canvas-Element selbst
+    const x = e.offsetX / this.state.scale;
+    const y = e.offsetY / this.state.scale;
 
     console.log("Mouse position on canvas:", x, y);
 
@@ -676,33 +689,24 @@ showMessage(message, type = "info") {
         x2: x,
         y2: y
     };
-
-    console.log("Created new field object:", this.state.currentField);
 }
 
-    /**
-     * Handle mouse move event for drawing fields
-     */
-    handleMouseMove(e) {
-        if (!this.state.drawing || !this.state.currentField) {
-            return;
-        }
-
-        // Get mouse position
-        const rect = this.elements.canvas.getBoundingClientRect();
-        const scaleX = this.elements.canvas.width / rect.width;
-        const scaleY = this.elements.canvas.height / rect.height;
-
-        const x = (e.clientX - rect.left) * scaleX / this.state.scale;
-        const y = (e.clientY - rect.top) * scaleY / this.state.scale;
-
-        // Update field dimensions
-        this.state.currentField.x2 = x;
-        this.state.currentField.y2 = y;
-
-        // Redraw
-        this.drawFields();
+handleMouseMove(e) {
+    if (!this.state.drawing || !this.state.currentField) {
+        return;
     }
+
+    // Wieder offsetX/offsetY verwenden
+    const x = e.offsetX / this.state.scale;
+    const y = e.offsetY / this.state.scale;
+
+    // Update field dimensions
+    this.state.currentField.x2 = x;
+    this.state.currentField.y2 = y;
+
+    // Redraw
+    this.drawFields();
+}
 
     /**
      * Handle mouse up event for drawing fields
@@ -1111,14 +1115,23 @@ showMessage(message, type = "info") {
         this.resizeCanvas();
     }
 
-    /**
-     * Fit document to width
-     */
-    fitToWidth() {
-        const containerWidth = this.container.clientWidth;
-        this.state.scale = containerWidth / this.documentDimensions.width;
-        this.resizeCanvas();
-    }
+            /**
+             * Fit document to width
+             */
+            /**
+         * Fit document to width
+         */
+        fitToWidth() {
+            const containerWidth = this.container.clientWidth;
+
+            // Set scale to fit container width with some margin
+            this.state.scale = (containerWidth - 40) / this.documentDimensions.width;
+
+            // Ensure minimum scale
+            if (this.state.scale < 0.2) this.state.scale = 0.2;
+
+            this.resizeCanvas();
+        }
 }
 
 // Initialize field editor when DOM is ready

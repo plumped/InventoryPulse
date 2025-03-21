@@ -15,11 +15,13 @@
 }
 
 .editor-canvas-container {
-    position: relative;
+    position: sticky;  /* Ändern von "relative" zu "sticky" */
+    top: 0;            /* Setzt die Position, an der das Element "kleben" soll */
     background-color: #fff;
     overflow: auto;
     max-height: 800px;
     border-bottom: 1px solid #ddd;
+    z-index: 20;       /* Höherer z-index, um sicherzustellen, dass es über anderen Elementen bleibt */
 }
 
 .editor-layer {
@@ -62,6 +64,7 @@
     left: 0;
     pointer-events: all;
     cursor: crosshair;
+    transform: translateZ(0); /* Verhindert Rendering-Probleme beim Scrollen */
 }
 
 .editor-controls {

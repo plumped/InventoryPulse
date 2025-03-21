@@ -30,9 +30,17 @@ class DocumentUploadForm(forms.ModelForm):
 class DocumentTemplateForm(forms.ModelForm):
     """Form for creating and updating document templates."""
 
+    reference_document = forms.ModelChoiceField(
+        queryset=Document.objects.filter(is_processed=True),
+        required=False,
+        label=_("Reference Document"),
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = DocumentTemplate
-        fields = ['name', 'document_type', 'supplier', 'description', 'header_pattern', 'footer_pattern', 'is_active']
+        fields = ['name', 'document_type', 'supplier', 'description', 'header_pattern', 'footer_pattern', 'is_active',
+                  'reference_document']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

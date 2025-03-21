@@ -239,7 +239,7 @@ def identify_document_template(document):
         best_template, best_score = template_scores[0]
 
         # If score is above threshold, consider it a match
-        if best_score >= 0.7:  # 70% confidence threshold
+        if best_score >= 0.5:  # 70% confidence threshold
             document.matched_template = best_template
             document.confidence_score = best_score
 

@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Document Template - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reference-document-card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+
+    .reference-document-card.selected {
+        border-color: #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .pattern-field {
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_list' %}">Templates</a></li>
+                    <li class="breadcrumb-item active">Create Template</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Create Document Template</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="template-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="reference_document" id="reference_document" value="{{ reference_doc_id }}">
+
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Template Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.document_type.id_for_label }}" class="form-label">Document Type</label>
+                            {{ form.document_type }}
+                            {% if form.document_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.document_type.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.supplier.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Describe what this template is used for</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.header_pattern.id_for_label }}" class="form-label">Header Pattern</label>
+                            {{ form.header_pattern }}
+                            {% if form.header_pattern.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.header_pattern.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Text patterns that identify the document header</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.footer_pattern.id_for_label }}" class="form-label">Footer Pattern</label>
+                            {{ form.footer_pattern }}
+                            {% if form.footer_pattern.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.footer_pattern.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Text patterns that identify the document footer</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Active Template
+                            </label>
+                            <small class="form-text text-muted d-block">Inactive templates won't be used for document matching</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'template_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                            <div>
+                                <button type="submit" class="btn btn-primary" name="save_only">
+                                    <i class="bi bi-save"></i> Save Template
+                                </button>
+                                <button type="submit" class="btn btn-success" name="save_and_map">
+                                    <i class="bi bi-grid"></i> Save & Define Fields
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Tips</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Reference Document</h6>
+                    {% if reference_doc %}
+                    <div class="reference-document-card selected">
+                        <h6>{{ reference_doc.title }}</h6>
+                        <div class="small text-muted mb-2">
+                            {{ reference_doc.upload_date|date:"d.m.Y H:i" }}
+                        </div>
+                        <a href="{% url 'document_detail' reference_doc.id %}" class="btn btn-outline-primary btn-sm" target="_blank">
+                            <i class="bi bi-eye"></i> View Document
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No reference document selected</p>
+                    <a href="{% url 'document_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-search"></i> Browse Documents
+                    </a>
+                    {% endif %}
+
+                    <hr>
+
+                    <h6 class="mb-3">Template Creation Guide</h6>
+                    <ol class="small">
+                        <li class="mb-2">
+                            <strong>Select document type and supplier</strong> - This helps organize templates and limits their use to specific document types and suppliers.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Define header and footer patterns</strong> - These help identify documents that match this template. Use unique text from the header or footer.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Add fields</strong> - After creating the template, you can define fields to extract specific information from documents.
+                        </li>
+                        <li class="mb-2">
+                            <strong>Test the template</strong> - Upload a document and see if it matches the template and extracts the correct information.
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Fields</h5>
+                </div>
+                <div class="card-body">
+                    <p>After creating the template, you can define fields to extract information from documents.</p>
+                    <div id="field-suggestions" style="display: none;">
+                        <h6>Suggested Fields</h6>
+                        <div id="suggestion-list" class="mb-3">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Loading field suggestions...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get DOM elements
+        const documentTypeSelect = document.getElementById('{{ form.document_type.id_for_label }}');
+        const fieldSuggestions = document.getElementById('field-suggestions');
+        const suggestionList = document.getElementById('suggestion-list');
+
+        // Function to load field suggestions
+        function loadFieldSuggestions(documentTypeCode) {
+            if (!documentTypeCode) {
+                fieldSuggestions.style.display = 'none';
+                return;
+            }
+
+            fieldSuggestions.style.display = 'block';
+            suggestionList.innerHTML = `
+                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                Loading field suggestions...
+            `;
+
+            // Fetch suggestions from server
+            fetch(`{% url 'get_field_suggestions' %}?document_type_code=${documentTypeCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.suggestions.length > 0) {
+                        // Display suggestions
+                        let suggestionsHtml = '<ul class="list-group">';
+                        data.suggestions.forEach(field => {
+                            suggestionsHtml += `
+                                <li class="list-group-item">
+                                    <strong>${field.name}</strong> <code>${field.code}</code>
+                                    <small class="d-block text-muted">${field.field_type} • ${field.extraction_method}</small>
+                                </li>
+                            `;
+                        });
+                        suggestionsHtml += '</ul>';
+                        suggestionList.innerHTML = suggestionsHtml;
+                    } else {
+                        suggestionList.innerHTML = '<div class="alert alert-info">No field suggestions available for this document type</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching field suggestions:', error);
+                    suggestionList.innerHTML = '<div class="alert alert-danger">Error loading field suggestions</div>';
+                });
+        }
+
+        // Add event listener to document type select
+        if (documentTypeSelect) {
+            documentTypeSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const documentTypeCode = selectedOption.getAttribute('data-code') || '';
+                loadFieldSuggestions(documentTypeCode);
+            });
+
+            // Load suggestions on page load if document type is already selected
+            if (documentTypeSelect.value) {
+                const selectedOption = documentTypeSelect.options[documentTypeSelect.selectedIndex];
+                const documentTypeCode = selectedOption.getAttribute('data-code') || '';
+                loadFieldSuggestions(documentTypeCode);
+            }
+        }
+    });
+</script>
+{% endblock %}

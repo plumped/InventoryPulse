@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Template - {{ template.name }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .reference-document-card {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+
+    .reference-document-card.selected {
+        border-color: #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+
+    .pattern-field {
+        font-family: monospace;
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_list' %}">Templates</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_detail' template.id %}">{{ template.name }}</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Edit Template</h1>
+            <div>
+                <a href="{% url 'field_mapping_editor' template.id %}" class="btn btn-primary">
+                    <i class="bi bi-grid"></i> Field Mapping Editor
+                </a>
+                <a href="{% url 'template_delete' template.id %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Delete Template
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Template Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.name.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.document_type.id_for_label }}" class="form-label">Document Type</label>
+                            {{ form.document_type }}
+                            {% if form.document_type.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.document_type.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.supplier.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Describe what this template is used for</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.header_pattern.id_for_label }}" class="form-label">Header Pattern</label>
+                            {{ form.header_pattern }}
+                            {% if form.header_pattern.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.header_pattern.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Text patterns that identify the document header</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.footer_pattern.id_for_label }}" class="form-label">Footer Pattern</label>
+                            {{ form.footer_pattern }}
+                            {% if form.footer_pattern.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.footer_pattern.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Text patterns that identify the document footer</small>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ form.is_active }}
+                            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                Active Template
+                            </label>
+                            <small class="form-text text-muted d-block">Inactive templates won't be used for document matching</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'template_detail' template.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Detail
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Template Statistics -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Created:</strong> {{ template.created_at|date:"d.m.Y H:i" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Last Updated:</strong> {{ template.updated_at|date:"d.m.Y H:i" }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Created By:</strong>
+                        {% if template.created_by %}
+                        {{ template.created_by.username }}
+                        {% else %}
+                        <span class="text-muted">Unknown</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Fields:</strong> {{ template.fields.count }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Matched Documents:</strong> {{ template.matched_documents.count }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reference Document -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Reference Document</h5>
+                </div>
+                <div class="card-body">
+                    {% if template.reference_document %}
+                    <div class="reference-document-card selected">
+                        <h6>{{ template.reference_document.title }}</h6>
+                        <div class="small text-muted mb-2">
+                            {{ template.reference_document.upload_date|date:"d.m.Y H:i" }}
+                        </div>
+                        <a href="{% url 'document_detail' template.reference_document.id %}" class="btn btn-outline-primary btn-sm" target="_blank">
+                            <i class="bi bi-eye"></i> View Document
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No reference document set for this template.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Field Management -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Field Management</h5>
+                </div>
+                <div class="card-body">
+                    <p>Manage the fields that will be extracted from documents matching this template.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'field_mapping_editor' template.id %}" class="btn btn-primary">
+                            <i class="bi bi-grid"></i> Field Mapping Editor
+                        </a>
+                        <a href="{% url 'field_create' template.id %}" class="btn btn-outline-success">
+                            <i class="bi bi-plus-circle"></i> Add New Field
+                        </a>
+                        <a href="{% url 'template_detail' template.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-list-check"></i> View Fields List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

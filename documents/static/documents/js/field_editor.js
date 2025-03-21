@@ -43,7 +43,7 @@ class FieldEditor {
             scale: 1,
             drawing: false,
             currentField: null,
-            fields: [],
+            fields: options.fields || [],
             mode: 'view' // 'view', 'create', 'edit'
         };
 
@@ -88,7 +88,7 @@ class FieldEditor {
         this.loadDocument();
 
         // Load existing fields if template ID is provided
-        if (this.options.templateId) {
+        if (this.options.templateId && this.state.fields.length === 0) {
             this.loadFields();
         }
     }
@@ -175,6 +175,7 @@ class FieldEditor {
         // Create zoom controls
         this.createZoomControls();
     }
+
     /**
      * Create page navigation controls
      */
@@ -309,10 +310,16 @@ class FieldEditor {
      * Load the document image
      */
     loadDocument() {
-        const url = `${this.options.ajaxUrls.getDocumentImage}${this.options.documentId}/?page=${this.state.currentPage}`;
+        // Construct the URL correctly
+        const url = `${this.options.ajaxUrls.getDocumentImage}?page=${this.state.currentPage}`;
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
                     console.error('Error loading document:', data.error);
@@ -343,16 +350,38 @@ class FieldEditor {
             })
             .catch(error => {
                 console.error('Error fetching document:', error);
+
+                // Display error message in the editor
+                this.showError(`Failed to load document: ${error.message}`);
             });
     }
+
+    /**
+     * Show error message in the editor
+     */
+    showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger m-3';
+        errorDiv.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${message}`;
+
+        // Clear container and show error
+        this.container.innerHTML = '';
+        this.container.appendChild(errorDiv);
+    }
+
     /**
      * Load OCR data for the current page
      */
     loadOcrData() {
-        const url = `${this.options.ajaxUrls.getDocumentOcrData}${this.options.documentId}/?page=${this.state.currentPage}`;
+        const url = `${this.options.ajaxUrls.getDocumentOcrData}?page=${this.state.currentPage}`;
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
                     console.error('Error loading OCR data:', data.error);
@@ -375,7 +404,7 @@ class FieldEditor {
      */
     loadFields() {
         // In a real application, you would fetch fields from the server
-        // For now, we'll mock this by using any fields passed in options
+        // For now, we'll use any fields passed in options
         if (this.options.fields && Array.isArray(this.options.fields)) {
             this.state.fields = this.options.fields;
             this.updateFieldSelector();
@@ -441,6 +470,8 @@ class FieldEditor {
      */
     drawFields() {
         const ctx = this.elements.context;
+        if (!ctx) return;
+
         const scale = this.state.scale;
 
         // Clear canvas
@@ -531,10 +562,10 @@ class FieldEditor {
         this.ocrData.words.forEach(word => {
             const wordElement = document.createElement('div');
             wordElement.className = 'ocr-word';
-            wordElement.style.left = `${word.x * scale * 100}%`;
-            wordElement.style.top = `${word.y * scale * 100}%`;
-            wordElement.style.width = `${word.w * scale * 100}%`;
-            wordElement.style.height = `${word.h * scale * 100}%`;
+            wordElement.style.left = `${word.x * scale}px`;
+            wordElement.style.top = `${word.y * scale}px`;
+            wordElement.style.width = `${word.w * scale}px`;
+            wordElement.style.height = `${word.h * scale}px`;
             wordElement.textContent = word.text;
             wordElement.title = `Confidence: ${word.conf}%`;
 
@@ -662,351 +693,30 @@ class FieldEditor {
      * Show dialog for creating or editing a field
      */
     showFieldDialog(field) {
-        // Create modal dialog
-        const modalHtml = `
-            <div class="modal fade" id="fieldDialog" tabindex="-1" aria-labelledby="fieldDialogLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="fieldDialogLabel">${field.id.startsWith('new_field') ? 'Add Field' : 'Edit Field'}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="fieldForm">
-                                <div class="mb-3">
-                                    <label for="fieldName" class="form-label">Field Name</label>
-                                    <input type="text" class="form-control" id="fieldName" value="${field.name}">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="fieldCode" class="form-label">Field Code</label>
-                                    <input type="text" class="form-control" id="fieldCode" value="${field.code || ''}">
-                                    <small class="form-text text-muted">Unique identifier for this field</small>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="fieldType" class="form-label">Field Type</label>
-                                    <select class="form-select" id="fieldType">
-                                        <option value="text" ${field.field_type === 'text' ? 'selected' : ''}>Text</option>
-                                        <option value="number" ${field.field_type === 'number' ? 'selected' : ''}>Number</option>
-                                        <option value="date" ${field.field_type === 'date' ? 'selected' : ''}>Date</option>
-                                        <option value="currency" ${field.field_type === 'currency' ? 'selected' : ''}>Currency</option>
-                                        <option value="boolean" ${field.field_type === 'boolean' ? 'selected' : ''}>Boolean</option>
-                                        <option value="list" ${field.field_type === 'list' ? 'selected' : ''}>List</option>
-                                        <option value="table" ${field.field_type === 'table' ? 'selected' : ''}>Table</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="extractionMethod" class="form-label">Extraction Method</label>
-                                    <select class="form-select" id="extractionMethod">
-                                        <option value="exact" ${field.extraction_method === 'exact' ? 'selected' : ''}>Exact Position</option>
-                                        <option value="label_based" ${field.extraction_method === 'label_based' ? 'selected' : ''}>Based on Label</option>
-                                        <option value="regex" ${field.extraction_method === 'regex' ? 'selected' : ''}>Regular Expression</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="searchPattern" class="form-label">Search Pattern</label>
-                                    <input type="text" class="form-control" id="searchPattern" value="${field.search_pattern || ''}">
-                                    <small class="form-text text-muted">Label text or regex pattern to find the field</small>
-                                </div>
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="isKeyField" ${field.is_key_field ? 'checked' : ''}>
-                                    <label class="form-check-label" for="isKeyField">Key field for document matching</label>
-                                </div>
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="isRequired" ${field.is_required ? 'checked' : ''}>
-                                    <label class="form-check-label" for="isRequired">Required field</label>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="saveFieldBtn">Save Field</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Create modal dialog (handled by parent page in this implementation)
+        if (typeof window.showFieldModal === 'function') {
+            window.showFieldModal(field, (updatedField) => {
+                this.saveField(updatedField);
+            });
+            return;
+        }
 
-        // Add modal to DOM
-        const modalContainer = document.createElement('div');
-        modalContainer.innerHTML = modalHtml;
-        document.body.appendChild(modalContainer);
-
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('fieldDialog'));
-        modal.show();
-
-        // Handle save button
-        const saveBtn = document.getElementById('saveFieldBtn');
-        saveBtn.addEventListener('click', () => {
-            // Get form values
-            const name = document.getElementById('fieldName').value;
-            const code = document.getElementById('fieldCode').value || this.generateFieldCode(name);
-            const fieldType = document.getElementById('fieldType').value;
-            const extractionMethod = document.getElementById('extractionMethod').value;
-            const searchPattern = document.getElementById('searchPattern').value;
-            const isKeyField = document.getElementById('isKeyField').checked;
-            const isRequired = document.getElementById('isRequired').checked;
-
-            // Update field
+        // If no external modal function, implement simple prompt
+        const name = prompt('Enter field name:', field.name);
+        if (name) {
             field.name = name;
-            field.code = code;
-            field.field_type = fieldType;
-            field.extraction_method = extractionMethod;
-            field.search_pattern = searchPattern;
-            field.is_key_field = isKeyField;
-            field.is_required = isRequired;
-
-            // Save field
+            field.code = this.generateFieldCode(name);
             this.saveField(field);
-
-            // Close modal
-            modal.hide();
-            document.body.removeChild(modalContainer);
-        });
-
-        // Handle modal close
-        document.getElementById('fieldDialog').addEventListener('hidden.bs.modal', () => {
-            document.body.removeChild(modalContainer);
-
-            // If field wasn't saved (new field), remove it
-            if (field.id.startsWith('new_field') && !this.state.fields.find(f => f.id === field.id)) {
-                this.state.currentField = null;
-                this.drawFields();
-            }
-        });
-    }/**
-     * Hide OCR overlay
-     */
-    hideOcrOverlay() {
-        this.elements.ocrLayer.classList.remove('active');
-        this.elements.ocrLayer.innerHTML = '';
-    }
-
-    /**
-     * Toggle OCR overlay
-     */
-    toggleOcrOverlay() {
-        if (this.elements.ocrLayer.classList.contains('active')) {
-            this.hideOcrOverlay();
         } else {
-            this.showOcrOverlay();
-        }
-    }
-
-    /**
-     * Handle mouse down event for drawing fields
-     */
-    handleMouseDown(e) {
-        // Only allow drawing in create mode
-        if (this.state.mode !== 'create') {
-            return;
-        }
-
-        this.state.drawing = true;
-
-        // Get mouse position
-        const rect = this.elements.canvas.getBoundingClientRect();
-        const scaleX = this.elements.canvas.width / rect.width;
-        const scaleY = this.elements.canvas.height / rect.height;
-
-        const x = (e.clientX - rect.left) * scaleX / this.state.scale;
-        const y = (e.clientY - rect.top) * scaleY / this.state.scale;
-
-        // Create new field
-        this.state.currentField = {
-            id: `new_field_${Date.now()}`,
-            name: 'New Field',
-            field_type: 'text',
-            page: this.state.currentPage,
-            x1: x,
-            y1: y,
-            x2: x,
-            y2: y
-        };
-    }
-
-    /**
-     * Handle mouse move event for drawing fields
-     */
-    handleMouseMove(e) {
-        if (!this.state.drawing || !this.state.currentField) {
-            return;
-        }
-
-        // Get mouse position
-        const rect = this.elements.canvas.getBoundingClientRect();
-        const scaleX = this.elements.canvas.width / rect.width;
-        const scaleY = this.elements.canvas.height / rect.height;
-
-        const x = (e.clientX - rect.left) * scaleX / this.state.scale;
-        const y = (e.clientY - rect.top) * scaleY / this.state.scale;
-
-        // Update field dimensions
-        this.state.currentField.x2 = x;
-        this.state.currentField.y2 = y;
-
-        // Redraw
-        this.drawFields();
-    }
-
-    /**
-     * Handle mouse up event for drawing fields
-     */
-    handleMouseUp(e) {
-        if (!this.state.drawing || !this.state.currentField) {
-            return;
-        }
-
-        this.state.drawing = false;
-
-        // Normalize coordinates (make sure x1 < x2 and y1 < y2)
-        const field = this.state.currentField;
-        const x1 = Math.min(field.x1, field.x2);
-        const y1 = Math.min(field.y1, field.y2);
-        const x2 = Math.max(field.x1, field.x2);
-        const y2 = Math.max(field.y1, field.y2);
-
-        // Only create field if it has some size
-        if (x2 - x1 < 0.01 || y2 - y1 < 0.01) {
-            this.state.currentField = null;
-            this.drawFields();
-            return;
-        }
-
-        // Update field coordinates
-        field.x1 = x1;
-        field.y1 = y1;
-        field.x2 = x2;
-        field.y2 = y2;
-
-        // Show field creation dialog
-        this.showFieldDialog(field);
-    }
-
-    /**
-     * Handle window resize
-     */
-    handleResize() {
-        this.resizeCanvas();
-    }
-
-    /**
-     * Show dialog for creating or editing a field
-     */
-    showFieldDialog(field) {
-        // Create modal dialog
-        const modalHtml = `
-            <div class="modal fade" id="fieldDialog" tabindex="-1" aria-labelledby="fieldDialogLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="fieldDialogLabel">${field.id.startsWith('new_field') ? 'Add Field' : 'Edit Field'}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="fieldForm">
-                                <div class="mb-3">
-                                    <label for="fieldName" class="form-label">Field Name</label>
-                                    <input type="text" class="form-control" id="fieldName" value="${field.name}">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="fieldCode" class="form-label">Field Code</label>
-                                    <input type="text" class="form-control" id="fieldCode" value="${field.code || ''}">
-                                    <small class="form-text text-muted">Unique identifier for this field</small>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="fieldType" class="form-label">Field Type</label>
-                                    <select class="form-select" id="fieldType">
-                                        <option value="text" ${field.field_type === 'text' ? 'selected' : ''}>Text</option>
-                                        <option value="number" ${field.field_type === 'number' ? 'selected' : ''}>Number</option>
-                                        <option value="date" ${field.field_type === 'date' ? 'selected' : ''}>Date</option>
-                                        <option value="currency" ${field.field_type === 'currency' ? 'selected' : ''}>Currency</option>
-                                        <option value="boolean" ${field.field_type === 'boolean' ? 'selected' : ''}>Boolean</option>
-                                        <option value="list" ${field.field_type === 'list' ? 'selected' : ''}>List</option>
-                                        <option value="table" ${field.field_type === 'table' ? 'selected' : ''}>Table</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="extractionMethod" class="form-label">Extraction Method</label>
-                                    <select class="form-select" id="extractionMethod">
-                                        <option value="exact" ${field.extraction_method === 'exact' ? 'selected' : ''}>Exact Position</option>
-                                        <option value="label_based" ${field.extraction_method === 'label_based' ? 'selected' : ''}>Based on Label</option>
-                                        <option value="regex" ${field.extraction_method === 'regex' ? 'selected' : ''}>Regular Expression</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="searchPattern" class="form-label">Search Pattern</label>
-                                    <input type="text" class="form-control" id="searchPattern" value="${field.search_pattern || ''}">
-                                    <small class="form-text text-muted">Label text or regex pattern to find the field</small>
-                                </div>
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="isKeyField" ${field.is_key_field ? 'checked' : ''}>
-                                    <label class="form-check-label" for="isKeyField">Key field for document matching</label>
-                                </div>
-                                <div class="mb-3 form-check">
-                                    <input type="checkbox" class="form-check-input" id="isRequired" ${field.is_required ? 'checked' : ''}>
-                                    <label class="form-check-label" for="isRequired">Required field</label>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="saveFieldBtn">Save Field</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Add modal to DOM
-        const modalContainer = document.createElement('div');
-        modalContainer.innerHTML = modalHtml;
-        document.body.appendChild(modalContainer);
-
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('fieldDialog'));
-        modal.show();
-
-        // Handle save button
-        const saveBtn = document.getElementById('saveFieldBtn');
-        saveBtn.addEventListener('click', () => {
-            // Get form values
-            const name = document.getElementById('fieldName').value;
-            const code = document.getElementById('fieldCode').value || this.generateFieldCode(name);
-            const fieldType = document.getElementById('fieldType').value;
-            const extractionMethod = document.getElementById('extractionMethod').value;
-            const searchPattern = document.getElementById('searchPattern').value;
-            const isKeyField = document.getElementById('isKeyField').checked;
-            const isRequired = document.getElementById('isRequired').checked;
-
-            // Update field
-            field.name = name;
-            field.code = code;
-            field.field_type = fieldType;
-            field.extraction_method = extractionMethod;
-            field.search_pattern = searchPattern;
-            field.is_key_field = isKeyField;
-            field.is_required = isRequired;
-
-            // Save field
-            this.saveField(field);
-
-            // Close modal
-            modal.hide();
-            document.body.removeChild(modalContainer);
-        });
-
-        // Handle modal close
-        document.getElementById('fieldDialog').addEventListener('hidden.bs.modal', () => {
-            document.body.removeChild(modalContainer);
-
-            // If field wasn't saved (new field), remove it
-            if (field.id.startsWith('new_field') && !this.state.fields.find(f => f.id === field.id)) {
+            // Cancel
+            if (field.id.startsWith('new_field')) {
+                // Remove new field if cancelled
                 this.state.currentField = null;
                 this.drawFields();
             }
-        });
+        }
     }
+
     /**
      * Generate field code from field name
      */
@@ -1032,10 +742,10 @@ class FieldEditor {
             field_name: field.name,
             field_code: field.code,
             field_type: field.field_type,
-            extraction_method: field.extraction_method,
-            search_pattern: field.search_pattern,
-            is_key_field: field.is_key_field,
-            is_required: field.is_required,
+            extraction_method: field.extraction_method || 'exact',
+            search_pattern: field.search_pattern || '',
+            is_key_field: !!field.is_key_field,
+            is_required: !!field.is_required,
             coordinates: {
                 x1: field.x1,
                 y1: field.y1,
@@ -1053,7 +763,12 @@ class FieldEditor {
             },
             body: JSON.stringify(payload)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.error) {
                 console.error('Error saving field:', data.error);
@@ -1242,7 +957,12 @@ class FieldEditor {
             },
             body: JSON.stringify(payload)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.error) {
                 console.error('Error extracting field value:', data.error);
@@ -1351,6 +1071,12 @@ document.addEventListener('DOMContentLoaded', function() {
         documentId: documentId,
         templateId: templateId,
         csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+        ajaxUrls: {
+            getDocumentImage: '/documents/ajax/get-document-image/' + documentId + '/',
+            getDocumentOcrData: '/documents/ajax/get-document-ocr-data/' + documentId + '/',
+            saveFieldCoordinates: '/documents/ajax/save-field-coordinates/',
+            extractFieldValue: '/documents/ajax/extract-field-value/'
+        },
         onFieldSaved: function(data) {
             console.log('Field saved:', data);
         },

@@ -1,0 +1,525 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Field - {{ field.name }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .field-type-info {
+        margin-bottom: 20px;
+    }
+
+    .field-type-name {
+        font-weight: bold;
+    }
+
+    .coordinate-group {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    .extraction-group {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    .validation-group {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    .table-group {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_list' %}">Templates</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_detail' template.id %}">{{ template.name }}</a></li>
+                    <li class="breadcrumb-item active">Edit Field</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Edit Field: {{ field.name }}</h1>
+            <div>
+                <a href="{% url 'field_mapping_editor' template.id %}" class="btn btn-primary">
+                    <i class="bi bi-grid"></i> Visual Field Editor
+                </a>
+                <a href="{% url 'field_delete' template.id field.id %}" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Delete Field
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Field Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Basic Field Information -->
+                        <div class="mb-4">
+                            <h6 class="mb-3">Basic Information</h6>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">Field Name</label>
+                                    {{ form.name }}
+                                    {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Human-readable name for this field</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.code.id_for_label }}" class="form-label">Field Code</label>
+                                    {{ form.code }}
+                                    {% if form.code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.code.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Unique identifier for this field</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.field_type.id_for_label }}" class="form-label">Field Type</label>
+                                    {{ form.field_type }}
+                                    {% if form.field_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.field_type.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.description.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Field Coordinates -->
+                        <div class="coordinate-group">
+                            <h6 class="mb-3">Field Coordinates</h6>
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-info-circle"></i>
+                                Coordinates define the position of the field on the document (values from 0 to 1).
+                                You can use the <a href="{% url 'field_mapping_editor' template.id %}">Visual Field Editor</a> to set these visually.
+                            </p>
+
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="{{ form.x1.id_for_label }}" class="form-label">X1 (Left)</label>
+                                    {{ form.x1 }}
+                                    {% if form.x1.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.x1.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="{{ form.y1.id_for_label }}" class="form-label">Y1 (Top)</label>
+                                    {{ form.y1 }}
+                                    {% if form.y1.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.y1.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="{{ form.x2.id_for_label }}" class="form-label">X2 (Right)</label>
+                                    {{ form.x2 }}
+                                    {% if form.x2.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.x2.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="{{ form.y2.id_for_label }}" class="form-label">Y2 (Bottom)</label>
+                                    {{ form.y2 }}
+                                    {% if form.y2.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.y2.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Extraction Configuration -->
+                        <div class="extraction-group">
+                            <h6 class="mb-3">Extraction Configuration</h6>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.extraction_method.id_for_label }}" class="form-label">Extraction Method</label>
+                                    {{ form.extraction_method }}
+                                    {% if form.extraction_method.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.extraction_method.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.search_pattern.id_for_label }}" class="form-label">Search Pattern</label>
+                                    {{ form.search_pattern }}
+                                    {% if form.search_pattern.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.search_pattern.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Label text or regex pattern to find the field</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.reference_field.id_for_label }}" class="form-label">Reference Field</label>
+                                    {{ form.reference_field }}
+                                    {% if form.reference_field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.reference_field.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">For relative extraction method</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.format_pattern.id_for_label }}" class="form-label">Format Pattern</label>
+                                    {{ form.format_pattern }}
+                                    {% if form.format_pattern.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.format_pattern.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Pattern to format the extracted value</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.x_offset.id_for_label }}" class="form-label">X Offset</label>
+                                    {{ form.x_offset }}
+                                    {% if form.x_offset.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.x_offset.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Horizontal offset from reference field</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.y_offset.id_for_label }}" class="form-label">Y Offset</label>
+                                    {{ form.y_offset }}
+                                    {% if form.y_offset.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.y_offset.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Vertical offset from reference field</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Table Configuration -->
+                        <div class="table-group">
+                            <h6 class="mb-3">Table Configuration</h6>
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-info-circle"></i>
+                                These settings are only used for table fields.
+                            </p>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        {{ form.is_table_header }}
+                                        <label class="form-check-label" for="{{ form.is_table_header.id_for_label }}">
+                                            Is Table Header
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">Check if this field is a table header</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.table_parent.id_for_label }}" class="form-label">Table Parent</label>
+                                    {{ form.table_parent }}
+                                    {% if form.table_parent.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.table_parent.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Parent field that defines the table area</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.table_column_index.id_for_label }}" class="form-label">Column Index</label>
+                                    {{ form.table_column_index }}
+                                    {% if form.table_column_index.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.table_column_index.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Column index in the table (0-based)</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label for="{{ form.table_row_index.id_for_label }}" class="form-label">Row Index</label>
+                                    {{ form.table_row_index }}
+                                    {% if form.table_row_index.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.table_row_index.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Row index in the table (0-based)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Validation Options -->
+                        <div class="validation-group">
+                            <h6 class="mb-3">Validation Options</h6>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        {{ form.is_required }}
+                                        <label class="form-check-label" for="{{ form.is_required.id_for_label }}">
+                                            Required Field
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">Check if this field is required for document validation</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        {{ form.is_key_field }}
+                                        <label class="form-check-label" for="{{ form.is_key_field.id_for_label }}">
+                                            Key Field
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">Check if this is a key field for document matching</small>
+                                </div>
+
+                                <div class="col-12">
+                                    <label for="{{ form.validation_regex.id_for_label }}" class="form-label">Validation Regex</label>
+                                    {{ form.validation_regex }}
+                                    {% if form.validation_regex.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.validation_regex.errors %}
+                                        {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    <small class="form-text text-muted">Regular expression pattern for validating the extracted value</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'template_detail' template.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Template
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Field Preview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Field Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Name:</strong> {{ field.name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Code:</strong> <code>{{ field.code }}</code>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Type:</strong> {{ field.get_field_type_display }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Extraction Method:</strong> {{ field.get_extraction_method_display }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Position:</strong><br>
+                        X1: {{ field.x1|floatformat:4 }}, Y1: {{ field.y1|floatformat:4 }}<br>
+                        X2: {{ field.x2|floatformat:4 }}, Y2: {{ field.y2|floatformat:4 }}
+                    </div>
+                    <div class="mb-3">
+                        <a href="{% url 'field_mapping_editor' template.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-grid"></i> Edit Position Visually
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Template Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Template Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Template:</strong> {{ template.name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Document Type:</strong> {{ template.document_type.name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Supplier:</strong> {{ template.supplier.name }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Fields:</strong> {{ template.fields.count }}
+                    </div>
+                    {% if template.reference_document %}
+                    <div class="mb-3">
+                        <strong>Reference Document:</strong>
+                        <a href="{% url 'document_detail' template.reference_document.id %}" target="_blank">
+                            {{ template.reference_document.title }}
+                        </a>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <a href="{% url 'template_detail' template.id %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-left"></i> Back to Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get DOM elements
+        const fieldTypeSelect = document.getElementById('{{ form.field_type.id_for_label }}');
+        const extractionMethodSelect = document.getElementById('{{ form.extraction_method.id_for_label }}');
+        const isTableHeaderCheckbox = document.getElementById('{{ form.is_table_header.id_for_label }}');
+
+        // Table configuration fields
+        const tableFields = document.querySelectorAll('[id^="id_table_"]');
+
+        // Extraction method dependent fields
+        const searchPatternField = document.getElementById('{{ form.search_pattern.id_for_label }}');
+        const referenceFieldField = document.getElementById('{{ form.reference_field.id_for_label }}');
+        const xOffsetField = document.getElementById('{{ form.x_offset.id_for_label }}');
+        const yOffsetField = document.getElementById('{{ form.y_offset.id_for_label }}');
+
+        // Function to update field visibility based on field type
+        function updateFieldVisibility() {
+            const fieldType = fieldTypeSelect.value;
+            const extractionMethod = extractionMethodSelect.value;
+
+            // Show/hide table fields
+            const isTableField = fieldType === 'table';
+            tableFields.forEach(field => {
+                field.closest('.col-md-6').style.display = isTableField ? 'block' : 'none';
+            });
+            isTableHeaderCheckbox.closest('.col-md-6').style.display = isTableField ? 'block' : 'none';
+
+            // Show/hide extraction method dependent fields
+            searchPatternField.closest('.col-md-6').style.display =
+                (extractionMethod === 'label_based' || extractionMethod === 'regex') ? 'block' : 'none';
+
+            referenceFieldField.closest('.col-md-6').style.display =
+                extractionMethod === 'relative' ? 'block' : 'none';
+
+            xOffsetField.closest('.col-md-6').style.display =
+                extractionMethod === 'relative' ? 'block' : 'none';
+
+            yOffsetField.closest('.col-md-6').style.display =
+                extractionMethod === 'relative' ? 'block' : 'none';
+        }
+
+        // Add event listeners
+        if (fieldTypeSelect) {
+            fieldTypeSelect.addEventListener('change', updateFieldVisibility);
+        }
+
+        if (extractionMethodSelect) {
+            extractionMethodSelect.addEventListener('change', updateFieldVisibility);
+        }
+
+        // Initialize visibility
+        updateFieldVisibility();
+    });
+</script>
+{% endblock %}

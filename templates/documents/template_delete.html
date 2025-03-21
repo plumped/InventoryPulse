@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Template - {{ template.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_list' %}">Templates</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'template_detail' template.id %}">{{ template.name }}</a></li>
+                    <li class="breadcrumb-item active">Delete</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Delete Template</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Confirm Deletion</h5>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Are you sure you want to delete the template "<strong>{{ template.name }}</strong>"?</p>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> This action cannot be undone. All fields associated with this template will be permanently removed.
+                    </div>
+
+                    {% if template.matched_documents.count > 0 %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle"></i> <strong>Warning:</strong> There are {{ template.matched_documents.count }} documents matched with this template. Deleting this template will remove these associations.
+                    </div>
+                    {% endif %}
+
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Template Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>Name:</strong> {{ template.name }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Document Type:</strong> {{ template.document_type.name }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Supplier:</strong> {{ template.supplier.name }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Fields:</strong> {{ template.fields.count }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Status:</strong>
+                                <span class="badge {% if template.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if template.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Created:</strong> {{ template.created_at|date:"d.m.Y H:i" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'template_detail' template.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Delete Template
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

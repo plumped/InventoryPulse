@@ -136,18 +136,21 @@ class FieldEditor {
      * Create the field layer for displaying and editing fields
      */
     createFieldLayer() {
-        this.elements.fieldLayer = document.createElement('div');
-        this.elements.fieldLayer.className = 'editor-layer field-layer';
-        this.elements.canvasContainer.appendChild(this.elements.fieldLayer);
+    this.elements.fieldLayer = document.createElement('div');
+    this.elements.fieldLayer.className = 'editor-layer field-layer';
+    this.elements.canvasContainer.appendChild(this.elements.fieldLayer);
 
-        // Create canvas for drawing
-        this.elements.canvas = document.createElement('canvas');
-        this.elements.canvas.className = 'editor-canvas';
-        this.elements.fieldLayer.appendChild(this.elements.canvas);
+    // Create canvas for drawing
+    this.elements.canvas = document.createElement('canvas');
+    this.elements.canvas.className = 'editor-canvas';
+    // Make sure the canvas covers the entire area
+    this.elements.canvas.style.width = "100%";
+    this.elements.canvas.style.height = "100%";
+    this.elements.fieldLayer.appendChild(this.elements.canvas);
 
-        // Get context
-        this.elements.context = this.elements.canvas.getContext('2d');
-    }
+    // Get context
+    this.elements.context = this.elements.canvas.getContext('2d');
+}
 
     /**
      * Create the OCR layer for displaying OCR data
@@ -372,32 +375,55 @@ class FieldEditor {
     /**
      * Load OCR data for the current page
      */
-    loadOcrData() {
-        const url = `${this.options.ajaxUrls.getDocumentOcrData}?page=${this.state.currentPage}`;
+    // In field_editor.js loadOcrData method
+loadOcrData() {
+    console.log("Loading OCR data for page", this.state.currentPage);
+    const url = `${this.options.ajaxUrls.getDocumentOcrData}?page=${this.state.currentPage}`;
 
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    console.error('Error loading OCR data:', data.error);
-                    return;
-                }
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                console.error('Error loading OCR data:', data.error);
+                this.showMessage("Could not load OCR data: " + data.error, "danger");
+                return;
+            }
 
-                this.ocrData = data;
-                // Only show OCR if the overlay is enabled
-                if (this.elements.ocrLayer.classList.contains('active')) {
-                    this.showOcrOverlay();
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching OCR data:', error);
-            });
+            if (!data.words || data.words.length === 0) {
+                this.showMessage("This document has no OCR data. Please process the document first.", "warning");
+                return;
+            }
+
+            console.log("OCR data loaded successfully", data);
+            this.ocrData = data;
+
+            // Show OCR overlay automatically
+            this.showOcrOverlay();
+        })
+        .catch(error => {
+            console.error('Error fetching OCR data:', error);
+            this.showMessage("Error loading OCR data. Please ensure the document has been processed.", "danger");
+        });
+}
+
+showMessage(message, type = "info") {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} mt-3`;
+    alertDiv.innerHTML = message;
+
+    // Find a place to show the message
+    const targetElement = this.elements.fieldControls.querySelector('.field-info-panel') || this.elements.controls;
+    if (targetElement) {
+        targetElement.style.display = 'block';
+        targetElement.innerHTML = '';
+        targetElement.appendChild(alertDiv);
     }
+}
 
     /**
      * Load existing fields for the template
@@ -545,33 +571,54 @@ class FieldEditor {
      * Show OCR overlay
      */
     showOcrOverlay() {
-        if (!this.ocrData || !this.ocrData.words) {
-            console.warn('No OCR data available');
-            return;
-        }
-
-        // Clear previous overlay
-        this.elements.ocrLayer.innerHTML = '';
-
-        // Set layer as active
-        this.elements.ocrLayer.classList.add('active');
-
-        // Create word elements
-        const scale = this.state.scale;
-
-        this.ocrData.words.forEach(word => {
-            const wordElement = document.createElement('div');
-            wordElement.className = 'ocr-word';
-            wordElement.style.left = `${word.x * scale}px`;
-            wordElement.style.top = `${word.y * scale}px`;
-            wordElement.style.width = `${word.w * scale}px`;
-            wordElement.style.height = `${word.h * scale}px`;
-            wordElement.textContent = word.text;
-            wordElement.title = `Confidence: ${word.conf}%`;
-
-            this.elements.ocrLayer.appendChild(wordElement);
-        });
+    console.log("Showing OCR overlay:", this.ocrData);
+    if (!this.ocrData || !this.ocrData.words) {
+        console.warn('No OCR data available, trying to load');
+        this.loadOcrData();
+        return;
     }
+
+    // Clear previous overlay
+    this.elements.ocrLayer.innerHTML = '';
+
+    // Set layer as active
+    this.elements.ocrLayer.classList.add('active');
+
+    // Get current document dimensions
+    const docWidth = this.documentDimensions.width;
+    const docHeight = this.documentDimensions.height;
+    const scale = this.state.scale;
+
+    console.log("Creating", this.ocrData.words.length, "OCR word elements");
+    console.log("Document dimensions:", docWidth, docHeight, "Scale:", scale);
+
+    // Create and append all word elements at once
+    const fragment = document.createDocumentFragment();
+
+    this.ocrData.words.forEach(word => {
+        const wordElement = document.createElement('div');
+        wordElement.className = 'ocr-word';
+
+        // Convert normalized coordinates (0-1) to absolute pixel values
+        const x = word.x * docWidth * scale;
+        const y = word.y * docHeight * scale;
+        const width = word.w * docWidth * scale;
+        const height = word.h * docHeight * scale;
+
+        wordElement.style.left = `${x}px`;
+        wordElement.style.top = `${y}px`;
+        wordElement.style.width = `${width}px`;
+        wordElement.style.height = `${height}px`;
+
+        wordElement.textContent = word.text;
+        wordElement.title = `${word.text} (Confidence: ${word.conf}%)`;
+
+        fragment.appendChild(wordElement);
+    });
+
+    this.elements.ocrLayer.appendChild(fragment);
+    console.log("OCR overlay created");
+}
 
     /**
      * Hide OCR overlay
@@ -596,33 +643,42 @@ class FieldEditor {
      * Handle mouse down event for drawing fields
      */
     handleMouseDown(e) {
-        // Only allow drawing in create mode
-        if (this.state.mode !== 'create') {
-            return;
-        }
+    console.log("Mouse down event on canvas", e);
+    console.log("Current editor mode:", this.state.mode);
 
-        this.state.drawing = true;
-
-        // Get mouse position
-        const rect = this.elements.canvas.getBoundingClientRect();
-        const scaleX = this.elements.canvas.width / rect.width;
-        const scaleY = this.elements.canvas.height / rect.height;
-
-        const x = (e.clientX - rect.left) * scaleX / this.state.scale;
-        const y = (e.clientY - rect.top) * scaleY / this.state.scale;
-
-        // Create new field
-        this.state.currentField = {
-            id: `new_field_${Date.now()}`,
-            name: 'New Field',
-            field_type: 'text',
-            page: this.state.currentPage,
-            x1: x,
-            y1: y,
-            x2: x,
-            y2: y
-        };
+    // Only allow drawing in create mode
+    if (this.state.mode !== 'create') {
+        console.log("Not in create mode, ignoring click");
+        return;
     }
+
+    this.state.drawing = true;
+    console.log("Started drawing");
+
+    // Get mouse position relative to canvas
+    const rect = this.elements.canvas.getBoundingClientRect();
+    const scaleX = this.elements.canvas.width / rect.width;
+    const scaleY = this.elements.canvas.height / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX / this.state.scale;
+    const y = (e.clientY - rect.top) * scaleY / this.state.scale;
+
+    console.log("Mouse position on canvas:", x, y);
+
+    // Create new field
+    this.state.currentField = {
+        id: `new_field_${Date.now()}`,
+        name: 'New Field',
+        field_type: 'text',
+        page: this.state.currentPage,
+        x1: x,
+        y1: y,
+        x2: x,
+        y2: y
+    };
+
+    console.log("Created new field object:", this.state.currentField);
+}
 
     /**
      * Handle mouse move event for drawing fields
@@ -831,25 +887,27 @@ class FieldEditor {
     /**
      * Deselect the current field
      */
-    deselectField() {
-        this.state.currentField = null;
+    deselectField(changeMode = true) {
+    this.state.currentField = null;
+    if (changeMode) {
         this.state.mode = 'view';
-
-        // Update field selector
-        const fieldSelector = this.elements.fieldControls.querySelector('select');
-        if (fieldSelector) {
-            fieldSelector.value = '';
-        }
-
-        // Hide field info panel
-        const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
-        if (fieldInfoPanel) {
-            fieldInfoPanel.style.display = 'none';
-        }
-
-        // Redraw fields
-        this.drawFields();
     }
+
+    // Update field selector
+    const fieldSelector = this.elements.fieldControls.querySelector('select');
+    if (fieldSelector) {
+        fieldSelector.value = '';
+    }
+
+    // Hide field info panel
+    const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
+    if (fieldInfoPanel) {
+        fieldInfoPanel.style.display = 'none';
+    }
+
+    // Redraw fields
+    this.drawFields();
+}
 
     /**
      * Show field info panel
@@ -989,21 +1047,33 @@ class FieldEditor {
      * Start field creation mode
      */
     startFieldCreation() {
-        this.state.mode = 'create';
-        this.deselectField();
+    console.log("Starting field creation mode");
+    // Set the mode first
+    this.state.mode = 'create';
 
-        // Show instruction message
-        const message = document.createElement('div');
-        message.className = 'alert alert-info mt-2';
-        message.innerHTML = '<i class="bi bi-info-circle"></i> Draw a rectangle on the document to create a field';
+    // Modify deselectField to not change the mode
+    const origMode = this.state.mode;
+    this.deselectField(false); // Pass false to indicate don't change mode
+    this.state.mode = origMode; // Restore the original mode
 
-        const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
-        if (fieldInfoPanel) {
-            fieldInfoPanel.style.display = 'block';
-            fieldInfoPanel.innerHTML = '';
-            fieldInfoPanel.appendChild(message);
-        }
+    // Add create mode class to container
+    this.elements.canvasContainer.classList.remove('view-mode', 'edit-mode');
+    this.elements.canvasContainer.classList.add('create-mode');
+
+    // Show instruction message
+    const message = document.createElement('div');
+    message.className = 'alert alert-info mt-2';
+    message.innerHTML = '<i class="bi bi-info-circle"></i> Draw a rectangle on the document to create a field';
+
+    const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
+    if (fieldInfoPanel) {
+        fieldInfoPanel.style.display = 'block';
+        fieldInfoPanel.innerHTML = '';
+        fieldInfoPanel.appendChild(message);
     }
+
+    console.log("Field creation mode started, mode:", this.state.mode);
+}
 
     /**
      * Go to previous page

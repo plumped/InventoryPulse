@@ -273,6 +273,15 @@ def template_create(request):
         if form.is_valid():
             template = form.save(commit=False)
             template.created_by = request.user
+
+            # Make sure reference document is set
+            reference_doc_id = request.POST.get('reference_document')
+            if reference_doc_id:
+                try:
+                    template.reference_document = Document.objects.get(pk=reference_doc_id)
+                except Document.DoesNotExist:
+                    pass
+
             template.save()
 
             messages.success(request, _('Template created successfully.'))

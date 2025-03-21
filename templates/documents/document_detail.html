@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load document_tags %}
 
 {% block title %}{{ document.title }} - Document Detail - InventoryPulse{% endblock %}
 
@@ -202,7 +203,7 @@
                             {{ document.matched_template.name }}
                         </a>
                         <div class="small text-muted">
-                            Confidence: {{ document.confidence_score|floatformat:1 }}%
+                            Confidence: {{ document.confidence_score|floatformat:1|multiply:100 }}%
                         </div>
                     </div>
                     {% endif %}

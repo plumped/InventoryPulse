@@ -24,3 +24,10 @@ def pprint(value):
     if isinstance(value, dict):
         return mark_safe('<pre>' + json.dumps(value, indent=2) + '</pre>')
     return value
+
+@register.filter
+def multiply(value, arg):
+    try:
+        return float(value) * arg
+    except (ValueError, TypeError):
+        return value

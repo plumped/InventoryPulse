@@ -26,10 +26,10 @@ class DocumentMatcher {
      * Initialize the matcher
      */
     init() {
-        // Find elements
-        this.purchaseOrderSelect = document.getElementById('purchase-order-select');
+        // Find elements - updated to use Django-generated IDs
+        this.purchaseOrderSelect = document.getElementById('id_purchase_order');
         this.matchButton = document.getElementById('match-document-button');
-        this.notesTextarea = document.getElementById('match-notes');
+        this.notesTextarea = document.getElementById('id_notes');
         this.matchResult = document.getElementById('match-result');
 
         if (this.matchButton) {
@@ -92,7 +92,7 @@ class DocumentMatcher {
         .finally(() => {
             // Reset button
             this.matchButton.disabled = false;
-            this.matchButton.innerHTML = 'Match Document';
+            this.matchButton.innerHTML = '<i class="bi bi-link"></i> Match Document';
         });
     }
 

@@ -258,56 +258,75 @@
         }
 
         // Load available purchase orders
-        const orderList = document.getElementById('order-list');
-        const purchaseOrderSelect = document.getElementById('purchase-order-select');
+        // Load available purchase orders
+const orderList = document.getElementById('order-list');
+// Use the correct ID from the form object
+const purchaseOrderSelect = document.getElementById('id_purchase_order');
 
-        function loadAvailableOrders() {
-            // In a real application, this would be an AJAX call to get orders
-            // For now, we'll use the options from the select element
-            const options = Array.from(purchaseOrderSelect.options).filter(option => option.value);
+function loadAvailableOrders() {
+    // First, check if the select element exists
+    if (!purchaseOrderSelect) {
+        console.error('Purchase order select not found, expected ID: id_purchase_order');
+        orderList.innerHTML = `
+            <div class="list-group-item text-center py-4">
+                <div class="text-muted">
+                    <i class="bi bi-exclamation-circle"></i><br>
+                    Error loading purchase orders.
+                </div>
+            </div>
+        `;
+        return;
+    }
 
-            // Clear loading indicator
-            orderList.innerHTML = '';
+    console.log('Purchase order select found:', purchaseOrderSelect);
+    console.log('Number of options:', purchaseOrderSelect.options.length);
 
-            if (options.length === 0) {
-                orderList.innerHTML = `
-                    <div class="list-group-item text-center py-4">
-                        <div class="text-muted">
-                            <i class="bi bi-info-circle"></i><br>
-                            No purchase orders available.
-                        </div>
-                    </div>
-                `;
-                return;
-            }
+    // Filter options that have a value
+    const options = Array.from(purchaseOrderSelect.options).filter(option => option.value);
+    console.log('Valid options:', options.length);
 
-            // Add order items
-            options.forEach(option => {
-                const orderItem = document.createElement('div');
-                orderItem.className = 'list-group-item order-item';
-                orderItem.dataset.orderId = option.value;
-                orderItem.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="mb-1">${option.text}</h6>
-                        <span class="badge bg-primary">Select</span>
-                    </div>
-                `;
+    // Clear loading indicator
+    orderList.innerHTML = '';
 
-                // Add click handler
-                orderItem.addEventListener('click', () => {
-                    // Update select element
-                    purchaseOrderSelect.value = option.value;
+    if (options.length === 0) {
+        orderList.innerHTML = `
+            <div class="list-group-item text-center py-4">
+                <div class="text-muted">
+                    <i class="bi bi-info-circle"></i><br>
+                    No purchase orders available.
+                </div>
+            </div>
+        `;
+        return;
+    }
 
-                    // Update UI
-                    document.querySelectorAll('.order-item').forEach(item => {
-                        item.classList.remove('selected');
-                    });
-                    orderItem.classList.add('selected');
-                });
+    // Add order items
+    options.forEach(option => {
+        const orderItem = document.createElement('div');
+        orderItem.className = 'list-group-item order-item';
+        orderItem.dataset.orderId = option.value;
+        orderItem.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-1">${option.text}</h6>
+                <span class="badge bg-primary">Select</span>
+            </div>
+        `;
 
-                orderList.appendChild(orderItem);
+        // Add click handler
+        orderItem.addEventListener('click', () => {
+            // Update select element
+            purchaseOrderSelect.value = option.value;
+
+            // Update UI
+            document.querySelectorAll('.order-item').forEach(item => {
+                item.classList.remove('selected');
             });
-        }
+            orderItem.classList.add('selected');
+        });
+
+        orderList.appendChild(orderItem);
+    });
+}
 
         // Load orders after a short delay
         setTimeout(loadAvailableOrders, 500);

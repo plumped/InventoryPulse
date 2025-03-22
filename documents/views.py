@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 
+from suppliers.models import Supplier
 from .models import Document, DocumentTemplate, TemplateField, DocumentType, DocumentMatch
 from .forms import DocumentUploadForm, DocumentTemplateForm, TemplateFieldForm, DocumentMatchForm
 from .utils import process_document_with_ocr, extract_field_from_document, log_processing_event, \
@@ -26,19 +27,19 @@ from .tasks import process_document_ocr
 @login_required
 def document_list(request):
     """View for listing uploaded documents with filtering options."""
-    # Get filter parameters
-    document_type_id = request.GET.get('document_type')
-    supplier_id = request.GET.get('supplier')
-    status = request.GET.get('status')
-    search_query = request.GET.get('search')
+    # Get filter parameters from request.GET
+    document_type_id = request.GET.get('document_type', '')
+    supplier_id = request.GET.get('supplier', '')
+    status = request.GET.get('status', '')
+    search_query = request.GET.get('search', '')
 
     # Base queryset
     queryset = Document.objects.all()
 
     # Apply filters
-    if document_type_id:
+    if document_type_id and document_type_id.isdigit():
         queryset = queryset.filter(document_type_id=document_type_id)
-    if supplier_id:
+    if supplier_id and supplier_id.isdigit():
         queryset = queryset.filter(supplier_id=supplier_id)
     if status:
         queryset = queryset.filter(processing_status=status)
@@ -58,8 +59,6 @@ def document_list(request):
     documents = paginator.get_page(page_number)
 
     # Get document types and suppliers for filtering
-    from core.models import Category
-    from suppliers.models import Supplier
     document_types = DocumentType.objects.filter(is_active=True)
     suppliers = Supplier.objects.filter(is_active=True)
 

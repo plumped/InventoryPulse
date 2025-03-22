@@ -314,11 +314,11 @@
                                                 <div class="progress">
                                                     <div class="progress-bar {% if document.confidence_score >= 0.8 %}bg-success{% elif document.confidence_score >= 0.6 %}bg-info{% elif document.confidence_score >= 0.4 %}bg-warning{% else %}bg-danger{% endif %}"
                                                          role="progressbar"
-                                                         style="width: {{ document.confidence_score|floatformat:0 }}%;"
-                                                         aria-valuenow="{{ document.confidence_score|floatformat:0 }}"
+                                                         style="width: {{ document.confidence_score|floatformat:2|multiply:100 }}%;"
+                                                         aria-valuenow="{{ document.confidence_score|floatformat:2|multiply:100 }}"
                                                          aria-valuemin="0"
                                                          aria-valuemax="100">
-                                                        {{ document.confidence_score|floatformat:0 }}%
+                                                        {{ document.confidence_score|floatformat:2|multiply:100 }}%
                                                     </div>
                                                 </div>
                                             </div>

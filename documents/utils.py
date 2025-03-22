@@ -29,6 +29,13 @@ def log_processing_event(document, level, message, details=None):
         details: Optional dictionary with additional details
     """
     try:
+        # Convert confidence score to percentage in message if present
+        if "with score" in message:
+            message = message.replace(
+                "with score {:.2f}".format(document.confidence_score),
+                "with score {:.0f}%".format(document.confidence_score * 100)
+            )
+
         DocumentProcessingLog.objects.create(
             document=document,
             level=level,
@@ -249,7 +256,7 @@ def identify_document_template(document):
 
             log_processing_event(
                 document, 'info',
-                f"Matched template: {best_template.name} with score {best_score:.2f}",
+                f"Matched template: {best_template.name} with score {best_score * 100:.0f}%",
                 {'extracted_fields': list(extracted_data.keys())}
             )
 

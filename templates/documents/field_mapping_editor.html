@@ -459,56 +459,62 @@
             });
         });
         window.showFieldModal = function(field, callback) {
-            // Get modal element
-            const modal = new bootstrap.Modal(document.getElementById('field-modal'));
+    // Get modal element
+    const modal = new bootstrap.Modal(document.getElementById('field-modal'));
 
-            // Markieren, dass dieses Feld vom Editor kommt
-            window.isCurrentFieldFromEditor = true;
+    // Mark this as a field from editor to avoid conflict with other event handlers
+    window.isCurrentFieldFromEditor = true;
 
-            // Populate form fields
-            document.getElementById('field-name').value = field.name || '';
-            document.getElementById('field-code').value = field.code || '';
-            document.getElementById('field-type').value = field.field_type || 'text';
-            document.getElementById('extraction-method').value = field.extraction_method || 'exact';
-            document.getElementById('search-pattern').value = field.search_pattern || '';
-            document.getElementById('is-key-field').checked = field.is_key_field || false;
-            document.getElementById('is-required').checked = field.is_required || false;
+    // Populate form fields
+    document.getElementById('field-name').value = field.name || '';
+    document.getElementById('field-code').value = field.code || '';
+    document.getElementById('field-type').value = field.field_type || 'text';
+    document.getElementById('extraction-method').value = field.extraction_method || 'exact';
+    document.getElementById('search-pattern').value = field.search_pattern || '';
 
-            // Update modal title based on if this is a new field or editing existing
-            document.getElementById('field-modal-label').textContent =
-                field.id && !field.id.startsWith('new_field') ? 'Edit Field' : 'Add Field';
+    // Ensure checkboxes are correctly set
+    document.getElementById('is-key-field').checked = !!field.is_key_field;
+    document.getElementById('is-required').checked = !!field.is_required;
 
-            // Show modal
-            modal.show();
+    // Update modal title based on if this is a new field or editing existing
+    document.getElementById('field-modal-label').textContent =
+        field.id && !field.id.startsWith('new_field') ? 'Edit Field' : 'Add Field';
 
-            // Ersetzen Sie die onclick-Funktion, entfernen Sie nicht nur den Event-Listener
-            const saveButton = document.getElementById('save-field-btn');
-            const originalOnClick = saveButton.onclick;
+    // Show modal
+    modal.show();
 
-            // Neue Handler-Funktion
-            saveButton.onclick = function editorSaveHandler() {
-                // Get form values
-                field.name = document.getElementById('field-name').value;
-                field.code = document.getElementById('field-code').value || field.name.toLowerCase().replace(/\s+/g, '_');
-                field.field_type = document.getElementById('field-type').value;
-                field.extraction_method = document.getElementById('extraction-method').value;
-                field.search_pattern = document.getElementById('search-pattern').value;
-                field.is_key_field = document.getElementById('is-key-field').checked;
-                field.is_required = document.getElementById('is-required').checked;
+    // Save the original onclick handler
+    const saveButton = document.getElementById('save-field-btn');
+    const originalOnClick = saveButton.onclick;
 
-                // Call callback with updated field
-                callback(field);
+    // Set new handler function
+    saveButton.onclick = function editorSaveHandler() {
+        // Get form values
+        field.name = document.getElementById('field-name').value;
+        field.code = document.getElementById('field-code').value || field.name.toLowerCase().replace(/\s+/g, '_');
+        field.field_type = document.getElementById('field-type').value;
+        field.extraction_method = document.getElementById('extraction-method').value;
+        field.search_pattern = document.getElementById('search-pattern').value;
 
-                // Hide modal
-                modal.hide();
+        // Important: Get checkbox values explicitly
+        field.is_key_field = document.getElementById('is-key-field').checked;
+        field.is_required = document.getElementById('is-required').checked;
 
-                // Handler zurücksetzen beim Schließen
-                window.isCurrentFieldFromEditor = false;
+        console.log("Saving field with is_key_field =", field.is_key_field);
 
-                // Danach den ursprünglichen Handler wiederherstellen
-                saveButton.onclick = originalOnClick;
-            };
-        };
+        // Call callback with updated field
+        callback(field);
+
+        // Hide modal
+        modal.hide();
+
+        // Reset flag
+        window.isCurrentFieldFromEditor = false;
+
+        // Restore original handler
+        saveButton.onclick = originalOnClick;
+    };
+};
     });
 </script>
 {% endblock %}

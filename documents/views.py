@@ -573,13 +573,14 @@ def save_field_coordinates(request):
             field_name = data.get('field_name', 'New Field')
             field_code = data.get('field_code', f'field_{template.fields.count() + 1}')
             field_type = data.get('field_type', 'text')
+            extraction_method = data.get('extraction_method', 'exact')
 
             field = TemplateField(
                 template=template,
                 name=field_name,
                 code=field_code,
                 field_type=field_type,
-                extraction_method='exact'
+                extraction_method=extraction_method
             )
 
         # Update coordinates
@@ -588,6 +589,28 @@ def save_field_coordinates(request):
         field.x2 = float(coordinates.get('x2', 0))
         field.y2 = float(coordinates.get('y2', 0))
 
+        # Update other properties
+        if 'field_name' in data:
+            field.name = data.get('field_name')
+        if 'field_code' in data:
+            field.code = data.get('field_code')
+        if 'field_type' in data:
+            field.field_type = data.get('field_type')
+        if 'extraction_method' in data:
+            field.extraction_method = data.get('extraction_method')
+        if 'search_pattern' in data:
+            field.search_pattern = data.get('search_pattern', '')
+
+        # Important: Set boolean fields explicitly
+        field.is_key_field = data.get('is_key_field', False)
+        field.is_required = data.get('is_required', False)
+
+        # Additional check to ensure boolean values are properly processed
+        if isinstance(field.is_key_field, str):
+            field.is_key_field = field.is_key_field.lower() == 'true'
+        if isinstance(field.is_required, str):
+            field.is_required = field.is_required.lower() == 'true'
+
         field.save()
 
         return JsonResponse({
@@ -595,6 +618,8 @@ def save_field_coordinates(request):
             'field_id': field.id,
             'field_name': field.name,
             'field_code': field.code,
+            'is_key_field': field.is_key_field,
+            'is_required': field.is_required
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)

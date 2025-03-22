@@ -792,78 +792,79 @@ handleMouseMove(e) {
     /**
      * Save field to server
      */
-    saveField(field) {
-        const isNewField = field.id.startsWith('new_field');
+    // Update the saveField method in field_editor.js to include all field properties
+saveField(field) {
+    const isNewField = field.id.startsWith('new_field');
 
-        // Create payload
-        const payload = {
-            template_id: this.options.templateId,
-            field_id: isNewField ? null : field.id,
-            field_name: field.name,
-            field_code: field.code,
-            field_type: field.field_type,
-            extraction_method: field.extraction_method || 'exact',
-            search_pattern: field.search_pattern || '',
-            is_key_field: !!field.is_key_field,
-            is_required: !!field.is_required,
-            coordinates: {
-                x1: field.x1,
-                y1: field.y1,
-                x2: field.x2,
-                y2: field.y2
+    // Create payload with ALL field properties
+    const payload = {
+        template_id: this.options.templateId,
+        field_id: isNewField ? null : field.id,
+        field_name: field.name,
+        field_code: field.code,
+        field_type: field.field_type,
+        extraction_method: field.extraction_method || 'exact',
+        search_pattern: field.search_pattern || '',
+        is_key_field: !!field.is_key_field,  // Ensure boolean
+        is_required: !!field.is_required,    // Ensure boolean
+        coordinates: {
+            x1: field.x1,
+            y1: field.y1,
+            x2: field.x2,
+            y2: field.y2
+        }
+    };
+
+    // Send to server
+    fetch(this.options.ajaxUrls.saveFieldCoordinates, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': this.options.csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            console.error('Error saving field:', data.error);
+            return;
+        }
+
+        // Update field ID for new fields
+        if (isNewField) {
+            const index = this.state.fields.findIndex(f => f.id === field.id);
+            if (index >= 0) {
+                this.state.fields[index].id = data.field_id;
             }
-        };
+        }
 
-        // Send to server
-        fetch(this.options.ajaxUrls.saveFieldCoordinates, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': this.options.csrfToken
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                console.error('Error saving field:', data.error);
-                return;
-            }
+        // If this is a new field, add it to the fields array
+        if (isNewField) {
+            field.id = data.field_id;
+            this.state.fields.push(field);
+        }
 
-            // Update field ID for new fields
-            if (isNewField) {
-                const index = this.state.fields.findIndex(f => f.id === field.id);
-                if (index >= 0) {
-                    this.state.fields[index].id = data.field_id;
-                }
-            }
+        // Select the field
+        this.selectField(data.field_id);
 
-            // If this is a new field, add it to the fields array
-            if (isNewField) {
-                field.id = data.field_id;
-                this.state.fields.push(field);
-            }
+        // Update field selector
+        this.updateFieldSelector();
 
-            // Select the field
-            this.selectField(data.field_id);
-
-            // Update field selector
-            this.updateFieldSelector();
-
-            // Callback
-            if (this.options.onFieldSaved) {
-                this.options.onFieldSaved(data);
-            }
-        })
-        .catch(error => {
-            console.error('Error saving field:', error);
-        });
-    }
+        // Callback
+        if (this.options.onFieldSaved) {
+            this.options.onFieldSaved(data);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving field:', error);
+    });
+}
 
     /**
      * Select a field

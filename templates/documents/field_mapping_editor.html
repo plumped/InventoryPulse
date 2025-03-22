@@ -28,6 +28,73 @@
         border-radius: 50%;
         margin-right: 5px;
     }
+
+    /* Standard Field Selector Styles */
+    .standard-field-selector {
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+
+    .standard-field-selector h6 {
+        display: flex;
+        align-items: center;
+    }
+
+    .standard-field-selector h6 i {
+        margin-right: 8px;
+    }
+
+    .field-card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        cursor: pointer;
+    }
+
+    .field-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .field-card .card-body {
+        padding: 0.75rem;
+    }
+
+    .field-card .card-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .field-card .card-text {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .field-card .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Key field indicator */
+    .field-card.key-field {
+        border-left-width: 3px;
+    }
+
+    /* Standardized field indicator */
+    .field-badge.standardized:after {
+        content: "★";
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        font-size: 10px;
+        color: #007bff;
+    }
+
+    /* Standard fields container */
+    .standard-fields {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
 </style>
 {% endblock %}
 
@@ -70,7 +137,8 @@
                 <div class="card-body p-0">
                     <div id="field-editor"
                          data-document-id="{{ reference_document.id }}"
-                         data-template-id="{{ template.id }}">
+                         data-template-id="{{ template.id }}"
+                         data-document-type="{{ template.document_type.code }}">
                         <!-- Editor will be initialized via JavaScript -->
                     </div>
                 </div>
@@ -109,6 +177,28 @@
                     </div>
                     <div class="mb-3">
                         <strong>Fields:</strong> {{ fields.count }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Standard Field Selector -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Standard Fields</h5>
+                    <span class="badge bg-info" id="standard-fields-count">0</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="small text-muted mb-3">
+                        <i class="bi bi-info-circle"></i> These are recommended fields for {{ template.document_type.name }} documents. Add them to ensure proper document matching.
+                    </div>
+
+                    <div id="standard-fields-container" class="standard-fields mb-3">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="ms-2">Loading standard fields...</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -290,19 +380,24 @@
         const editor = new FieldEditor('field-editor', {
             documentId: editorContainer.dataset.documentId,
             templateId: editorContainer.dataset.templateId,
+            documentType: editorContainer.dataset.documentType, // Pass document type code for standard fields
             fields: fieldsData,
             csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
             ajaxUrls: {
                 getDocumentImage: '{% url "get_document_image" 0 %}'.replace('0', editorContainer.dataset.documentId),
                 getDocumentOcrData: '{% url "get_document_ocr_data" 0 %}'.replace('0', editorContainer.dataset.documentId),
                 saveFieldCoordinates: '{% url "save_field_coordinates" %}',
-                extractFieldValue: '{% url "extract_field_value" %}'
+                extractFieldValue: '{% url "extract_field_value" %}',
+                getStandardFields: '{% url "get_standard_fields" %}'
             },
             onFieldSaved: function(data) {
                 // Reload the page to show the updated field list
                 window.location.reload();
             }
         });
+
+        // Load standard fields
+        loadStandardFields(editorContainer.dataset.documentType);
 
         // Add Field button click handler
         document.getElementById('add-field-btn').addEventListener('click', function() {
@@ -311,12 +406,106 @@
             modal.show();
         });
 
+        // Standard fields loading function
+        function loadStandardFields(documentType) {
+            const container = document.getElementById('standard-fields-container');
+            const countBadge = document.getElementById('standard-fields-count');
+
+            fetch(`{% url "get_standard_fields" %}?document_type_code=${documentType}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        container.innerHTML = `<div class="alert alert-danger py-2">Error: ${data.error}</div>`;
+                        return;
+                    }
+
+                    // Get standard fields
+                    const standardFields = data.suggestions || [];
+
+                    // Update count badge
+                    countBadge.textContent = standardFields.length;
+
+                    if (standardFields.length === 0) {
+                        container.innerHTML = '<div class="alert alert-info py-2">No standard fields available for this document type.</div>';
+                        return;
+                    }
+
+                    // Clear container
+                    container.innerHTML = '';
+
+                    // Create a card for each standard field
+                    standardFields.forEach(field => {
+                        // Check if already added to template
+                        const isAdded = fieldsData.some(f => f.code === field.code);
+
+                        // Create field card
+                        const fieldCard = document.createElement('div');
+                        fieldCard.className = `card mb-2 ${field.is_key_field ? 'key-field' : ''}`;
+                        fieldCard.style.borderLeft = field.is_key_field ?
+                            '3px solid #007bff' : '1px solid rgba(0,0,0,.125)';
+
+                        // Get color based on field type
+                        const typeColor = getBootstrapColor(field.field_type);
+
+                        fieldCard.innerHTML = `
+                            <div class="card-body p-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="card-title mb-1">${field.name}</h6>
+                                        <p class="card-text small text-muted mb-1">Code: <code>${field.code}</code></p>
+                                    </div>
+                                    <span class="badge bg-${typeColor}">${field.field_type}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    ${field.is_key_field ? '<span class="badge bg-primary">Key Field</span>' : ''}
+                                    <button class="btn btn-sm ${isAdded ? 'btn-success' : 'btn-primary'}"
+                                            ${isAdded ? 'disabled' : ''}>
+                                        ${isAdded ? '<i class="bi bi-check"></i> Added' : '<i class="bi bi-plus"></i> Add Field'}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+
+                        // Add click handler to add the field if not already added
+                        if (!isAdded) {
+                            const button = fieldCard.querySelector('button');
+                            button.addEventListener('click', () => {
+                                // Tell editor to add this standard field
+                                editor.addStandardField(field);
+                            });
+                        }
+
+                        // Add to container
+                        container.appendChild(fieldCard);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading standard fields:', error);
+                    container.innerHTML = '<div class="alert alert-danger py-2">Error loading standard fields.</div>';
+                });
+        }
+
+        // Helper function to get Bootstrap color based on field type
+        function getBootstrapColor(fieldType) {
+            const colors = {
+                'text': 'success',
+                'number': 'danger',
+                'date': 'warning',
+                'currency': 'primary',
+                'boolean': 'info',
+                'list': 'secondary',
+                'table': 'dark'
+            };
+            return colors[fieldType] || 'secondary';
+        }
+
         // Save Field button click handler
         document.getElementById('save-field-btn').addEventListener('click', function() {
             if (window.isCurrentFieldFromEditor) {
                 console.log("This save is handled by field editor");
-                return; // Nichts tun, der Handler wurde bereits durch den Editor ersetzt
+                return; // Handler already replaced by the editor
             }
+
             // Get form values
             const name = document.getElementById('field-name').value;
             const code = document.getElementById('field-code').value;
@@ -458,63 +647,63 @@
                 };
             });
         });
+
+        // Function to show field modal from editor
         window.showFieldModal = function(field, callback) {
-    // Get modal element
-    const modal = new bootstrap.Modal(document.getElementById('field-modal'));
+            // Get modal element
+            const modal = new bootstrap.Modal(document.getElementById('field-modal'));
 
-    // Mark this as a field from editor to avoid conflict with other event handlers
-    window.isCurrentFieldFromEditor = true;
+            // Mark this as a field from editor to avoid conflict with other event handlers
+            window.isCurrentFieldFromEditor = true;
 
-    // Populate form fields
-    document.getElementById('field-name').value = field.name || '';
-    document.getElementById('field-code').value = field.code || '';
-    document.getElementById('field-type').value = field.field_type || 'text';
-    document.getElementById('extraction-method').value = field.extraction_method || 'exact';
-    document.getElementById('search-pattern').value = field.search_pattern || '';
+            // Populate form fields
+            document.getElementById('field-name').value = field.name || '';
+            document.getElementById('field-code').value = field.code || '';
+            document.getElementById('field-type').value = field.field_type || 'text';
+            document.getElementById('extraction-method').value = field.extraction_method || 'exact';
+            document.getElementById('search-pattern').value = field.search_pattern || '';
 
-    // Ensure checkboxes are correctly set
-    document.getElementById('is-key-field').checked = !!field.is_key_field;
-    document.getElementById('is-required').checked = !!field.is_required;
+            // Ensure checkboxes are correctly set
+            document.getElementById('is-key-field').checked = !!field.is_key_field;
+            document.getElementById('is-required').checked = !!field.is_required;
 
-    // Update modal title based on if this is a new field or editing existing
-    document.getElementById('field-modal-label').textContent =
-        field.id && !field.id.startsWith('new_field') ? 'Edit Field' : 'Add Field';
+            // Update modal title based on if this is a new field or editing existing
+            document.getElementById('field-modal-label').textContent =
+                field.id && !field.id.startsWith('new_field') ? 'Edit Field' : 'Add Field';
 
-    // Show modal
-    modal.show();
+            // Show modal
+            modal.show();
 
-    // Save the original onclick handler
-    const saveButton = document.getElementById('save-field-btn');
-    const originalOnClick = saveButton.onclick;
+            // Save the original onclick handler
+            const saveButton = document.getElementById('save-field-btn');
+            const originalOnClick = saveButton.onclick;
 
-    // Set new handler function
-    saveButton.onclick = function editorSaveHandler() {
-        // Get form values
-        field.name = document.getElementById('field-name').value;
-        field.code = document.getElementById('field-code').value || field.name.toLowerCase().replace(/\s+/g, '_');
-        field.field_type = document.getElementById('field-type').value;
-        field.extraction_method = document.getElementById('extraction-method').value;
-        field.search_pattern = document.getElementById('search-pattern').value;
+            // Set new handler function
+            saveButton.onclick = function editorSaveHandler() {
+                // Get form values
+                field.name = document.getElementById('field-name').value;
+                field.code = document.getElementById('field-code').value || field.name.toLowerCase().replace(/\s+/g, '_');
+                field.field_type = document.getElementById('field-type').value;
+                field.extraction_method = document.getElementById('extraction-method').value;
+                field.search_pattern = document.getElementById('search-pattern').value;
 
-        // Important: Get checkbox values explicitly
-        field.is_key_field = document.getElementById('is-key-field').checked;
-        field.is_required = document.getElementById('is-required').checked;
+                // Important: Get checkbox values explicitly
+                field.is_key_field = document.getElementById('is-key-field').checked;
+                field.is_required = document.getElementById('is-required').checked;
 
-        console.log("Saving field with is_key_field =", field.is_key_field);
+                // Call callback with updated field
+                callback(field);
 
-        // Call callback with updated field
-        callback(field);
+                // Hide modal
+                modal.hide();
 
-        // Hide modal
-        modal.hide();
+                // Reset flag
+                window.isCurrentFieldFromEditor = false;
 
-        // Reset flag
-        window.isCurrentFieldFromEditor = false;
-
-        // Restore original handler
-        saveButton.onclick = originalOnClick;
-    };
-};
+                // Restore original handler
+                saveButton.onclick = originalOnClick;
+            };
+        };
     });
 </script>
 {% endblock %}

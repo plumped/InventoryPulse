@@ -1,9 +1,8 @@
 /**
- * Field Editor for Document Template Mapping
+ * Enhanced Field Editor for Document Template Mapping
  *
- * This script handles the interactive mapping of fields on a document image.
- * It allows users to draw rectangles around areas of interest and extract
- * values from those areas.
+ * This improved version includes a standard field selector to help users
+ * choose from predefined fields that the system recognizes for matching.
  */
 
 // Main editor class
@@ -19,11 +18,13 @@ class FieldEditor {
         this.options = Object.assign({
             documentId: null,
             templateId: null,
+            documentType: null, // Document type code for standard fields
             ajaxUrls: {
                 getDocumentImage: '/documents/ajax/get-document-image/',
                 getDocumentOcrData: '/documents/ajax/get-document-ocr-data/',
                 saveFieldCoordinates: '/documents/ajax/save-field-coordinates/',
-                extractFieldValue: '/documents/ajax/extract-field-value/'
+                extractFieldValue: '/documents/ajax/extract-field-value/',
+                getStandardFields: '/documents/ajax/get-standard-fields/' // API for standard fields
             },
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             onFieldSaved: null,
@@ -40,11 +41,12 @@ class FieldEditor {
         this.state = {
             currentPage: 1,
             totalPages: 1,
-            scale: 1,  // Dies wird später angepasst
+            scale: 1,
             drawing: false,
             currentField: null,
             fields: options.fields || [],
-            mode: 'view' // 'view', 'create', 'edit'
+            mode: 'view', // 'view', 'create', 'edit'
+            standardFields: [] // Array to store standard fields by document type
         };
 
         // DOM elements
@@ -136,21 +138,21 @@ class FieldEditor {
      * Create the field layer for displaying and editing fields
      */
     createFieldLayer() {
-    this.elements.fieldLayer = document.createElement('div');
-    this.elements.fieldLayer.className = 'editor-layer field-layer';
-    this.elements.canvasContainer.appendChild(this.elements.fieldLayer);
+        this.elements.fieldLayer = document.createElement('div');
+        this.elements.fieldLayer.className = 'editor-layer field-layer';
+        this.elements.canvasContainer.appendChild(this.elements.fieldLayer);
 
-    // Create canvas for drawing
-    this.elements.canvas = document.createElement('canvas');
-    this.elements.canvas.className = 'editor-canvas';
-    // Make sure the canvas covers the entire area
-    this.elements.canvas.style.width = "100%";
-    this.elements.canvas.style.height = "100%";
-    this.elements.fieldLayer.appendChild(this.elements.canvas);
+        // Create canvas for drawing
+        this.elements.canvas = document.createElement('canvas');
+        this.elements.canvas.className = 'editor-canvas';
+        // Make sure the canvas covers the entire area
+        this.elements.canvas.style.width = "100%";
+        this.elements.canvas.style.height = "100%";
+        this.elements.fieldLayer.appendChild(this.elements.canvas);
 
-    // Get context
-    this.elements.context = this.elements.canvas.getContext('2d');
-}
+        // Get context
+        this.elements.context = this.elements.canvas.getContext('2d');
+    }
 
     /**
      * Create the OCR layer for displaying OCR data
@@ -258,34 +260,6 @@ class FieldEditor {
     }
 
     /**
-     * Create standard field selector
-     * NEW: This component helps users select from predefined fields
-     */
-    createStandardFieldSelector() {
-        const standardFieldContainer = document.createElement('div');
-        standardFieldContainer.className = 'standard-field-selector mt-3 p-3 bg-light rounded';
-        this.elements.controls.appendChild(standardFieldContainer);
-
-        // Header
-        const header = document.createElement('h6');
-        header.className = 'mb-2';
-        header.innerHTML = '<i class="bi bi-list-check"></i> Standard Fields';
-        standardFieldContainer.appendChild(header);
-
-        // Help text
-        const helpText = document.createElement('p');
-        helpText.className = 'small text-muted mb-2';
-        helpText.textContent = 'Select a standard field to add it to your template. These fields are recognized by the system for document matching.';
-        standardFieldContainer.appendChild(helpText);
-
-        // Create the standard field selector
-        this.elements.standardFieldSelector = document.createElement('div');
-        this.elements.standardFieldSelector.className = 'standard-fields row g-2';
-        this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-info py-2">Loading standard fields...</div></div>';
-        standardFieldContainer.appendChild(this.elements.standardFieldSelector);
-    }
-
-    /**
      * Create zoom controls
      */
     createZoomControls() {
@@ -336,131 +310,10 @@ class FieldEditor {
         // Window resize event
         window.addEventListener('resize', () => this.handleResize());
     }
-        /**
-     * Load standard fields based on document type
-     * NEW: Fetch and populate standard fields
-     */
-    loadStandardFields() {
-        // In a real implementation, this would fetch from the server
-        // For now, we'll use hardcoded fields from field_suggestions.py
-
-        // Create a loading indicator
-        this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-info py-2">Loading standard fields...</div></div>';
-
-        // Determine document type code from options or template
-        const docTypeCode = this.options.documentType || 'delivery_note'; // Default to delivery note
-
-        // Fetch standard fields from server
-        fetch(`${this.options.ajaxUrls.getStandardFields}?document_type_code=${docTypeCode}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.error('Error loading standard fields:', data.error);
-                    this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-danger py-2">Error loading standard fields</div></div>';
-                    return;
-                }
-
-                this.state.standardFields = data.suggestions || [];
-                this.updateStandardFieldSelector();
-            })
-            .catch(error => {
-                console.error('Error fetching standard fields:', error);
-                this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-danger py-2">Error loading standard fields</div></div>';
-
-                // For demo/fallback, load hardcoded fields if fetch fails
-                this.loadHardcodedStandardFields(docTypeCode);
-            });
-    }
-
-    /**
-     * Load hardcoded standard fields (fallback if API isn't available)
-     */
-    loadHardcodedStandardFields(docTypeCode) {
-        // These should match the fields in field_suggestions.py
-        const standardFieldsByType = {
-            'delivery_note': [
-                { name: 'Lieferscheinnummer', code: 'delivery_note_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
-                { name: 'Lieferdatum', code: 'delivery_date', field_type: 'date', extraction_method: 'label_based', is_key_field: false },
-                { name: 'Bestellnummer', code: 'order_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
-                { name: 'Menge', code: 'quantity', field_type: 'number', extraction_method: 'table_cell', is_key_field: false }
-            ],
-            'invoice': [
-                { name: 'Rechnungsnummer', code: 'invoice_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
-                { name: 'Rechnungsdatum', code: 'invoice_date', field_type: 'date', extraction_method: 'label_based', is_key_field: false },
-                { name: 'Lieferscheinnummer', code: 'delivery_note_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
-                { name: 'Bestellnummer', code: 'order_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
-                { name: 'Gesamtbetrag', code: 'total_amount', field_type: 'currency', extraction_method: 'label_based', is_key_field: false }
-            ],
-            'order_confirmation': [
-                { name: 'Auftragsbestätigungsnummer', code: 'confirmation_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
-                { name: 'Bestellnummer', code: 'order_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
-                { name: 'Auftragsdatum', code: 'confirmation_date', field_type: 'date', extraction_method: 'label_based', is_key_field: false },
-                { name: 'Liefertermin', code: 'delivery_date', field_type: 'date', extraction_method: 'label_based', is_key_field: false }
-            ]
-        };
-
-        this.state.standardFields = standardFieldsByType[docTypeCode] || standardFieldsByType['delivery_note'];
-        this.updateStandardFieldSelector();
-    }
-
-    /**
-     * Update the standard field selector with available fields
-     */
-    updateStandardFieldSelector() {
-        if (!this.elements.standardFieldSelector) return;
-
-        // Clear existing content
-        this.elements.standardFieldSelector.innerHTML = '';
-
-        if (this.state.standardFields.length === 0) {
-            this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-warning py-2">No standard fields available for this document type</div></div>';
-            return;
-        }
-
-        // Create a button for each standard field
-        this.state.standardFields.forEach(field => {
-            const fieldCol = document.createElement('div');
-            fieldCol.className = 'col-md-6 col-lg-4';
-
-            // Get color based on field type
-            const typeColor = this.getFieldColor(field.field_type);
-            const borderStyle = `border-left: 3px solid ${typeColor}`;
-
-            // Check if this standard field is already added to the template
-            const isAdded = this.state.fields.some(f => f.code === field.code);
-
-            fieldCol.innerHTML = `
-                <div class="card field-card mb-2" style="${borderStyle}">
-                    <div class="card-body p-2">
-                        <h6 class="card-title mb-1">${field.name}</h6>
-                        <p class="card-text small text-muted mb-1">Code: ${field.code}</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge bg-${this.getBootstrapColor(field.field_type)}">${field.field_type}</span>
-                            <button class="btn btn-sm ${isAdded ? 'btn-success' : 'btn-primary'}" 
-                                    ${isAdded ? 'disabled' : ''} 
-                                    data-field-code="${field.code}">
-                                ${isAdded ? '<i class="bi bi-check"></i> Added' : '<i class="bi bi-plus"></i> Add Field'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Add click handler to add the standard field
-            const addButton = fieldCol.querySelector('button');
-            if (addButton && !isAdded) {
-                addButton.addEventListener('click', () => {
-                    this.addStandardField(field);
-                });
-            }
-
-            this.elements.standardFieldSelector.appendChild(fieldCol);
-        });
-    }
 
     /**
      * Add a standard field to the template
-     * NEW: This creates a new field from a standard field definition
+     * This creates a new field from a standard field definition
      */
     addStandardField(standardField) {
         // Enter create mode
@@ -500,6 +353,23 @@ class FieldEditor {
 
         // We'll wait for the user to draw the field position
         // The rest of the process continues in handleMouseUp
+    }
+
+    /**
+     * Get color for a field type
+     */
+    getFieldColor(fieldType) {
+        const colors = {
+            'text': '#28a745',       // Green
+            'number': '#dc3545',     // Red
+            'date': '#fd7e14',       // Orange
+            'currency': '#6f42c1',   // Purple
+            'boolean': '#20c997',    // Teal
+            'list': '#17a2b8',       // Cyan
+            'table': '#6610f2'       // Indigo
+        };
+
+        return colors[fieldType] || '#6c757d';  // Default gray
     }
 
     /**
@@ -564,28 +434,25 @@ class FieldEditor {
             })
             .catch(error => {
                 console.error('Error fetching document:', error);
-
-                // Display error message in the editor
                 this.showError(`Failed to load document: ${error.message}`);
             });
     }
+
     /**
- * Fit document to container width (initial scaling)
- */
-fitToContainer() {
-    // Get container width
-    const containerWidth = this.container.clientWidth;
+     * Fit document to container width (initial scaling)
+     */
+    fitToContainer() {
+        // Get container width
+        const containerWidth = this.container.clientWidth;
 
-    // Scale document to fit container width with some margin
-    this.state.scale = (containerWidth - 40) / this.documentDimensions.width;
+        // Scale document to fit container width with some margin
+        this.state.scale = (containerWidth - 40) / this.documentDimensions.width;
 
-    // Ensure minimum scale
-    if (this.state.scale < 0.2) this.state.scale = 0.2;
-    // Ensure maximum scale
-    if (this.state.scale > 1.0) this.state.scale = 1.0;
-
-    console.log(`Auto-fitting to container: Scale set to ${this.state.scale.toFixed(2)}`);
-}
+        // Ensure minimum scale
+        if (this.state.scale < 0.2) this.state.scale = 0.2;
+        // Ensure maximum scale
+        if (this.state.scale > 1.0) this.state.scale = 1.0;
+    }
 
     /**
      * Show error message in the editor
@@ -603,55 +470,53 @@ fitToContainer() {
     /**
      * Load OCR data for the current page
      */
-    // In field_editor.js loadOcrData method
-loadOcrData() {
-    console.log("Loading OCR data for page", this.state.currentPage);
-    const url = `${this.options.ajaxUrls.getDocumentOcrData}?page=${this.state.currentPage}`;
+    loadOcrData() {
+        const url = `${this.options.ajaxUrls.getDocumentOcrData}?page=${this.state.currentPage}`;
 
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                console.error('Error loading OCR data:', data.error);
-                this.showMessage("Could not load OCR data: " + data.error, "danger");
-                return;
-            }
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    console.error('Error loading OCR data:', data.error);
+                    this.showMessage("Could not load OCR data: " + data.error, "danger");
+                    return;
+                }
 
-            if (!data.words || data.words.length === 0) {
-                this.showMessage("This document has no OCR data. Please process the document first.", "warning");
-                return;
-            }
+                if (!data.words || data.words.length === 0) {
+                    this.showMessage("This document has no OCR data. Please process the document first.", "warning");
+                    return;
+                }
 
-            console.log("OCR data loaded successfully", data);
-            this.ocrData = data;
-
-            // Show OCR overlay automatically
-            this.showOcrOverlay();
-        })
-        .catch(error => {
-            console.error('Error fetching OCR data:', error);
-            this.showMessage("Error loading OCR data. Please ensure the document has been processed.", "danger");
-        });
-}
-
-showMessage(message, type = "info") {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} mt-3`;
-    alertDiv.innerHTML = message;
-
-    // Find a place to show the message
-    const targetElement = this.elements.fieldControls.querySelector('.field-info-panel') || this.elements.controls;
-    if (targetElement) {
-        targetElement.style.display = 'block';
-        targetElement.innerHTML = '';
-        targetElement.appendChild(alertDiv);
+                this.ocrData = data;
+                this.showOcrOverlay();
+            })
+            .catch(error => {
+                console.error('Error fetching OCR data:', error);
+                this.showMessage("Error loading OCR data. Please ensure the document has been processed.", "danger");
+            });
     }
-}
+
+    /**
+     * Show a message to the user
+     */
+    showMessage(message, type = "info") {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} mt-3`;
+        alertDiv.innerHTML = message;
+
+        // Find a place to show the message
+        const targetElement = this.elements.fieldControls.querySelector('.field-info-panel') || this.elements.controls;
+        if (targetElement) {
+            targetElement.style.display = 'block';
+            targetElement.innerHTML = '';
+            targetElement.appendChild(alertDiv);
+        }
+    }
 
     /**
      * Load existing fields for the template
@@ -690,34 +555,34 @@ showMessage(message, type = "info") {
      * Resize the canvas to match the image dimensions
      */
     resizeCanvas() {
-    const img = this.elements.imageLayer.querySelector('img');
-    if (!img) return;
+        const img = this.elements.imageLayer.querySelector('img');
+        if (!img) return;
 
-    const scale = this.state.scale;
-    const width = this.documentDimensions.width * scale;
-    const height = this.documentDimensions.height * scale;
+        const scale = this.state.scale;
+        const width = this.documentDimensions.width * scale;
+        const height = this.documentDimensions.height * scale;
 
-    // Set canvas dimensions to actual pixels
-    this.elements.canvas.width = width;
-    this.elements.canvas.height = height;
+        // Set canvas dimensions to actual pixels
+        this.elements.canvas.width = width;
+        this.elements.canvas.height = height;
 
-    // Set container dimensions to match
-    this.elements.canvasContainer.style.minWidth = `${width}px`;
-    this.elements.canvasContainer.style.minHeight = `${height}px`;
+        // Set container dimensions to match
+        this.elements.canvasContainer.style.minWidth = `${width}px`;
+        this.elements.canvasContainer.style.minHeight = `${height}px`;
 
-    // Set image dimensions
-    img.style.width = `${width}px`;
-    img.style.height = `${height}px`;
+        // Set image dimensions
+        img.style.width = `${width}px`;
+        img.style.height = `${height}px`;
 
-    // Update zoom indicator
-    const zoomIndicator = this.elements.zoomControls.querySelector('.zoom-indicator');
-    if (zoomIndicator) {
-        zoomIndicator.textContent = `${Math.round(scale * 100)}%`;
+        // Update zoom indicator
+        const zoomIndicator = this.elements.zoomControls.querySelector('.zoom-indicator');
+        if (zoomIndicator) {
+            zoomIndicator.textContent = `${Math.round(scale * 100)}%`;
+        }
+
+        // Redraw fields
+        this.drawFields();
     }
-
-    // Redraw fields
-    this.drawFields();
-}
 
     /**
      * Draw fields on the canvas
@@ -779,74 +644,50 @@ showMessage(message, type = "info") {
     }
 
     /**
-     * Get color for a field type
-     */
-    getFieldColor(fieldType) {
-        const colors = {
-            'text': '#28a745',       // Green
-            'number': '#dc3545',     // Red
-            'date': '#fd7e14',       // Orange
-            'currency': '#6f42c1',   // Purple
-            'boolean': '#20c997',    // Teal
-            'list': '#17a2b8',       // Cyan
-            'table': '#6610f2'       // Indigo
-        };
-
-        return colors[fieldType] || '#6c757d';  // Default gray
-    }
-
-    /**
      * Show OCR overlay
      */
     showOcrOverlay() {
-    console.log("Showing OCR overlay:", this.ocrData);
-    if (!this.ocrData || !this.ocrData.words) {
-        console.warn('No OCR data available, trying to load');
-        this.loadOcrData();
-        return;
+        if (!this.ocrData || !this.ocrData.words) {
+            return;
+        }
+
+        // Clear previous overlay
+        this.elements.ocrLayer.innerHTML = '';
+
+        // Set layer as active
+        this.elements.ocrLayer.classList.add('active');
+
+        // Get current document dimensions
+        const docWidth = this.documentDimensions.width;
+        const docHeight = this.documentDimensions.height;
+        const scale = this.state.scale;
+
+        // Create and append all word elements at once
+        const fragment = document.createDocumentFragment();
+
+        this.ocrData.words.forEach(word => {
+            const wordElement = document.createElement('div');
+            wordElement.className = 'ocr-word';
+
+            // Convert normalized coordinates (0-1) to absolute pixel values
+            const x = word.x * docWidth * scale;
+            const y = word.y * docHeight * scale;
+            const width = word.w * docWidth * scale;
+            const height = word.h * docHeight * scale;
+
+            wordElement.style.left = `${x}px`;
+            wordElement.style.top = `${y}px`;
+            wordElement.style.width = `${width}px`;
+            wordElement.style.height = `${height}px`;
+
+            wordElement.textContent = word.text;
+            wordElement.title = `${word.text} (Confidence: ${word.conf}%)`;
+
+            fragment.appendChild(wordElement);
+        });
+
+        this.elements.ocrLayer.appendChild(fragment);
     }
-
-    // Clear previous overlay
-    this.elements.ocrLayer.innerHTML = '';
-
-    // Set layer as active
-    this.elements.ocrLayer.classList.add('active');
-
-    // Get current document dimensions
-    const docWidth = this.documentDimensions.width;
-    const docHeight = this.documentDimensions.height;
-    const scale = this.state.scale;
-
-    console.log("Creating", this.ocrData.words.length, "OCR word elements");
-    console.log("Document dimensions:", docWidth, docHeight, "Scale:", scale);
-
-    // Create and append all word elements at once
-    const fragment = document.createDocumentFragment();
-
-    this.ocrData.words.forEach(word => {
-        const wordElement = document.createElement('div');
-        wordElement.className = 'ocr-word';
-
-        // Convert normalized coordinates (0-1) to absolute pixel values
-        const x = word.x * docWidth * scale;
-        const y = word.y * docHeight * scale;
-        const width = word.w * docWidth * scale;
-        const height = word.h * docHeight * scale;
-
-        wordElement.style.left = `${x}px`;
-        wordElement.style.top = `${y}px`;
-        wordElement.style.width = `${width}px`;
-        wordElement.style.height = `${height}px`;
-
-        wordElement.textContent = word.text;
-        wordElement.title = `${word.text} (Confidence: ${word.conf}%)`;
-
-        fragment.appendChild(wordElement);
-    });
-
-    this.elements.ocrLayer.appendChild(fragment);
-    console.log("OCR overlay created");
-}
 
     /**
      * Hide OCR overlay
@@ -871,51 +712,58 @@ showMessage(message, type = "info") {
      * Handle mouse down event for drawing fields
      */
     handleMouseDown(e) {
-    console.log("Mouse down event on canvas", e);
+        // Only allow drawing in create mode
+        if (this.state.mode !== 'create') {
+            return;
+        }
 
-    // Only allow drawing in create mode
-    if (this.state.mode !== 'create') {
-        return;
+        this.state.drawing = true;
+
+        // Get mouse position relative to canvas
+        const x = e.offsetX / this.state.scale;
+        const y = e.offsetY / this.state.scale;
+
+        // If currentField is already defined (i.e., from addStandardField),
+        // update only the coordinates
+        if (this.state.currentField) {
+            this.state.currentField.x1 = x;
+            this.state.currentField.y1 = y;
+            this.state.currentField.x2 = x;
+            this.state.currentField.y2 = y;
+        } else {
+            // Create new field
+            this.state.currentField = {
+                id: `new_field_${Date.now()}`,
+                name: 'New Field',
+                field_type: 'text',
+                page: this.state.currentPage,
+                x1: x,
+                y1: y,
+                x2: x,
+                y2: y
+            };
+        }
     }
 
-    this.state.drawing = true;
+    /**
+     * Handle mouse move event for drawing fields
+     */
+    handleMouseMove(e) {
+        if (!this.state.drawing || !this.state.currentField) {
+            return;
+        }
 
-    // Verwenden Sie offsetX/offsetY für direktere Koordinaten
-    // Diese sind relativ zum Canvas-Element selbst
-    const x = e.offsetX / this.state.scale;
-    const y = e.offsetY / this.state.scale;
+        // Get mouse position relative to canvas
+        const x = e.offsetX / this.state.scale;
+        const y = e.offsetY / this.state.scale;
 
-    console.log("Mouse position on canvas:", x, y);
+        // Update field dimensions
+        this.state.currentField.x2 = x;
+        this.state.currentField.y2 = y;
 
-    // Create new field
-    this.state.currentField = {
-        id: `new_field_${Date.now()}`,
-        name: 'New Field',
-        field_type: 'text',
-        page: this.state.currentPage,
-        x1: x,
-        y1: y,
-        x2: x,
-        y2: y
-    };
-}
-
-handleMouseMove(e) {
-    if (!this.state.drawing || !this.state.currentField) {
-        return;
+        // Redraw
+        this.drawFields();
     }
-
-    // Wieder offsetX/offsetY verwenden
-    const x = e.offsetX / this.state.scale;
-    const y = e.offsetY / this.state.scale;
-
-    // Update field dimensions
-    this.state.currentField.x2 = x;
-    this.state.currentField.y2 = y;
-
-    // Redraw
-    this.drawFields();
-}
 
     /**
      * Handle mouse up event for drawing fields
@@ -1001,107 +849,112 @@ handleMouseMove(e) {
     /**
      * Save field to server
      */
-    // Update the saveField method in field_editor.js to include all field properties
-saveField(field) {
-    const isNewField = field.id.startsWith('new_field');
+    saveField(field) {
+        const isNewField = field.id.startsWith('new_field');
 
-    // Create payload with ALL field properties
-    const payload = {
-        template_id: this.options.templateId,
-        field_id: isNewField ? null : field.id,
-        field_name: field.name,
-        field_code: field.code,
-        field_type: field.field_type,
-        extraction_method: field.extraction_method || 'exact',
-        search_pattern: field.search_pattern || '',
-        is_key_field: !!field.is_key_field,  // Ensure boolean
-        is_required: !!field.is_required,    // Ensure boolean
-        coordinates: {
-            x1: field.x1,
-            y1: field.y1,
-            x2: field.x2,
-            y2: field.y2
-        }
-    };
-
-    // Send to server
-    fetch(this.options.ajaxUrls.saveFieldCoordinates, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': this.options.csrfToken
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.error) {
-            console.error('Error saving field:', data.error);
-            return;
-        }
-
-        // Update field ID for new fields
-        if (isNewField) {
-            const index = this.state.fields.findIndex(f => f.id === field.id);
-            if (index >= 0) {
-                this.state.fields[index].id = data.field_id;
+        // Create payload with ALL field properties
+        const payload = {
+            template_id: this.options.templateId,
+            field_id: isNewField ? null : field.id,
+            field_name: field.name,
+            field_code: field.code,
+            field_type: field.field_type,
+            extraction_method: field.extraction_method || 'exact',
+            search_pattern: field.search_pattern || '',
+            is_key_field: !!field.is_key_field,  // Ensure boolean
+            is_required: !!field.is_required,    // Ensure boolean
+            coordinates: {
+                x1: field.x1,
+                y1: field.y1,
+                x2: field.x2,
+                y2: field.y2
             }
-        }
+        };
 
-        // If this is a new field, add it to the fields array
-        if (isNewField) {
-            field.id = data.field_id;
-            this.state.fields.push(field);
-        }
-
-        // Select the field
-        this.selectField(data.field_id);
-
-        // Update field selector
-        this.updateFieldSelector();
-
-        // Callback
-        if (this.options.onFieldSaved) {
-            this.options.onFieldSaved(data);
-        }
-    })
-    .catch(error => {
-        console.error('Error saving field:', error);
-    });
-}
-
-    /**
-     * Select a field
-     */
-    selectField(fieldId) {
-        const field = this.state.fields.find(f => f.id == fieldId);
-        if (!field) return;
-
-        this.state.currentField = field;
-        this.state.mode = 'edit';
-
-        // Update field selector
-        const fieldSelector = this.elements.fieldControls.querySelector('select');
-        if (fieldSelector) {
-            fieldSelector.value = fieldId;
-        }
-
-        // Show field info panel
-        this.showFieldInfo(field);
-
-        // Redraw fields
-        this.drawFields();
+        // Send to server
+        fetch(this.options.ajaxUrls.saveFieldCoordinates, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.options.csrfToken
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+    if (data.error) {
+        console.error('Error saving field:', data.error);
+        return;
     }
 
-    /**
-     * Deselect the current field
-     */
-    deselectField(changeMode = true) {
+    // Update field ID for new fields
+    if (isNewField) {
+        const index = this.state.fields.findIndex(f => f.id === field.id);
+        if (index >= 0) {
+            this.state.fields[index].id = data.field_id;
+        }
+    }
+
+    // If this is a new field, add it to the fields array
+    if (isNewField) {
+        field.id = data.field_id;
+        this.state.fields.push(field);
+    }
+
+    // Reset the currentField and mode
+    this.state.currentField = null;
+    this.state.mode = 'view';
+    this.elements.canvasContainer.classList.remove('create-mode', 'edit-mode');
+    this.elements.canvasContainer.classList.add('view-mode');
+
+    // Select the field
+    this.selectField(data.field_id);
+
+    // Update field selector
+    this.updateFieldSelector();
+
+    // Callback
+    if (this.options.onFieldSaved) {
+        this.options.onFieldSaved(data);
+    }
+})
+.catch(error => {
+    console.error('Error saving field:', error);
+});
+}
+
+/**
+ * Select a field
+ */
+selectField(fieldId) {
+    const field = this.state.fields.find(f => f.id == fieldId);
+    if (!field) return;
+
+    this.state.currentField = field;
+    this.state.mode = 'edit';
+
+    // Update field selector
+    const fieldSelector = this.elements.fieldControls.querySelector('select');
+    if (fieldSelector) {
+        fieldSelector.value = fieldId;
+    }
+
+    // Show field info panel
+    this.showFieldInfo(field);
+
+    // Redraw fields
+    this.drawFields();
+}
+
+/**
+ * Deselect the current field
+ */
+deselectField(changeMode = true) {
     this.state.currentField = null;
     if (changeMode) {
         this.state.mode = 'view';
@@ -1123,149 +976,148 @@ saveField(field) {
     this.drawFields();
 }
 
-    /**
-     * Show field info panel
-     */
-    showFieldInfo(field) {
-        if (!field) return;
+/**
+ * Show field info panel
+ */
+showFieldInfo(field) {
+    if (!field) return;
 
-        const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
-        if (!fieldInfoPanel) return;
+    const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
+    if (!fieldInfoPanel) return;
 
-        // Show the panel
-        fieldInfoPanel.style.display = 'block';
+    // Show the panel
+    fieldInfoPanel.style.display = 'block';
 
-        // Set content
-        fieldInfoPanel.innerHTML = `
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">${field.name}</h6>
-                    <div>
-                        <button type="button" class="btn btn-sm btn-outline-primary edit-field-btn">
-                            <i class="bi bi-pencil"></i> Edit
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger delete-field-btn">
-                            <i class="bi bi-trash"></i> Delete
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div><strong>Code:</strong> ${field.code}</div>
-                    <div><strong>Type:</strong> ${field.field_type}</div>
-                    <div><strong>Coordinates:</strong> (${field.x1.toFixed(2)}, ${field.y1.toFixed(2)}) - (${field.x2.toFixed(2)}, ${field.y2.toFixed(2)})</div>
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-sm btn-outline-info extract-field-btn">
-                            <i class="bi bi-eye"></i> Extract Value
-                        </button>
-                        <span class="extracted-value ms-2"></span>
-                    </div>
+    // Set content
+    fieldInfoPanel.innerHTML = `
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">${field.name}</h6>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-primary edit-field-btn">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-field-btn">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
                 </div>
             </div>
-        `;
+            <div class="card-body">
+                <div><strong>Code:</strong> ${field.code}</div>
+                <div><strong>Type:</strong> ${field.field_type}</div>
+                <div><strong>Coordinates:</strong> (${field.x1.toFixed(2)}, ${field.y1.toFixed(2)}) - (${field.x2.toFixed(2)}, ${field.y2.toFixed(2)})</div>
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-info extract-field-btn">
+                        <i class="bi bi-eye"></i> Extract Value
+                    </button>
+                    <span class="extracted-value ms-2"></span>
+                </div>
+            </div>
+        </div>
+    `;
 
-        // Add event listeners
-        const editBtn = fieldInfoPanel.querySelector('.edit-field-btn');
-        const deleteBtn = fieldInfoPanel.querySelector('.delete-field-btn');
-        const extractBtn = fieldInfoPanel.querySelector('.extract-field-btn');
+    // Add event listeners
+    const editBtn = fieldInfoPanel.querySelector('.edit-field-btn');
+    const deleteBtn = fieldInfoPanel.querySelector('.delete-field-btn');
+    const extractBtn = fieldInfoPanel.querySelector('.extract-field-btn');
 
-        editBtn.addEventListener('click', () => {
-            this.showFieldDialog(field);
-        });
+    editBtn.addEventListener('click', () => {
+        this.showFieldDialog(field);
+    });
 
-        deleteBtn.addEventListener('click', () => {
-            this.deleteField(field);
-        });
+    deleteBtn.addEventListener('click', () => {
+        this.deleteField(field);
+    });
 
-        extractBtn.addEventListener('click', () => {
-            this.extractFieldValue(field);
-        });
+    extractBtn.addEventListener('click', () => {
+        this.extractFieldValue(field);
+    });
+}
+
+/**
+ * Delete a field
+ */
+deleteField(field) {
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete the field "${field.name}"?`)) {
+        return;
     }
 
-    /**
-     * Delete a field
-     */
-    deleteField(field) {
-        // Confirm deletion
-        if (!confirm(`Are you sure you want to delete the field "${field.name}"?`)) {
+    // Remove field from array
+    const index = this.state.fields.findIndex(f => f.id === field.id);
+    if (index >= 0) {
+        this.state.fields.splice(index, 1);
+    }
+
+    // Deselect field
+    this.deselectField();
+
+    // Update field selector
+    this.updateFieldSelector();
+
+    // Redraw fields
+    this.drawFields();
+
+    // In a real application, you would delete from server too
+    // For now, we'll just log it
+    console.log('Delete field from server:', field.id);
+}
+
+/**
+ * Extract field value from document
+ */
+extractFieldValue(field) {
+    // Create payload
+    const payload = {
+        document_id: this.options.documentId,
+        field_id: field.id
+    };
+
+    // Send to server
+    fetch(this.options.ajaxUrls.extractFieldValue, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': this.options.csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            console.error('Error extracting field value:', data.error);
             return;
         }
 
-        // Remove field from array
-        const index = this.state.fields.findIndex(f => f.id === field.id);
-        if (index >= 0) {
-            this.state.fields.splice(index, 1);
+        // Show the extracted value
+        const valueSpan = this.elements.fieldControls.querySelector('.extracted-value');
+        if (valueSpan) {
+            valueSpan.textContent = data.value || 'No value found';
         }
 
-        // Deselect field
-        this.deselectField();
+        // Callback
+        if (this.options.onFieldExtracted) {
+            this.options.onFieldExtracted(data);
+        }
+    })
+    .catch(error => {
+        console.error('Error extracting field value:', error);
+    });
+}
 
-        // Update field selector
-        this.updateFieldSelector();
-
-        // Redraw fields
-        this.drawFields();
-
-        // In a real application, you would delete from server too
-        // For now, we'll just log it
-        console.log('Delete field from server:', field.id);
-    }
-
-    /**
-     * Extract field value from document
-     */
-    extractFieldValue(field) {
-        // Create payload
-        const payload = {
-            document_id: this.options.documentId,
-            field_id: field.id
-        };
-
-        // Send to server
-        fetch(this.options.ajaxUrls.extractFieldValue, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': this.options.csrfToken
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                console.error('Error extracting field value:', data.error);
-                return;
-            }
-
-            // Show the extracted value
-            const valueSpan = this.elements.fieldControls.querySelector('.extracted-value');
-            if (valueSpan) {
-                valueSpan.textContent = data.value || 'No value found';
-            }
-
-            // Callback
-            if (this.options.onFieldExtracted) {
-                this.options.onFieldExtracted(data);
-            }
-        })
-        .catch(error => {
-            console.error('Error extracting field value:', error);
-        });
-    }
-
-    /**
-     * Start field creation mode
-     */
-    startFieldCreation() {
-    console.log("Starting field creation mode");
+/**
+ * Start field creation mode
+ */
+startFieldCreation() {
     // Set the mode first
     this.state.mode = 'create';
 
-    // Modify deselectField to not change the mode
+    // Deselect any selected field
     const origMode = this.state.mode;
     this.deselectField(false); // Pass false to indicate don't change mode
     this.state.mode = origMode; // Restore the original mode
@@ -1285,96 +1137,94 @@ saveField(field) {
         fieldInfoPanel.innerHTML = '';
         fieldInfoPanel.appendChild(message);
     }
-
-    console.log("Field creation mode started, mode:", this.state.mode);
 }
 
-    /**
-     * Go to previous page
-     */
-    previousPage() {
-        if (this.state.currentPage > 1) {
-            this.state.currentPage--;
-            this.loadDocument();
-        }
+/**
+ * Go to previous page
+ */
+previousPage() {
+    if (this.state.currentPage > 1) {
+        this.state.currentPage--;
+        this.loadDocument();
     }
+}
 
-    /**
-     * Go to next page
-     */
-    nextPage() {
-        if (this.state.currentPage < this.state.totalPages) {
-            this.state.currentPage++;
-            this.loadDocument();
-        }
+/**
+ * Go to next page
+ */
+nextPage() {
+    if (this.state.currentPage < this.state.totalPages) {
+        this.state.currentPage++;
+        this.loadDocument();
     }
+}
 
-    /**
-     * Zoom in
-     */
-    zoomIn() {
-        this.state.scale *= 1.2;
-        this.resizeCanvas();
-    }
+/**
+ * Zoom in
+ */
+zoomIn() {
+    this.state.scale *= 1.2;
+    this.resizeCanvas();
+}
 
-    /**
-     * Zoom out
-     */
-    zoomOut() {
-        this.state.scale /= 1.2;
-        this.resizeCanvas();
-    }
+/**
+ * Zoom out
+ */
+zoomOut() {
+    this.state.scale /= 1.2;
+    this.resizeCanvas();
+}
 
-            /**
-             * Fit document to width
-             */
-            /**
-         * Fit document to width
-         */
-        fitToWidth() {
-            const containerWidth = this.container.clientWidth;
+/**
+ * Fit document to width
+ */
+fitToWidth() {
+    const containerWidth = this.container.clientWidth;
 
-            // Set scale to fit container width with some margin
-            this.state.scale = (containerWidth - 40) / this.documentDimensions.width;
+    // Set scale to fit container width with some margin
+    this.state.scale = (containerWidth - 40) / this.documentDimensions.width;
 
-            // Ensure minimum scale
-            if (this.state.scale < 0.2) this.state.scale = 0.2;
+    // Ensure minimum scale
+    if (this.state.scale < 0.2) this.state.scale = 0.2;
 
-            this.resizeCanvas();
-        }
+    this.resizeCanvas();
+}
 }
 
 // Initialize field editor when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if editor container exists
-    const editorContainer = document.getElementById('field-editor');
-    if (!editorContainer) return;
+// Check if editor container exists
+const editorContainer = document.getElementById('field-editor');
+if (!editorContainer) return;
 
-    // Get options from data attributes
-    const documentId = editorContainer.dataset.documentId;
-    const templateId = editorContainer.dataset.templateId;
+// Get options from data attributes
+const documentId = editorContainer.dataset.documentId;
+const templateId = editorContainer.dataset.templateId;
+const documentType = editorContainer.dataset.documentType;
 
-    if (!documentId) {
-        console.error('Document ID is required');
-        return;
+if (!documentId) {
+    console.error('Document ID is required');
+    return;
+}
+
+// Initialize editor
+const editor = new FieldEditor('field-editor', {
+    documentId: documentId,
+    templateId: templateId,
+    documentType: documentType,
+    csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+    ajaxUrls: {
+        getDocumentImage: '/documents/ajax/get-document-image/' + documentId + '/',
+        getDocumentOcrData: '/documents/ajax/get-document-ocr-data/' + documentId + '/',
+        saveFieldCoordinates: '/documents/ajax/save-field-coordinates/',
+        extractFieldValue: '/documents/ajax/extract-field-value/',
+        getStandardFields: '/documents/ajax/get-standard-fields/'
+    },
+    onFieldSaved: function(data) {
+        console.log('Field saved:', data);
+    },
+    onFieldExtracted: function(data) {
+        console.log('Field extracted:', data);
     }
-
-    // Initialize editor
-    const editor = new FieldEditor('field-editor', {
-        documentId: documentId,
-        templateId: templateId,
-        csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-        ajaxUrls: {
-            getDocumentImage: '/documents/ajax/get-document-image/' + documentId + '/',
-            getDocumentOcrData: '/documents/ajax/get-document-ocr-data/' + documentId + '/',
-            saveFieldCoordinates: '/documents/ajax/save-field-coordinates/',
-            extractFieldValue: '/documents/ajax/extract-field-value/'
-        },
-        onFieldSaved: function(data) {
-            console.log('Field saved:', data);
-        },
-        onFieldExtracted: function(data) {
-            console.log('Field extracted:', data);
-        }
-    });
+});
 });

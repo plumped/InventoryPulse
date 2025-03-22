@@ -258,6 +258,34 @@ class FieldEditor {
     }
 
     /**
+     * Create standard field selector
+     * NEW: This component helps users select from predefined fields
+     */
+    createStandardFieldSelector() {
+        const standardFieldContainer = document.createElement('div');
+        standardFieldContainer.className = 'standard-field-selector mt-3 p-3 bg-light rounded';
+        this.elements.controls.appendChild(standardFieldContainer);
+
+        // Header
+        const header = document.createElement('h6');
+        header.className = 'mb-2';
+        header.innerHTML = '<i class="bi bi-list-check"></i> Standard Fields';
+        standardFieldContainer.appendChild(header);
+
+        // Help text
+        const helpText = document.createElement('p');
+        helpText.className = 'small text-muted mb-2';
+        helpText.textContent = 'Select a standard field to add it to your template. These fields are recognized by the system for document matching.';
+        standardFieldContainer.appendChild(helpText);
+
+        // Create the standard field selector
+        this.elements.standardFieldSelector = document.createElement('div');
+        this.elements.standardFieldSelector.className = 'standard-fields row g-2';
+        this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-info py-2">Loading standard fields...</div></div>';
+        standardFieldContainer.appendChild(this.elements.standardFieldSelector);
+    }
+
+    /**
      * Create zoom controls
      */
     createZoomControls() {
@@ -307,6 +335,187 @@ class FieldEditor {
 
         // Window resize event
         window.addEventListener('resize', () => this.handleResize());
+    }
+        /**
+     * Load standard fields based on document type
+     * NEW: Fetch and populate standard fields
+     */
+    loadStandardFields() {
+        // In a real implementation, this would fetch from the server
+        // For now, we'll use hardcoded fields from field_suggestions.py
+
+        // Create a loading indicator
+        this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-info py-2">Loading standard fields...</div></div>';
+
+        // Determine document type code from options or template
+        const docTypeCode = this.options.documentType || 'delivery_note'; // Default to delivery note
+
+        // Fetch standard fields from server
+        fetch(`${this.options.ajaxUrls.getStandardFields}?document_type_code=${docTypeCode}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error loading standard fields:', data.error);
+                    this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-danger py-2">Error loading standard fields</div></div>';
+                    return;
+                }
+
+                this.state.standardFields = data.suggestions || [];
+                this.updateStandardFieldSelector();
+            })
+            .catch(error => {
+                console.error('Error fetching standard fields:', error);
+                this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-danger py-2">Error loading standard fields</div></div>';
+
+                // For demo/fallback, load hardcoded fields if fetch fails
+                this.loadHardcodedStandardFields(docTypeCode);
+            });
+    }
+
+    /**
+     * Load hardcoded standard fields (fallback if API isn't available)
+     */
+    loadHardcodedStandardFields(docTypeCode) {
+        // These should match the fields in field_suggestions.py
+        const standardFieldsByType = {
+            'delivery_note': [
+                { name: 'Lieferscheinnummer', code: 'delivery_note_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
+                { name: 'Lieferdatum', code: 'delivery_date', field_type: 'date', extraction_method: 'label_based', is_key_field: false },
+                { name: 'Bestellnummer', code: 'order_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
+                { name: 'Menge', code: 'quantity', field_type: 'number', extraction_method: 'table_cell', is_key_field: false }
+            ],
+            'invoice': [
+                { name: 'Rechnungsnummer', code: 'invoice_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
+                { name: 'Rechnungsdatum', code: 'invoice_date', field_type: 'date', extraction_method: 'label_based', is_key_field: false },
+                { name: 'Lieferscheinnummer', code: 'delivery_note_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
+                { name: 'Bestellnummer', code: 'order_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
+                { name: 'Gesamtbetrag', code: 'total_amount', field_type: 'currency', extraction_method: 'label_based', is_key_field: false }
+            ],
+            'order_confirmation': [
+                { name: 'Auftragsbestätigungsnummer', code: 'confirmation_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
+                { name: 'Bestellnummer', code: 'order_number', field_type: 'text', extraction_method: 'label_based', is_key_field: true },
+                { name: 'Auftragsdatum', code: 'confirmation_date', field_type: 'date', extraction_method: 'label_based', is_key_field: false },
+                { name: 'Liefertermin', code: 'delivery_date', field_type: 'date', extraction_method: 'label_based', is_key_field: false }
+            ]
+        };
+
+        this.state.standardFields = standardFieldsByType[docTypeCode] || standardFieldsByType['delivery_note'];
+        this.updateStandardFieldSelector();
+    }
+
+    /**
+     * Update the standard field selector with available fields
+     */
+    updateStandardFieldSelector() {
+        if (!this.elements.standardFieldSelector) return;
+
+        // Clear existing content
+        this.elements.standardFieldSelector.innerHTML = '';
+
+        if (this.state.standardFields.length === 0) {
+            this.elements.standardFieldSelector.innerHTML = '<div class="col-12"><div class="alert alert-warning py-2">No standard fields available for this document type</div></div>';
+            return;
+        }
+
+        // Create a button for each standard field
+        this.state.standardFields.forEach(field => {
+            const fieldCol = document.createElement('div');
+            fieldCol.className = 'col-md-6 col-lg-4';
+
+            // Get color based on field type
+            const typeColor = this.getFieldColor(field.field_type);
+            const borderStyle = `border-left: 3px solid ${typeColor}`;
+
+            // Check if this standard field is already added to the template
+            const isAdded = this.state.fields.some(f => f.code === field.code);
+
+            fieldCol.innerHTML = `
+                <div class="card field-card mb-2" style="${borderStyle}">
+                    <div class="card-body p-2">
+                        <h6 class="card-title mb-1">${field.name}</h6>
+                        <p class="card-text small text-muted mb-1">Code: ${field.code}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-${this.getBootstrapColor(field.field_type)}">${field.field_type}</span>
+                            <button class="btn btn-sm ${isAdded ? 'btn-success' : 'btn-primary'}" 
+                                    ${isAdded ? 'disabled' : ''} 
+                                    data-field-code="${field.code}">
+                                ${isAdded ? '<i class="bi bi-check"></i> Added' : '<i class="bi bi-plus"></i> Add Field'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add click handler to add the standard field
+            const addButton = fieldCol.querySelector('button');
+            if (addButton && !isAdded) {
+                addButton.addEventListener('click', () => {
+                    this.addStandardField(field);
+                });
+            }
+
+            this.elements.standardFieldSelector.appendChild(fieldCol);
+        });
+    }
+
+    /**
+     * Add a standard field to the template
+     * NEW: This creates a new field from a standard field definition
+     */
+    addStandardField(standardField) {
+        // Enter create mode
+        this.state.mode = 'create';
+        this.elements.canvasContainer.classList.remove('view-mode', 'edit-mode');
+        this.elements.canvasContainer.classList.add('create-mode');
+
+        // Show instruction
+        const message = document.createElement('div');
+        message.className = 'alert alert-info mt-2';
+        message.innerHTML = `<i class="bi bi-info-circle"></i> Draw a rectangle on the document to place the <strong>${standardField.name}</strong> field`;
+
+        const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
+        if (fieldInfoPanel) {
+            fieldInfoPanel.style.display = 'block';
+            fieldInfoPanel.innerHTML = '';
+            fieldInfoPanel.appendChild(message);
+        }
+
+        // Set up the new field with standard field properties
+        this.state.currentField = {
+            id: `new_field_${Date.now()}`,
+            name: standardField.name,
+            code: standardField.code,
+            field_type: standardField.field_type,
+            extraction_method: standardField.extraction_method || 'label_based',
+            search_pattern: standardField.search_pattern || '',
+            is_key_field: standardField.is_key_field || false,
+            is_required: standardField.is_required || false,
+            page: this.state.currentPage,
+            // Coordinates will be set by the drawing process
+            x1: 0,
+            y1: 0,
+            x2: 0,
+            y2: 0
+        };
+
+        // We'll wait for the user to draw the field position
+        // The rest of the process continues in handleMouseUp
+    }
+
+    /**
+     * Convert field type to Bootstrap color class
+     */
+    getBootstrapColor(fieldType) {
+        const colors = {
+            'text': 'success',
+            'number': 'danger',
+            'date': 'warning',
+            'currency': 'primary',
+            'boolean': 'info',
+            'list': 'secondary',
+            'table': 'dark'
+        };
+        return colors[fieldType] || 'secondary';
     }
 
     /**

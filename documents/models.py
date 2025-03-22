@@ -223,3 +223,30 @@ class DocumentProcessingLog(models.Model):
         verbose_name = _("Document Processing Log")
         verbose_name_plural = _("Document Processing Logs")
         ordering = ['-timestamp']
+
+class StandardField(models.Model):
+    """Standard fields that can be used in document templates."""
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=100)  # Changed to 100 and not unique globally
+    original_code = models.CharField(max_length=50, blank=True, help_text=_("Original field code used for extraction"))
+    field_type = models.CharField(max_length=20, choices=TemplateField.FIELD_TYPES, default='text')
+    document_type = models.ForeignKey(DocumentType, on_delete=models.CASCADE, related_name='standard_fields')
+    extraction_method = models.CharField(max_length=20, choices=TemplateField.EXTRACTION_METHODS, default='label_based')
+    search_pattern = models.CharField(max_length=255, blank=True, help_text=_("Label or regex pattern to find the field"))
+    is_key_field = models.BooleanField(default=False)
+    is_required = models.BooleanField(default=False)
+    description = models.TextField(blank=True)
+    order = models.PositiveIntegerField(default=0, help_text=_("Sort order for display"))
+
+    class Meta:
+        verbose_name = _("Standard Field")
+        verbose_name_plural = _("Standard Fields")
+        ordering = ['document_type', 'order', 'name']
+        unique_together = ('code', 'document_type')  # Unique code per document type
+
+    def __str__(self):
+        return f"{self.name} ({self.document_type.name})"
+
+    def get_extraction_code(self):
+        """Returns the code to use for extraction (original code or general code)"""
+        return self.original_code or self.code.split('_', 1)[1] if '_' in self.code else self.code

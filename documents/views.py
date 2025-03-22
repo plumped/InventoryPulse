@@ -17,7 +17,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 
 from suppliers.models import Supplier
-from .models import Document, DocumentTemplate, TemplateField, DocumentType, DocumentMatch
+from .models import Document, DocumentTemplate, TemplateField, DocumentType, DocumentMatch, StandardField
 from .forms import DocumentUploadForm, DocumentTemplateForm, TemplateFieldForm, DocumentMatchForm
 from .utils import process_document_with_ocr, extract_field_from_document, log_processing_event, \
     extract_fields_from_document
@@ -750,3 +750,55 @@ def match_document_to_template(request, pk, template_id):
         messages.success(request, _('Dokument erfolgreich mit Template verknüpft.'))
 
     return redirect('document_detail', pk=document.pk)
+
+
+@login_required
+def get_standard_fields(request):
+    """AJAX view for getting standard fields for a document type."""
+    document_type_code = request.GET.get('document_type_code')
+
+    if not document_type_code:
+        return JsonResponse({'error': 'Document type code is required'}, status=400)
+
+    try:
+        # First try to get from database
+        document_type = get_object_or_404(DocumentType, code=document_type_code)
+        standard_fields = StandardField.objects.filter(document_type=document_type)
+
+        # Convert to list of dictionaries
+        suggestions = []
+        for field in standard_fields:
+            # Extract the original code for extraction
+            extraction_code = field.get_extraction_code()
+
+            suggestions.append({
+                'name': field.name,
+                'code': extraction_code,  # Use extraction code, not the database code
+                'field_type': field.field_type,
+                'extraction_method': field.extraction_method,
+                'search_pattern': field.search_pattern,
+                'is_key_field': field.is_key_field,
+                'is_required': field.is_required,
+                'description': field.description
+            })
+
+        # If no fields found in db, fall back to field_suggestions (during transition)
+        if not suggestions:
+            from .field_suggestions import get_field_suggestions
+            suggestions = get_field_suggestions(document_type_code)
+
+        return JsonResponse({
+            'success': True,
+            'document_type_code': document_type_code,
+            'suggestions': suggestions
+        })
+    except DocumentType.DoesNotExist:
+        # If document type not found, fall back to field_suggestions
+        from .field_suggestions import get_field_suggestions
+        suggestions = get_field_suggestions(document_type_code)
+
+        return JsonResponse({
+            'success': True,
+            'document_type_code': document_type_code,
+            'suggestions': suggestions
+        })

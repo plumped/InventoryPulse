@@ -3,7 +3,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from .models import (
     DocumentType, Document, DocumentTemplate,
-    TemplateField, DocumentMatch, DocumentProcessingLog
+    TemplateField, DocumentMatch, DocumentProcessingLog, StandardField
 )
 
 
@@ -178,3 +178,24 @@ class DocumentProcessingLogAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(StandardField)
+class StandardFieldAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'original_code', 'field_type', 'document_type', 'is_key_field', 'is_required')
+    list_filter = ('document_type', 'field_type', 'is_key_field', 'is_required')
+    search_fields = ('name', 'code', 'original_code', 'description')
+    ordering = ('document_type', 'order', 'name')
+
+    # Optional: Add fieldsets for better organization in the edit form
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'code', 'original_code', 'document_type', 'field_type', 'description')
+        }),
+        ('Extraction Settings', {
+            'fields': ('extraction_method', 'search_pattern', 'is_key_field', 'is_required')
+        }),
+        ('Display Settings', {
+            'fields': ('order',)
+        }),
+    )

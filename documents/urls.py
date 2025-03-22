@@ -35,5 +35,6 @@ urlpatterns = [
     path('ajax/match-document-to-order/<int:pk>/', views.match_document_to_order, name='match_document_to_order'),
 
     path('ajax/field-suggestions/', views.get_field_suggestions, name='get_field_suggestions'),
+    path('ajax/get-standard-fields/', views.get_standard_fields, name='get_standard_fields'),
 
 ]

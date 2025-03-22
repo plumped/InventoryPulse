@@ -316,6 +316,7 @@ class FieldEditor {
      * This creates a new field from a standard field definition
      */
     addStandardField(standardField) {
+        console.log("Adding standard field with code:", standardField.code);
         // Enter create mode
         this.state.mode = 'create';
         this.elements.canvasContainer.classList.remove('view-mode', 'edit-mode');
@@ -350,7 +351,7 @@ class FieldEditor {
             x2: 0,
             y2: 0
         };
-
+        console.log("Current field setup with code:", this.state.currentField.code);
         // We'll wait for the user to draw the field position
         // The rest of the process continues in handleMouseUp
     }
@@ -852,6 +853,8 @@ class FieldEditor {
     saveField(field) {
         const isNewField = field.id.startsWith('new_field');
 
+        console.log("Saving field with code:", field.code);
+
         // Create payload with ALL field properties
         const payload = {
             template_id: this.options.templateId,
@@ -870,6 +873,7 @@ class FieldEditor {
                 y2: field.y2
             }
         };
+        console.log("Sending payload:", payload);
 
         // Send to server
         fetch(this.options.ajaxUrls.saveFieldCoordinates, {

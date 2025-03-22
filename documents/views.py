@@ -769,7 +769,7 @@ def get_standard_fields(request):
         suggestions = []
         for field in standard_fields:
             # Extract the original code for extraction
-            extraction_code = field.get_extraction_code()
+            extraction_code = field.code
 
             suggestions.append({
                 'name': field.name,

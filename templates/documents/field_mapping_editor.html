@@ -421,6 +421,7 @@
 
                     // Get standard fields
                     const standardFields = data.suggestions || [];
+                    console.log("Standard fields received:", standardFields);
 
                     // Update count badge
                     countBadge.textContent = standardFields.length;
@@ -682,7 +683,12 @@
             saveButton.onclick = function editorSaveHandler() {
                 // Get form values
                 field.name = document.getElementById('field-name').value;
-                field.code = document.getElementById('field-code').value || field.name.toLowerCase().replace(/\s+/g, '_');
+
+                // Use the provided field code, or keep the original code, or generate from name as last resort
+                field.code = document.getElementById('field-code').value ||
+                             field.code ||  // Keep original code if available
+                             field.name.toLowerCase().replace(/\s+/g, '_');
+
                 field.field_type = document.getElementById('field-type').value;
                 field.extraction_method = document.getElementById('extraction-method').value;
                 field.search_pattern = document.getElementById('search-pattern').value;

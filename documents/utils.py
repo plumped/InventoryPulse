@@ -366,7 +366,9 @@ def extract_fields_from_document(document, template):
     for field in fields:
         value = extract_field_from_document(document, field)
         if value:
-            result[field.code] = value
+            # Use the extracted code without prefixes
+            field_code = field.code
+            result[field_code] = value
 
     return result
 
@@ -454,69 +456,57 @@ def extract_field_by_position(document, field):
 
 def extract_field_by_label(document, field):
     """
-    Extract field value by finding text that follows a label.
-
-    Args:
-        document: Document instance with OCR data
-        field: TemplateField instance with label pattern
-
-    Returns:
-        str: Extracted text that follows the label
+    Extract field value by finding text that follows a label pattern.
     """
     if not field.search_pattern:
         return None
 
-    label_pattern = field.search_pattern.strip()
-    pages = document.ocr_data.get('pages', [])
+    # Log für Debugging
+    logger.debug(f"Extracting field {field.code} with pattern '{field.search_pattern}'")
 
-    for page in pages:
-        words = page.get('words', [])
+    # Get label patterns
+    label_patterns = [pattern.strip() for pattern in field.search_pattern.split('|')]
 
-        # Convert words to a single string with position information
-        text_with_positions = []
-        current_line_y = None
-        line_words = []
+    # Get OCR text (einfacher Ansatz für Debugging)
+    ocr_text = document.ocr_text
 
-        # Group words by line based on y-coordinate
-        for word in sorted(words, key=lambda w: (w.get('y', 0), w.get('x', 0))):
-            word_y = word.get('y', 0)
+    # Für jedes Muster überprüfen
+    for pattern in label_patterns:
+        # Muster in Zeilen suchen
+        for line in ocr_text.split('\n'):
+            if pattern.lower() in line.lower():
+                logger.debug(f"Found pattern '{pattern}' in line: '{line}'")
 
-            # If we're on a new line
-            if current_line_y is None or abs(word_y - current_line_y) > 0.01:  # Threshold for new line
-                if line_words:
-                    line_text = ' '.join(w.get('text', '') for w in line_words)
-                    text_with_positions.append((line_text, line_words[0].get('y', 0), line_words))
+                # Extrahiere den Text nach dem Muster
+                start_idx = line.lower().find(pattern.lower()) + len(pattern)
+                value = line[start_idx:].strip()
 
-                line_words = [word]
-                current_line_y = word_y
-            else:
-                line_words.append(word)
+                # Entferne Doppelpunkt und führende/nachfolgende Leerzeichen
+                if value.startswith(':'):
+                    value = value[1:].strip()
 
-        # Add the last line
-        if line_words:
-            line_text = ' '.join(w.get('text', '') for w in line_words)
-            text_with_positions.append((line_text, line_words[0].get('y', 0), line_words))
+                # Bereinige den Wert (entferne "Ihre Bestellnummer:" etc.)
+                if ":" in value:
+                    # Versuche, nur den Teil nach dem letzten Doppelpunkt zu nehmen
+                    parts = value.split(':', 1)
+                    if len(parts) > 1:
+                        value = parts[1].strip()
 
-        # Search for the label in each line
-        for i, (line_text, line_y, line_words) in enumerate(text_with_positions):
-            if label_pattern.lower() in line_text.lower():
-                # Find position of label in the line
-                label_pos = line_text.lower().find(label_pattern.lower())
+                if value:
+                    logger.debug(f"Extracted value for {field.code}: '{value}'")
+                    return value
 
-                # Extract text after the label in the same line
-                value_text = line_text[label_pos + len(label_pattern):].strip()
+                # Wenn auf dieser Zeile kein Wert gefunden wurde, nächste Zeile prüfen
+                lines = ocr_text.split('\n')
+                for i, current_line in enumerate(lines):
+                    if pattern.lower() in current_line.lower():
+                        if i + 1 < len(lines):
+                            next_line = lines[i + 1].strip()
+                            if next_line and ":" not in next_line:
+                                logger.debug(f"Extracted value from next line for {field.code}: '{next_line}'")
+                                return next_line
 
-                # If value is not in the same line, check the next line
-                if not value_text and i < len(text_with_positions) - 1:
-                    value_text = text_with_positions[i + 1][0].strip()
-
-                if value_text:
-                    # Apply formatting if needed
-                    if field.format_pattern:
-                        value_text = format_field_value(value_text, field)
-
-                    return value_text
-
+    logger.debug(f"No value found for field {field.code}")
     return None
 
 

@@ -33,7 +33,7 @@ class Command(BaseCommand):
             for idx, field_data in enumerate(suggestions):
                 # Create a unique code for each document type to avoid conflicts
                 # Format: doc_type_code + "_" + field_code
-                unique_code = f"{doc_type.code}_{field_data['code']}"
+                unique_code = field_data['code']
 
                 try:
                     # Try to find an existing field for this document type and code

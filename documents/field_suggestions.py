@@ -12,7 +12,7 @@ DELIVERY_NOTE_FIELDS = [
         'code': 'delivery_note_number',
         'field_type': 'text',
         'extraction_method': 'label_based',
-        'search_pattern': 'Lieferschein Nr.|Liefersch.-Nr.|Lieferscheinnummer',
+        'search_pattern': 'Lieferschein Nr.|Liefersch.-Nr.|Lieferscheinnummer|Delivery Note No.|Delivery Note Number',
         'is_key_field': True,
         'is_required': True
     },
@@ -21,7 +21,7 @@ DELIVERY_NOTE_FIELDS = [
         'code': 'delivery_date',
         'field_type': 'date',
         'extraction_method': 'label_based',
-        'search_pattern': 'Lieferdatum|Datum|vom',
+        'search_pattern': 'Lieferdatum|Datum|vom|Belegdatum',
         'is_key_field': False,
         'is_required': True
     },
@@ -30,7 +30,7 @@ DELIVERY_NOTE_FIELDS = [
         'code': 'order_number',
         'field_type': 'text',
         'extraction_method': 'label_based',
-        'search_pattern': 'Bestellung|Bestellnummer|Ihre Bestellung|Bestell-Nr',
+        'search_pattern': 'Bestellung|Bestellnummer|Ihre Bestellung|Bestell-Nr|Ihre Bestellnummer',
         'is_key_field': True,
         'is_required': True
     },

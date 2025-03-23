@@ -320,7 +320,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="search-pattern" class="form-label">Search Pattern</label>
-                        <input type="text" class="form-control" id="search-pattern">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="search-pattern">
+                            <button class="btn btn-outline-secondary" type="button" onclick="window.useSelectionAsPattern()">
+                                <i class="bi bi-cursor-text"></i> Use Selection
+                            </button>
+                        </div>
                         <small class="form-text text-muted">Label text or regex pattern to find the field</small>
                     </div>
                     <div class="mb-3 form-check">
@@ -395,6 +400,9 @@
                 window.location.reload();
             }
         });
+
+        // Make editor instance globally available
+        window.editorInstance = editor;
 
         // Load standard fields
         loadStandardFields(editorContainer.dataset.documentType);
@@ -672,6 +680,13 @@
             document.getElementById('field-modal-label').textContent =
                 field.id && !field.id.startsWith('new_field') ? 'Edit Field' : 'Add Field';
 
+            // If there's extracted text from the rectangle, automatically fill it in
+            // when the field doesn't already have a search pattern
+            if (window.editorInstance && window.editorInstance.selectedText &&
+                (!field.search_pattern || field.search_pattern === '')) {
+                document.getElementById('search-pattern').value = window.editorInstance.selectedText;
+            }
+
             // Show modal
             modal.show();
 
@@ -711,5 +726,138 @@
             };
         };
     });
+
+
+    // This function will handle the "Use Selection" button click
+window.useSelectionAsPattern = function() {
+    // Get the pattern field element
+    const patternField = document.getElementById('search-pattern');
+    if (!patternField) {
+        console.error("Search pattern field not found");
+        return;
+    }
+
+    // Check if we have an editor instance and a drawn rectangle
+    if (!window.editorInstance || !window.editorInstance.state.currentField) {
+        console.log("No selection rectangle available");
+        return;
+    }
+
+    // Get the current field's coordinates
+    const field = window.editorInstance.state.currentField;
+
+    // Check if we have OCR data
+    if (!window.editorInstance.ocrData || !window.editorInstance.ocrData.words) {
+        console.log("No OCR data available");
+        return;
+    }
+
+    // IMPORTANT: Convert selection coordinates from pixels to normalized values (0-1)
+    // First, get document dimensions
+    const docWidth = window.editorInstance.documentDimensions.width;
+    const docHeight = window.editorInstance.documentDimensions.height;
+
+    // Check if the coordinates are already normalized (between 0-1)
+    const alreadyNormalized = field.x1 <= 1 && field.y1 <= 1 && field.x2 <= 1 && field.y2 <= 1;
+
+    // Normalize coordinates if needed
+    const normalizedField = alreadyNormalized ? field : {
+        x1: field.x1 / docWidth,
+        y1: field.y1 / docHeight,
+        x2: field.x2 / docWidth,
+        y2: field.y2 / docHeight
+    };
+
+    console.log("Normalized selection coordinates:",
+                normalizedField.x1, normalizedField.y1,
+                normalizedField.x2, normalizedField.y2);
+
+    // Find all words that intersect with the normalized selection rectangle
+    const wordsInSelection = window.editorInstance.ocrData.words.filter(word => {
+        // Determine if the word intersects with the selection rectangle
+        const wordRight = word.x + word.w;
+        const wordBottom = word.y + word.h;
+
+        // Debug coordinates for specific words
+        if (word.text.includes("Lieferschein") || word.text.includes("Nr")) {
+            console.log(`Word "${word.text}" coords: x=${word.x}, y=${word.y}, w=${word.w}, h=${word.h}`);
+            console.log(`Compare with normalized selection: x1=${normalizedField.x1}, y1=${normalizedField.y1}, x2=${normalizedField.x2}, y2=${normalizedField.y2}`);
+        }
+
+        return !(
+            word.x > normalizedField.x2 || // word is to the right of selection
+            wordRight < normalizedField.x1 || // word is to the left of selection
+            word.y > normalizedField.y2 || // word is below selection
+            wordBottom < normalizedField.y1 // word is above selection
+        );
+    });
+
+    console.log("Words in selection:", wordsInSelection);
+
+    if (wordsInSelection.length === 0) {
+        console.log("No words found in the selection. Trying with expanded boundaries...");
+
+        // Try with expanded boundaries
+        const expandFactor = 0.05; // Expand by 5% of document size
+        const expandedField = {
+            x1: Math.max(0, normalizedField.x1 - expandFactor),
+            y1: Math.max(0, normalizedField.y1 - expandFactor),
+            x2: Math.min(1, normalizedField.x2 + expandFactor),
+            y2: Math.min(1, normalizedField.y2 + expandFactor)
+        };
+
+        console.log("Expanded selection:", expandedField);
+
+        // Try again with expanded boundaries
+        const wordsInExpandedSelection = window.editorInstance.ocrData.words.filter(word => {
+            const wordRight = word.x + word.w;
+            const wordBottom = word.y + word.h;
+
+            return !(
+                word.x > expandedField.x2 ||
+                wordRight < expandedField.x1 ||
+                word.y > expandedField.y2 ||
+                wordBottom < expandedField.y1
+            );
+        });
+
+        if (wordsInExpandedSelection.length > 0) {
+            // Sort words by position
+            wordsInExpandedSelection.sort((a, b) => {
+                const lineThreshold = 0.01;
+                if (Math.abs(a.y - b.y) < lineThreshold) {
+                    return a.x - b.x;
+                }
+                return a.y - b.y;
+            });
+
+            // Extract text from expanded selection
+            const selectedText = wordsInExpandedSelection.map(word => word.text).join(' ');
+            console.log("Extracted text from expanded selection:", selectedText);
+            patternField.value = selectedText;
+            return;
+        }
+
+        console.log("Still no words found. Cannot extract text from selection.");
+        return;
+    }
+
+    // Sort words by position (top to bottom, left to right)
+    wordsInSelection.sort((a, b) => {
+        // If words are on roughly the same line (within a threshold)
+        const lineThreshold = 0.01; // Adjust based on your document's text spacing
+        if (Math.abs(a.y - b.y) < lineThreshold) {
+            return a.x - b.x; // Sort left to right
+        }
+        return a.y - b.y; // Sort top to bottom
+    });
+
+    // Extract text from selected words
+    const selectedText = wordsInSelection.map(word => word.text).join(' ');
+    console.log("Extracted text from selection:", selectedText);
+
+    // Set the extracted text as the pattern
+    patternField.value = selectedText;
+}
 </script>
 {% endblock %}

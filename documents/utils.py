@@ -454,59 +454,124 @@ def extract_field_by_position(document, field):
     return result if result else None
 
 
+# def extract_field_by_label(document, field):
+#     """
+#     Extract field value by finding text that follows a label pattern.
+#     """
+#     if not field.search_pattern:
+#         return None
+#
+#     # Log für Debugging
+#     logger.debug(f"Extracting field {field.code} with pattern '{field.search_pattern}'")
+#
+#     # Get label patterns
+#     label_patterns = [pattern.strip() for pattern in field.search_pattern.split('|')]
+#
+#     # Get OCR text (einfacher Ansatz für Debugging)
+#     ocr_text = document.ocr_text
+#
+#     # Für jedes Muster überprüfen
+#     for pattern in label_patterns:
+#         # Muster in Zeilen suchen
+#         for line in ocr_text.split('\n'):
+#             if pattern.lower() in line.lower():
+#                 logger.debug(f"Found pattern '{pattern}' in line: '{line}'")
+#
+#                 # Extrahiere den Text nach dem Muster
+#                 start_idx = line.lower().find(pattern.lower()) + len(pattern)
+#                 value = line[start_idx:].strip()
+#
+#                 # Entferne Doppelpunkt und führende/nachfolgende Leerzeichen
+#                 if value.startswith(':'):
+#                     value = value[1:].strip()
+#
+#                 # Bereinige den Wert (entferne "Ihre Bestellnummer:" etc.)
+#                 if ":" in value:
+#                     # Versuche, nur den Teil nach dem letzten Doppelpunkt zu nehmen
+#                     parts = value.split(':', 1)
+#                     if len(parts) > 1:
+#                         value = parts[1].strip()
+#
+#                 if value:
+#                     logger.debug(f"Extracted value for {field.code}: '{value}'")
+#                     return value
+#
+#                 # Wenn auf dieser Zeile kein Wert gefunden wurde, nächste Zeile prüfen
+#                 lines = ocr_text.split('\n')
+#                 for i, current_line in enumerate(lines):
+#                     if pattern.lower() in current_line.lower():
+#                         if i + 1 < len(lines):
+#                             next_line = lines[i + 1].strip()
+#                             if next_line and ":" not in next_line:
+#                                 logger.debug(f"Extracted value from next line for {field.code}: '{next_line}'")
+#                                 return next_line
+#
+#     logger.debug(f"No value found for field {field.code}")
+#     return None
+
 def extract_field_by_label(document, field):
     """
     Extract field value by finding text that follows a label pattern.
+
+    Args:
+        document: Document instance with OCR data
+        field: TemplateField instance with search pattern
+
+    Returns:
+        str: Extracted text that follows the label
     """
     if not field.search_pattern:
         return None
 
-    # Log für Debugging
-    logger.debug(f"Extracting field {field.code} with pattern '{field.search_pattern}'")
+    # Behandle das Suchmuster als einen einzelnen regulären Ausdruck
+    pattern = field.search_pattern.strip()
 
-    # Get label patterns
-    label_patterns = [pattern.strip() for pattern in field.search_pattern.split('|')]
+    try:
+        # Kompiliere den regulären Ausdruck mit IGNORECASE-Flag
+        regex = re.compile(pattern, re.IGNORECASE)
 
-    # Get OCR text (einfacher Ansatz für Debugging)
-    ocr_text = document.ocr_text
+        # Suche in jeder Zeile des OCR-Textes
+        lines = document.ocr_text.split('\n')
+        for i, line in enumerate(lines):
+            match = regex.search(line)
+            if match:
+                # Extrahiere Text nach dem gefundenen Muster
+                value = line[match.end():].strip()
 
-    # Für jedes Muster überprüfen
-    for pattern in label_patterns:
-        # Muster in Zeilen suchen
-        for line in ocr_text.split('\n'):
-            if pattern.lower() in line.lower():
-                logger.debug(f"Found pattern '{pattern}' in line: '{line}'")
-
-                # Extrahiere den Text nach dem Muster
-                start_idx = line.lower().find(pattern.lower()) + len(pattern)
-                value = line[start_idx:].strip()
-
-                # Entferne Doppelpunkt und führende/nachfolgende Leerzeichen
+                # Entferne Doppelpunkt am Anfang
                 if value.startswith(':'):
                     value = value[1:].strip()
 
-                # Bereinige den Wert (entferne "Ihre Bestellnummer:" etc.)
-                if ":" in value:
-                    # Versuche, nur den Teil nach dem letzten Doppelpunkt zu nehmen
-                    parts = value.split(':', 1)
-                    if len(parts) > 1:
-                        value = parts[1].strip()
-
+                # Wenn Wert gefunden, gib ihn zurück
                 if value:
-                    logger.debug(f"Extracted value for {field.code}: '{value}'")
                     return value
 
-                # Wenn auf dieser Zeile kein Wert gefunden wurde, nächste Zeile prüfen
-                lines = ocr_text.split('\n')
-                for i, current_line in enumerate(lines):
-                    if pattern.lower() in current_line.lower():
-                        if i + 1 < len(lines):
-                            next_line = lines[i + 1].strip()
-                            if next_line and ":" not in next_line:
-                                logger.debug(f"Extracted value from next line for {field.code}: '{next_line}'")
-                                return next_line
+                # Wenn kein Wert auf dieser Zeile, prüfe die nächste Zeile
+                if i + 1 < len(lines):
+                    next_line = lines[i + 1].strip()
+                    if next_line and not regex.search(next_line):
+                        return next_line
 
-    logger.debug(f"No value found for field {field.code}")
+    except re.error as e:
+        # Bei einem Regex-Fehler loggen und auf fallback-Methode zurückgreifen
+        logger.warning(f"Invalid regex pattern for field {field.name}: {pattern} - {str(e)}")
+
+        # Fallback: Behandle als Liste von Teilstrings
+        patterns = [p.strip() for p in pattern.split('|')]
+        for i, line in enumerate(lines):
+            for p in patterns:
+                if p.lower() in line.lower():
+                    start_idx = line.lower().find(p.lower()) + len(p)
+                    value = line[start_idx:].strip()
+                    if value.startswith(':'):
+                        value = value[1:].strip()
+                    if value:
+                        return value
+
+                    # Prüfe nächste Zeile
+                    if i + 1 < len(lines):
+                        return lines[i + 1].strip()
+
     return None
 
 

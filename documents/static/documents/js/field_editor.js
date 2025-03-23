@@ -1,8 +1,5 @@
 /**
  * Enhanced Field Editor for Document Template Mapping
- *
- * This improved version includes a standard field selector to help users
- * choose from predefined fields that the system recognizes for matching.
  */
 
 // Main editor class
@@ -71,6 +68,12 @@ class FieldEditor {
             width: 0,
             height: 0
         };
+
+        // Store the current text selection from rectangle
+        this.selectedText = '';
+
+        // Make the editor instance available globally
+        window.editorInstance = this;
 
         // Initialize the editor
         this.init();
@@ -312,6 +315,91 @@ class FieldEditor {
     }
 
     /**
+ * Extract text from OCR data within a region
+ * @param {number} x1 - Left coordinate (0-1)
+ * @param {number} y1 - Top coordinate (0-1)
+ * @param {number} x2 - Right coordinate (0-1)
+ * @param {number} y2 - Bottom coordinate (0-1)
+ * @returns {string} - Extracted text
+ */
+extractTextFromRegion(x1, y1, x2, y2) {
+    if (!this.ocrData || !this.ocrData.words || this.ocrData.words.length === 0) {
+        return '';
+    }
+
+    // Find all words that are entirely or partially within the region
+    const wordsInRegion = this.ocrData.words.filter(word => {
+        // Consider a word if its center point is in the region
+        const wordCenterX = word.x + (word.w / 2);
+        const wordCenterY = word.y + (word.h / 2);
+
+        return (
+            wordCenterX >= x1 &&
+            wordCenterX <= x2 &&
+            wordCenterY >= y1 &&
+            wordCenterY <= y2
+        );
+    });
+
+    // If no words found, return empty string
+    if (wordsInRegion.length === 0) {
+        return '';
+    }
+
+    // Sort words by vertical position first, then horizontal
+    wordsInRegion.sort((a, b) => {
+        // Group words on similar vertical position (within 1.5x height of average)
+        const avgHeight = (a.h + b.h) / 2;
+        const threshold = avgHeight * 1.5;
+
+        // If y-coordinates are close enough, consider them on same line
+        if (Math.abs(a.y - b.y) < threshold) {
+            return a.x - b.x; // Sort horizontally on same line
+        }
+
+        return a.y - b.y; // Otherwise sort by vertical position
+    });
+
+    // Group words into lines
+    const lines = [];
+    let currentLine = [];
+    let prevY = -1;
+
+    wordsInRegion.forEach(word => {
+        if (prevY === -1) {
+            // First word
+            currentLine.push(word);
+        } else {
+            const avgHeight = word.h; // Use current word height as reference
+            const threshold = avgHeight * 1.5;
+
+            // If vertical difference is small, same line
+            if (Math.abs(word.y - prevY) < threshold) {
+                currentLine.push(word);
+            } else {
+                // New line
+                lines.push([...currentLine]);
+                currentLine = [word];
+            }
+        }
+
+        prevY = word.y;
+    });
+
+    // Add last line
+    if (currentLine.length > 0) {
+        lines.push(currentLine);
+    }
+
+    // Combine words into text, line by line
+    const text = lines.map(line => {
+        return line.map(word => word.text).join(' ');
+    }).join('\n');
+
+    return text;
+}
+
+    /**
      * Add a standard field to the template
      * This creates a new field from a standard field definition
      */
@@ -351,7 +439,7 @@ class FieldEditor {
             x2: 0,
             y2: 0
         };
-        console.log("Current field setup with code:", this.state.currentField.code);
+
         // We'll wait for the user to draw the field position
         // The rest of the process continues in handleMouseUp
     }
@@ -517,6 +605,35 @@ class FieldEditor {
             targetElement.innerHTML = '';
             targetElement.appendChild(alertDiv);
         }
+    }
+
+    /**
+     * Display text selected in the rectangle
+     */
+    showSelectedText(text) {
+        if (!text) return;
+
+        // Store the selected text
+        this.selectedText = text;
+        console.log("Selected text from region:", text);
+
+        // Visual feedback for selection
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = 'alert alert-info position-fixed';
+        feedbackDiv.style.bottom = '20px';
+        feedbackDiv.style.right = '20px';
+        feedbackDiv.style.zIndex = '9999';
+        feedbackDiv.style.maxWidth = '300px';
+        feedbackDiv.style.maxHeight = '150px';
+        feedbackDiv.style.overflow = 'auto';
+        feedbackDiv.innerHTML = `<strong>Text extracted:</strong> "${text}"`;
+
+        document.body.appendChild(feedbackDiv);
+
+        // Remove feedback after 3 seconds
+        setTimeout(() => {
+            document.body.removeChild(feedbackDiv);
+        }, 3000);
     }
 
     /**
@@ -796,6 +913,14 @@ class FieldEditor {
         field.x2 = x2;
         field.y2 = y2;
 
+        // Extract text from the selected region
+        this.selectedText = this.extractTextFromRegion(x1, y1, x2, y2);
+
+        // Show the extracted text to the user
+        if (this.selectedText) {
+            this.showSelectedText(this.selectedText);
+        }
+
         // Show field creation dialog
         this.showFieldDialog(field);
     }
@@ -891,344 +1016,344 @@ class FieldEditor {
                 return response.json();
             })
             .then(data => {
-    if (data.error) {
-        console.error('Error saving field:', data.error);
-        return;
+                if (data.error) {
+                    console.error('Error saving field:', data.error);
+                    return;
+                }
+
+                // Update field ID for new fields
+                if (isNewField) {
+                    const index = this.state.fields.findIndex(f => f.id === field.id);
+                    if (index >= 0) {
+                        this.state.fields[index].id = data.field_id;
+                    }
+                }
+
+                // If this is a new field, add it to the fields array
+                if (isNewField) {
+                    field.id = data.field_id;
+                    this.state.fields.push(field);
+                }
+
+                // Reset the currentField and mode
+                this.state.currentField = null;
+                this.state.mode = 'view';
+                this.elements.canvasContainer.classList.remove('create-mode', 'edit-mode');
+                this.elements.canvasContainer.classList.add('view-mode');
+
+                // Select the field
+                this.selectField(data.field_id);
+
+                // Update field selector
+                this.updateFieldSelector();
+
+                // Callback
+                if (this.options.onFieldSaved) {
+                    this.options.onFieldSaved(data);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving field:', error);
+            });
     }
 
-    // Update field ID for new fields
-    if (isNewField) {
-        const index = this.state.fields.findIndex(f => f.id === field.id);
-        if (index >= 0) {
-            this.state.fields[index].id = data.field_id;
+    /**
+     * Select a field
+     */
+    selectField(fieldId) {
+        const field = this.state.fields.find(f => f.id == fieldId);
+        if (!field) return;
+
+        this.state.currentField = field;
+        this.state.mode = 'edit';
+
+        // Update field selector
+        const fieldSelector = this.elements.fieldControls.querySelector('select');
+        if (fieldSelector) {
+            fieldSelector.value = fieldId;
         }
+
+        // Show field info panel
+        this.showFieldInfo(field);
+
+        // Redraw fields
+        this.drawFields();
     }
 
-    // If this is a new field, add it to the fields array
-    if (isNewField) {
-        field.id = data.field_id;
-        this.state.fields.push(field);
+    /**
+     * Deselect the current field
+     */
+    deselectField(changeMode = true) {
+        this.state.currentField = null;
+        if (changeMode) {
+            this.state.mode = 'view';
+        }
+
+        // Update field selector
+        const fieldSelector = this.elements.fieldControls.querySelector('select');
+        if (fieldSelector) {
+            fieldSelector.value = '';
+        }
+
+        // Hide field info panel
+        const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
+        if (fieldInfoPanel) {
+            fieldInfoPanel.style.display = 'none';
+        }
+
+        // Redraw fields
+        this.drawFields();
     }
 
-    // Reset the currentField and mode
-    this.state.currentField = null;
-    this.state.mode = 'view';
-    this.elements.canvasContainer.classList.remove('create-mode', 'edit-mode');
-    this.elements.canvasContainer.classList.add('view-mode');
+    /**
+     * Show field info panel
+     */
+    showFieldInfo(field) {
+        if (!field) return;
 
-    // Select the field
-    this.selectField(data.field_id);
+        const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
+        if (!fieldInfoPanel) return;
 
-    // Update field selector
-    this.updateFieldSelector();
+        // Show the panel
+        fieldInfoPanel.style.display = 'block';
 
-    // Callback
-    if (this.options.onFieldSaved) {
-        this.options.onFieldSaved(data);
-    }
-})
-.catch(error => {
-    console.error('Error saving field:', error);
-});
-}
-
-/**
- * Select a field
- */
-selectField(fieldId) {
-    const field = this.state.fields.find(f => f.id == fieldId);
-    if (!field) return;
-
-    this.state.currentField = field;
-    this.state.mode = 'edit';
-
-    // Update field selector
-    const fieldSelector = this.elements.fieldControls.querySelector('select');
-    if (fieldSelector) {
-        fieldSelector.value = fieldId;
-    }
-
-    // Show field info panel
-    this.showFieldInfo(field);
-
-    // Redraw fields
-    this.drawFields();
-}
-
-/**
- * Deselect the current field
- */
-deselectField(changeMode = true) {
-    this.state.currentField = null;
-    if (changeMode) {
-        this.state.mode = 'view';
-    }
-
-    // Update field selector
-    const fieldSelector = this.elements.fieldControls.querySelector('select');
-    if (fieldSelector) {
-        fieldSelector.value = '';
-    }
-
-    // Hide field info panel
-    const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
-    if (fieldInfoPanel) {
-        fieldInfoPanel.style.display = 'none';
-    }
-
-    // Redraw fields
-    this.drawFields();
-}
-
-/**
- * Show field info panel
- */
-showFieldInfo(field) {
-    if (!field) return;
-
-    const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
-    if (!fieldInfoPanel) return;
-
-    // Show the panel
-    fieldInfoPanel.style.display = 'block';
-
-    // Set content
-    fieldInfoPanel.innerHTML = `
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">${field.name}</h6>
-                <div>
-                    <button type="button" class="btn btn-sm btn-outline-primary edit-field-btn">
-                        <i class="bi bi-pencil"></i> Edit
-                    </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger delete-field-btn">
-                        <i class="bi bi-trash"></i> Delete
-                    </button>
+        // Set content
+        fieldInfoPanel.innerHTML = `
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">${field.name}</h6>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-outline-primary edit-field-btn">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger delete-field-btn">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div><strong>Code:</strong> ${field.code}</div>
+                    <div><strong>Type:</strong> ${field.field_type}</div>
+                    <div><strong>Coordinates:</strong> (${field.x1.toFixed(2)}, ${field.y1.toFixed(2)}) - (${field.x2.toFixed(2)}, ${field.y2.toFixed(2)})</div>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-info extract-field-btn">
+                            <i class="bi bi-eye"></i> Extract Value
+                        </button>
+                        <span class="extracted-value ms-2"></span>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div><strong>Code:</strong> ${field.code}</div>
-                <div><strong>Type:</strong> ${field.field_type}</div>
-                <div><strong>Coordinates:</strong> (${field.x1.toFixed(2)}, ${field.y1.toFixed(2)}) - (${field.x2.toFixed(2)}, ${field.y2.toFixed(2)})</div>
-                <div class="mt-2">
-                    <button type="button" class="btn btn-sm btn-outline-info extract-field-btn">
-                        <i class="bi bi-eye"></i> Extract Value
-                    </button>
-                    <span class="extracted-value ms-2"></span>
-                </div>
-            </div>
-        </div>
-    `;
+        `;
 
-    // Add event listeners
-    const editBtn = fieldInfoPanel.querySelector('.edit-field-btn');
-    const deleteBtn = fieldInfoPanel.querySelector('.delete-field-btn');
-    const extractBtn = fieldInfoPanel.querySelector('.extract-field-btn');
+        // Add event listeners
+        const editBtn = fieldInfoPanel.querySelector('.edit-field-btn');
+        const deleteBtn = fieldInfoPanel.querySelector('.delete-field-btn');
+        const extractBtn = fieldInfoPanel.querySelector('.extract-field-btn');
 
-    editBtn.addEventListener('click', () => {
-        this.showFieldDialog(field);
-    });
+        editBtn.addEventListener('click', () => {
+            this.showFieldDialog(field);
+        });
 
-    deleteBtn.addEventListener('click', () => {
-        this.deleteField(field);
-    });
+        deleteBtn.addEventListener('click', () => {
+            this.deleteField(field);
+        });
 
-    extractBtn.addEventListener('click', () => {
-        this.extractFieldValue(field);
-    });
-}
-
-/**
- * Delete a field
- */
-deleteField(field) {
-    // Confirm deletion
-    if (!confirm(`Are you sure you want to delete the field "${field.name}"?`)) {
-        return;
+        extractBtn.addEventListener('click', () => {
+            this.extractFieldValue(field);
+        });
     }
 
-    // Remove field from array
-    const index = this.state.fields.findIndex(f => f.id === field.id);
-    if (index >= 0) {
-        this.state.fields.splice(index, 1);
-    }
-
-    // Deselect field
-    this.deselectField();
-
-    // Update field selector
-    this.updateFieldSelector();
-
-    // Redraw fields
-    this.drawFields();
-
-    // In a real application, you would delete from server too
-    // For now, we'll just log it
-    console.log('Delete field from server:', field.id);
-}
-
-/**
- * Extract field value from document
- */
-extractFieldValue(field) {
-    // Create payload
-    const payload = {
-        document_id: this.options.documentId,
-        field_id: field.id
-    };
-
-    // Send to server
-    fetch(this.options.ajaxUrls.extractFieldValue, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': this.options.csrfToken
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.error) {
-            console.error('Error extracting field value:', data.error);
+    /**
+     * Delete a field
+     */
+    deleteField(field) {
+        // Confirm deletion
+        if (!confirm(`Are you sure you want to delete the field "${field.name}"?`)) {
             return;
         }
 
-        // Show the extracted value
-        const valueSpan = this.elements.fieldControls.querySelector('.extracted-value');
-        if (valueSpan) {
-            valueSpan.textContent = data.value || 'No value found';
+        // Remove field from array
+        const index = this.state.fields.findIndex(f => f.id === field.id);
+        if (index >= 0) {
+            this.state.fields.splice(index, 1);
         }
 
-        // Callback
-        if (this.options.onFieldExtracted) {
-            this.options.onFieldExtracted(data);
+        // Deselect field
+        this.deselectField();
+
+        // Update field selector
+        this.updateFieldSelector();
+
+        // Redraw fields
+        this.drawFields();
+
+        // In a real application, you would delete from server too
+        // For now, we'll just log it
+        console.log('Delete field from server:', field.id);
+    }
+
+    /**
+     * Extract field value from document
+     */
+    extractFieldValue(field) {
+        // Create payload
+        const payload = {
+            document_id: this.options.documentId,
+            field_id: field.id
+        };
+
+        // Send to server
+        fetch(this.options.ajaxUrls.extractFieldValue, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.options.csrfToken
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                console.error('Error extracting field value:', data.error);
+                return;
+            }
+
+            // Show the extracted value
+            const valueSpan = this.elements.fieldControls.querySelector('.extracted-value');
+            if (valueSpan) {
+                valueSpan.textContent = data.value || 'No value found';
+            }
+
+            // Callback
+            if (this.options.onFieldExtracted) {
+                this.options.onFieldExtracted(data);
+            }
+        })
+        .catch(error => {
+            console.error('Error extracting field value:', error);
+        });
+    }
+
+    /**
+     * Start field creation mode
+     */
+    startFieldCreation() {
+        // Set the mode first
+        this.state.mode = 'create';
+
+        // Deselect any selected field
+        const origMode = this.state.mode;
+        this.deselectField(false); // Pass false to indicate don't change mode
+        this.state.mode = origMode; // Restore the original mode
+
+        // Add create mode class to container
+        this.elements.canvasContainer.classList.remove('view-mode', 'edit-mode');
+        this.elements.canvasContainer.classList.add('create-mode');
+
+        // Show instruction message
+        const message = document.createElement('div');
+        message.className = 'alert alert-info mt-2';
+        message.innerHTML = '<i class="bi bi-info-circle"></i> Draw a rectangle on the document to create a field';
+
+        const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
+        if (fieldInfoPanel) {
+            fieldInfoPanel.style.display = 'block';
+            fieldInfoPanel.innerHTML = '';
+            fieldInfoPanel.appendChild(message);
         }
-    })
-    .catch(error => {
-        console.error('Error extracting field value:', error);
-    });
-}
-
-/**
- * Start field creation mode
- */
-startFieldCreation() {
-    // Set the mode first
-    this.state.mode = 'create';
-
-    // Deselect any selected field
-    const origMode = this.state.mode;
-    this.deselectField(false); // Pass false to indicate don't change mode
-    this.state.mode = origMode; // Restore the original mode
-
-    // Add create mode class to container
-    this.elements.canvasContainer.classList.remove('view-mode', 'edit-mode');
-    this.elements.canvasContainer.classList.add('create-mode');
-
-    // Show instruction message
-    const message = document.createElement('div');
-    message.className = 'alert alert-info mt-2';
-    message.innerHTML = '<i class="bi bi-info-circle"></i> Draw a rectangle on the document to create a field';
-
-    const fieldInfoPanel = this.elements.fieldControls.querySelector('.field-info-panel');
-    if (fieldInfoPanel) {
-        fieldInfoPanel.style.display = 'block';
-        fieldInfoPanel.innerHTML = '';
-        fieldInfoPanel.appendChild(message);
     }
-}
 
-/**
- * Go to previous page
- */
-previousPage() {
-    if (this.state.currentPage > 1) {
-        this.state.currentPage--;
-        this.loadDocument();
+    /**
+     * Go to previous page
+     */
+    previousPage() {
+        if (this.state.currentPage > 1) {
+            this.state.currentPage--;
+            this.loadDocument();
+        }
     }
-}
 
-/**
- * Go to next page
- */
-nextPage() {
-    if (this.state.currentPage < this.state.totalPages) {
-        this.state.currentPage++;
-        this.loadDocument();
+    /**
+     * Go to next page
+     */
+    nextPage() {
+        if (this.state.currentPage < this.state.totalPages) {
+            this.state.currentPage++;
+            this.loadDocument();
+        }
     }
-}
 
-/**
- * Zoom in
- */
-zoomIn() {
-    this.state.scale *= 1.2;
-    this.resizeCanvas();
-}
+    /**
+     * Zoom in
+     */
+    zoomIn() {
+        this.state.scale *= 1.2;
+        this.resizeCanvas();
+    }
 
-/**
- * Zoom out
- */
-zoomOut() {
-    this.state.scale /= 1.2;
-    this.resizeCanvas();
-}
+    /**
+     * Zoom out
+     */
+    zoomOut() {
+        this.state.scale /= 1.2;
+        this.resizeCanvas();
+    }
 
-/**
- * Fit document to width
- */
-fitToWidth() {
-    const containerWidth = this.container.clientWidth;
+    /**
+     * Fit document to width
+     */
+    fitToWidth() {
+        const containerWidth = this.container.clientWidth;
 
-    // Set scale to fit container width with some margin
-    this.state.scale = (containerWidth - 40) / this.documentDimensions.width;
+        // Set scale to fit container width with some margin
+        this.state.scale = (containerWidth - 40) / this.documentDimensions.width;
 
-    // Ensure minimum scale
-    if (this.state.scale < 0.2) this.state.scale = 0.2;
+        // Ensure minimum scale
+        if (this.state.scale < 0.2) this.state.scale = 0.2;
 
-    this.resizeCanvas();
-}
+        this.resizeCanvas();
+    }
 }
 
 // Initialize field editor when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-// Check if editor container exists
-const editorContainer = document.getElementById('field-editor');
-if (!editorContainer) return;
+    // Check if editor container exists
+    const editorContainer = document.getElementById('field-editor');
+    if (!editorContainer) return;
 
-// Get options from data attributes
-const documentId = editorContainer.dataset.documentId;
-const templateId = editorContainer.dataset.templateId;
-const documentType = editorContainer.dataset.documentType;
+    // Get options from data attributes
+    const documentId = editorContainer.dataset.documentId;
+    const templateId = editorContainer.dataset.templateId;
+    const documentType = editorContainer.dataset.documentType;
 
-if (!documentId) {
-    console.error('Document ID is required');
-    return;
-}
-
-// Initialize editor
-const editor = new FieldEditor('field-editor', {
-    documentId: documentId,
-    templateId: templateId,
-    documentType: documentType,
-    csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
-    ajaxUrls: {
-        getDocumentImage: '/documents/ajax/get-document-image/' + documentId + '/',
-        getDocumentOcrData: '/documents/ajax/get-document-ocr-data/' + documentId + '/',
-        saveFieldCoordinates: '/documents/ajax/save-field-coordinates/',
-        extractFieldValue: '/documents/ajax/extract-field-value/',
-        getStandardFields: '/documents/ajax/get-standard-fields/'
-    },
-    onFieldSaved: function(data) {
-        console.log('Field saved:', data);
-    },
-    onFieldExtracted: function(data) {
-        console.log('Field extracted:', data);
+    if (!documentId) {
+        console.error('Document ID is required');
+        return;
     }
-});
+
+    // Initialize editor
+    const editor = new FieldEditor('field-editor', {
+        documentId: documentId,
+        templateId: templateId,
+        documentType: documentType,
+        csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+        ajaxUrls: {
+            getDocumentImage: '/documents/ajax/get-document-image/' + documentId + '/',
+            getDocumentOcrData: '/documents/ajax/get-document-ocr-data/' + documentId + '/',
+            saveFieldCoordinates: '/documents/ajax/save-field-coordinates/',
+            extractFieldValue: '/documents/ajax/extract-field-value/',
+            getStandardFields: '/documents/ajax/get-standard-fields/'
+        },
+        onFieldSaved: function(data) {
+            console.log('Field saved:', data);
+        },
+        onFieldExtracted: function(data) {
+            console.log('Field extracted:', data);
+        }
+    });
 });

@@ -1200,3 +1200,315 @@ def bulk_send_orders(request):
         )
 
     return redirect('purchase_order_list')
+
+
+@login_required
+@permission_required('order', 'edit')
+def purchase_order_receipt_edit(request, pk, receipt_id):
+    """Edit a purchase order receipt."""
+    order = get_object_or_404(PurchaseOrder, pk=pk)
+    receipt = get_object_or_404(PurchaseOrderReceipt, pk=receipt_id, purchase_order=order)
+
+    # Only receipts for orders in partially_received or received status can be edited
+    if order.status not in ['partially_received', 'received']:
+        messages.error(request,
+                       f'Wareneingang kann nicht bearbeitet werden, da die Bestellung im Status "{order.get_status_display()}" ist.')
+        return redirect('purchase_order_detail', pk=order.pk)
+
+    if request.method == 'POST':
+        # Process form submission
+        notes = request.POST.get('notes', '')
+
+        with transaction.atomic():
+            # Update receipt notes
+            receipt.notes = notes
+            receipt.save()
+
+            # Process each receipt item
+            for item in receipt.items.all():
+                # Get updated values from form
+                quantity_key = f'quantity_{item.id}'
+                warehouse_key = f'warehouse_{item.id}'
+                batch_key = f'batch_{item.id}'
+                expiry_key = f'expiry_{item.id}'
+
+                if quantity_key in request.POST:
+                    try:
+                        new_quantity = Decimal(request.POST.get(quantity_key))
+                        old_quantity = item.quantity_received
+
+                        # Only process if quantity changed
+                        if new_quantity != old_quantity:
+                            # Update the quantity difference in the stock
+                            quantity_diff = new_quantity - old_quantity
+
+                            # Update the receipt item quantity
+                            item.quantity_received = new_quantity
+
+                            # Update warehouse if changed
+                            if warehouse_key in request.POST:
+                                new_warehouse_id = request.POST.get(warehouse_key)
+                                new_warehouse = get_object_or_404(Warehouse, pk=new_warehouse_id)
+
+                                if new_warehouse.id != item.warehouse.id:
+                                    # First, reverse the stock movement in the old warehouse
+                                    StockMovement.objects.create(
+                                        product=item.order_item.product,
+                                        warehouse=item.warehouse,
+                                        quantity=-old_quantity,
+                                        movement_type='adj',
+                                        reference=f'Wareneingang korrigiert: {order.order_number}',
+                                        notes=f'Wareneingang in anderes Lager verschoben',
+                                        created_by=request.user
+                                    )
+
+                                    # Update ProductWarehouse for old warehouse
+                                    try:
+                                        pw_old = ProductWarehouse.objects.get(
+                                            product=item.order_item.product,
+                                            warehouse=item.warehouse
+                                        )
+                                        pw_old.quantity -= old_quantity
+                                        pw_old.save()
+                                    except ProductWarehouse.DoesNotExist:
+                                        pass  # Should not happen, but just in case
+
+                                    # Create stock movement in new warehouse
+                                    StockMovement.objects.create(
+                                        product=item.order_item.product,
+                                        warehouse=new_warehouse,
+                                        quantity=new_quantity,
+                                        movement_type='in',
+                                        reference=f'Wareneingang verschoben: {order.order_number}',
+                                        notes=f'Von {item.warehouse.name} nach {new_warehouse.name}',
+                                        created_by=request.user
+                                    )
+
+                                    # Update ProductWarehouse for new warehouse
+                                    pw_new, created = ProductWarehouse.objects.get_or_create(
+                                        product=item.order_item.product,
+                                        warehouse=new_warehouse,
+                                        defaults={'quantity': 0}
+                                    )
+                                    pw_new.quantity += new_quantity
+                                    pw_new.save()
+
+                                    # Update item's warehouse
+                                    item.warehouse = new_warehouse
+                                else:
+                                    # Same warehouse, just update the quantity
+                                    StockMovement.objects.create(
+                                        product=item.order_item.product,
+                                        warehouse=item.warehouse,
+                                        quantity=quantity_diff,
+                                        movement_type='adj',
+                                        reference=f'Wareneingang korrigiert: {order.order_number}',
+                                        notes=f'Korrektur von {old_quantity} auf {new_quantity}',
+                                        created_by=request.user
+                                    )
+
+                                    # Update ProductWarehouse
+                                    pw, created = ProductWarehouse.objects.get_or_create(
+                                        product=item.order_item.product,
+                                        warehouse=item.warehouse,
+                                        defaults={'quantity': 0}
+                                    )
+                                    pw.quantity += quantity_diff
+                                    pw.save()
+                            else:
+                                # No warehouse change, just update quantity
+                                StockMovement.objects.create(
+                                    product=item.order_item.product,
+                                    warehouse=item.warehouse,
+                                    quantity=quantity_diff,
+                                    movement_type='adj',
+                                    reference=f'Wareneingang korrigiert: {order.order_number}',
+                                    notes=f'Korrektur von {old_quantity} auf {new_quantity}',
+                                    created_by=request.user
+                                )
+
+                                # Update ProductWarehouse
+                                pw, created = ProductWarehouse.objects.get_or_create(
+                                    product=item.order_item.product,
+                                    warehouse=item.warehouse,
+                                    defaults={'quantity': 0}
+                                )
+                                pw.quantity += quantity_diff
+                                pw.save()
+
+                            # Update batch number if applicable
+                            if batch_key in request.POST:
+                                item.batch_number = request.POST.get(batch_key)
+
+                            # Update expiry date if applicable
+                            if expiry_key in request.POST and request.POST.get(expiry_key):
+                                try:
+                                    item.expiry_date = request.POST.get(expiry_key)
+                                except ValueError:
+                                    pass  # Invalid date format, ignore
+
+                            # Save the receipt item
+                            item.save()
+
+                            # Update the order item's received quantity
+                            order_item = item.order_item
+
+                            # Recalculate total received quantity for this order item from all receipts
+                            from django.db.models import Sum
+                            total_received = PurchaseOrderReceiptItem.objects.filter(
+                                order_item=order_item
+                            ).aggregate(
+                                total=Sum('quantity_received')
+                            )['total'] or 0
+
+                            # Update the order item
+                            order_item.quantity_received = total_received
+                            order_item.save()
+
+                    except (ValueError, TypeError) as e:
+                        messages.error(request,
+                                       f'Ungültige Menge für Position {item.order_item.product.name}: {str(e)}')
+
+            # Recalculate order status based on updated receipt items
+            all_items_received = True
+            any_items_received = False
+
+            for order_item in order.items.all():
+                if order_item.quantity_received >= order_item.quantity_ordered:
+                    any_items_received = True
+                else:
+                    all_items_received = False
+                    if order_item.quantity_received > 0:
+                        any_items_received = True
+
+            if all_items_received:
+                order.status = 'received'
+            elif any_items_received:
+                order.status = 'partially_received'
+            else:
+                order.status = 'sent'
+
+            order.save()
+
+            messages.success(request,
+                             f'Wareneingang für Bestellung {order.order_number} wurde erfolgreich aktualisiert.')
+            return redirect('purchase_order_detail', pk=order.pk)
+
+    # For GET requests, prepare form
+    warehouses = Warehouse.objects.filter(is_active=True)
+
+    # Prepare items data with the right field names matching the template
+    items_data = []
+
+    # Check for any products requiring batch or expiry tracking
+    any_batch_products = False
+    any_expiry_products = False
+
+    for item in receipt.items.all():
+        product = item.order_item.product
+
+        # Check for batch and expiry tracking
+        if product.has_batch_tracking:
+            any_batch_products = True
+        if product.has_expiry_tracking:
+            any_expiry_products = True
+
+        items_data.append({
+            'id': item.id,
+            'product': product,
+            'quantity': item.quantity_received,
+            'warehouse': item.warehouse,
+            'batch_number': item.batch_number,
+            'expiry_date': item.expiry_date.isoformat() if item.expiry_date else None,
+            'has_batch_tracking': product.has_batch_tracking,
+            'has_expiry_tracking': product.has_expiry_tracking
+        })
+
+    context = {
+        'order': order,
+        'receipt': receipt,
+        'items': items_data,
+        'warehouses': warehouses,
+        'any_batch_products': any_batch_products,
+        'any_expiry_products': any_expiry_products
+    }
+
+    return render(request, 'order/purchase_order_receipt_edit.html', context)
+
+
+@login_required
+@permission_required('order', 'delete')
+def purchase_order_receipt_delete(request, pk, receipt_id):
+    """Delete a purchase order receipt."""
+    order = get_object_or_404(PurchaseOrder, pk=pk)
+    receipt = get_object_or_404(PurchaseOrderReceipt, pk=receipt_id, purchase_order=order)
+
+    # Only receipts for orders in partially_received or received status can be deleted
+    if order.status not in ['partially_received', 'received']:
+        messages.error(request,
+                       f'Wareneingang kann nicht gelöscht werden, da die Bestellung im Status "{order.get_status_display()}" ist.')
+        return redirect('purchase_order_detail', pk=order.pk)
+
+    if request.method == 'POST':
+        with transaction.atomic():
+            # Reverse all stock movements and update product warehouse quantities
+            for item in receipt.items.all():
+                # Reverse stock movement
+                StockMovement.objects.create(
+                    product=item.order_item.product,
+                    warehouse=item.warehouse,
+                    quantity=-item.quantity_received,
+                    movement_type='adj',
+                    reference=f'Wareneingang gelöscht: {order.order_number}',
+                    notes=f'Wareneingang vom {receipt.receipt_date} gelöscht',
+                    created_by=request.user
+                )
+
+                # Update product warehouse
+                pw, created = ProductWarehouse.objects.get_or_create(
+                    product=item.order_item.product,
+                    warehouse=item.warehouse,
+                    defaults={'quantity': 0}
+                )
+                pw.quantity -= item.quantity_received
+                pw.save()
+
+                # Update order item received quantity
+                order_item = item.order_item
+                order_item.quantity_received -= item.quantity_received
+                order_item.save()
+
+            # Delete the receipt
+            receipt.delete()
+
+            # Update order status based on remaining receipts
+            all_items_received = True
+            any_items_received = False
+
+            for order_item in order.items.all():
+                if order_item.quantity_received >= order_item.quantity_ordered:
+                    any_items_received = True
+                else:
+                    all_items_received = False
+                    if order_item.quantity_received > 0:
+                        any_items_received = True
+
+            if all_items_received:
+                order.status = 'received'
+            elif any_items_received:
+                order.status = 'partially_received'
+            else:
+                order.status = 'sent'
+
+            order.save()
+
+            messages.success(request, f'Wareneingang für Bestellung {order.order_number} wurde erfolgreich gelöscht.')
+
+        return redirect('purchase_order_detail', pk=order.pk)
+
+    context = {
+        'order': order,
+        'receipt': receipt,
+    }
+
+    return render(request, 'order/purchase_order_receipt_confirm_delete.html', context)

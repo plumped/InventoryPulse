@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Wareneingang löschen - Bestellung {{ order.order_number }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">Wareneingang löschen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Wareneingang löschen bestätigen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Achtung:</strong> Sind Sie sicher, dass Sie diesen Wareneingang vom {{ receipt.receipt_date|date:"d.m.Y" }} löschen möchten?
+                    </div>
+
+                    <p>Wenn Sie fortfahren:</p>
+                    <ul>
+                        <li>Werden alle Bestandsbewegungen dieses Wareneingangs storniert</li>
+                        <li>Werden die entsprechenden Lagerbestände korrigiert</li>
+                        <li>Wird der Status der Bestellung möglicherweise auf "Bestellt" zurückgesetzt</li>
+                    </ul>
+
+                    <div class="alert alert-danger">
+                        <strong>Diese Aktion kann nicht rückgängig gemacht werden!</strong>
+                    </div>
+
+                    <h6 class="mt-4">Inhalt des Wareneingangs:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Produkt</th>
+                                    <th>Menge</th>
+                                    <th>Lager</th>
+                                    <th>Charge</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in receipt.items.all %}
+                                <tr>
+                                    <td>{{ item.order_item.product.name }}</td>
+                                    <td>{{ item.quantity_received }} {{ item.order_item.product.unit }}</td>
+                                    <td>{{ item.warehouse.name }}</td>
+                                    <td>{{ item.batch_number|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">Abbrechen</a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Wareneingang unwiderruflich löschen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

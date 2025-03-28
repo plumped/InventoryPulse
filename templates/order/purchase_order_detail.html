@@ -331,7 +331,18 @@
                                         aria-controls="collapse{{ receipt.id }}">
                                     <div class="d-flex justify-content-between align-items-center w-100">
                                         <span>Wareneingang vom {{ receipt.receipt_date|date:"d.m.Y" }}</span>
-                                        <span class="badge bg-info ms-2">{{ receipt.items.count }} Positionen</span>
+                                        <div>
+                                            <span class="badge bg-info ms-2">{{ receipt.items.count }} Positionen</span>
+                                            <!-- Add action buttons -->
+                                            <div class="btn-group btn-group-sm ms-2">
+                                                <a href="{% url 'purchase_order_receipt_edit' order.id receipt.id %}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'purchase_order_receipt_delete' order.id receipt.id %}" class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </div>
                                     </div>
                                 </button>
                             </h2>

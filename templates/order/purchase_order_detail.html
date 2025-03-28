@@ -110,7 +110,7 @@
                         {% if supplier_currency %}
                         <dt class="col-sm-5">Währung:</dt>
                         <dd class="col-sm-7">
-                            <span class="badge bg-light text-dark">
+                            <span class="badge text-dark">
                                 {{ supplier_currency.code }} ({{ supplier_currency.symbol }})
                             </span>
                             {% if show_conversion %}
@@ -388,7 +388,7 @@
                                         </table>
                                     </div>
                                     {% if receipt.notes %}
-                                    <div class="p-3 bg-light">
+                                    <div class="p-3">
                                         <h6>Anmerkungen:</h6>
                                         <p class="mb-0">{{ receipt.notes|linebreaks }}</p>
                                     </div>

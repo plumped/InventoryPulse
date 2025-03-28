@@ -55,7 +55,7 @@
             {% if primary_photo %}
             <img src="{{ primary_photo.image.url }}" class="card-img-top" alt="{{ product.name }}">
             {% else %}
-            <div class="text-center p-4 bg-light">
+            <div class="text-center p-4">
                 <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
                 <p class="mt-2 text-muted">Kein Produktfoto vorhanden</p>
                 {% if perms.product.edit %}
@@ -448,7 +448,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="card h-100">
-                                    <div class="card-header bg-light">
+                                    <div class="card-header">
                                         <h6 class="mb-0">Seriennummern nach Status</h6>
                                     </div>
                                     <div class="card-body p-2">

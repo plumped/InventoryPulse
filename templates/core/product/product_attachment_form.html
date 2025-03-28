@@ -26,7 +26,7 @@
     <div class="row">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header bg-light">
+                <div class="card-header">
                     <h5 class="mb-0">Anhangdetails</h5>
                 </div>
                 <div class="card-body">
@@ -106,7 +106,7 @@
 
         <div class="col-md-4">
             <div class="card">
-                <div class="card-header bg-light">
+                <div class="card-header">
                     <h5 class="mb-0">Produktinformation</h5>
                 </div>
                 <div class="card-body">
@@ -114,7 +114,7 @@
                         {% if product.primary_photo %}
                         <img src="{{ product.primary_photo.image.url }}" alt="{{ product.name }}" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: contain;">
                         {% else %}
-                        <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                        <div class="d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
                             <i class="bi bi-box-seam text-muted" style="font-size: 1.5rem;"></i>
                         </div>
                         {% endif %}

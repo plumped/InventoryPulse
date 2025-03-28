@@ -192,6 +192,59 @@
                         {% endif %}
                     </div>
 
+                    <!-- Neue Sektion für Tracking-Funktionen -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">Tracking-Funktionen</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="{{ form.has_variants.id_for_label }}"
+                                               name="{{ form.has_variants.name }}" {% if form.has_variants.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ form.has_variants.id_for_label }}">
+                                            Produktvarianten aktivieren
+                                        </label>
+                                        <div class="form-text">Ermöglicht das Erstellen verschiedener Varianten dieses Produkts (z.B. Farbe, Größe)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="{{ form.has_serial_numbers.id_for_label }}"
+                                               name="{{ form.has_serial_numbers.name }}" {% if form.has_serial_numbers.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ form.has_serial_numbers.id_for_label }}">
+                                            Seriennummernverfolgung aktivieren
+                                        </label>
+                                        <div class="form-text">Ermöglicht die Nachverfolgung einzelner Produkte mittels eindeutiger Seriennummern</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="{{ form.has_batch_tracking.id_for_label }}"
+                                               name="{{ form.has_batch_tracking.name }}" {% if form.has_batch_tracking.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ form.has_batch_tracking.id_for_label }}">
+                                            Chargenverfolgung aktivieren
+                                        </label>
+                                        <div class="form-text">Ermöglicht die Nachverfolgung von Produktchargen (Batches/Lots)</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="{{ form.has_expiry_tracking.id_for_label }}"
+                                               name="{{ form.has_expiry_tracking.name }}" {% if form.has_expiry_tracking.value %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ form.has_expiry_tracking.id_for_label }}">
+                                            Verfallsdatenverfolgung aktivieren
+                                        </label>
+                                        <div class="form-text">Aktiviert die Überwachung von Verfallsdaten für Chargen und Seriennummern</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between">
                         <a href="{% url 'product_list' %}" class="btn btn-secondary">Abbrechen</a>
                         <button type="submit" class="btn btn-primary">Speichern</button>
@@ -213,6 +266,20 @@
                     <li><strong>Barcode:</strong> Kann manuell eingegeben oder automatisch generiert werden.</li>
                     <li><strong>Mindestbestand:</strong> Bei Unterschreitung wird eine Warnung angezeigt.</li>
                 </ul>
+
+                <hr>
+
+                <h6 class="mt-3">Tracking-Funktionen erklärt:</h6>
+                <ul>
+                    <li><strong>Produktvarianten:</strong> Nutzen Sie diese Funktion für Produkte, die in verschiedenen Ausführungen verfügbar sind (z.B. verschiedene Farben, Größen oder Materialien)</li>
+                    <li><strong>Seriennummern:</strong> Für Produkte, bei denen jedes einzelne Exemplar verfolgt werden muss (z.B. elektronische Geräte)</li>
+                    <li><strong>Chargenverfolgung:</strong> Für Produkte, die in Chargen hergestellt werden und bei denen die Chargennummer wichtig ist (z.B. Lebensmittel, Medikamente)</li>
+                    <li><strong>Verfallsdaten:</strong> Für Produkte mit begrenzter Haltbarkeit</li>
+                </ul>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i> <strong>Tipp:</strong> Aktivieren Sie nur die Tracking-Funktionen, die Sie wirklich benötigen. Dies verbessert die Übersichtlichkeit und Benutzerfreundlichkeit.
+                </div>
             </div>
         </div>
     </div>
@@ -231,6 +298,19 @@
             const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
             const barcode = dateStr + random;
             $('#{{ form.barcode.id_for_label }}').val(barcode);
+        });
+
+        // Abhängigkeit von Verfallsdatenverfolgung und Chargenverfolgung
+        $('#{{ form.has_expiry_tracking.id_for_label }}').change(function() {
+            if ($(this).prop('checked')) {
+                // Wenn Verfallsdatenverfolgung aktiviert wird, prüfen ob mind. Chargen- oder Seriennummernverfolgung aktiv ist
+                if (!$('#{{ form.has_batch_tracking.id_for_label }}').prop('checked') &&
+                    !$('#{{ form.has_serial_numbers.id_for_label }}').prop('checked')) {
+                    // Standardmäßig Chargenverfolgung aktivieren
+                    $('#{{ form.has_batch_tracking.id_for_label }}').prop('checked', true);
+                    alert('Die Verfallsdatenverfolgung erfordert entweder Chargenverfolgung oder Seriennummernverfolgung. Chargenverfolgung wurde automatisch aktiviert.');
+                }
+            }
         });
     });
 </script>

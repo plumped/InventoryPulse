@@ -99,32 +99,25 @@
                         {% endif %}
                     </dd>
 
-                    <dt class="col-sm-5">Varianten:</dt>
-                        <dd class="col-sm-7">
-                            {% if product.has_variants and variant_count > 0 %}
-                            <span class="badge bg-success">Ja ({{ variant_count }})</span>
-                            {% else %}
-                            <span class="badge bg-secondary">Nein</span>
+                    <dt class="col-sm-5">Aktivierte Funktionen:</dt>
+                    <dd class="col-sm-7">
+                        {% if product.has_variants or product.has_serial_numbers or product.has_batch_tracking or product.has_expiry_tracking %}
+                            {% if product.has_variants %}
+                            <span class="badge bg-success">Varianten</span>
                             {% endif %}
-                        </dd>
-
-                        <dt class="col-sm-5">Seriennummern:</dt>
-                        <dd class="col-sm-7">
-                            {% if product.has_serial_numbers and serial_count > 0 %}
-                            <span class="badge bg-success">Ja ({{ serial_count }})</span>
-                            {% else %}
-                            <span class="badge bg-secondary">Nein</span>
+                            {% if product.has_serial_numbers %}
+                            <span class="badge bg-success">Seriennummern</span>
                             {% endif %}
-                        </dd>
-
-                        <dt class="col-sm-5">Chargenverfolgung:</dt>
-                        <dd class="col-sm-7">
-                            {% if product.has_batch_tracking and batch_count > 0 %}
-                            <span class="badge bg-success">Ja ({{ batch_count }})</span>
-                            {% else %}
-                            <span class="badge bg-secondary">Nein</span>
+                            {% if product.has_batch_tracking %}
+                            <span class="badge bg-success">Chargen</span>
                             {% endif %}
-                        </dd>
+                            {% if product.has_expiry_tracking %}
+                            <span class="badge bg-success">Verfallsdaten</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-secondary">Keine</span>
+                        {% endif %}
+                    </dd>
                 </dl>
             </div>
 
@@ -339,15 +332,14 @@
             <!-- Tab: Erweitert -->
             <div class="tab-pane fade" id="extras" role="tabpanel" aria-labelledby="extras-tab">
                 <!-- Varianten -->
+                {% if product.has_variants %}
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Produktvarianten</h5>
                         <div>
-                            {% if product.has_variants %}
                             <a href="{% url 'product_variants' product.id %}" class="btn btn-sm btn-outline-primary me-1">
                                 <i class="bi bi-list"></i> Alle Varianten
                             </a>
-                            {% endif %}
                             {% if perms.product.create %}
                             <a href="{% url 'product_variant_add' product.id %}" class="btn btn-sm btn-outline-success">
                                 <i class="bi bi-plus-circle"></i> Variante hinzufügen
@@ -356,7 +348,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        {% if product.has_variants and variant_count > 0 %}
+                        {% if variant_count > 0 %}
                         <div class="table-responsive">
                             <table class="table table-sm table-hover">
                                 <thead>
@@ -414,17 +406,31 @@
                         {% endif %}
                     </div>
                 </div>
+                {% elif perms.product.edit %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Produktvarianten</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i> Die Variantenfunktion ist für dieses Produkt deaktiviert.
+                        </div>
+                        <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-toggle-on"></i> Varianten aktivieren
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Seriennummern -->
+                {% if product.has_serial_numbers %}
                 <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Seriennummern</h5>
                         <div>
-                            {% if product.has_serial_numbers %}
                             <a href="{% url 'product_serials' product.id %}" class="btn btn-sm btn-outline-primary me-1">
                                 <i class="bi bi-list"></i> Alle Seriennummern
                             </a>
-                            {% endif %}
                             {% if perms.product.create %}
                             <div class="btn-group">
                                 <a href="{% url 'product_serial_add' product.id %}" class="btn btn-sm btn-outline-success">
@@ -438,7 +444,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        {% if product.has_serial_numbers and serial_count > 0 %}
+                        {% if serial_count > 0 %}
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="card h-100">
@@ -509,17 +515,31 @@
                         {% endif %}
                     </div>
                 </div>
+                {% elif perms.product.edit %}
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Seriennummern</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i> Die Seriennummernverfolgung ist für dieses Produkt deaktiviert.
+                        </div>
+                        <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-toggle-on"></i> Seriennummern aktivieren
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Chargen -->
+                {% if product.has_batch_tracking %}
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Chargenverfolgung</h5>
                         <div>
-                            {% if product.has_batch_tracking %}
                             <a href="{% url 'product_batches' product.id %}" class="btn btn-sm btn-outline-primary me-1">
                                 <i class="bi bi-list"></i> Alle Chargen
                             </a>
-                            {% endif %}
                             {% if perms.product.create %}
                             <a href="{% url 'product_batch_add' product.id %}" class="btn btn-sm btn-outline-success">
                                 <i class="bi bi-plus-circle"></i> Charge hinzufügen
@@ -575,8 +595,10 @@
                                             <tr>
                                                 <th>Chargennummer</th>
                                                 <th>Menge</th>
+                                                {% if product.has_expiry_tracking %}
                                                 <th>Produktionsdatum</th>
                                                 <th>Verfallsdatum</th>
+                                                {% endif %}
                                                 <th>Lager</th>
                                                 <th>Lieferant</th>
                                             </tr>
@@ -586,6 +608,7 @@
                                             <tr>
                                                 <td>{{ batch.batch_number }}</td>
                                                 <td>{{ batch.quantity }} {{ product.unit }}</td>
+                                                {% if product.has_expiry_tracking %}
                                                 <td>{{ batch.production_date|date:"d.m.Y"|default:"--" }}</td>
                                                 <td>
                                                     {% if batch.expiry_date %}
@@ -596,6 +619,7 @@
                                                     --
                                                     {% endif %}
                                                 </td>
+                                                {% endif %}
                                                 <td>{{ batch.warehouse.name|default:"--" }}</td>
                                                 <td>{{ batch.supplier.name|default:"--" }}</td>
                                             </tr>
@@ -622,6 +646,21 @@
                         {% endif %}
                     </div>
                 </div>
+                {% elif perms.product.edit %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Chargenverfolgung</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i> Die Chargenverfolgung ist für dieses Produkt deaktiviert.
+                        </div>
+                        <a href="{% url 'product_update' product.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-toggle-on"></i> Chargenverfolgung aktivieren
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
             </div>
             <div class="tab-pane fade" id="warehouses" role="tabpanel" aria-labelledby="warehouses-tab">
                 <div class="card">

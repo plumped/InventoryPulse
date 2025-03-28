@@ -52,6 +52,7 @@
             </div>
             <div class="card-body">
                 <form method="get" class="row g-3">
+                    {% if product.has_expiry_tracking %}
                     <div class="col-md-3">
                         <label for="expiry" class="form-label">Verfallsstatus</label>
                         <select name="expiry" id="expiry" class="form-select">
@@ -61,6 +62,7 @@
                             <option value="valid" {% if expiry_filter == 'valid' %}selected{% endif %}>Gültig</option>
                         </select>
                     </div>
+                    {% endif %}
 
                     <div class="col-md-3">
                         <label for="warehouse" class="form-label">Lager</label>
@@ -115,6 +117,7 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-sm mb-0">
+                        {% if product.has_expiry_tracking %}
                         <tbody>
                             <tr>
                                 <td class="ps-3">Abgelaufen</td>
@@ -140,11 +143,12 @@
                                     </span>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="fw-bold ps-3">Gesamt</td>
-                                <td class="text-end fw-bold pe-3">{{ batches.paginator.count }}</td>
-                            </tr>
                         </tbody>
+                        {% endif %}
+                        <tr>
+                            <td class="fw-bold ps-3">Gesamt</td>
+                            <td class="text-end fw-bold pe-3">{{ batches.paginator.count }}</td>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -165,8 +169,10 @@
                     <tr>
                         <th>Chargennummer</th>
                         <th>Menge</th>
+                        {% if product.has_expiry_tracking %}
                         <th>Produktionsdatum</th>
                         <th>Verfallsdatum</th>
+                        {% endif %}
                         <th>Lager</th>
                         <th>Lieferant</th>
                         <th>Aktionen</th>
@@ -174,9 +180,10 @@
                 </thead>
                 <tbody>
                     {% for batch in batches %}
-                    <tr class="{% if batch.is_expired %}table-danger{% elif batch.days_until_expiry < 30 %}table-warning{% endif %}">
+                    <tr class="{% if product.has_expiry_tracking %}{% if batch.is_expired %}table-danger{% elif batch.days_until_expiry < 30 %}table-warning{% endif %}{% endif %}">
                         <td>{{ batch.batch_number }}</td>
                         <td>{{ batch.quantity }} {{ product.unit }}</td>
+                        {% if product.has_expiry_tracking %}
                         <td>{{ batch.production_date|date:"d.m.Y"|default:"-" }}</td>
                         <td>
                             {% if batch.expiry_date %}
@@ -190,6 +197,7 @@
                             -
                             {% endif %}
                         </td>
+                        {% endif %}
                         <td>{{ batch.warehouse.name|default:"-" }}</td>
                         <td>{{ batch.supplier.name|default:"-" }}</td>
                         <td>
@@ -331,7 +339,7 @@
 </div>
 {% endif %}
 
-{% if perms.product.create %}
+{% if perms.product.create and product.has_expiry_tracking %}
 <div class="mt-4">
     <a href="{% url 'expiry_management' %}" class="btn btn-outline-secondary">
         <i class="bi bi-calendar-check"></i> Zur zentralen Verfallsdatenverwaltung

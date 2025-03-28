@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
 
-{% load static %}
-
 {% block title %}
     {% if form.instance.pk %}Produkt bearbeiten{% else %}Neues Produkt{% endif %} - InventoryPulse
 {% endblock %}
@@ -134,20 +132,6 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label for="{{ form.current_stock.id_for_label }}" class="form-label">Aktueller Bestand*</label>
-                            <input type="number" name="{{ form.current_stock.name }}"
-                                   id="{{ form.current_stock.id_for_label }}"
-                                   class="form-control {% if form.current_stock.errors %}is-invalid{% endif %}"
-                                   value="{{ form.current_stock.value|default:'0' }}" min="0" required>
-                            {% if form.current_stock.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.current_stock.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-4">
                             <label for="{{ form.minimum_stock.id_for_label }}" class="form-label">Mindestbestand*</label>
                             <input type="number" name="{{ form.minimum_stock.name }}"
                                    id="{{ form.minimum_stock.id_for_label }}"
@@ -175,6 +159,16 @@
                                 </div>
                             {% endif %}
                         </div>
+                        <!-- Nur bei Neuanlage -->
+                        {% if not form.instance.pk %}
+                        <div class="col-md-4">
+                            <label for="id_initial_stock" class="form-label">Anfangsbestand</label>
+                            <input type="number" name="initial_stock"
+                                   id="id_initial_stock"
+                                   class="form-control"
+                                   value="0" min="0" step="0.01">
+                        </div>
+                        {% endif %}
                     </div>
 
                     <div class="mb-3">
@@ -192,7 +186,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- Neue Sektion für Tracking-Funktionen -->
+                    <!-- Tracking-Funktionen -->
                     <div class="card mb-3">
                         <div class="card-header">
                             <h5 class="mb-0">Tracking-Funktionen</h5>
@@ -202,21 +196,51 @@
                                 <div class="col-md-6">
                                     <div class="form-check form-switch mb-3">
                                         <input class="form-check-input" type="checkbox" id="{{ form.has_variants.id_for_label }}"
-                                               name="{{ form.has_variants.name }}" {% if form.has_variants.value %}checked{% endif %}>
+                                               name="{{ form.has_variants.name }}" {% if form.has_variants.value %}checked{% endif %}
+                                               {% if form.has_variants.field.disabled %}disabled{% endif %}>
                                         <label class="form-check-label" for="{{ form.has_variants.id_for_label }}">
                                             Produktvarianten aktivieren
+                                            {% if form.has_variants.field.disabled and has_variants %}
+                                            <span class="badge bg-info ms-2">Nicht deaktivierbar</span>
+                                            {% endif %}
                                         </label>
-                                        <div class="form-text">Ermöglicht das Erstellen verschiedener Varianten dieses Produkts (z.B. Farbe, Größe)</div>
+                                        <div class="form-text">
+                                            {% if form.has_variants.help_text %}
+                                                {{ form.has_variants.help_text }}
+                                            {% else %}
+                                                Ermöglicht das Erstellen verschiedener Varianten dieses Produkts (z.B. Farbe, Größe)
+                                            {% endif %}
+                                        </div>
+                                        {% if form.has_variants.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.has_variants.errors }}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-check form-switch mb-3">
                                         <input class="form-check-input" type="checkbox" id="{{ form.has_serial_numbers.id_for_label }}"
-                                               name="{{ form.has_serial_numbers.name }}" {% if form.has_serial_numbers.value %}checked{% endif %}>
+                                               name="{{ form.has_serial_numbers.name }}" {% if form.has_serial_numbers.value %}checked{% endif %}
+                                               {% if form.has_serial_numbers.field.disabled %}disabled{% endif %}>
                                         <label class="form-check-label" for="{{ form.has_serial_numbers.id_for_label }}">
                                             Seriennummernverfolgung aktivieren
+                                            {% if form.has_serial_numbers.field.disabled and has_serial_numbers %}
+                                            <span class="badge bg-info ms-2">Nicht deaktivierbar</span>
+                                            {% endif %}
                                         </label>
-                                        <div class="form-text">Ermöglicht die Nachverfolgung einzelner Produkte mittels eindeutiger Seriennummern</div>
+                                        <div class="form-text">
+                                            {% if form.has_serial_numbers.help_text %}
+                                                {{ form.has_serial_numbers.help_text }}
+                                            {% else %}
+                                                Ermöglicht die Nachverfolgung einzelner Produkte mittels eindeutiger Seriennummern
+                                            {% endif %}
+                                        </div>
+                                        {% if form.has_serial_numbers.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.has_serial_numbers.errors }}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -224,21 +248,53 @@
                                 <div class="col-md-6">
                                     <div class="form-check form-switch mb-3">
                                         <input class="form-check-input" type="checkbox" id="{{ form.has_batch_tracking.id_for_label }}"
-                                               name="{{ form.has_batch_tracking.name }}" {% if form.has_batch_tracking.value %}checked{% endif %}>
+                                               name="{{ form.has_batch_tracking.name }}" {% if form.has_batch_tracking.value %}checked{% endif %}
+                                               {% if form.has_batch_tracking.field.disabled %}disabled{% endif %}>
                                         <label class="form-check-label" for="{{ form.has_batch_tracking.id_for_label }}">
                                             Chargenverfolgung aktivieren
+                                            {% if form.has_batch_tracking.field.disabled and has_batches %}
+                                            <span class="badge bg-info ms-2">Nicht deaktivierbar</span>
+                                            {% endif %}
                                         </label>
-                                        <div class="form-text">Ermöglicht die Nachverfolgung von Produktchargen (Batches/Lots)</div>
+                                        <div class="form-text">
+                                            {% if form.has_batch_tracking.help_text %}
+                                                {{ form.has_batch_tracking.help_text }}
+                                            {% else %}
+                                                Ermöglicht die Nachverfolgung von Produktchargen (Batches/Lots)
+                                            {% endif %}
+                                        </div>
+                                        {% if form.has_batch_tracking.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.has_batch_tracking.errors }}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-check form-switch mb-3">
                                         <input class="form-check-input" type="checkbox" id="{{ form.has_expiry_tracking.id_for_label }}"
-                                               name="{{ form.has_expiry_tracking.name }}" {% if form.has_expiry_tracking.value %}checked{% endif %}>
+                                               name="{{ form.has_expiry_tracking.name }}" {% if form.has_expiry_tracking.value %}checked{% endif %}
+                                               {% if form.has_expiry_tracking.field.disabled %}disabled{% endif %}>
                                         <label class="form-check-label" for="{{ form.has_expiry_tracking.id_for_label }}">
                                             Verfallsdatenverfolgung aktivieren
+                                            {% if has_expiry_dates %}
+                                            <span class="badge bg-info ms-2">Nicht deaktivierbar</span>
+                                            {% endif %}
                                         </label>
-                                        <div class="form-text">Aktiviert die Überwachung von Verfallsdaten für Chargen und Seriennummern</div>
+                                        <div class="form-text">
+                                            {% if has_expiry_dates %}
+                                                Diese Funktion kann nicht deaktiviert werden, da bereits Einträge mit Verfallsdaten existieren.
+                                            {% elif form.has_expiry_tracking.help_text and form.has_expiry_tracking.disabled %}
+                                                {{ form.has_expiry_tracking.help_text }}
+                                            {% else %}
+                                                Aktiviert die Überwachung von Verfallsdaten für Chargen und Seriennummern
+                                            {% endif %}
+                                        </div>
+                                        {% if form.has_expiry_tracking.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.has_expiry_tracking.errors }}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -280,6 +336,29 @@
                 <div class="alert alert-info">
                     <i class="fas fa-lightbulb me-2"></i> <strong>Tipp:</strong> Aktivieren Sie nur die Tracking-Funktionen, die Sie wirklich benötigen. Dies verbessert die Übersichtlichkeit und Benutzerfreundlichkeit.
                 </div>
+
+                {% if form.instance.pk and has_variants or has_serial_numbers or has_batches or has_expiry_dates %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i> <strong>Wichtiger Hinweis:</strong>
+                    <p>Funktionen, für die bereits Daten existieren, können nicht deaktiviert werden. Dies verhindert Datenverlust oder Inkonsistenzen.</p>
+
+                    {% if has_variants %}
+                    <div class="mt-2"><strong>Produktvarianten:</strong> Diese Funktion kann nicht deaktiviert werden, da bereits Varianten für dieses Produkt erstellt wurden.</div>
+                    {% endif %}
+
+                    {% if has_serial_numbers %}
+                    <div class="mt-2"><strong>Seriennummern:</strong> Diese Funktion kann nicht deaktiviert werden, da bereits Seriennummern für dieses Produkt erfasst wurden.</div>
+                    {% endif %}
+
+                    {% if has_batches %}
+                    <div class="mt-2"><strong>Chargenverfolgung:</strong> Diese Funktion kann nicht deaktiviert werden, da bereits Chargen für dieses Produkt erfasst wurden.</div>
+                    {% endif %}
+
+                    {% if has_expiry_dates %}
+                    <div class="mt-2"><strong>Verfallsdaten:</strong> Diese Funktion kann nicht deaktiviert werden, da bereits Chargen oder Seriennummern mit Verfallsdaten vorhanden sind.</div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -306,9 +385,49 @@
                 // Wenn Verfallsdatenverfolgung aktiviert wird, prüfen ob mind. Chargen- oder Seriennummernverfolgung aktiv ist
                 if (!$('#{{ form.has_batch_tracking.id_for_label }}').prop('checked') &&
                     !$('#{{ form.has_serial_numbers.id_for_label }}').prop('checked')) {
-                    // Standardmäßig Chargenverfolgung aktivieren
-                    $('#{{ form.has_batch_tracking.id_for_label }}').prop('checked', true);
-                    alert('Die Verfallsdatenverfolgung erfordert entweder Chargenverfolgung oder Seriennummernverfolgung. Chargenverfolgung wurde automatisch aktiviert.');
+
+                    // Prüfen, ob Chargenverfolgung aktivierbar ist
+                    if (!$('#{{ form.has_batch_tracking.id_for_label }}').prop('disabled')) {
+                        // Standardmäßig Chargenverfolgung aktivieren
+                        $('#{{ form.has_batch_tracking.id_for_label }}').prop('checked', true);
+                        alert('Die Verfallsdatenverfolgung erfordert entweder Chargenverfolgung oder Seriennummernverfolgung. Chargenverfolgung wurde automatisch aktiviert.');
+                    }
+                    // Wenn Chargenverfolgung nicht aktivierbar ist, aber Seriennummern aktivierbar sind
+                    else if (!$('#{{ form.has_serial_numbers.id_for_label }}').prop('disabled')) {
+                        $('#{{ form.has_serial_numbers.id_for_label }}').prop('checked', true);
+                        alert('Die Verfallsdatenverfolgung erfordert entweder Chargenverfolgung oder Seriennummernverfolgung. Seriennummernverfolgung wurde automatisch aktiviert.');
+                    }
+                    // Wenn beide nicht aktivierbar sind, dann Hinweis anzeigen und Verfallsdatenverfolgung deaktivieren
+                    else {
+                        $(this).prop('checked', false);
+                        alert('Die Verfallsdatenverfolgung erfordert entweder Chargenverfolgung oder Seriennummernverfolgung. Bitte aktivieren Sie zuerst eine dieser Funktionen.');
+                    }
+                }
+            }
+        });
+
+        // Deaktivieren von Chargenverfolgung oder Seriennummernverfolgung
+        $('#{{ form.has_batch_tracking.id_for_label }}, #{{ form.has_serial_numbers.id_for_label }}').change(function() {
+            // Wenn sowohl Chargenverfolgung als auch Seriennummernverfolgung deaktiviert werden und
+            // Verfallsdatenverfolgung aktiviert ist
+            if (!$('#{{ form.has_batch_tracking.id_for_label }}').prop('checked') &&
+                !$('#{{ form.has_serial_numbers.id_for_label }}').prop('checked') &&
+                $('#{{ form.has_expiry_tracking.id_for_label }}').prop('checked')) {
+
+                // Wenn das aktuelle Feld nicht deaktivierbar ist, verhindern
+                if ($(this).prop('disabled')) {
+                    return;
+                }
+
+                // Prüfen, ob Verfallsdatenverfolgung deaktivierbar ist
+                if (!$('#{{ form.has_expiry_tracking.id_for_label }}').prop('disabled')) {
+                    // Verfallsdatenverfolgung deaktivieren
+                    $('#{{ form.has_expiry_tracking.id_for_label }}').prop('checked', false);
+                    alert('Verfallsdatenverfolgung wurde automatisch deaktiviert, da diese entweder Chargenverfolgung oder Seriennummernverfolgung erfordert.');
+                } else {
+                    // Wenn Verfallsdatenverfolgung nicht deaktivierbar ist, Änderung zurücksetzen
+                    $(this).prop('checked', true);
+                    alert('Diese Funktion kann nicht deaktiviert werden, solange Verfallsdatenverfolgung aktiviert ist und nicht deaktiviert werden kann.');
                 }
             }
         });

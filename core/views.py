@@ -344,7 +344,7 @@ def product_create(request):
 def product_update(request, pk):
     """Update an existing product."""
     product = get_object_or_404(Product, pk=pk)
-    
+
     # Lager abrufen, auf die der Benutzer Zugriff hat
     if request.user.is_superuser:
         accessible_warehouses = Warehouse.objects.filter(is_active=True)
@@ -354,19 +354,38 @@ def product_update(request, pk):
             department__in=user_departments
         ).values_list('warehouse', flat=True)
         accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
-    
+
     # Aktuellen Bestand berechnen
     total_accessible_stock = ProductWarehouse.objects.filter(
         product=product,
         warehouse__in=accessible_warehouses
     ).aggregate(total=Sum('quantity'))['total'] or 0
 
+    # Prüfen, ob Funktionen deaktivierbar sind
+    has_variants = False
+    has_serial_numbers = False
+    has_batches = False
+    has_expiry_dates = False
+
+    if hasattr(product, 'variants'):
+        has_variants = product.variants.exists()
+
+    if hasattr(product, 'serial_numbers'):
+        has_serial_numbers = product.serial_numbers.exists()
+        # Prüfen, ob Seriennummern mit Verfallsdaten existieren
+        has_expiry_dates = has_expiry_dates or product.serial_numbers.filter(expiry_date__isnull=False).exists()
+
+    if hasattr(product, 'batches'):
+        has_batches = product.batches.exists()
+        # Prüfen, ob Chargen mit Verfallsdaten existieren
+        has_expiry_dates = has_expiry_dates or product.batches.filter(expiry_date__isnull=False).exists()
+
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
             # Das Produkt ohne Bestandsänderung speichern
             product = form.save()
-            
+
             messages.success(request, f'Produkt "{product.name}" wurde erfolgreich aktualisiert.')
             return redirect('product_detail', pk=product.pk)
     else:
@@ -374,7 +393,11 @@ def product_update(request, pk):
 
     context = {
         'form': form,
-        'total_accessible_stock': total_accessible_stock
+        'total_accessible_stock': total_accessible_stock,
+        'has_variants': has_variants,
+        'has_serial_numbers': has_serial_numbers,
+        'has_batches': has_batches,
+        'has_expiry_dates': has_expiry_dates
     }
 
     return render(request, 'core/product_form.html', context)

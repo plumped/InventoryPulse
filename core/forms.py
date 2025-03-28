@@ -4,6 +4,13 @@ from inventory.models import Warehouse
 from .models import Product, Category, ProductVariant, SerialNumber, BatchNumber, ProductVariantType, ProductAttachment, \
     ProductPhoto, Tax, Currency
 
+# Fix for the ProductForm class in core/forms.py
+
+from django import forms
+from inventory.models import Warehouse
+from .models import Product, Category, ProductVariant, SerialNumber, BatchNumber, ProductVariantType, ProductAttachment, \
+    ProductPhoto, Tax, Currency
+
 
 class ProductForm(forms.ModelForm):
     """Form for creating and updating products."""
@@ -61,14 +68,17 @@ class ProductForm(forms.ModelForm):
                 self.fields[
                     'has_batch_tracking'].help_text = "Diese Funktion kann nicht deaktiviert werden, da bereits Chargen existieren."
 
-            # Verfallsdaten können nur für Produkte mit Seriennummern oder Chargen aktiviert werden
-            # Überprüfen, ob irgendwelche Einträge tatsächlich Verfallsdaten besitzen
+            # Überprüfen, ob Einträge mit Verfallsdaten existieren
             has_expiry_dates = False
+
+            # Nur prüfen, ob tatsächlich Verfallsdaten eingetragen sind, nicht nur ob die Modelle existieren
             if hasattr(self.instance, 'serial_numbers'):
                 has_expiry_dates = has_expiry_dates or self.instance.serial_numbers.filter(
                     expiry_date__isnull=False).exists()
+
             if hasattr(self.instance, 'batches'):
-                has_expiry_dates = has_expiry_dates or self.instance.batches.filter(expiry_date__isnull=False).exists()
+                has_expiry_dates = has_expiry_dates or self.instance.batches.filter(
+                    expiry_date__isnull=False).exists()
 
             # Verfallsdatenverfolgung kann nur dann nicht deaktiviert werden, wenn tatsächlich Verfallsdaten existieren
             if has_expiry_dates:
@@ -140,13 +150,14 @@ class ProductForm(forms.ModelForm):
                     self.add_error('has_batch_tracking',
                                    "Diese Funktion kann nicht deaktiviert werden, da bereits Chargen existieren.")
 
-            # Prüfen auf Verfallsdaten in Seriennummern und Chargen
+            # FIX: Nur prüfen, ob tatsächlich Verfallsdaten eingetragen sind
             has_expiry_dates = False
             if hasattr(self.instance, 'serial_numbers'):
                 has_expiry_dates = has_expiry_dates or self.instance.serial_numbers.filter(
                     expiry_date__isnull=False).exists()
             if hasattr(self.instance, 'batches'):
-                has_expiry_dates = has_expiry_dates or self.instance.batches.filter(expiry_date__isnull=False).exists()
+                has_expiry_dates = has_expiry_dates or self.instance.batches.filter(
+                    expiry_date__isnull=False).exists()
 
             if not cleaned_data.get('has_expiry_tracking') and not self.fields['has_expiry_tracking'].disabled:
                 if has_expiry_dates:

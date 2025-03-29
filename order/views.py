@@ -913,6 +913,7 @@ def refresh_order_suggestions(request):
 @login_required
 @permission_required('order', 'create')
 # Update in order/views.py - create_orders_from_suggestions function
+# Add this code to handle expected delivery date calculation
 
 def create_orders_from_suggestions(request):
     """Erstellt Bestellungen basierend auf ausgewählten Bestellvorschlägen und manuell hinzugefügten Produkten."""
@@ -1043,11 +1044,37 @@ def create_orders_from_suggestions(request):
 
                     order_number = f"{order_number_prefix}{next_seq:03d}"
 
+                    # Ermittle den erwarteten Liefertermin basierend auf den Lieferzeiten der Produkte
+                    # Standardwert aus den Systemeinstellungen oder 7 Tage
+                    default_lead_time = 7
+                    try:
+                        if system_settings and hasattr(system_settings, 'default_lead_time'):
+                            default_lead_time = system_settings.default_lead_time
+                    except:
+                        pass
+
+                    # Ermittle die längste Lieferzeit für alle Produkte des Lieferanten
+                    max_lead_time = default_lead_time
+                    for item in items:
+                        try:
+                            supplier_product = SupplierProduct.objects.get(
+                                supplier=supplier,
+                                product=item['product']
+                            )
+                            if supplier_product.lead_time_days and supplier_product.lead_time_days > max_lead_time:
+                                max_lead_time = supplier_product.lead_time_days
+                        except SupplierProduct.DoesNotExist:
+                            continue
+
+                    # Berechne das erwartete Lieferdatum
+                    expected_delivery = today + timedelta(days=max_lead_time)
+
                     order = PurchaseOrder.objects.create(
                         supplier=supplier,
                         created_by=request.user,
                         status='draft',
-                        order_number=order_number
+                        order_number=order_number,
+                        expected_delivery=expected_delivery  # Setze den erwarteten Liefertermin
                     )
 
                     # Systemeinstellungen aktualisieren

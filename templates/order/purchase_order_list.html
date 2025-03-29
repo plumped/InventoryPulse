@@ -110,9 +110,31 @@
                                 <td>{{ order.order_date|date:"d.m.Y" }}</td>
                                 <td>
                                     {% if order.expected_delivery %}
-                                    {{ order.expected_delivery|date:"d.m.Y" }}
+                                        {% if order.status == 'sent' or order.status == 'partially_received' %}
+                                            {% if order.expected_delivery < today_date %}
+                                                <!-- Überfällige Lieferung rot hervorheben -->
+                                                <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">
+                                                    {{ order.expected_delivery|date:"d.m.Y" }}
+                                                </span>
+                                            {% elif order.expected_delivery < soon_date %}
+                                                <!-- Bald fällige Lieferung gelb hervorheben -->
+                                                <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">
+                                                    {{ order.expected_delivery|date:"d.m.Y" }}
+                                                </span>
+                                            {% else %}
+                                                <!-- Normale Darstellung -->
+                                                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">
+                                                    {{ order.expected_delivery|date:"d.m.Y" }}
+                                                </span>
+                                            {% endif %}
+                                        {% else %}
+                                            <!-- Normale Darstellung für alle anderen Status -->
+                                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">
+                                                {{ order.expected_delivery|date:"d.m.Y" }}
+                                            </span>
+                                        {% endif %}
                                     {% else %}
-                                    <span class="text-muted">--</span>
+                                        <span class="text-muted">--</span>
                                     {% endif %}
                                 </td>
                                 <td>

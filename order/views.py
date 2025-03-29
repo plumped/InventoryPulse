@@ -74,6 +74,10 @@ def purchase_order_list(request):
         else:
             order.converted_total = None
 
+    # Datum für farbliche Hervorhebung berechnen
+    today_date = date.today()
+    soon_date = today_date + timedelta(days=7)  # 7 Tage in der Zukunft für "bald fällig"
+
     # Paginierung
     paginator = Paginator(queryset, 20)  # 20 Bestellungen pro Seite
     page = request.GET.get('page')
@@ -102,7 +106,9 @@ def purchase_order_list(request):
         'date_from': date_from,
         'date_to': date_to,
         'search': search,
-        'system_currency': system_currency
+        'system_currency': system_currency,
+        'today_date': today_date,  # Heutiges Datum für Template
+        'soon_date': soon_date     # Datum für "bald fällig"
     }
 
     return render(request, 'order/purchase_order_list.html', context)

@@ -175,6 +175,23 @@ def purchase_order_detail(request, pk):
     has_batch_products = Product.objects.filter(id__in=product_ids, has_batch_tracking=True).exists()
     has_expiry_products = Product.objects.filter(id__in=product_ids, has_expiry_tracking=True).exists()
 
+    # Daten für die Workflow-Visualization
+    progress_percentage = 0
+    status_weights = {
+        'draft': 0,
+        'pending': 20,
+        'approved': 40,
+        'sent': 60,
+        'partially_received': 80,
+        'received': 100,
+        'cancelled': 0  # Sonderfall
+    }
+    progress_percentage = status_weights.get(order.status, 0)
+
+    # Datum für farbliche Hervorhebung des Lieferdatums
+    today_date = date.today()
+    soon_date = today_date + timedelta(days=7)  # 7 Tage in der Zukunft für "bald fällig"
+
     # Bei POST-Request (direkt aus dem Modal)
     if request.method == 'POST' and order.status == 'approved' and request.user.has_perm('order.edit'):
         interface_id = request.POST.get('interface_id')
@@ -208,7 +225,10 @@ def purchase_order_detail(request, pk):
         'system_currency': system_currency,
         'show_conversion': show_conversion,
         'has_batch_products': has_batch_products,
-        'has_expiry_products': has_expiry_products
+        'has_expiry_products': has_expiry_products,
+        'progress_percentage': progress_percentage,
+        'today_date': today_date,
+        'soon_date': soon_date
     }
 
     return render(request, 'order/purchase_order_detail.html', context)

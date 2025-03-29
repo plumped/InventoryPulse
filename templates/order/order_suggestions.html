@@ -486,9 +486,9 @@
 
                 // Zeige eine temporäre Info-Meldung an
                 let infoAlert = $(`<div class="alert alert-info alert-dismissible fade show" role="alert">
-                                     <i class="bi bi-info-circle me-2"></i>${message}
-                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                   </div>`);
+                                    <i class="bi bi-info-circle me-2"></i>${message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>`);
 
                 // Füge die Meldung nach dem Produktsuchbereich ein
                 $('.card-body:first').append(infoAlert);
@@ -515,20 +515,84 @@
                 stockClass = 'bg-success-subtle border border-success-subtle text-success-emphasis';
             }
 
-            // Überprüfe, ob bereits ein Accordion für den Lieferanten im Accordion-Container existiert
-            let existingSupplierGroup = $(`#collapse${supplierId}`).length > 0;
-            let manualSupplierGroup = $(`#supplier-accordion-${supplierId}`);
+            // Überprüfe, ob bereits ein Accordion für den Lieferanten im System-Vorschläge existiert
+            const systemAccordion = $(`#collapse${supplierId}`);
+            const existingSystemAccordion = systemAccordion.length > 0;
 
-            if (existingSupplierGroup) {
+            // Überprüfe, ob bereits eine manuelle Gruppe für diesen Lieferanten existiert
+            const manualAccordion = $(`#supplier-accordion-${supplierId}`);
+            const existingManualAccordion = manualAccordion.length > 0;
+
+            if (existingSystemAccordion) {
                 // Es gibt einen bestehenden Lieferanten aus den Systemvorschlägen
+                // Wir fügen den manuellen Artikel direkt zur Tabelle der Systemvorschläge hinzu
 
-                // Prüfe, ob wir bereits eine manuelle Gruppe für diesen Lieferanten haben
-                if (manualSupplierGroup.length === 0) {
-                    // Wir haben keine manuelle Gruppe, also erstellen wir eine und fügen sie nach dem bestehenden Lieferanten ein
-                    let template = document.getElementById('manualItemTemplate').innerHTML;
+                // Prüfe, ob das Produkt bereits in der Systemtabelle vorhanden ist
+                const productExists = systemAccordion.find(`.manual-item-system[data-product-id="${product.id}"]`).length > 0;
+
+                if (!productExists) {
+                    // Erstelle eine neue Tabellenzeile mit einer Klasse, die sie als manuell hinzugefügt kennzeichnet
+                    const newRow = `
+                        <tr class="manual-item-system" data-product-id="${product.id}">
+                            <td class="text-center">
+                                <input type="checkbox" name="manual_products[]"
+                                    value="${product.id}" class="suggestion-checkbox"
+                                    data-supplier="${supplierId}" checked>
+                            </td>
+                            <td>
+                                <a href="/product/${product.id}/">
+                                    ${product.name}
+                                </a>
+                                <input type="hidden" name="manual_product_${product.id}" value="${product.id}">
+                                <input type="hidden" name="manual_supplier_${product.id}" value="${supplierId}">
+                                <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis ms-2">Manuell</span>
+                            </td>
+                            <td>${product.sku}</td>
+                            <td>
+                                <span class="badge ${stockClass} rounded-pill">
+                                    ${product.stock}
+                                </span>
+                            </td>
+                            <td>${product.minimum_stock}</td>
+                            <td>-</td>
+                            <td>${product.unit}</td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm"
+                                    name="manual_quantity_${product.id}"
+                                    value="${orderQuantity}"
+                                    min="1" step="1">
+                            </td>
+                        </tr>
+                    `;
+
+                    // Füge die Zeile zur Tabelle der Systemvorschläge hinzu
+                    systemAccordion.find('tbody').append(newRow);
+
+                    // Aktualisiere den Badge im Accordion-Header
+                    const supplierBadge = $(`#heading${supplierId}`).find('.badge');
+                    const currentCount = parseInt(supplierBadge.text());
+                    supplierBadge.text(`${currentCount + 1} Artikel`);
+                } else {
+                    // Das Produkt existiert bereits, aktualisiere die Menge
+                    const existingRow = systemAccordion.find(`.manual-item-system[data-product-id="${product.id}"]`);
+                    const currentQty = parseInt(existingRow.find('input[type="number"]').val()) || 0;
+                    existingRow.find('input[type="number"]').val(Math.max(currentQty + quantity, product.minimum_stock));
+                }
+            } else if (existingManualAccordion) {
+                // Es gibt keine Systemvorschläge, aber bereits eine manuelle Gruppe für diesen Lieferanten
+
+                // Prüfe, ob das Produkt bereits in der manuellen Liste ist
+                const existingRow = manualAccordion.find(`.manual-item[data-product-id="${product.id}"]`);
+
+                if (existingRow.length > 0) {
+                    // Aktualisiere die Menge des bestehenden Produkts
+                    const currentQty = parseInt(existingRow.find('input[type="number"]').val()) || 0;
+                    existingRow.find('input[type="number"]').val(Math.max(currentQty + quantity, product.minimum_stock));
+                } else {
+                    // Füge eine neue Zeile für dieses Produkt hinzu
+                    let template = document.getElementById('manualItemRowTemplate').innerHTML;
                     template = template
                         .replace(/{supplierId}/g, supplierId)
-                        .replace(/{supplierName}/g, supplierName + ' (Manuell hinzugefügt)')
                         .replace(/{productId}/g, product.id)
                         .replace(/{productName}/g, product.name)
                         .replace(/{productSku}/g, product.sku)
@@ -538,90 +602,30 @@
                         .replace(/{unit}/g, product.unit)
                         .replace(/{quantity}/g, orderQuantity);
 
-                    // Einfügen nach dem bestehenden Lieferanten-Accordion
-                    $(`#collapse${supplierId}`).closest('.accordion-item').after(template);
-                } else {
-                    // Wir haben bereits eine manuelle Gruppe für diesen Lieferanten
-                    // Prüfe, ob das Produkt bereits in der Liste ist
-                    const existingRow = manualSupplierGroup.find(`.manual-item[data-product-id="${product.id}"]`);
+                    // Zur tbody der bestehenden Lieferantengruppe hinzufügen
+                    manualAccordion.find('.manual-items-tbody').append(template);
 
-                    if (existingRow.length > 0) {
-                        // Aktualisiere die Menge des bestehenden Produkts
-                        const currentQty = parseInt(existingRow.find('input[type="number"]').val()) || 0;
-                        existingRow.find('input[type="number"]').val(Math.max(currentQty + quantity, product.minimum_stock));
-                    } else {
-                        // Füge eine neue Zeile für dieses Produkt hinzu
-                        let template = document.getElementById('manualItemRowTemplate').innerHTML;
-                        template = template
-                            .replace(/{supplierId}/g, supplierId)
-                            .replace(/{productId}/g, product.id)
-                            .replace(/{productName}/g, product.name)
-                            .replace(/{productSku}/g, product.sku)
-                            .replace(/{stockClass}/g, stockClass)
-                            .replace(/{currentStock}/g, product.stock)
-                            .replace(/{minStock}/g, product.minimum_stock)
-                            .replace(/{unit}/g, product.unit)
-                            .replace(/{quantity}/g, orderQuantity);
-
-                        // Zur tbody der bestehenden Lieferantengruppe hinzufügen
-                        manualSupplierGroup.find('.manual-items-tbody').append(template);
-
-                        // Update item count badge
-                        const itemCount = manualSupplierGroup.find('.manual-item').length;
-                        manualSupplierGroup.find('.manual-item-count').text(`${itemCount} Artikel`);
-                    }
+                    // Update item count badge
+                    const itemCount = manualAccordion.find('.manual-item').length;
+                    manualAccordion.find('.manual-item-count').text(`${itemCount} Artikel`);
                 }
             } else {
-                // Kein bestehender Lieferant aus den Systemvorschlägen
+                // Weder Systemvorschläge noch manuelle Gruppe vorhanden, erstelle eine neue Gruppe
+                let template = document.getElementById('manualItemTemplate').innerHTML;
+                template = template
+                    .replace(/{supplierId}/g, supplierId)
+                    .replace(/{supplierName}/g, supplierName)
+                    .replace(/{productId}/g, product.id)
+                    .replace(/{productName}/g, product.name)
+                    .replace(/{productSku}/g, product.sku)
+                    .replace(/{stockClass}/g, stockClass)
+                    .replace(/{currentStock}/g, product.stock)
+                    .replace(/{minStock}/g, product.minimum_stock)
+                    .replace(/{unit}/g, product.unit)
+                    .replace(/{quantity}/g, orderQuantity);
 
-                // Prüfe, ob wir bereits eine manuelle Gruppe für diesen Lieferanten haben
-                if (manualSupplierGroup.length === 0) {
-                    // Erstelle eine neue Lieferantengruppe mit der Vorlage
-                    let template = document.getElementById('manualItemTemplate').innerHTML;
-                    template = template
-                        .replace(/{supplierId}/g, supplierId)
-                        .replace(/{supplierName}/g, supplierName)
-                        .replace(/{productId}/g, product.id)
-                        .replace(/{productName}/g, product.name)
-                        .replace(/{productSku}/g, product.sku)
-                        .replace(/{stockClass}/g, stockClass)
-                        .replace(/{currentStock}/g, product.stock)
-                        .replace(/{minStock}/g, product.minimum_stock)
-                        .replace(/{unit}/g, product.unit)
-                        .replace(/{quantity}/g, orderQuantity);
-
-                    // Zum DOM hinzufügen
-                    $('#manualEntriesBySupplier').append(template);
-                } else {
-                    // Prüfe, ob dieses Produkt bereits in der Liste ist
-                    const existingRow = manualSupplierGroup.find(`.manual-item[data-product-id="${product.id}"]`);
-
-                    if (existingRow.length > 0) {
-                        // Aktualisiere die Menge des bestehenden Produkts
-                        const currentQty = parseInt(existingRow.find('input[type="number"]').val()) || 0;
-                        existingRow.find('input[type="number"]').val(Math.max(currentQty + quantity, product.minimum_stock));
-                    } else {
-                        // Füge eine neue Zeile für dieses Produkt hinzu
-                        let template = document.getElementById('manualItemRowTemplate').innerHTML;
-                        template = template
-                            .replace(/{supplierId}/g, supplierId)
-                            .replace(/{productId}/g, product.id)
-                            .replace(/{productName}/g, product.name)
-                            .replace(/{productSku}/g, product.sku)
-                            .replace(/{stockClass}/g, stockClass)
-                            .replace(/{currentStock}/g, product.stock)
-                            .replace(/{minStock}/g, product.minimum_stock)
-                            .replace(/{unit}/g, product.unit)
-                            .replace(/{quantity}/g, orderQuantity);
-
-                        // Zur tbody der bestehenden Lieferantengruppe hinzufügen
-                        manualSupplierGroup.find('.manual-items-tbody').append(template);
-
-                        // Update item count badge
-                        const itemCount = manualSupplierGroup.find('.manual-item').length;
-                        manualSupplierGroup.find('.manual-item-count').text(`${itemCount} Artikel`);
-                    }
-                }
+                // Zum DOM hinzufügen
+                $('#manualEntriesBySupplier').append(template);
             }
         }
 
@@ -641,7 +645,7 @@
                 supplierGroup.remove();
 
                 // Hide the submit button if no manual items left
-                if ($('.manual-item').length === 0) {
+                if ($('.manual-item').length === 0 && $('.manual-item-system').length === 0) {
                     $('#confirmManualOrderBtn').hide();
                 }
             } else {
@@ -678,16 +682,16 @@
             $(`.suggestion-checkbox[data-supplier="${supplierId}"]`).prop('checked', isChecked);
         });
 
-        // Aktualisieren der Vorschläge (bestehende Funktion)
+        // Aktualisieren der Vorschläge - FIX: Use correct URL directly from Django template tag
         $('#refreshSuggestions').click(function() {
             const $button = $(this);
             $button.prop('disabled', true).html('<i class="spinner-border spinner-border-sm"></i> Aktualisiere...');
 
             $.ajax({
-                url: '{% url "refresh_order_suggestions" %}',
+                url: '{% url "refresh_order_suggestions" %}',  // Fixed: Use Django URL tag directly
                 method: 'POST',
                 data: {
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
                 },
                 success: function(response) {
                     if(response.success) {

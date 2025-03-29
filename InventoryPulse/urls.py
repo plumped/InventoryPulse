@@ -128,6 +128,7 @@ urlpatterns = [
 
     # === API Endpoints ===
     path('api/v1/', include('api.urls')),
+    path('api/products/search/', core_views.products_search, name='api_products_search'),
 
     # === Select2 ===
     path('select2/', include('django_select2.urls')),

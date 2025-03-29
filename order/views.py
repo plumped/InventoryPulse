@@ -905,22 +905,26 @@ def refresh_order_suggestions(request):
     return JsonResponse({'success': False, 'message': 'Nur POST-Anfragen sind erlaubt.'})
 
 
-# Korrigiere die create_orders_from_suggestions Funktion in order/views.py
+# Füge diese Methode in der order/views.py hinzu, um manuelle Produkte in der create_orders_from_suggestions Funktion zu verarbeiten
 
 @login_required
 @permission_required('order', 'create')
 def create_orders_from_suggestions(request):
-    """Erstellt Bestellungen basierend auf ausgewählten Bestellvorschlägen."""
+    """Erstellt Bestellungen basierend auf ausgewählten Bestellvorschlägen und manuell hinzugefügten Produkten."""
     if request.method == 'POST':
         # Ausgewählte Vorschläge ermitteln
         selected_ids = request.POST.getlist('selected_suggestions')
+        # Manuell hinzugefügte Produkte ermitteln
+        manual_products = request.POST.getlist('manual_products[]')
 
-        if not selected_ids:
-            messages.warning(request, 'Es wurden keine Bestellvorschläge ausgewählt.')
+        if not selected_ids and not manual_products:
+            messages.warning(request, 'Es wurden keine Artikel ausgewählt.')
             return redirect('order_suggestions')
 
         # Vorschläge nach Lieferant gruppieren
         suggestions_by_supplier = {}
+
+        # Bestehende Vorschläge verarbeiten
         for suggestion_id in selected_ids:
             try:
                 suggestion = OrderSuggestion.objects.select_related('product', 'preferred_supplier').get(
@@ -952,6 +956,37 @@ def create_orders_from_suggestions(request):
                 })
 
             except (OrderSuggestion.DoesNotExist, ValueError):
+                continue
+
+        # Manuell hinzugefügte Produkte verarbeiten
+        for product_id in manual_products:
+            try:
+                product = Product.objects.get(pk=product_id)
+                supplier_id = request.POST.get(f'manual_supplier_{product_id}')
+                quantity_str = request.POST.get(f'manual_quantity_{product_id}', '1')
+
+                if not supplier_id:
+                    continue
+
+                try:
+                    quantity = Decimal(quantity_str)
+                except ValueError:
+                    quantity = Decimal('1')
+
+                # Nur hinzufügen, wenn Menge > 0
+                if quantity <= 0:
+                    continue
+
+                supplier = Supplier.objects.get(pk=supplier_id)
+
+                if supplier not in suggestions_by_supplier:
+                    suggestions_by_supplier[supplier] = []
+
+                suggestions_by_supplier[supplier].append({
+                    'product': product,
+                    'quantity': quantity
+                })
+            except (Product.DoesNotExist, Supplier.DoesNotExist, ValueError):
                 continue
 
         # Für jeden Lieferanten eine Bestellung erstellen oder vorhandenen Entwurf aktualisieren

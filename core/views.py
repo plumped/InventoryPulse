@@ -3398,3 +3398,69 @@ def currency_delete(request, pk):
     }
 
     return render(request, 'core/currency/currency_confirm_delete.html', context)
+
+
+@login_required
+def products_search(request):
+    """API-Endpunkt für die Suche nach Produkten mit Bestandsinformationen und bevorzugtem Lieferanten."""
+    search_query = request.GET.get('q', '')
+
+    if not search_query or len(search_query) < 2:
+        return JsonResponse([], safe=False)
+
+    # Produkte suchen
+    products = Product.objects.filter(
+        Q(name__icontains=search_query) |
+        Q(sku__icontains=search_query) |
+        Q(barcode__icontains=search_query)
+    ).prefetch_related('supplier_products', 'productwarehouse_set')
+
+    # Maximal 50 Ergebnisse zurückgeben
+    products = products[:50]
+
+    results = []
+    for product in products:
+        # Aktuellen Bestand berechnen
+        stock = product.productwarehouse_set.aggregate(total=Sum('quantity'))['total'] or 0
+
+        # Bevorzugten Lieferanten ermitteln
+        preferred_supplier = None
+        try:
+            supplier_product = SupplierProduct.objects.filter(
+                product=product,
+                is_preferred=True
+            ).select_related('supplier').first()
+
+            if supplier_product:
+                preferred_supplier = {
+                    'id': supplier_product.supplier.id,
+                    'name': supplier_product.supplier.name
+                }
+            else:
+                # Fallback: Den ersten verfügbaren Lieferanten verwenden
+                supplier_product = SupplierProduct.objects.filter(
+                    product=product
+                ).select_related('supplier').first()
+
+                if supplier_product:
+                    preferred_supplier = {
+                        'id': supplier_product.supplier.id,
+                        'name': supplier_product.supplier.name
+                    }
+        except:
+            pass
+
+        # Produktdaten zusammenstellen
+        product_data = {
+            'id': product.id,
+            'name': product.name,
+            'sku': product.sku,
+            'stock': float(stock),
+            'minimum_stock': float(product.minimum_stock),
+            'unit': product.unit,
+            'preferred_supplier': preferred_supplier
+        }
+
+        results.append(product_data)
+
+    return JsonResponse(results, safe=False)

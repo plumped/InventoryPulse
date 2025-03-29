@@ -1,7 +1,52 @@
-<!-- templates/order/order_suggestions.html -->
 {% extends 'base.html' %}
 
 {% block title %}Bestellvorschläge - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .select2-container--default .select2-selection--single {
+        height: calc(1.5em + 0.75rem + 2px) !important;
+        padding: 0.375rem 0.75rem !important;
+        font-size: 1rem !important;
+        font-weight: 400 !important;
+        line-height: 1.5 !important;
+        color: #495057 !important;
+        background-color: #fff !important;
+        background-clip: padding-box !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0.25rem !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5 !important;
+        padding-left: 0 !important;
+        padding-right: 20px !important;
+        color: #495057 !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100% !important;
+        right: 5px !important;
+    }
+
+    .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #80bdff !important;
+        outline: 0 !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    }
+
+    .select2-container--open .select2-dropdown {
+        width: auto !important;
+        min-width: 100% !important;
+    }
+
+    .select2-container--default {
+        display: block;
+        width: 100% !important;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -12,6 +57,57 @@
                 <button id="refreshSuggestions" class="btn btn-outline-primary me-2">
                     <i class="bi bi-arrow-clockwise"></i> Aktualisieren
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Neue Karte für manuelle Artikelhinzufügung -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Artikel manuell hinzufügen</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group mb-3">
+                        <label for="manualProductSearch" class="form-label">Produkt suchen</label>
+                        <select id="manualProductSearch" class="form-control product-select" placeholder="Produkt suchen...">
+                            <option></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group mb-3">
+                        <label for="manualQuantity" class="form-label">Menge</label>
+                        <input type="number" id="manualQuantity" class="form-control" value="1" min="1" step="1">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button id="addManualProduct" class="btn btn-primary w-100" type="button">
+                            <i class="bi bi-plus-circle"></i> Hinzufügen
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="manualProductInfo" class="border rounded p-3 mt-2" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 id="selectedProductName">Produktname</h6>
+                        <p class="text-muted mb-1">SKU: <span id="selectedProductSku">-</span></p>
+                        <p class="text-muted mb-1">Aktueller Bestand: <span id="selectedProductStock">-</span></p>
+                        <p class="text-muted mb-1">Mindestbestand: <span id="selectedProductMinStock">-</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Bevorzugter Lieferant:</h6>
+                        <p id="selectedProductSupplier" class="mb-1">-</p>
+                        <p class="text-muted mb-0" id="noPreferredSupplierWarning" style="display: none;">
+                            <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                            Kein bevorzugter Lieferant für dieses Produkt definiert.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -28,6 +124,11 @@
             {% if grouped_suggestions %}
                 <form id="suggestionForm" method="post" action="{% url 'create_orders_from_suggestions' %}">
                     {% csrf_token %}
+
+                    <!-- Container für manuell hinzugefügte Artikel -->
+                    <div id="manualItemsContainer">
+                        <!-- Hier werden manuell hinzugefügte Artikel eingefügt -->
+                    </div>
 
                     <div class="accordion" id="suggestionsAccordion">
                         {% for supplier, suggestions in grouped_suggestions.items %}
@@ -99,6 +200,11 @@
                                 </div>
                             </div>
                         {% endfor %}
+
+                        <!-- Container für manuelle Einträge, gruppiert nach Lieferant -->
+                        <div id="manualEntriesBySupplier">
+                            <!-- Hier werden manuell hinzugefügte Artikel nach Lieferanten gruppiert angezeigt -->
+                        </div>
                     </div>
 
                     <div class="d-flex justify-content-end mt-3">
@@ -111,28 +217,460 @@
                 <div class="alert alert-info mb-0">
                     <i class="bi bi-info-circle me-2"></i> Aktuell gibt es keine Bestellvorschläge.
                 </div>
+
+                <!-- Formular für manuelle Bestellungen -->
+                <form id="manualOrderForm" method="post" action="{% url 'create_orders_from_suggestions' %}" class="mt-3">
+                    {% csrf_token %}
+                    <div id="manualEntriesBySupplier">
+                        <!-- Hier werden manuell hinzugefügte Artikel angezeigt -->
+                    </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <button type="submit" class="btn btn-outline-primary" id="confirmManualOrderBtn" style="display: none;">
+                            <i class="bi bi-cart-plus"></i> Bestellungen erstellen
+                        </button>
+                    </div>
+                </form>
             {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Template für manuell hinzugefügte Artikel -->
+<template id="manualItemTemplate">
+    <div id="supplier-accordion-{supplierId}" class="accordion-item supplier-group" data-supplier-id="{supplierId}">
+        <h2 class="accordion-header" id="heading-manual-{supplierId}">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapse-manual-{supplierId}" aria-expanded="true"
+                    aria-controls="collapse-manual-{supplierId}">
+                <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                    <span>{supplierName}</span>
+                    <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill manual-item-count">1 Artikel</span>
+                </div>
+            </button>
+        </h2>
+        <div id="collapse-manual-{supplierId}" class="accordion-collapse collapse show"
+             aria-labelledby="heading-manual-{supplierId}" data-bs-parent="#manualEntriesBySupplier">
+            <div class="accordion-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;" class="text-center">
+                                    <input type="checkbox" class="supplier-select-all-manual"
+                                           data-supplier="{supplierId}" checked>
+                                </th>
+                                <th>Produkt</th>
+                                <th>SKU</th>
+                                <th>Akt. Bestand</th>
+                                <th>Min. Bestand</th>
+                                <th>Einheit</th>
+                                <th>Bestellmenge</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody class="manual-items-tbody">
+                            <tr class="manual-item" data-product-id="{productId}">
+                                <td class="text-center">
+                                    <input type="checkbox" name="manual_products[]"
+                                           value="{productId}" class="manual-checkbox"
+                                           data-supplier="{supplierId}" checked>
+                                </td>
+                                <td>
+                                    <a href="/product/{productId}/">
+                                        {productName}
+                                    </a>
+                                    <input type="hidden" name="manual_product_{productId}" value="{productId}">
+                                    <input type="hidden" name="manual_supplier_{productId}" value="{supplierId}">
+                                </td>
+                                <td>{productSku}</td>
+                                <td>
+                                    <span class="badge {stockClass} rounded-pill">
+                                        {currentStock}
+                                    </span>
+                                </td>
+                                <td>{minStock}</td>
+                                <td>{unit}</td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm"
+                                           name="manual_quantity_{productId}"
+                                           value="{quantity}"
+                                           min="1" step="1">
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-manual-item">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Template für eine neue Zeile unter einem vorhandenen Lieferanten -->
+<template id="manualItemRowTemplate">
+    <tr class="manual-item" data-product-id="{productId}">
+        <td class="text-center">
+            <input type="checkbox" name="manual_products[]"
+                   value="{productId}" class="manual-checkbox"
+                   data-supplier="{supplierId}" checked>
+        </td>
+        <td>
+            <a href="/product/{productId}/">
+                {productName}
+            </a>
+            <input type="hidden" name="manual_product_{productId}" value="{productId}">
+            <input type="hidden" name="manual_supplier_{productId}" value="{supplierId}">
+        </td>
+        <td>{productSku}</td>
+        <td>
+            <span class="badge {stockClass} rounded-pill">
+                {currentStock}
+            </span>
+        </td>
+        <td>{minStock}</td>
+        <td>{unit}</td>
+        <td>
+            <input type="number" class="form-control form-control-sm"
+                   name="manual_quantity_{productId}"
+                   value="{quantity}"
+                   min="1" step="1">
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-manual-item">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
 {% endblock %}
 
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        // Alle Checkboxen auswählen
+        // Initialisiere Select2 für die Produktsuche
+        $('#manualProductSearch').select2({
+            placeholder: 'Produkt suchen (SKU oder Name)',
+            allowClear: true,
+            minimumInputLength: 2,
+            ajax: {
+                url: '/api/products/search/',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term || ''
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: data.map(function(product) {
+                            return {
+                                id: product.id,
+                                text: product.sku + ' - ' + product.name,
+                                product: product
+                            };
+                        })
+                    };
+                },
+                cache: true
+            },
+            templateResult: formatProduct,
+            templateSelection: formatProductSelection
+        }).on('select2:select', function(e) {
+            const productData = e.params.data.product;
+            if (productData) {
+                displayProductInfo(productData);
+            }
+        }).on('select2:clear', function() {
+            hideProductInfo();
+        });
+
+        // Format product options in dropdown
+        function formatProduct(product) {
+            if (product.loading) {
+                return product.text;
+            }
+
+            if (!product.product) {
+                return product.text;
+            }
+
+            return $(`
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div><strong>${product.product.name}</strong></div>
+                        <div class="text-muted small">SKU: ${product.product.sku}</div>
+                    </div>
+                    <div class="text-end">
+                        <div>Bestand: ${product.product.stock}</div>
+                        <div class="text-muted small">Min: ${product.product.minimum_stock}</div>
+                    </div>
+                </div>
+            `);
+        }
+
+        // Format selected product in dropdown
+        function formatProductSelection(product) {
+            if (!product.id || !product.product) {
+                return product.text || 'Produkt suchen...';
+            }
+
+            return product.product.sku + ' - ' + product.product.name;
+        }
+
+        // Anzeigen der Produktinformationen
+        function displayProductInfo(product) {
+            $('#selectedProductName').text(product.name);
+            $('#selectedProductSku').text(product.sku);
+            $('#selectedProductStock').text(product.stock + ' ' + product.unit);
+            $('#selectedProductMinStock').text(product.minimum_stock + ' ' + product.unit);
+
+            // Wenn eine vorgeschlagene Menge vom Server kommt, diese verwenden
+            if (product.suggested_quantity) {
+                $('#manualQuantity').val(product.suggested_quantity);
+            } else {
+                // Ansonsten als Fallback den Mindestbestand verwenden
+                $('#manualQuantity').val(Math.max(1, product.minimum_stock));
+            }
+
+            if (product.preferred_supplier) {
+                $('#selectedProductSupplier').text(product.preferred_supplier.name);
+                $('#noPreferredSupplierWarning').hide();
+            } else {
+                $('#selectedProductSupplier').text('Nicht definiert');
+                $('#noPreferredSupplierWarning').show();
+            }
+
+            $('#manualProductInfo').show();
+        }
+
+        // Ausblenden der Produktinformationen
+        function hideProductInfo() {
+            $('#manualProductInfo').hide();
+        }
+
+        // Hinzufügen des manuellen Produkts zur Bestellliste
+        $('#addManualProduct').click(function() {
+            const selectedProduct = $('#manualProductSearch').select2('data')[0];
+
+            if (!selectedProduct || !selectedProduct.product) {
+                alert('Bitte wählen Sie zuerst ein Produkt aus.');
+                return;
+            }
+
+            const product = selectedProduct.product;
+            const quantity = parseInt($('#manualQuantity').val()) || 1;
+
+            if (!product.preferred_supplier) {
+                alert('Dieses Produkt hat keinen bevorzugten Lieferanten. Bitte definieren Sie zuerst einen bevorzugten Lieferanten für dieses Produkt.');
+                return;
+            }
+
+            addManualProduct(product, quantity);
+
+            // Reset the input fields
+            $('#manualProductSearch').val(null).trigger('change');
+            $('#manualQuantity').val(1);
+            hideProductInfo();
+
+            // Show the submit button for manual orders if it's hidden
+            $('#confirmManualOrderBtn').show();
+
+            // Nachricht anzeigen, wenn die Menge erhöht wurde
+            if (quantity < product.minimum_stock) {
+                let message = `Die Bestellmenge wurde auf den Mindestbestand von ${product.minimum_stock} ${product.unit} angepasst.`;
+
+                // Zeige eine temporäre Info-Meldung an
+                let infoAlert = $(`<div class="alert alert-info alert-dismissible fade show" role="alert">
+                                     <i class="bi bi-info-circle me-2"></i>${message}
+                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                   </div>`);
+
+                // Füge die Meldung nach dem Produktsuchbereich ein
+                $('.card-body:first').append(infoAlert);
+
+                // Automatisch ausblenden nach 5 Sekunden
+                setTimeout(function() {
+                    infoAlert.alert('close');
+                }, 5000);
+            }
+        });
+
+        // Funktion zum Hinzufügen eines manuellen Produkts
+        function addManualProduct(product, quantity) {
+            const supplierId = product.preferred_supplier.id;
+            const supplierName = product.preferred_supplier.name;
+
+            // Bestimme die Bestellmenge basierend auf dem Mindestbestand
+            // Verwende die höhere Menge zwischen der angegebenen Menge und dem Mindestbestand
+            const orderQuantity = Math.max(quantity, product.minimum_stock);
+
+            // Determine the stock class based on current stock
+            let stockClass = 'bg-danger-subtle border border-danger-subtle text-danger-emphasis';
+            if (product.stock > product.minimum_stock) {
+                stockClass = 'bg-success-subtle border border-success-subtle text-success-emphasis';
+            }
+
+            // Überprüfe, ob bereits ein Accordion für den Lieferanten im Accordion-Container existiert
+            let existingSupplierGroup = $(`#collapse${supplierId}`).length > 0;
+            let manualSupplierGroup = $(`#supplier-accordion-${supplierId}`);
+
+            if (existingSupplierGroup) {
+                // Es gibt einen bestehenden Lieferanten aus den Systemvorschlägen
+
+                // Prüfe, ob wir bereits eine manuelle Gruppe für diesen Lieferanten haben
+                if (manualSupplierGroup.length === 0) {
+                    // Wir haben keine manuelle Gruppe, also erstellen wir eine und fügen sie nach dem bestehenden Lieferanten ein
+                    let template = document.getElementById('manualItemTemplate').innerHTML;
+                    template = template
+                        .replace(/{supplierId}/g, supplierId)
+                        .replace(/{supplierName}/g, supplierName + ' (Manuell hinzugefügt)')
+                        .replace(/{productId}/g, product.id)
+                        .replace(/{productName}/g, product.name)
+                        .replace(/{productSku}/g, product.sku)
+                        .replace(/{stockClass}/g, stockClass)
+                        .replace(/{currentStock}/g, product.stock)
+                        .replace(/{minStock}/g, product.minimum_stock)
+                        .replace(/{unit}/g, product.unit)
+                        .replace(/{quantity}/g, orderQuantity);
+
+                    // Einfügen nach dem bestehenden Lieferanten-Accordion
+                    $(`#collapse${supplierId}`).closest('.accordion-item').after(template);
+                } else {
+                    // Wir haben bereits eine manuelle Gruppe für diesen Lieferanten
+                    // Prüfe, ob das Produkt bereits in der Liste ist
+                    const existingRow = manualSupplierGroup.find(`.manual-item[data-product-id="${product.id}"]`);
+
+                    if (existingRow.length > 0) {
+                        // Aktualisiere die Menge des bestehenden Produkts
+                        const currentQty = parseInt(existingRow.find('input[type="number"]').val()) || 0;
+                        existingRow.find('input[type="number"]').val(Math.max(currentQty + quantity, product.minimum_stock));
+                    } else {
+                        // Füge eine neue Zeile für dieses Produkt hinzu
+                        let template = document.getElementById('manualItemRowTemplate').innerHTML;
+                        template = template
+                            .replace(/{supplierId}/g, supplierId)
+                            .replace(/{productId}/g, product.id)
+                            .replace(/{productName}/g, product.name)
+                            .replace(/{productSku}/g, product.sku)
+                            .replace(/{stockClass}/g, stockClass)
+                            .replace(/{currentStock}/g, product.stock)
+                            .replace(/{minStock}/g, product.minimum_stock)
+                            .replace(/{unit}/g, product.unit)
+                            .replace(/{quantity}/g, orderQuantity);
+
+                        // Zur tbody der bestehenden Lieferantengruppe hinzufügen
+                        manualSupplierGroup.find('.manual-items-tbody').append(template);
+
+                        // Update item count badge
+                        const itemCount = manualSupplierGroup.find('.manual-item').length;
+                        manualSupplierGroup.find('.manual-item-count').text(`${itemCount} Artikel`);
+                    }
+                }
+            } else {
+                // Kein bestehender Lieferant aus den Systemvorschlägen
+
+                // Prüfe, ob wir bereits eine manuelle Gruppe für diesen Lieferanten haben
+                if (manualSupplierGroup.length === 0) {
+                    // Erstelle eine neue Lieferantengruppe mit der Vorlage
+                    let template = document.getElementById('manualItemTemplate').innerHTML;
+                    template = template
+                        .replace(/{supplierId}/g, supplierId)
+                        .replace(/{supplierName}/g, supplierName)
+                        .replace(/{productId}/g, product.id)
+                        .replace(/{productName}/g, product.name)
+                        .replace(/{productSku}/g, product.sku)
+                        .replace(/{stockClass}/g, stockClass)
+                        .replace(/{currentStock}/g, product.stock)
+                        .replace(/{minStock}/g, product.minimum_stock)
+                        .replace(/{unit}/g, product.unit)
+                        .replace(/{quantity}/g, orderQuantity);
+
+                    // Zum DOM hinzufügen
+                    $('#manualEntriesBySupplier').append(template);
+                } else {
+                    // Prüfe, ob dieses Produkt bereits in der Liste ist
+                    const existingRow = manualSupplierGroup.find(`.manual-item[data-product-id="${product.id}"]`);
+
+                    if (existingRow.length > 0) {
+                        // Aktualisiere die Menge des bestehenden Produkts
+                        const currentQty = parseInt(existingRow.find('input[type="number"]').val()) || 0;
+                        existingRow.find('input[type="number"]').val(Math.max(currentQty + quantity, product.minimum_stock));
+                    } else {
+                        // Füge eine neue Zeile für dieses Produkt hinzu
+                        let template = document.getElementById('manualItemRowTemplate').innerHTML;
+                        template = template
+                            .replace(/{supplierId}/g, supplierId)
+                            .replace(/{productId}/g, product.id)
+                            .replace(/{productName}/g, product.name)
+                            .replace(/{productSku}/g, product.sku)
+                            .replace(/{stockClass}/g, stockClass)
+                            .replace(/{currentStock}/g, product.stock)
+                            .replace(/{minStock}/g, product.minimum_stock)
+                            .replace(/{unit}/g, product.unit)
+                            .replace(/{quantity}/g, orderQuantity);
+
+                        // Zur tbody der bestehenden Lieferantengruppe hinzufügen
+                        manualSupplierGroup.find('.manual-items-tbody').append(template);
+
+                        // Update item count badge
+                        const itemCount = manualSupplierGroup.find('.manual-item').length;
+                        manualSupplierGroup.find('.manual-item-count').text(`${itemCount} Artikel`);
+                    }
+                }
+            }
+        }
+
+        // Remove manual item
+        $(document).on('click', '.remove-manual-item', function() {
+            const row = $(this).closest('tr');
+            const supplierGroup = $(this).closest('.supplier-group');
+
+            // Remove the row
+            row.remove();
+
+            // Update item count
+            const itemCount = supplierGroup.find('.manual-item').length;
+
+            if (itemCount === 0) {
+                // Remove the entire supplier group if no items left
+                supplierGroup.remove();
+
+                // Hide the submit button if no manual items left
+                if ($('.manual-item').length === 0) {
+                    $('#confirmManualOrderBtn').hide();
+                }
+            } else {
+                // Update the count badge
+                supplierGroup.find('.manual-item-count').text(`${itemCount} Artikel`);
+            }
+        });
+
+        // Select all checkboxes for manual items
+        $(document).on('change', '.supplier-select-all-manual', function() {
+            const supplierId = $(this).data('supplier');
+            const isChecked = $(this).prop('checked');
+
+            $(`.manual-checkbox[data-supplier="${supplierId}"]`).prop('checked', isChecked);
+        });
+
+        // Alle Checkboxen auswählen (bestehende Funktion)
         $('#selectAll').click(function() {
-            $('.suggestion-checkbox').prop('checked', true);
-            $('.supplier-select-all').prop('checked', true);
+            $('.suggestion-checkbox, .manual-checkbox').prop('checked', true);
+            $('.supplier-select-all, .supplier-select-all-manual').prop('checked', true);
         });
 
-        // Keine Checkboxen auswählen
+        // Keine Checkboxen auswählen (bestehende Funktion)
         $('#selectNone').click(function() {
-            $('.suggestion-checkbox').prop('checked', false);
-            $('.supplier-select-all').prop('checked', false);
+            $('.suggestion-checkbox, .manual-checkbox').prop('checked', false);
+            $('.supplier-select-all, .supplier-select-all-manual').prop('checked', false);
         });
 
-        // Lieferanten-spezifische Checkboxen
+        // Lieferanten-spezifische Checkboxen (bestehende Funktion)
         $('.supplier-select-all').change(function() {
             const supplierId = $(this).data('supplier');
             const isChecked = $(this).prop('checked');
@@ -140,7 +678,7 @@
             $(`.suggestion-checkbox[data-supplier="${supplierId}"]`).prop('checked', isChecked);
         });
 
-        // Aktualisieren der Vorschläge
+        // Aktualisieren der Vorschläge (bestehende Funktion)
         $('#refreshSuggestions').click(function() {
             const $button = $(this);
             $button.prop('disabled', true).html('<i class="spinner-border spinner-border-sm"></i> Aktualisiere...');
@@ -165,9 +703,11 @@
                 }
             });
         });
-        $('#suggestionForm').on('submit', function(e) {
+
+        // Formular-Validierung vor dem Absenden (bestehende Funktion mit Erweiterung)
+        $('#suggestionForm, #manualOrderForm').on('submit', function(e) {
             // Überprüfen, ob Artikel ausgewählt wurden
-            var selectedItems = $('.suggestion-checkbox:checked').length;
+            var selectedItems = $('.suggestion-checkbox:checked, .manual-checkbox:checked').length;
 
             if (selectedItems === 0) {
                 e.preventDefault();

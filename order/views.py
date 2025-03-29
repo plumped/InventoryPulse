@@ -10,6 +10,8 @@ from django.db.models import Q, Sum, F, Count, Case, When, Value, IntegerField
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.urls import reverse
+
 
 from accessmanagement.decorators import permission_required
 from core.models import Product, ProductWarehouse, Currency
@@ -2024,15 +2026,36 @@ def order_template_update(request, pk):
         shipping_address = request.POST.get('shipping_address', '')
         notes = request.POST.get('notes', '')
 
+        # Debug logging for troubleshooting
+        print(f"Name: '{name}', Supplier ID: '{supplier_id}'")
+
         if not name or not supplier_id:
             messages.error(request, 'Vorlagenname und Lieferant sind erforderlich.')
-            return redirect('order_template_update', pk=template.pk)
+            # Instead of redirecting, render the form with existing data
+            suppliers = Supplier.objects.filter(is_active=True).order_by('name')
+            recurrence_choices = OrderTemplate.RECURRENCE_CHOICES
+            context = {
+                'form': {'instance': template},  # Mock form for template compatibility
+                'template': template,
+                'suppliers': suppliers,
+                'recurrence_choices': recurrence_choices,
+            }
+            return render(request, 'order/order_template_form.html', context)
 
         try:
             supplier = Supplier.objects.get(pk=supplier_id)
         except Supplier.DoesNotExist:
             messages.error(request, 'Der ausgewählte Lieferant existiert nicht.')
-            return redirect('order_template_update', pk=template.pk)
+            # Instead of redirecting, render the form with existing data
+            suppliers = Supplier.objects.filter(is_active=True).order_by('name')
+            recurrence_choices = OrderTemplate.RECURRENCE_CHOICES
+            context = {
+                'form': {'instance': template},  # Mock form for template compatibility
+                'template': template,
+                'suppliers': suppliers,
+                'recurrence_choices': recurrence_choices,
+            }
+            return render(request, 'order/order_template_form.html', context)
 
         # Update template
         with transaction.atomic():
@@ -2069,62 +2092,88 @@ def order_template_update(request, pk):
 
 def process_template_items(post_data, template):
     """Process template items from form data."""
+    # Print debugging information
+    print(f"Processing items for template: {template.id} - {template.name}")
+
     # Get existing items
     existing_items = {item.id: item for item in template.items.all()}
     processed_ids = set()
 
     # Process items
-    for key, value in post_data.items():
+    for key in post_data.keys():
         # Check if it's a product field
         if key.startswith('item_product_'):
             # Extract item ID (new_X or a number)
             item_id = key.split('item_product_')[1]
 
             # Get product ID
-            product_id = value
+            product_id = post_data[key]
             if not product_id:
+                print(f"No product ID for key: {key}")
                 continue
+
+            print(f"Processing item_id: {item_id}, product_id: {product_id}")
 
             # Find corresponding quantity and supplier_sku
             quantity_key = f'item_quantity_{item_id}'
             supplier_sku_key = f'item_supplier_sku_{item_id}'
 
             if quantity_key in post_data:
-                quantity = Decimal(post_data[quantity_key])
-                supplier_sku = post_data.get(supplier_sku_key, '')
-
-                # Get product
                 try:
-                    product = Product.objects.get(pk=product_id)
+                    quantity = Decimal(post_data[quantity_key])
+                    supplier_sku = post_data.get(supplier_sku_key, '')
 
-                    if item_id.startswith('new_'):
-                        # Create new item
-                        OrderTemplateItem.objects.create(
-                            template=template,
-                            product=product,
-                            quantity=quantity,
-                            supplier_sku=supplier_sku
-                        )
-                    else:
-                        # Update existing item
-                        try:
-                            item_id_int = int(item_id)
-                            if item_id_int in existing_items:
-                                item = existing_items[item_id_int]
-                                item.product = product
-                                item.quantity = quantity
-                                item.supplier_sku = supplier_sku
-                                item.save()
-                                processed_ids.add(item_id_int)
-                        except (ValueError, KeyError):
-                            continue
-                except Product.DoesNotExist:
+                    print(f"Quantity: {quantity}, Supplier SKU: {supplier_sku}")
+
+                    # Get product
+                    try:
+                        product = Product.objects.get(pk=product_id)
+                        print(f"Found product: {product.name}")
+
+                        if item_id.startswith('new_'):
+                            # Create new item
+                            OrderTemplateItem.objects.create(
+                                template=template,
+                                product=product,
+                                quantity=quantity,
+                                supplier_sku=supplier_sku
+                            )
+                            print(f"Created new item for product: {product.name}")
+                        else:
+                            # Update existing item
+                            try:
+                                item_id_int = int(item_id)
+                                if item_id_int in existing_items:
+                                    item = existing_items[item_id_int]
+                                    item.product = product
+                                    item.quantity = quantity
+                                    item.supplier_sku = supplier_sku
+                                    item.save()
+                                    processed_ids.add(item_id_int)
+                                    print(f"Updated existing item: {item_id_int}")
+                                else:
+                                    print(f"Item ID not found in existing items: {item_id_int}")
+                            except (ValueError, KeyError) as e:
+                                print(f"Error processing existing item {item_id}: {str(e)}")
+                                continue
+                    except Product.DoesNotExist:
+                        print(f"Product not found with ID: {product_id}")
+                        continue
+                except (ValueError, TypeError) as e:
+                    print(f"Error with quantity for {item_id}: {str(e)}")
                     continue
+            else:
+                print(f"Quantity key not found: {quantity_key}")
 
     # Delete items that weren't processed
     for item_id, item in existing_items.items():
         if item_id not in processed_ids:
+            print(f"Deleting item: {item_id}")
             item.delete()
+
+    # Print summary
+    print(f"Processed {len(processed_ids)} existing items")
+    print(f"Existing items: {len(existing_items)}")
 
 
 @login_required
@@ -2303,8 +2352,8 @@ def create_order_from_template(request, pk):
                              f'Bestellung {order.order_number} wurde erfolgreich aus der Vorlage "{template.name}" erstellt.')
             return redirect('purchase_order_detail', pk=order.pk)
 
-    # For GET requests, just redirect to template detail
-    return redirect('order_template_detail', pk=template.pk)
+    # For GET requests, just redirect to template detail with showing modal via URL parameter
+    return redirect(f"{reverse('order_template_detail', kwargs={'pk': template.pk})}?show_modal=true")
 
 
 @login_required

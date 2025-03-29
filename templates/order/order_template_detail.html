@@ -29,9 +29,10 @@
         </div>
         <div class="col-md-4 text-md-end">
             <div class="btn-group">
-                <a href="{% url 'create_order_from_template' template.id %}" class="btn btn-primary">
+                <!-- Change to button that triggers the modal instead of direct link -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createOrderModal">
                     <i class="bi bi-cart-plus"></i> Bestellung erstellen
-                </a>
+                </button>
                 <a href="{% url 'order_template_update' template.id %}" class="btn btn-outline-secondary">
                     <i class="bi bi-pencil"></i> Bearbeiten
                 </a>
@@ -162,12 +163,12 @@
                                     <th>Artikel-Nr.</th>
                                     <th>Menge</th>
                                     <th>Einheit</th>
-                                    <th>Akt. Preis</th>
-                                    <th>Geschätzter Wert</th>
+                                    <th class="text-end">Akt. Preis</th>
+                                    <th class="text-end">Geschätzter Wert</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for item in template.items.all %}
+                                {% for item in items %}
                                 <tr>
                                     <td>
                                         <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
@@ -181,14 +182,14 @@
                                     </td>
                                     <td>{{ item.quantity }}</td>
                                     <td>{{ item.product.unit }}</td>
-                                    <td>
+                                    <td class="text-end">
                                         {% if item.current_price %}
                                         {{ item.current_price|floatformat:2 }} {{ currency_symbol }}
                                         {% else %}
                                         <span class="text-muted">--</span>
                                         {% endif %}
                                     </td>
-                                    <td>
+                                    <td class="text-end">
                                         {% if item.estimated_value %}
                                         {{ item.estimated_value|floatformat:2 }} {{ currency_symbol }}
                                         {% else %}
@@ -213,7 +214,7 @@
                             <tfoot>
                                 <tr>
                                     <td colspan="5" class="text-end"><strong>Geschätzter Gesamtwert:</strong></td>
-                                    <td>
+                                    <td class="text-end">
                                         {% if total_value %}
                                         <strong>{{ total_value|floatformat:2 }} {{ currency_symbol }}</strong>
                                         {% else %}
@@ -323,11 +324,20 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // Listener for "Create Order" button to open modal
-    $('#createOrderBtn').click(function(e) {
-        e.preventDefault();
+    // Check URL parameters for showing the modal automatically
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('show_modal') === 'true') {
         $('#createOrderModal').modal('show');
-    });
+    }
+
+    // Set the default expected delivery date to 7 days from now
+    const today = new Date();
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+
+    // Format the date as YYYY-MM-DD
+    const formattedDate = nextWeek.toISOString().split('T')[0];
+    $('#expected_delivery').val(formattedDate);
 });
 </script>
 {% endblock %}

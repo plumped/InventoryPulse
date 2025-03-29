@@ -72,10 +72,18 @@ def supplier_detail(request, pk):
         else:
             sp.converted_price = None
 
+    # Aktuelle Bestellungen für diesen Lieferanten abrufen
+    from order.models import PurchaseOrder
+    supplier_orders = PurchaseOrder.objects.filter(
+        supplier=supplier,
+        status__in=['draft', 'pending', 'approved', 'sent', 'partially_received']
+    ).order_by('-order_date')[:5]  # Neueste 5 Bestellungen
+
     context = {
         'supplier': supplier,
         'supplier_products': supplier_products,
         'system_currency': system_currency,
+        'supplier_orders': supplier_orders,  # Neue Kontext-Variable für Bestellungen
     }
 
     return render(request, 'suppliers/supplier_detail.html', context)

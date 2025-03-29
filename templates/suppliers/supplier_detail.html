@@ -208,13 +208,89 @@
         </div>
 
         <!-- Aktuelle Bestellungen -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-truck me-2"></i>Aktuelle Bestellungen</h5>
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Aktuelle Bestellungen</h5>
+                <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus-circle"></i> Neue Bestellung
+                </a>
             </div>
-            <div class="card-body">
-                <!-- Hier kann später eine Liste der aktuellen Bestellungen angezeigt werden -->
-                <p class="text-muted">Keine aktuellen Bestellungen vorhanden.</p>
+            <div class="card-body p-0">
+                {% if supplier_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Bestellnummer</th>
+                                    <th>Datum</th>
+                                    <th>Status</th>
+                                    <th>Wert</th>
+                                    <th>Positionen</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in supplier_orders %}
+                                <tr>
+                                    <td><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></td>
+                                    <td>{{ order.order_date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        {% if order.status == 'draft' %}
+                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'pending' %}
+                                        <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'approved' %}
+                                        <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'sent' %}
+                                        <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'partially_received' %}
+                                        <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'received' %}
+                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.total|floatformat:2 }}
+                                        {% if supplier.default_currency %}
+                                            {{ supplier.default_currency.symbol }}
+                                        {% else %}
+                                            €
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.items.count }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if order.status == 'draft' %}
+                                                <a href="{% url 'purchase_order_update' order.id %}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            {% elif order.status == 'sent' or order.status == 'partially_received' %}
+                                                <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-outline-info">
+                                                    <i class="bi bi-truck"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="bi bi-cart fs-2 d-block mb-2"></i>
+                            <p>Keine aktuellen Bestellungen für diesen Lieferanten.</p>
+                            <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Neue Bestellung anlegen
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

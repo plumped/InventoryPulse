@@ -11,4 +11,6 @@ urlpatterns = [
     path('product/<int:pk>/delete/', views.supplier_product_delete, name='supplier_product_delete'),
 
     path('get-supplier-data/', views.get_supplier_data, name='get_supplier_data'),
+    path('get-supplier-products/', views.get_supplier_products, name='get_supplier_products'),
+
 ]

@@ -1,4 +1,3 @@
-<!-- templates/order/purchase_order_form.html -->
 {% extends 'base.html' %}
 {% load core_tags %}
 
@@ -89,8 +88,14 @@
                         {% endif %}
 
                         <div class="mb-3">
-                            <label for="{{ form.supplier.id_for_label }}" class="form-label">{{ form.supplier.label }}</label>
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">{{ form.supplier.label }} <span class="text-danger">*</span></label>
                             {{ form.supplier }}
+                            <div id="supplierLoadingIndicator" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary mt-2" role="status">
+                                    <span class="visually-hidden">Lädt...</span>
+                                </div>
+                                <small class="text-muted ms-2">Lade Lieferantendaten...</small>
+                            </div>
                             {% if form.supplier.errors %}
                             <div class="invalid-feedback d-block">{{ form.supplier.errors }}</div>
                             {% endif %}
@@ -123,14 +128,43 @@
                 </div>
             </div>
 
-            <!-- Rechte Spalte: Artikelliste -->
+            <!-- Rechte Spalte: Produktauswahl und Artikelliste -->
             <div class="col-md-8 mb-4">
+                <!-- Produktauswahl-Section -->
+                <div id="productSelectionSection" class="card mb-4" style="display: none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Verfügbare Produkte des Lieferanten</h5>
+                        <div>
+                            <span class="btn btn-sm btn-outline-secondary" id="toggleProductsBtn">
+                                <i class="bi bi-list-ul"></i> Produkte anzeigen/ausblenden
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body" id="productListContainer" style="display: none;">
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Wählen Sie Produkte aus der Liste aus oder verwenden Sie das Suchfeld, um schnell Produkte zu finden.
+                            Sie können auch über das Formular unten Produkte manuell hinzufügen.
+                        </div>
+                        <div id="productList">
+                            <!-- Products will be populated here -->
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Lädt...</span>
+                                </div>
+                                <p class="mt-2">Produkte werden geladen...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Artikelliste -->
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Bestellpositionen</h5>
                         {% if not form.instance.pk or form.instance.status == 'draft' %}
                         <button type="button" class="btn btn-sm btn-outline-success" id="addItemButton">
-                            <i class="bi bi-plus-circle"></i> Position hinzufügen
+                            <i class="bi bi-plus-circle"></i> Weitere Position
                         </button>
                         {% endif %}
                     </div>
@@ -139,11 +173,11 @@
                             <table class="table table-hover" id="itemsTable">
                                 <thead>
                                     <tr>
-                                        <th>Produkt</th>
+                                        <th>Produkt <span class="text-danger">*</span></th>
                                         <th>Lieferant-SKU</th>
-                                        <th>Menge</th>
+                                        <th>Menge <span class="text-danger">*</span></th>
                                         <th>Einheit</th>
-                                        <th>Einzelpreis</th>
+                                        <th>Einzelpreis <span class="text-danger">*</span></th>
                                         <th>MwSt</th>  <!-- Neue Spalte für MwSt -->
                                         <th>Gesamt</th>
                                         <th style="width: 80px;"></th>
@@ -181,7 +215,7 @@
                                                 <input type="hidden" name="item_quantity_{{ item.id }}" value="{{ item.quantity_ordered }}">
                                                 {% endif %}
                                             </td>
-                                            <td>{{ item.product.unit }}</td>
+                                            <td class="item-unit">{{ item.product.unit }}</td>
                                             <td>
                                                 {% if form.instance.status == 'draft' %}
                                                 <input type="number" name="item_price_{{ item.id }}" class="form-control item-price"
@@ -271,15 +305,13 @@
 <template id="newItemTemplate">
     <tr data-item-id="new_{index}">
         <td>
-            <select name="item_product_new_{index}" class="form-select product-select" required>
-                <option value="">-- Produkt wählen --</option>
-                {% for product in products %}
-                <option value="{{ product.id }}" data-unit="{{ product.unit }}" data-supplier-sku="{{ product.supplier_sku }}">{{ product.name }}</option>
-                {% endfor %}
+            <select name="item_product_new_{index}" class="form-select product-select" required
+                   placeholder="Produkt suchen (SKU oder Name)">
+                <option value="">-- Produkt suchen --</option>
             </select>
         </td>
         <td>
-            <input type="text" name="item_supplier_sku_new_{index}" class="form-control supplier-sku">
+            <input type="text" name="item_supplier_sku_new_{index}" class="form-control supplier-sku" readonly>
         </td>
         <td>
             <input type="number" name="item_quantity_new_{index}" class="form-control item-quantity"
@@ -303,34 +335,37 @@
 
 {% block extra_js %}
 <script>
+// Fixed JavaScript for the Purchase Order form
 $(document).ready(function() {
-    let itemIndex = 0;
+    // Initialize Select2 for supplier selection with search
+    if($.fn.select2) {
+        $('#id_supplier').select2({
+            placeholder: 'Lieferant auswählen',
+            width: '100%',
+            allowClear: true,
+            theme: 'bootstrap-5'
+        });
+    }
+
     let supplierShippingCost = 0;
     let supplierMinimumOrderValue = 0;
-    let currencySymbol = '{{ default_currency.symbol }}';
-    let currencyCode = '{{ default_currency.code }}';
+    let currencySymbol = '€';
+    let currencyCode = 'EUR';
     let exchangeRate = 1.0;
-
-    // Initialize product selections
-    initializeProductSelects();
-
-    // Initialize calculations
-    initializeCalculations();
+    let itemIndex = 0;
 
     // Watch for supplier changes
     $('#id_supplier').on('change', function() {
         const supplierId = $(this).val();
 
-        if (supplierId) {
-            // Update product data for existing rows
-            $('.product-select').each(function() {
-                const selectedProductId = $(this).val();
-                if (selectedProductId) {
-                    fetchAndUpdateProductData($(this), selectedProductId);
-                }
-            });
+        // Clear existing product rows
+        $('#itemsTableBody').empty();
 
-            // Retrieve supplier data (shipping costs and minimum order value)
+        if (supplierId) {
+            // Show loading indicator
+            $('#supplierLoadingIndicator').show();
+
+            // Fetch supplier data (shipping costs, minimum order value, currency)
             $.getJSON('/suppliers/get-supplier-data/', {
                 supplier_id: supplierId
             }).done(function(data) {
@@ -349,14 +384,6 @@ $(document).ready(function() {
                         $('[id^="currencySymbol"]').text(currencySymbol);
                     }
 
-                    console.log('Supplier data loaded:', {
-                        supplierShippingCost: supplierShippingCost,
-                        supplierMinimumOrderValue: supplierMinimumOrderValue,
-                        currencySymbol: currencySymbol,
-                        currencyCode: currencyCode,
-                        exchangeRate: exchangeRate
-                    });
-
                     // If a minimum order value exists and is greater than 0
                     if (data.minimum_order_value > 0) {
                         // Show minimum order value notice
@@ -373,12 +400,19 @@ $(document).ready(function() {
                         $('#minimum-order-warning').remove();
                     }
 
-                    // Recalculate totals
-                    updateTotals();
+                    // Add a first empty row for the order
+                    addNewItem();
+
+                    // Hide loading indicator
+                    $('#supplierLoadingIndicator').hide();
                 }
             }).fail(function(jqXHR, textStatus, errorThrown) {
                 console.error('Error retrieving supplier data:', textStatus, errorThrown);
+                $('#supplierLoadingIndicator').hide();
             });
+        } else {
+            // If no supplier selected, hide loading indicator
+            $('#supplierLoadingIndicator').hide();
         }
     });
 
@@ -393,7 +427,7 @@ $(document).ready(function() {
         updateTotals();
     });
 
-    // Function to add a new item
+    // Function to add a new empty item
     function addNewItem() {
         // Clone and adapt template
         let template = document.getElementById('newItemTemplate').innerHTML;
@@ -414,23 +448,136 @@ $(document).ready(function() {
         }, 500);
     }
 
-    // Improved product selection logic
+    // Product selection logic
     function initializeProductSelects() {
         // Select2 for product selection (if available)
         if($.fn.select2) {
-            $('.product-select').select2({
-                placeholder: 'Produkt wählen',
-                width: '100%'
+            $('.product-select:not(.select2-hidden-accessible)').each(function() {
+                $(this).select2({
+                    placeholder: 'Produkt suchen (Artikelnummer oder Name)',
+                    width: '100%',
+                    allowClear: true,
+                    ajax: {
+                        url: '/order/get-supplier-products-list/',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                supplier_id: $('#id_supplier').val(),
+                                q: params.term || '',
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function(data, params) {
+                            params.page = params.page || 1;
+
+                            return {
+                                results: data.products.map(function(product) {
+                                    return {
+                                        id: product.id,
+                                        text: product.sku + ' - ' + product.name,
+                                        product: product
+                                    };
+                                }),
+                                pagination: {
+                                    more: data.more
+                                }
+                            };
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 1,
+                    templateResult: formatProduct,
+                    templateSelection: formatProductSelection
+                }).on('select2:select', function(e) {
+                    const productData = e.params.data.product;
+                    if (productData) {
+                        updateRowWithProductData($(this).closest('tr'), productData);
+                    }
+                });
             });
         }
+    }
 
-        // Changes in product selection
-        $('.product-select').off('change').on('change', function() {
-            const productId = $(this).val();
-            if (productId) {
-                fetchAndUpdateProductData($(this), productId);
+    // Format product options in dropdown
+    function formatProduct(product) {
+        if (product.loading) {
+            return product.text;
+        }
+
+        if (!product.product) {
+            return product.text;
+        }
+
+        return $(`
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div><strong>${product.product.name}</strong></div>
+                    <div class="text-muted small">SKU: ${product.product.sku}</div>
+                </div>
+                <div class="text-end">
+                    <div>${product.product.price} ${currencySymbol}</div>
+                    <div class="text-muted small">Lieferant-SKU: ${product.product.supplier_sku || '-'}</div>
+                </div>
+            </div>
+        `);
+    }
+
+    // Format selected product in dropdown
+    function formatProductSelection(product) {
+        if (!product.id || !product.product) {
+            return product.text;
+        }
+
+        return product.product.sku + ' - ' + product.product.name;
+    }
+
+    // Update row with selected product data
+    function updateRowWithProductData($row, productData) {
+        // Set supplier SKU if available
+        if (productData.supplier_sku) {
+            $row.find('.supplier-sku').val(productData.supplier_sku);
+        }
+
+        // Set unit
+        $row.find('.item-unit').text(productData.unit || '--');
+
+        // Set price
+        if (productData.price) {
+            $row.find('.item-price').val(productData.price);
+        }
+
+        // Store tax information
+        if (productData.tax_id !== null && productData.tax_id !== undefined) {
+            const itemId = $row.data('item-id');
+
+            // Create or update hidden field for tax_id
+            let $taxIdField = $row.find('.item-tax-id');
+            if ($taxIdField.length === 0) {
+                $taxIdField = $('<input>')
+                    .attr('type', 'hidden')
+                    .addClass('item-tax-id')
+                    .attr('name', 'item_tax_id_' + itemId)
+                    .appendTo($row);
             }
-        });
+
+            // Set tax rate
+            $taxIdField.val(productData.tax_id);
+
+            // Display tax rate
+            const $taxRateDisplay = $row.find('.item-tax-rate');
+            if ($taxRateDisplay.length > 0) {
+                $taxRateDisplay.text(productData.tax_rate + '%');
+            }
+        }
+
+        // Update row total
+        updateRowTotal($row);
+
+        // Focus quantity field after product selection
+        setTimeout(function() {
+            $row.find('.item-quantity').focus().select();
+        }, 100);
     }
 
     // Function to retrieve and update product data from server
@@ -448,65 +595,18 @@ $(document).ready(function() {
             product_id: productId,
             supplier_id: supplierId
         }).done(function(data) {
-            console.log('Product data received:', data);
-
             if (data.success) {
-                // Set price if available
-                if (data.price) {
-                    $row.find('.item-price').val(data.price);
-                }
+                // Update row with product data
+                const productData = {
+                    id: productId,
+                    supplier_sku: data.supplier_sku,
+                    price: data.price,
+                    unit: data.unit,
+                    tax_id: data.tax_id,
+                    tax_rate: data.tax_rate
+                };
 
-                // Set supplier SKU if available
-                if (data.supplier_sku) {
-                    $row.find('.supplier-sku').val(data.supplier_sku);
-                }
-
-                // Update unit
-                $row.find('.item-unit').text(data.unit || '--');
-
-                // Store tax information
-                if (data.tax_id !== null && data.tax_id !== undefined) {
-                    // Create or update hidden field for tax_id
-                    const itemId = $row.data('item-id');
-
-                    // Check if field already exists
-                    let $taxIdField = $row.find('.item-tax-id');
-                    if ($taxIdField.length === 0) {
-                        // Create field if it doesn't exist
-                        $taxIdField = $('<input>')
-                            .attr('type', 'hidden')
-                            .addClass('item-tax-id')
-                            .attr('name', 'item_tax_id_' + itemId)
-                            .appendTo($row);
-                    }
-
-                    // Set tax rate
-                    $taxIdField.val(data.tax_id);
-
-                    // Display tax rate if corresponding element exists
-                    const $taxRateDisplay = $row.find('.item-tax-rate');
-                    if ($taxRateDisplay.length > 0) {
-                        $taxRateDisplay.text(data.tax_rate + '%');
-                    }
-                }
-
-                // Update currency information if available
-                if (data.currency && data.currency.id) {
-                    // Create or update hidden field for currency_id
-                    const itemId = $row.data('item-id');
-                    let $currencyIdField = $row.find('.item-currency-id');
-                    if ($currencyIdField.length === 0) {
-                        $currencyIdField = $('<input>')
-                            .attr('type', 'hidden')
-                            .addClass('item-currency-id')
-                            .attr('name', 'item_currency_id_' + itemId)
-                            .appendTo($row);
-                    }
-                    $currencyIdField.val(data.currency.id);
-                }
-
-                // Update row total
-                updateRowTotal($row);
+                updateRowWithProductData($row, productData);
             } else {
                 console.warn('No supplier data found:', data.message);
             }
@@ -568,7 +668,6 @@ $(document).ready(function() {
             shipping = supplierShippingCost;
             $('#shippingInput').val(shipping.toFixed(2));
 
-
             // Remove "free shipping" notice if present
             $('#free-shipping-info').remove();
         } else if (supplierMinimumOrderValue > 0) {
@@ -578,7 +677,6 @@ $(document).ready(function() {
 
             // Remove notice if present
             $('#shipping-cost-warning').remove();
-
         }
 
         // Calculate total sum
@@ -616,13 +714,91 @@ $(document).ready(function() {
         }
     }
 
-    // If there are no items, add an empty one
-    if($('#itemsTableBody tr').length === 0) {
-        addNewItem();
-    }
+    // Handle keyboard navigation between rows
+    $(document).on('keydown', '.product-select, .item-quantity, .item-price', function(e) {
+        // If Enter key is pressed and not in a Select2 dropdown
+        if (e.key === 'Enter' && !$(this).hasClass('select2-search__field')) {
+            e.preventDefault();
 
-    // Initially calculate totals
-    updateTotals();
+            // Find the current row
+            const $currentRow = $(this).closest('tr');
+            const $allRows = $('#itemsTableBody tr');
+            const currentIndex = $allRows.index($currentRow);
+
+            // Get all input fields in the current row
+            const $fields = $currentRow.find('input:visible, select:visible');
+            const fieldIndex = $fields.index(this);
+
+            // If this is the last field in the row
+            if (fieldIndex === $fields.length - 1) {
+                // If this is the last row, add a new row
+                if (currentIndex === $allRows.length - 1) {
+                    addNewItem();
+                } else {
+                    // Focus the first field in the next row
+                    $allRows.eq(currentIndex + 1).find('input:visible, select:visible').first().focus();
+                }
+            } else {
+                // Focus the next field in this row
+                $fields.eq(fieldIndex + 1).focus();
+            }
+        }
+    });
+
+    // Handle form submission
+    $('#purchase-order-form').on('submit', function(e) {
+        // Validate that we have at least one product
+        if ($('#itemsTableBody tr').length === 0) {
+            e.preventDefault();
+            alert('Bitte fügen Sie mindestens ein Produkt zur Bestellung hinzu.');
+            return false;
+        }
+
+        // Check that all products have quantities and prices
+        let validForm = true;
+        $('#itemsTableBody tr').each(function() {
+            const $productSelect = $(this).find('.product-select');
+            const $quantity = $(this).find('.item-quantity');
+            const $price = $(this).find('.item-price');
+
+            // Validate product is selected
+            if (!$productSelect.val()) {
+                $productSelect.addClass('is-invalid');
+                validForm = false;
+            } else {
+                $productSelect.removeClass('is-invalid');
+            }
+
+            // Validate quantity
+            if (!$quantity.val() || parseFloat($quantity.val()) <= 0) {
+                $quantity.addClass('is-invalid');
+                validForm = false;
+            } else {
+                $quantity.removeClass('is-invalid');
+            }
+
+            // Validate price
+            if (!$price.val() || parseFloat($price.val()) <= 0) {
+                $price.addClass('is-invalid');
+                validForm = false;
+            } else {
+                $price.removeClass('is-invalid');
+            }
+        });
+
+        if (!validForm) {
+            e.preventDefault();
+            alert('Bitte füllen Sie alle erforderlichen Felder aus (Produkt, Menge, Preis).');
+            return false;
+        }
+
+        return true;
+    });
+
+    // Check if there's a pre-selected supplier (e.g., when redirected from supplier page)
+    if ($('#id_supplier').val()) {
+        $('#id_supplier').trigger('change');
+    }
 });
 </script>
 {% endblock %}

@@ -297,3 +297,56 @@ def get_supplier_data(request):
         return JsonResponse({'success': False, 'message': 'Lieferant nicht gefunden'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Fehler: {str(e)}'})
+
+# Add this to suppliers/views.py
+
+@login_required
+def get_supplier_products(request):
+    """AJAX-Endpunkt zum Abrufen aller Produkte eines Lieferanten."""
+    supplier_id = request.GET.get('supplier_id')
+
+    if not supplier_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'Lieferanten-ID erforderlich'
+        })
+
+    try:
+        # Lieferanten-Produkt-Informationen abrufen
+        supplier_products = SupplierProduct.objects.filter(
+            supplier_id=supplier_id
+        ).select_related('product', 'product__tax')
+
+        # Format the response
+        products_data = []
+        for sp in supplier_products:
+            product = sp.product
+
+            # Get tax information
+            tax_id = None
+            tax_rate = 0
+            if product.tax:
+                tax_id = product.tax.id
+                tax_rate = product.tax.rate
+
+            products_data.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': product.sku,
+                'supplier_sku': sp.supplier_sku or '',
+                'price': float(sp.purchase_price),
+                'unit': product.unit,
+                'tax_id': tax_id,
+                'tax_rate': tax_rate
+            })
+
+        return JsonResponse({
+            'success': True,
+            'products': products_data
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Fehler: {str(e)}'
+        })

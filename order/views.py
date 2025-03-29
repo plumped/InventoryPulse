@@ -1512,3 +1512,222 @@ def purchase_order_receipt_delete(request, pk, receipt_id):
     }
 
     return render(request, 'order/purchase_order_receipt_confirm_delete.html', context)
+
+
+# Add this function to order/views.py
+
+# Add this function to order/views.py
+
+@login_required
+def get_supplier_products_list(request):
+    """AJAX-Endpunkt für die Suche nach Produkten eines Lieferanten."""
+    supplier_id = request.GET.get('supplier_id')
+    search_query = request.GET.get('q', '')
+    page = int(request.GET.get('page', 1))
+    page_size = 50  # Increased number of results per page
+
+    if not supplier_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'Lieferanten-ID erforderlich'
+        })
+
+    try:
+        # Base query - products that have a relationship with this supplier
+        queryset = SupplierProduct.objects.filter(
+            supplier_id=supplier_id
+        ).select_related('product', 'product__tax')
+
+        # Apply search filter if provided
+        if search_query:
+            queryset = queryset.filter(
+                Q(product__name__icontains=search_query) |
+                Q(product__sku__icontains=search_query) |
+                Q(supplier_sku__icontains=search_query)
+            )
+
+        # Calculate total and paginate
+        total_count = queryset.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        # Get the paginated results
+        supplier_products = queryset[start:end]
+
+        # Format the response
+        products_data = []
+        for sp in supplier_products:
+            product = sp.product
+
+            # Get tax information
+            tax_id = None
+            tax_rate = 0
+            if product.tax:
+                tax_id = product.tax.id
+                tax_rate = product.tax.rate
+
+            products_data.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': product.sku,
+                'supplier_sku': sp.supplier_sku or '',
+                'price': float(sp.purchase_price),
+                'unit': product.unit,
+                'tax_id': tax_id,
+                'tax_rate': tax_rate
+            })
+
+        return JsonResponse({
+            'success': True,
+            'products': products_data,
+            'total': total_count,
+            'more': (page * page_size) < total_count  # Whether there are more results
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Fehler: {str(e)}'
+        })
+
+
+# Add this to suppliers/views.py
+
+# Add this function to order/views.py
+
+@login_required
+def get_supplier_products_list(request):
+    """AJAX-Endpunkt für die Suche nach Produkten eines Lieferanten."""
+    supplier_id = request.GET.get('supplier_id')
+    search_query = request.GET.get('q', '')
+    page = int(request.GET.get('page', 1))
+    page_size = 100  # Increased number of results per page for better matches
+
+    if not supplier_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'Lieferanten-ID erforderlich'
+        })
+
+    try:
+        # Base query - products that have a relationship with this supplier
+        queryset = SupplierProduct.objects.filter(
+            supplier_id=supplier_id
+        ).select_related('product', 'product__tax')
+
+        # Apply search filter if provided
+        if search_query:
+            # Check if search query is an exact SKU match
+            exact_sku_match = queryset.filter(
+                Q(product__sku__iexact=search_query) |
+                Q(supplier_sku__iexact=search_query)
+            )
+
+            # If we have an exact match, just return that
+            if exact_sku_match.exists():
+                queryset = exact_sku_match
+            else:
+                # Otherwise do a partial match search
+                queryset = queryset.filter(
+                    Q(product__name__icontains=search_query) |
+                    Q(product__sku__icontains=search_query) |
+                    Q(supplier_sku__icontains=search_query)
+                )
+
+        # Calculate total and paginate
+        total_count = queryset.count()
+        start = (page - 1) * page_size
+        end = start + page_size
+
+        # Get the paginated results
+        supplier_products = queryset[start:end]
+
+        # Format the response
+        products_data = []
+        for sp in supplier_products:
+            product = sp.product
+
+            # Get tax information
+            tax_id = None
+            tax_rate = 0
+            if product.tax:
+                tax_id = product.tax.id
+                tax_rate = product.tax.rate
+
+            products_data.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': product.sku,
+                'supplier_sku': sp.supplier_sku or '',
+                'price': float(sp.purchase_price),
+                'unit': product.unit,
+                'tax_id': tax_id,
+                'tax_rate': tax_rate
+            })
+
+        return JsonResponse({
+            'success': True,
+            'products': products_data,
+            'total': total_count,
+            'more': (page * page_size) < total_count  # Whether there are more results
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Fehler: {str(e)}'
+        })
+
+
+# Add this to suppliers/views.py
+
+@login_required
+def get_supplier_products(request):
+    """AJAX-Endpunkt zum Abrufen aller Produkte eines Lieferanten."""
+    supplier_id = request.GET.get('supplier_id')
+
+    if not supplier_id:
+        return JsonResponse({
+            'success': False,
+            'message': 'Lieferanten-ID erforderlich'
+        })
+
+    try:
+        # Lieferanten-Produkt-Informationen abrufen
+        supplier_products = SupplierProduct.objects.filter(
+            supplier_id=supplier_id
+        ).select_related('product', 'product__tax')
+
+        # Format the response
+        products_data = []
+        for sp in supplier_products:
+            product = sp.product
+
+            # Get tax information
+            tax_id = None
+            tax_rate = 0
+            if product.tax:
+                tax_id = product.tax.id
+                tax_rate = product.tax.rate
+
+            products_data.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': product.sku,
+                'supplier_sku': sp.supplier_sku or '',
+                'price': float(sp.purchase_price),
+                'unit': product.unit,
+                'tax_id': tax_id,
+                'tax_rate': tax_rate
+            })
+
+        return JsonResponse({
+            'success': True,
+            'products': products_data
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Fehler: {str(e)}'
+        })

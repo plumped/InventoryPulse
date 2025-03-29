@@ -211,8 +211,11 @@ def purchase_order_detail(request, pk):
 def purchase_order_create(request):
     """Neue Bestellung erstellen."""
     # Systemeinstellungen abrufen
-    from admin_dashboard.models import SystemSettings
-    system_settings = SystemSettings.objects.first()
+    try:
+        from admin_dashboard.models import SystemSettings
+        system_settings = SystemSettings.objects.first()
+    except:
+        system_settings = None
 
     if request.method == 'POST':
         form = PurchaseOrderForm(request.POST)
@@ -226,12 +229,12 @@ def purchase_order_create(request):
                 today = date.today()
 
                 # Präfix aus Systemeinstellungen oder Standardwert
-                prefix = (
-                             system_settings.order_number_prefix if system_settings else "ORD-") + f"{today.strftime('%Y%m%d')}-"
+                prefix = (system_settings.order_number_prefix if system_settings else "ORD-")
+                order_number_prefix = f"{prefix}{today.strftime('%Y%m%d')}-"
 
                 # Nächste Sequenznummer finden
                 last_order = PurchaseOrder.objects.filter(
-                    order_number__startswith=prefix
+                    order_number__startswith=order_number_prefix
                 ).order_by('-order_number').first()
 
                 if last_order:
@@ -239,13 +242,13 @@ def purchase_order_create(request):
                         last_seq = int(last_order.order_number.split('-')[-1])
                         next_seq = last_seq + 1
                     except ValueError:
-                        next_seq = 1
+                        next_seq = system_settings.next_order_number if system_settings else 1
                 else:
                     # Wenn keine vorherige Bestellung, verwende Systemeinstellung oder 1
                     next_seq = system_settings.next_order_number if system_settings else 1
 
                 # Bestellnummer generieren
-                order.order_number = f"{prefix}{next_seq:03d}"
+                order.order_number = f"{order_number_prefix}{next_seq:03d}"
 
                 # Systemeinstellungen aktualisieren (falls vorhanden)
                 if system_settings:
@@ -909,6 +912,8 @@ def refresh_order_suggestions(request):
 
 @login_required
 @permission_required('order', 'create')
+# Update in order/views.py - create_orders_from_suggestions function
+
 def create_orders_from_suggestions(request):
     """Erstellt Bestellungen basierend auf ausgewählten Bestellvorschlägen und manuell hinzugefügten Produkten."""
     if request.method == 'POST':
@@ -1009,14 +1014,24 @@ def create_orders_from_suggestions(request):
                     order = existing_draft
                     orders_updated += 1
                 else:
-                    # Bestellung erstellen
-                    # Bestellnummer generieren (z.B. ORD-20230501-001)
+                    # Systemeinstellungen abrufen für Bestellnummer-Präfix
+                    try:
+                        from admin_dashboard.models import SystemSettings
+                        system_settings = SystemSettings.objects.first()
+                        prefix = system_settings.order_number_prefix if system_settings else "ORD-"
+                        next_seq = system_settings.next_order_number if system_settings else 1
+                    except:
+                        # Fallback, wenn keine Systemeinstellungen vorhanden sind
+                        prefix = "ORD-"
+                        next_seq = 1
+
+                    # Bestellnummer generieren
                     today = date.today()
-                    prefix = f"ORD-{today.strftime('%Y%m%d')}-"
+                    order_number_prefix = f"{prefix}{today.strftime('%Y%m%d')}-"
 
                     # Nächste Sequenznummer finden
                     last_order = PurchaseOrder.objects.filter(
-                        order_number__startswith=prefix
+                        order_number__startswith=order_number_prefix
                     ).order_by('-order_number').first()
 
                     if last_order:
@@ -1024,11 +1039,9 @@ def create_orders_from_suggestions(request):
                             last_seq = int(last_order.order_number.split('-')[-1])
                             next_seq = last_seq + 1
                         except ValueError:
-                            next_seq = 1
-                    else:
-                        next_seq = 1
+                            pass  # Verwende den Standardwert aus den Systemeinstellungen
 
-                    order_number = f"{prefix}{next_seq:03d}"
+                    order_number = f"{order_number_prefix}{next_seq:03d}"
 
                     order = PurchaseOrder.objects.create(
                         supplier=supplier,
@@ -1036,6 +1049,12 @@ def create_orders_from_suggestions(request):
                         status='draft',
                         order_number=order_number
                     )
+
+                    # Systemeinstellungen aktualisieren
+                    if 'system_settings' in locals() and system_settings:
+                        system_settings.next_order_number = next_seq + 1
+                        system_settings.save()
+
                     orders_created += 1
 
                 # Positionen hinzufügen oder aktualisieren
@@ -1046,9 +1065,10 @@ def create_orders_from_suggestions(request):
                         product=item['product']
                     ).first()
 
-                    # Lieferantenpreis ermitteln
+                    # Lieferantenpreis und Währung ermitteln
                     unit_price = Decimal('0.00')
                     supplier_sku = ''
+                    currency = None
 
                     try:
                         supplier_product = SupplierProduct.objects.get(
@@ -1057,12 +1077,31 @@ def create_orders_from_suggestions(request):
                         )
                         unit_price = supplier_product.purchase_price
                         supplier_sku = supplier_product.supplier_sku
+
+                        # Währung aus dem SupplierProduct oder vom Supplier verwenden
+                        currency = supplier_product.currency or supplier.default_currency
+
+                        # Wenn keine Währung definiert ist, Standardwährung verwenden
+                        if not currency:
+                            from core.models import Currency
+                            currency = Currency.get_default_currency()
+
                     except SupplierProduct.DoesNotExist:
-                        pass
+                        # Wenn kein Lieferantenprodukt existiert, verwende die Standardwährung des Lieferanten
+                        if supplier.default_currency:
+                            currency = supplier.default_currency
+                        else:
+                            from core.models import Currency
+                            currency = Currency.get_default_currency()
 
                     if existing_item:
-                        # Menge erhöhen
+                        # Menge erhöhen und Währung aktualisieren, falls notwendig
                         existing_item.quantity_ordered += item['quantity']
+
+                        # Währung aktualisieren, falls nicht gesetzt
+                        if not existing_item.currency:
+                            existing_item.currency = currency
+
                         existing_item.save()
                     else:
                         # Neue Position erstellen
@@ -1071,7 +1110,10 @@ def create_orders_from_suggestions(request):
                             product=item['product'],
                             quantity_ordered=item['quantity'],
                             unit_price=unit_price,
-                            supplier_sku=supplier_sku
+                            supplier_sku=supplier_sku,
+                            currency=currency,  # Währung mit angeben
+                            # Steuersatz vom Produkt übernehmen
+                            tax=item['product'].tax
                         )
 
                 # Summen aktualisieren

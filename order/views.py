@@ -12,13 +12,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
 from accessmanagement.decorators import permission_required
-from core.models import Product, ProductWarehouse
+from core.models import Product, ProductWarehouse, Currency
 from suppliers.models import Supplier, SupplierProduct
 from inventory.models import Warehouse, StockMovement
 
 from .models import (
     PurchaseOrder, PurchaseOrderItem, PurchaseOrderReceipt,
-    PurchaseOrderReceiptItem, OrderSuggestion
+    PurchaseOrderReceiptItem, OrderSuggestion, OrderTemplate, OrderTemplateItem
 )
 from .forms import PurchaseOrderForm, ReceiveOrderForm
 from .services import generate_order_suggestions
@@ -1841,3 +1841,606 @@ def get_supplier_products(request):
             'success': False,
             'message': f'Fehler: {str(e)}'
         })
+
+
+@login_required
+@permission_required('order', 'view')
+def order_template_list(request):
+    """List all order templates with filtering options."""
+    # Base queryset
+    queryset = OrderTemplate.objects.select_related('supplier', 'created_by')
+
+    # Apply filters
+    supplier = request.GET.get('supplier', '')
+    is_recurring = request.GET.get('is_recurring', '')
+    search = request.GET.get('search', '')
+
+    if supplier:
+        queryset = queryset.filter(supplier_id=supplier)
+
+    if is_recurring:
+        is_recurring_bool = is_recurring.lower() == 'true'
+        queryset = queryset.filter(is_recurring=is_recurring_bool)
+
+    if search:
+        queryset = queryset.filter(
+            Q(name__icontains=search) |
+            Q(description__icontains=search) |
+            Q(supplier__name__icontains=search)
+        )
+
+    # Order by name
+    queryset = queryset.order_by('name')
+
+    # Pagination
+    paginator = Paginator(queryset, 10)  # 10 templates per page
+    page = request.GET.get('page')
+    try:
+        templates = paginator.page(page)
+        # Calculate page range
+        page_range = range(max(1, templates.number - 2), min(paginator.num_pages + 1, templates.number + 3))
+    except PageNotAnInteger:
+        templates = paginator.page(1)
+        page_range = range(1, min(paginator.num_pages + 1, 6))
+    except EmptyPage:
+        templates = paginator.page(paginator.num_pages)
+        page_range = range(max(1, paginator.num_pages - 4), paginator.num_pages + 1)
+
+    # Suppliers for filter dropdown
+    suppliers = Supplier.objects.filter(is_active=True).order_by('name')
+
+    context = {
+        'templates': templates,
+        'page_range': page_range,
+        'suppliers': suppliers,
+        'supplier': supplier,
+        'is_recurring': is_recurring,
+        'search': search,
+    }
+
+    return render(request, 'order/order_template_list.html', context)
+
+
+@login_required
+@permission_required('order', 'view')
+def order_template_detail(request, pk):
+    """Show details for a specific order template."""
+    template = get_object_or_404(
+        OrderTemplate.objects.select_related('supplier', 'created_by'),
+        pk=pk
+    )
+
+    # Calculate current prices and estimated values for items
+    items = template.items.all().select_related('product')
+
+    # System currency
+    system_currency = Currency.get_default_currency()
+    currency_symbol = system_currency.symbol if system_currency else '€'
+
+    total_value = Decimal('0.00')
+
+    for item in items:
+        # Try to get current supplier price
+        try:
+            supplier_product = SupplierProduct.objects.get(
+                supplier=template.supplier,
+                product=item.product
+            )
+            item.current_price = supplier_product.purchase_price
+            item.estimated_value = item.current_price * item.quantity
+            total_value += item.estimated_value
+        except SupplierProduct.DoesNotExist:
+            item.current_price = None
+            item.estimated_value = None
+
+    # Get orders created from this template
+    orders = PurchaseOrder.objects.filter(
+        template_source=template
+    ).order_by('-order_date')[:10]  # Only show the last 10 orders
+
+    context = {
+        'template': template,
+        'items': items,
+        'total_value': total_value,
+        'currency_symbol': currency_symbol,
+        'orders': orders,
+    }
+
+    return render(request, 'order/order_template_detail.html', context)
+
+
+@login_required
+@permission_required('order', 'create')
+def order_template_create(request):
+    """Create a new order template."""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        supplier_id = request.POST.get('supplier')
+        description = request.POST.get('description', '')
+        is_active = 'is_active' in request.POST
+        is_recurring = 'is_recurring' in request.POST
+        recurrence_frequency = request.POST.get('recurrence_frequency', 'none')
+        next_order_date = request.POST.get('next_order_date', None)
+        shipping_address = request.POST.get('shipping_address', '')
+        notes = request.POST.get('notes', '')
+
+        if not name or not supplier_id:
+            messages.error(request, 'Vorlagenname und Lieferant sind erforderlich.')
+            return redirect('order_template_create')
+
+        try:
+            supplier = Supplier.objects.get(pk=supplier_id)
+        except Supplier.DoesNotExist:
+            messages.error(request, 'Der ausgewählte Lieferant existiert nicht.')
+            return redirect('order_template_create')
+
+        # Create template
+        with transaction.atomic():
+            template = OrderTemplate.objects.create(
+                name=name,
+                supplier=supplier,
+                description=description,
+                is_active=is_active,
+                is_recurring=is_recurring,
+                recurrence_frequency=recurrence_frequency,
+                next_order_date=next_order_date if next_order_date else None,
+                shipping_address=shipping_address,
+                notes=notes,
+                created_by=request.user
+            )
+
+            # Process items
+            process_template_items(request.POST, template)
+
+            messages.success(request, f'Bestellvorlage "{template.name}" wurde erfolgreich erstellt.')
+            return redirect('order_template_detail', pk=template.pk)
+
+    # For GET requests
+    suppliers = Supplier.objects.filter(is_active=True).order_by('name')
+    recurrence_choices = OrderTemplate.RECURRENCE_CHOICES
+
+    context = {
+        'suppliers': suppliers,
+        'recurrence_choices': recurrence_choices,
+    }
+
+    return render(request, 'order/order_template_form.html', context)
+
+
+@login_required
+@permission_required('order', 'edit')
+def order_template_update(request, pk):
+    """Update an existing order template."""
+    template = get_object_or_404(OrderTemplate, pk=pk)
+
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        supplier_id = request.POST.get('supplier')
+        description = request.POST.get('description', '')
+        is_active = 'is_active' in request.POST
+        is_recurring = 'is_recurring' in request.POST
+        recurrence_frequency = request.POST.get('recurrence_frequency', 'none')
+        next_order_date = request.POST.get('next_order_date', None)
+        shipping_address = request.POST.get('shipping_address', '')
+        notes = request.POST.get('notes', '')
+
+        if not name or not supplier_id:
+            messages.error(request, 'Vorlagenname und Lieferant sind erforderlich.')
+            return redirect('order_template_update', pk=template.pk)
+
+        try:
+            supplier = Supplier.objects.get(pk=supplier_id)
+        except Supplier.DoesNotExist:
+            messages.error(request, 'Der ausgewählte Lieferant existiert nicht.')
+            return redirect('order_template_update', pk=template.pk)
+
+        # Update template
+        with transaction.atomic():
+            template.name = name
+            template.supplier = supplier
+            template.description = description
+            template.is_active = is_active
+            template.is_recurring = is_recurring
+            template.recurrence_frequency = recurrence_frequency
+            template.next_order_date = next_order_date if next_order_date else None
+            template.shipping_address = shipping_address
+            template.notes = notes
+            template.save()
+
+            # Process items
+            process_template_items(request.POST, template)
+
+            messages.success(request, f'Bestellvorlage "{template.name}" wurde erfolgreich aktualisiert.')
+            return redirect('order_template_detail', pk=template.pk)
+
+    # For GET requests
+    suppliers = Supplier.objects.filter(is_active=True).order_by('name')
+    recurrence_choices = OrderTemplate.RECURRENCE_CHOICES
+
+    context = {
+        'form': {'instance': template},  # Mock form for template compatibility
+        'template': template,
+        'suppliers': suppliers,
+        'recurrence_choices': recurrence_choices,
+    }
+
+    return render(request, 'order/order_template_form.html', context)
+
+
+def process_template_items(post_data, template):
+    """Process template items from form data."""
+    # Get existing items
+    existing_items = {item.id: item for item in template.items.all()}
+    processed_ids = set()
+
+    # Process items
+    for key, value in post_data.items():
+        # Check if it's a product field
+        if key.startswith('item_product_'):
+            # Extract item ID (new_X or a number)
+            item_id = key.split('item_product_')[1]
+
+            # Get product ID
+            product_id = value
+            if not product_id:
+                continue
+
+            # Find corresponding quantity and supplier_sku
+            quantity_key = f'item_quantity_{item_id}'
+            supplier_sku_key = f'item_supplier_sku_{item_id}'
+
+            if quantity_key in post_data:
+                quantity = Decimal(post_data[quantity_key])
+                supplier_sku = post_data.get(supplier_sku_key, '')
+
+                # Get product
+                try:
+                    product = Product.objects.get(pk=product_id)
+
+                    if item_id.startswith('new_'):
+                        # Create new item
+                        OrderTemplateItem.objects.create(
+                            template=template,
+                            product=product,
+                            quantity=quantity,
+                            supplier_sku=supplier_sku
+                        )
+                    else:
+                        # Update existing item
+                        try:
+                            item_id_int = int(item_id)
+                            if item_id_int in existing_items:
+                                item = existing_items[item_id_int]
+                                item.product = product
+                                item.quantity = quantity
+                                item.supplier_sku = supplier_sku
+                                item.save()
+                                processed_ids.add(item_id_int)
+                        except (ValueError, KeyError):
+                            continue
+                except Product.DoesNotExist:
+                    continue
+
+    # Delete items that weren't processed
+    for item_id, item in existing_items.items():
+        if item_id not in processed_ids:
+            item.delete()
+
+
+@login_required
+@permission_required('order', 'delete')
+def order_template_delete(request, pk):
+    """Delete an order template."""
+    template = get_object_or_404(OrderTemplate, pk=pk)
+
+    if request.method == 'POST':
+        template_name = template.name
+        template.delete()
+        messages.success(request, f'Bestellvorlage "{template_name}" wurde erfolgreich gelöscht.')
+        return redirect('order_template_list')
+
+    context = {
+        'template': template,
+    }
+
+    return render(request, 'order/order_template_delete.html', context)
+
+
+@login_required
+@permission_required('order', 'edit')
+def order_template_toggle_active(request, pk):
+    """Toggle active status of an order template."""
+    template = get_object_or_404(OrderTemplate, pk=pk)
+
+    # Get desired state from request
+    is_active = request.GET.get('active', '').lower() == 'true'
+
+    template.is_active = is_active
+    template.save(update_fields=['is_active'])
+
+    if is_active:
+        messages.success(request, f'Bestellvorlage "{template.name}" wurde aktiviert.')
+    else:
+        messages.success(request, f'Bestellvorlage "{template.name}" wurde deaktiviert.')
+
+    return redirect('order_template_detail', pk=template.pk)
+
+
+@login_required
+@permission_required('order', 'create')
+def order_template_duplicate(request, pk):
+    """Duplicate an order template."""
+    template = get_object_or_404(OrderTemplate, pk=pk)
+
+    # Create a new template with the same data
+    new_template = OrderTemplate.objects.create(
+        name=f"{template.name} (Kopie)",
+        supplier=template.supplier,
+        description=template.description,
+        is_active=template.is_active,
+        is_recurring=False,  # Don't duplicate recurrence settings
+        recurrence_frequency='none',
+        next_order_date=None,
+        shipping_address=template.shipping_address,
+        notes=template.notes,
+        created_by=request.user
+    )
+
+    # Duplicate items
+    for item in template.items.all():
+        OrderTemplateItem.objects.create(
+            template=new_template,
+            product=item.product,
+            quantity=item.quantity,
+            supplier_sku=item.supplier_sku
+        )
+
+    messages.success(request, f'Bestellvorlage "{template.name}" wurde als "{new_template.name}" dupliziert.')
+    return redirect('order_template_detail', pk=new_template.pk)
+
+
+@login_required
+@permission_required('order', 'create')
+def create_order_from_template(request, pk):
+    """Create a purchase order from a template."""
+    template = get_object_or_404(
+        OrderTemplate.objects.select_related('supplier').prefetch_related('items__product'),
+        pk=pk
+    )
+
+    # Check if the template has items
+    if not template.items.exists():
+        messages.error(request, f'Die Vorlage "{template.name}" enthält keine Artikelpositionen.')
+        return redirect('order_template_detail', pk=template.pk)
+
+    # Process the request
+    if request.method == 'POST':
+        # Get expected delivery date from the form, if provided
+        expected_delivery = request.POST.get('expected_delivery', None)
+        notes = request.POST.get('notes', template.notes)
+
+        with transaction.atomic():
+            # Generate order number
+            today = date.today()
+
+            # Try to get system settings for order number prefix
+            try:
+                from admin_dashboard.models import SystemSettings
+                system_settings = SystemSettings.objects.first()
+                prefix = system_settings.order_number_prefix if system_settings else "ORD-"
+                next_seq = system_settings.next_order_number if system_settings else 1
+            except:
+                # Fallback if no system settings
+                prefix = "ORD-"
+                next_seq = 1
+
+            order_number_prefix = f"{prefix}{today.strftime('%Y%m%d')}-"
+
+            # Find next sequence number
+            last_order = PurchaseOrder.objects.filter(
+                order_number__startswith=order_number_prefix
+            ).order_by('-order_number').first()
+
+            if last_order:
+                try:
+                    last_seq = int(last_order.order_number.split('-')[-1])
+                    next_seq = last_seq + 1
+                except ValueError:
+                    pass  # Use the default next_seq
+
+            order_number = f"{order_number_prefix}{next_seq:03d}"
+
+            # Create the order
+            order = PurchaseOrder.objects.create(
+                order_number=order_number,
+                supplier=template.supplier,
+                status=get_initial_order_status(None),  # Determine initial status
+                expected_delivery=expected_delivery if expected_delivery else None,
+                shipping_address=template.shipping_address,
+                notes=notes,
+                created_by=request.user,
+                template_source=template  # Reference to the source template
+            )
+
+            # Create order items
+            for template_item in template.items.all():
+                # Try to get the current price from supplier products
+                try:
+                    supplier_product = SupplierProduct.objects.get(
+                        supplier=template.supplier,
+                        product=template_item.product
+                    )
+                    unit_price = supplier_product.purchase_price
+                    supplier_sku = supplier_product.supplier_sku
+                    # Add currency if available
+                    currency = supplier_product.currency or template.supplier.default_currency
+                except SupplierProduct.DoesNotExist:
+                    # Use a default price if no supplier product exists
+                    unit_price = Decimal('0.00')
+                    supplier_sku = template_item.supplier_sku
+                    currency = None
+
+                # Create the order item
+                PurchaseOrderItem.objects.create(
+                    purchase_order=order,
+                    product=template_item.product,
+                    quantity_ordered=template_item.quantity,
+                    unit_price=unit_price,
+                    supplier_sku=supplier_sku,
+                    tax=template_item.product.tax,
+                    currency=currency
+                )
+
+            # Update totals
+            order.update_totals()
+
+            # Update system settings if they exist
+            if 'system_settings' in locals() and system_settings:
+                system_settings.next_order_number = next_seq + 1
+                system_settings.save()
+
+            messages.success(request,
+                             f'Bestellung {order.order_number} wurde erfolgreich aus der Vorlage "{template.name}" erstellt.')
+            return redirect('purchase_order_detail', pk=order.pk)
+
+    # For GET requests, just redirect to template detail
+    return redirect('order_template_detail', pk=template.pk)
+
+
+@login_required
+def handle_recurring_orders():
+    """
+    Process recurring order templates and create new orders.
+    This function is meant to be called by a scheduled job.
+    """
+    today = date.today()
+
+    # Find active templates with recurrence and next_order_date <= today
+    templates = OrderTemplate.objects.filter(
+        is_active=True,
+        is_recurring=True,
+        next_order_date__lte=today
+    ).select_related('supplier').prefetch_related('items__product')
+
+    orders_created = 0
+
+    for template in templates:
+        with transaction.atomic():
+            try:
+                # Skip templates without items
+                if not template.items.exists():
+                    continue
+
+                # Calculate next order date based on recurrence frequency
+                if template.recurrence_frequency == 'daily':
+                    next_date = today + timedelta(days=1)
+                elif template.recurrence_frequency == 'weekly':
+                    next_date = today + timedelta(weeks=1)
+                elif template.recurrence_frequency == 'biweekly':
+                    next_date = today + timedelta(weeks=2)
+                elif template.recurrence_frequency == 'monthly':
+                    # Add a month (approximate)
+                    next_date = date(today.year + ((today.month + 1) // 12), ((today.month + 1) % 12) or 12,
+                                     min(today.day, 28))
+                elif template.recurrence_frequency == 'quarterly':
+                    # Add 3 months (approximate)
+                    next_date = date(today.year + ((today.month + 3) // 12), ((today.month + 3) % 12) or 12,
+                                     min(today.day, 28))
+                elif template.recurrence_frequency == 'semiannual':
+                    # Add 6 months (approximate)
+                    next_date = date(today.year + ((today.month + 6) // 12), ((today.month + 6) % 12) or 12,
+                                     min(today.day, 28))
+                elif template.recurrence_frequency == 'annual':
+                    # Add a year
+                    next_year = today.year + 1
+                    next_date = date(next_year, today.month, min(today.day, 28 if today.month == 2 and (
+                                next_year % 4 != 0 or (next_year % 100 == 0 and next_year % 400 != 0)) else (
+                        29 if today.month == 2 else (30 if today.month in [4, 6, 9, 11] else 31))))
+                else:
+                    # Default: no recurrence
+                    next_date = None
+
+                # Generate order number
+                try:
+                    from admin_dashboard.models import SystemSettings
+                    system_settings = SystemSettings.objects.first()
+                    prefix = system_settings.order_number_prefix if system_settings else "ORD-"
+                    next_seq = system_settings.next_order_number if system_settings else 1
+                except:
+                    # Fallback
+                    prefix = "ORD-"
+                    next_seq = 1
+
+                order_number_prefix = f"{prefix}{today.strftime('%Y%m%d')}-"
+
+                # Find next sequence number
+                last_order = PurchaseOrder.objects.filter(
+                    order_number__startswith=order_number_prefix
+                ).order_by('-order_number').first()
+
+                if last_order:
+                    try:
+                        last_seq = int(last_order.order_number.split('-')[-1])
+                        next_seq = last_seq + 1
+                    except ValueError:
+                        pass
+
+                order_number = f"{order_number_prefix}{next_seq:03d}"
+
+                # Create order
+                order = PurchaseOrder.objects.create(
+                    order_number=order_number,
+                    supplier=template.supplier,
+                    status='draft',  # Always start as draft for recurring orders
+                    shipping_address=template.shipping_address,
+                    notes=f"Automatisch erstellt aus Vorlage: {template.name}",
+                    created_by=template.created_by,
+                    template_source=template
+                )
+
+                # Create order items
+                for template_item in template.items.all():
+                    try:
+                        supplier_product = SupplierProduct.objects.get(
+                            supplier=template.supplier,
+                            product=template_item.product
+                        )
+                        unit_price = supplier_product.purchase_price
+                        supplier_sku = supplier_product.supplier_sku
+                        currency = supplier_product.currency or template.supplier.default_currency
+                    except SupplierProduct.DoesNotExist:
+                        unit_price = Decimal('0.00')
+                        supplier_sku = template_item.supplier_sku
+                        currency = None
+
+                    PurchaseOrderItem.objects.create(
+                        purchase_order=order,
+                        product=template_item.product,
+                        quantity_ordered=template_item.quantity,
+                        unit_price=unit_price,
+                        supplier_sku=supplier_sku,
+                        tax=template_item.product.tax,
+                        currency=currency
+                    )
+
+                # Update totals
+                order.update_totals()
+
+                # Update template's next order date
+                template.next_order_date = next_date
+                template.save(update_fields=['next_order_date'])
+
+                # Update system settings if they exist
+                if 'system_settings' in locals() and system_settings:
+                    system_settings.next_order_number = next_seq + 1
+                    system_settings.save()
+
+                orders_created += 1
+
+            except Exception as e:
+                # Log error but continue with other templates
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error creating recurring order from template {template.id}: {str(e)}")
+
+    return orders_created

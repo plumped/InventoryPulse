@@ -37,6 +37,11 @@ class PurchaseOrder(models.Model):
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     tracker = FieldTracker(['status'])
+    template_source = models.ForeignKey('OrderTemplate', on_delete=models.SET_NULL,
+                                        null=True, blank=True,
+                                        related_name='generated_orders',
+                                        verbose_name="Erstellungsvorlage",
+                                        help_text="Die Vorlage, aus der diese Bestellung erstellt wurde")
 
     def update_totals(self):
         """Aktualisiert alle Summen basierend auf den Bestellpositionen"""
@@ -181,3 +186,61 @@ class OrderSuggestion(models.Model):
 
     def __str__(self):
         return f"Bestellvorschlag: {self.product.name} ({self.suggested_order_quantity})"
+
+
+class OrderTemplate(models.Model):
+    """Template for frequently used orders"""
+    RECURRENCE_CHOICES = [
+        ('none', 'Keine Wiederholung'),
+        ('daily', 'Täglich'),
+        ('weekly', 'Wöchentlich'),
+        ('biweekly', 'Alle zwei Wochen'),
+        ('monthly', 'Monatlich'),
+        ('quarterly', 'Vierteljährlich'),
+        ('semiannual', 'Halbjährlich'),
+        ('annual', 'Jährlich'),
+    ]
+
+    name = models.CharField(max_length=100, verbose_name="Vorlagenname")
+    description = models.TextField(blank=True, verbose_name="Beschreibung")
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name="Lieferant")
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='order_templates')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True, verbose_name="Aktiv")
+
+    # Recurrence settings
+    is_recurring = models.BooleanField(default=False, verbose_name="Wiederkehrend")
+    recurrence_frequency = models.CharField(
+        max_length=20,
+        choices=RECURRENCE_CHOICES,
+        default='none',
+        verbose_name="Häufigkeit"
+    )
+    next_order_date = models.DateField(null=True, blank=True, verbose_name="Nächstes Bestelldatum")
+    shipping_address = models.TextField(blank=True, verbose_name="Lieferadresse")
+    notes = models.TextField(blank=True, verbose_name="Anmerkungen")
+
+    def __str__(self):
+        return f"{self.name} ({self.supplier.name})"
+
+    class Meta:
+        verbose_name = "Bestellvorlage"
+        verbose_name_plural = "Bestellvorlagen"
+        ordering = ['supplier__name', 'name']
+
+
+class OrderTemplateItem(models.Model):
+    """Line items for order templates"""
+    template = models.ForeignKey(OrderTemplate, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Menge")
+    supplier_sku = models.CharField(max_length=100, blank=True, verbose_name="Lieferanten-Artikelnummer")
+
+    def __str__(self):
+        return f"{self.product.name} ({self.quantity} {self.product.unit})"
+
+    class Meta:
+        verbose_name = "Vorlagenposition"
+        verbose_name_plural = "Vorlagenpositionen"
+        unique_together = ['template', 'product']

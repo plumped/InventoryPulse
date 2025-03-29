@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     PurchaseOrder, PurchaseOrderItem, PurchaseOrderReceipt,
-    PurchaseOrderReceiptItem, OrderSuggestion
+    PurchaseOrderReceiptItem, OrderSuggestion, OrderTemplate, OrderTemplateItem
 )
 
 
@@ -81,6 +81,42 @@ class PurchaseOrderItemAdmin(admin.ModelAdmin):
         Optimize the queryset to reduce database queries
         """
         return super().get_queryset(request).select_related('purchase_order', 'product')
+
+
+class OrderTemplateItemInline(admin.TabularInline):
+    model = OrderTemplateItem
+    extra = 0
+    fields = ('product', 'supplier_sku', 'quantity')
+    autocomplete_fields = ['product']
+
+
+class OrderTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'supplier', 'created_by', 'is_recurring', 'recurrence_frequency', 'is_active')
+    list_filter = ('is_active', 'is_recurring', 'supplier', 'created_by')
+    search_fields = ('name', 'description', 'supplier__name')
+    inlines = [OrderTemplateItemInline]
+    autocomplete_fields = ['supplier']
+
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'description', 'supplier', 'is_active')
+        }),
+        ('Wiederkehrende Bestellung', {
+            'fields': ('is_recurring', 'recurrence_frequency', 'next_order_date')
+        }),
+        ('Zusatzinformationen', {
+            'fields': ('shipping_address', 'notes', 'created_by')
+        })
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not change:  # If creating a new object
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+# Register the models
+admin.site.register(OrderTemplate, OrderTemplateAdmin)
 
 
 admin.site.register(PurchaseOrder, PurchaseOrderAdmin)

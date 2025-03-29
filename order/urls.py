@@ -50,6 +50,15 @@ urlpatterns = [
     # Bestellungen aus Vorschlägen erstellen
     path('suggestions/create-orders/', views.create_orders_from_suggestions, name='create_orders_from_suggestions'),
 
+    path('templates/', views.order_template_list, name='order_template_list'),
+    path('templates/create/', views.order_template_create, name='order_template_create'),
+    path('templates/<int:pk>/', views.order_template_detail, name='order_template_detail'),
+    path('templates/<int:pk>/update/', views.order_template_update, name='order_template_update'),
+    path('templates/<int:pk>/delete/', views.order_template_delete, name='order_template_delete'),
+    path('templates/<int:pk>/toggle-active/', views.order_template_toggle_active, name='order_template_toggle_active'),
+    path('templates/<int:pk>/duplicate/', views.order_template_duplicate, name='order_template_duplicate'),
+    path('templates/<int:pk>/create-order/', views.create_order_from_template, name='create_order_from_template'),
+
     # AJAX-Endpunkt für Lieferantenproduktpreis
     path('get-supplier-product-price/', views.get_supplier_product_price, name='get_supplier_product_price'),
     path('get-supplier-products-list/', views.get_supplier_products_list, name='get_supplier_products_list'),

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellvorlage löschen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_template_list' %}">Bestellvorlagen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_template_detail' template.id %}">{{ template.name }}</a></li>
+                    <li class="breadcrumb-item active">Löschen bestätigen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Bestellvorlage löschen</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Achtung!</h4>
+                <p>Sind Sie sicher, dass Sie die Bestellvorlage <strong>{{ template.name }}</strong> unwiderruflich löschen möchten?</p>
+                <hr>
+                <p>Diese Aktion kann nicht rückgängig gemacht werden. Das Löschen der Vorlage wirkt sich nicht auf bereits erstellte Bestellungen aus.</p>
+
+                {% if template.is_recurring %}
+                <hr>
+                <div class="alert alert-warning mb-0">
+                    <h5 class="alert-heading">Wiederkehrende Bestellung wird beendet</h5>
+                    <p class="mb-0">Diese Vorlage ist für wiederkehrende Bestellungen konfiguriert. Das Löschen der Vorlage beendet automatisch die Erstellung zukünftiger Bestellungen.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Vorlagendetails</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Name:</span>
+                            <span class="fw-bold">{{ template.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Lieferant:</span>
+                            <span>{{ template.supplier.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Erstellt am:</span>
+                            <span>{{ template.created_at|date:"d.m.Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Wiederkehrend:</span>
+                            <span>
+                                {% if template.is_recurring %}
+                                <span class="badge bg-success">{{ template.get_recurrence_frequency_display }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Nein</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Status:</span>
+                            <span>
+                                {% if template.is_active %}
+                                <span class="badge bg-success">Aktiv</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inaktiv</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5>Artikelpositionen</h5>
+                    <ul class="list-group">
+                        {% for item in template.items.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-bold">{{ item.product.name }}</span>
+                                <br>
+                                <small class="text-muted">{{ item.quantity }} {{ item.product.unit }}</small>
+                            </div>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted">Keine Positionen vorhanden</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-5">
+                <a href="{% url 'order_template_detail' template.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Abbrechen
+                </a>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Bestellvorlage unwiderruflich löschen
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

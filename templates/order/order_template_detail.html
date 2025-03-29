@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellvorlage {{ template.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_template_list' %}">Bestellvorlagen</a></li>
+                    <li class="breadcrumb-item active">{{ template.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Bestellvorlage: {{ template.name }}</h1>
+            <p class="text-muted">
+                Erstellt am {{ template.created_at|date:"d.m.Y" }} von {{ template.created_by.username }}
+                {% if not template.is_active %}
+                <span class="badge bg-secondary ms-2">Inaktiv</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group">
+                <a href="{% url 'create_order_from_template' template.id %}" class="btn btn-primary">
+                    <i class="bi bi-cart-plus"></i> Bestellung erstellen
+                </a>
+                <a href="{% url 'order_template_update' template.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-pencil"></i> Bearbeiten
+                </a>
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{% url 'order_template_duplicate' template.id %}">
+                            <i class="bi bi-copy me-2"></i>Duplizieren
+                        </a>
+                    </li>
+                    {% if template.is_active %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'order_template_toggle_active' template.id %}?active=false">
+                            <i class="bi bi-x-circle me-2"></i>Deaktivieren
+                        </a>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'order_template_toggle_active' template.id %}?active=true">
+                            <i class="bi bi-check-circle me-2"></i>Aktivieren
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="{% url 'order_template_delete' template.id %}">
+                            <i class="bi bi-trash me-2"></i>Löschen
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left column: Template details -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Vorlagen-Details</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Lieferant:</dt>
+                        <dd class="col-sm-8">
+                            <a href="{% url 'supplier_detail' template.supplier.id %}">{{ template.supplier.name }}</a>
+                        </dd>
+
+                        <dt class="col-sm-4">Wiederkehrend:</dt>
+                        <dd class="col-sm-8">
+                            {% if template.is_recurring %}
+                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">
+                                {{ template.get_recurrence_frequency_display }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">
+                                Nein
+                            </span>
+                            {% endif %}
+                        </dd>
+
+                        {% if template.is_recurring %}
+                        <dt class="col-sm-4">Nächste Bestellung:</dt>
+                        <dd class="col-sm-8">
+                            {% if template.next_order_date %}
+                            {{ template.next_order_date|date:"d.m.Y" }}
+                            {% else %}
+                            <span class="text-muted">Nicht festgelegt</span>
+                            {% endif %}
+                        </dd>
+                        {% endif %}
+
+                        <dt class="col-sm-4">Beschreibung:</dt>
+                        <dd class="col-sm-8">
+                            {% if template.description %}
+                            {{ template.description|linebreaks }}
+                            {% else %}
+                            <span class="text-muted">Keine Beschreibung</span>
+                            {% endif %}
+                        </dd>
+
+                        {% if template.shipping_address %}
+                        <dt class="col-sm-4">Lieferadresse:</dt>
+                        <dd class="col-sm-8">{{ template.shipping_address|linebreaks }}</dd>
+                        {% endif %}
+
+                        {% if template.notes %}
+                        <dt class="col-sm-4">Anmerkungen:</dt>
+                        <dd class="col-sm-8">{{ template.notes|linebreaks }}</dd>
+                        {% endif %}
+
+                        <dt class="col-sm-4">Erstellt von:</dt>
+                        <dd class="col-sm-8">{{ template.created_by.username }}</dd>
+
+                        <dt class="col-sm-4">Erstellt am:</dt>
+                        <dd class="col-sm-8">{{ template.created_at|date:"d.m.Y H:i" }}</dd>
+
+                        <dt class="col-sm-4">Aktualisiert:</dt>
+                        <dd class="col-sm-8">{{ template.updated_at|date:"d.m.Y H:i" }}</dd>
+
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">
+                            {% if template.is_active %}
+                            <span class="badge bg-success">Aktiv</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inaktiv</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column: Order items -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Bestellpositionen</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Produkt</th>
+                                    <th>Artikel-Nr.</th>
+                                    <th>Menge</th>
+                                    <th>Einheit</th>
+                                    <th>Akt. Preis</th>
+                                    <th>Geschätzter Wert</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in template.items.all %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                                    </td>
+                                    <td>
+                                        {% if item.supplier_sku %}
+                                        {{ item.supplier_sku }}
+                                        {% else %}
+                                        {{ item.product.sku }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.product.unit }}</td>
+                                    <td>
+                                        {% if item.current_price %}
+                                        {{ item.current_price|floatformat:2 }} {{ currency_symbol }}
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.estimated_value %}
+                                        {{ item.estimated_value|floatformat:2 }} {{ currency_symbol }}
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-3">
+                                        <div class="text-muted">
+                                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                            <p>Keine Bestellpositionen vorhanden.</p>
+                                            <a href="{% url 'order_template_update' template.id %}" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-plus-circle me-1"></i>Positionen hinzufügen
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Geschätzter Gesamtwert:</strong></td>
+                                    <td>
+                                        {% if total_value %}
+                                        <strong>{{ total_value|floatformat:2 }} {{ currency_symbol }}</strong>
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order History from Template -->
+            {% if orders %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Vorherige Bestellungen aus dieser Vorlage</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Bestellnummer</th>
+                                    <th>Datum</th>
+                                    <th>Status</th>
+                                    <th>Wert</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a>
+                                    </td>
+                                    <td>{{ order.order_date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        {% if order.status == 'draft' %}
+                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'pending' %}
+                                        <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'approved' %}
+                                        <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'sent' %}
+                                        <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'partially_received' %}
+                                        <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'received' %}
+                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% elif order.status == 'cancelled' %}
+                                        <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ order.total|floatformat:2 }} {{ currency_symbol }}</td>
+                                    <td>
+                                        <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Quick Order Creation -->
+<div class="modal fade" id="createOrderModal" tabindex="-1" aria-labelledby="createOrderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createOrderModalLabel">Bestellung aus Vorlage erstellen</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{% url 'create_order_from_template' template.id %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p>Sie erstellen eine neue Bestellung aus der Vorlage "{{ template.name }}".</p>
+
+          <div class="mb-3">
+            <label for="expected_delivery" class="form-label">Erwartetes Lieferdatum</label>
+            <input type="date" class="form-control" id="expected_delivery" name="expected_delivery">
+          </div>
+
+          <div class="mb-3">
+            <label for="notes" class="form-label">Anmerkungen</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ template.notes }}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+          <button type="submit" class="btn btn-primary">Bestellung erstellen</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Listener for "Create Order" button to open modal
+    $('#createOrderBtn').click(function(e) {
+        e.preventDefault();
+        $('#createOrderModal').modal('show');
+    });
+});
+</script>
+{% endblock %}

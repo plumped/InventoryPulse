@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Bestellvorlagen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">Bestellvorlagen</h1>
+            <div class="btn-group">
+                <a href="{% url 'order_template_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Neue Vorlage
+                </a>
+                <a href="{% url 'purchase_order_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-list"></i> Bestellungen
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="supplier" class="form-label">Lieferant</label>
+                    <select class="form-select" id="supplier" name="supplier">
+                        <option value="">Alle Lieferanten</option>
+                        {% for supplier_obj in suppliers %}
+                        <option value="{{ supplier_obj.id }}" {% if supplier == supplier_obj.id|stringformat:"s" %}selected{% endif %}>{{ supplier_obj.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="is_recurring" class="form-label">Wiederkehrend</label>
+                    <select class="form-select" id="is_recurring" name="is_recurring">
+                        <option value="">Alle</option>
+                        <option value="true" {% if is_recurring == 'true' %}selected{% endif %}>Ja</option>
+                        <option value="false" {% if is_recurring == 'false' %}selected{% endif %}>Nein</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Suche</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search|default:'' }}" placeholder="Vorlagenname">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary w-100">Filtern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Templates List -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Lieferant</th>
+                            <th>Wiederkehrend</th>
+                            <th>Nächste Bestellung</th>
+                            <th>Positionen</th>
+                            <th>Erstellt von</th>
+                            <th>Letzte Aktualisierung</th>
+                            <th style="width: 160px;">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for template in templates %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'order_template_detail' template.id %}">{{ template.name }}</a>
+                                {% if not template.is_active %}
+                                <span class="badge bg-secondary ms-2">Inaktiv</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'supplier_detail' template.supplier.id %}">{{ template.supplier.name }}</a>
+                            </td>
+                            <td>
+                                {% if template.is_recurring %}
+                                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">
+                                    {{ template.get_recurrence_frequency_display }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">
+                                    Nein
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if template.is_recurring and template.next_order_date %}
+                                {{ template.next_order_date|date:"d.m.Y" }}
+                                {% else %}
+                                <span class="text-muted">--</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ template.items.count }}</td>
+                            <td>{{ template.created_by.username }}</td>
+                            <td>{{ template.updated_at|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'order_template_detail' template.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'order_template_update' template.id %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'create_order_from_template' template.id %}" class="btn btn-outline-success" title="Bestellung erstellen">
+                                        <i class="bi bi-cart-plus"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'order_template_duplicate' template.id %}">
+                                                <i class="bi bi-copy me-2"></i>Duplizieren
+                                            </a>
+                                        </li>
+                                        {% if template.is_active %}
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'order_template_toggle_active' template.id %}?active=false">
+                                                <i class="bi bi-x-circle me-2"></i>Deaktivieren
+                                            </a>
+                                        </li>
+                                        {% else %}
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'order_template_toggle_active' template.id %}?active=true">
+                                                <i class="bi bi-check-circle me-2"></i>Aktivieren
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="{% url 'order_template_delete' template.id %}">
+                                                <i class="bi bi-trash me-2"></i>Löschen
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="bi bi-clipboard-x fs-2 d-block mb-2"></i>
+                                    <p>Keine Bestellvorlagen gefunden.</p>
+                                    <a href="{% url 'order_template_create' %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle me-1"></i>Neue Vorlage erstellen
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if templates.has_other_pages %}
+    <nav aria-label="Pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if templates.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ templates.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+            </li>
+            {% endif %}
+
+            {% for num in page_range %}
+                {% if templates.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if templates.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ templates.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ templates.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

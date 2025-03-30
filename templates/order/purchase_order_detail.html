@@ -1135,8 +1135,87 @@
                 </div>
             </div>
             {% endif %}
-
-            <!-- Dokumente und andere bestehende Komponenten hier einfügen -->
+            <!-- Dokumente -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Zugeordnete Dokumente</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if order.delivery_documents.exists %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Dokument</th>
+                                    <th>Typ</th>
+                                    <th>Nummer</th>
+                                    <th>Datum</th>
+                                    <th>Lieferant</th>
+                                    <th>Status</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in order.delivery_documents.all %}
+                                <tr>
+                                    <td>{{ document.title }}</td>
+                                    <td>
+                                        {% if document.document_type %}
+                                            {{ document.document_type.name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ document.document_number|default:"-" }}</td>
+                                    <td>
+                                        {% if document.document_date %}
+                                            {{ document.document_date|date:"d.m.Y" }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if document.supplier %}
+                                            {{ document.supplier.name }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ document.processing_status }}">
+                                            {{ document.get_processing_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'document_detail' document.id %}" class="btn btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if document.file %}
+                                            <a href="{{ document.file.url }}" class="btn btn-outline-secondary" target="_blank">
+                                                <i class="bi bi-file-earmark-pdf"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="bi bi-file-earmark-text fs-2"></i>
+                            <p class="mt-2">Keine Dokumente für diese Bestellung vorhanden.</p>
+                            <a href="{% url 'document_upload' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-cloud-upload"></i> Dokument hochladen
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -407,66 +407,75 @@ $(document).ready(function() {
     $('#id_supplier').on('change', function() {
         const supplierId = $(this).val();
 
-        // Clear existing product rows
-        $('#itemsTableBody').empty();
-
-        if (supplierId) {
-            // Show loading indicator
-            $('#supplierLoadingIndicator').show();
-
-            // Fetch supplier data (shipping costs, minimum order value, currency)
-            $.getJSON('/suppliers/get-supplier-data/', {
-                supplier_id: supplierId
-            }).done(function(data) {
-                if (data.success) {
-                    // Store supplier data for later calculations
-                    supplierShippingCost = parseFloat(data.shipping_cost);
-                    supplierMinimumOrderValue = parseFloat(data.minimum_order_value);
-
-                    // Update currency information if available
-                    if (data.currency_symbol) {
-                        currencySymbol = data.currency_symbol;
-                        currencyCode = data.currency_code;
-                        exchangeRate = parseFloat(data.exchange_rate || 1.0);
-
-                        // Update all currency symbols in the page
-                        $('[id^="currencySymbol"]').text(currencySymbol);
-                    }
-
-                    // If a minimum order value exists and is greater than 0
-                    if (data.minimum_order_value > 0) {
-                        // Show minimum order value notice
-                        if (!$('#minimum-order-warning').length) {
-                            $('<div id="minimum-order-warning" class="alert alert-warning mt-3">' +
-                              '<i class="bi bi-exclamation-triangle me-2"></i>' +
-                              'Mindestbestellwert für diesen Lieferanten: <strong>' + data.minimum_order_value + ' ' + currencySymbol + '</strong>' +
-                              '</div>').insertAfter('#itemsTable');
-                        } else {
-                            $('#minimum-order-warning strong').text(data.minimum_order_value + ' ' + currencySymbol);
-                        }
-                    } else {
-                        // Remove notice if no minimum order value
-                        $('#minimum-order-warning').remove();
-                    }
-
-                    // Zeige den Bereich für die Produktauswahl an
-                    $('#productSelectionSection').show();
-
-                    // Add a first empty row for the order
-                    addNewItem();
-
-                    // Hide loading indicator
-                    $('#supplierLoadingIndicator').hide();
-                }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                console.error('Error retrieving supplier data:', textStatus, errorThrown);
-                $('#supplierLoadingIndicator').hide();
-            });
-        } else {
-            // If no supplier selected, hide loading indicator
-            $('#supplierLoadingIndicator').hide();
+        // Clear existing product rows if it's a change of supplier
+        if (!supplierId) {
+            $('#itemsTableBody').empty();
             $('#productSelectionSection').hide();
+            $('#supplierLoadingIndicator').hide();
+            return;
         }
+
+        // For new orders, clear any existing items
+        if ($('#itemsTableBody tr').length === 0) {
+            $('#itemsTableBody').empty();
+        }
+
+        // Show loading indicator
+        $('#supplierLoadingIndicator').show();
+
+        // Fetch supplier data (shipping costs, minimum order value, currency)
+        $.getJSON('/suppliers/get-supplier-data/', {
+            supplier_id: supplierId
+        }).done(function(data) {
+            if (data.success) {
+                // Store supplier data for later calculations
+                supplierShippingCost = parseFloat(data.shipping_cost);
+                supplierMinimumOrderValue = parseFloat(data.minimum_order_value);
+
+                // Update currency information if available
+                if (data.currency_symbol) {
+                    currencySymbol = data.currency_symbol;
+                    currencyCode = data.currency_code;
+                    exchangeRate = parseFloat(data.exchange_rate || 1.0);
+
+                    // Update all currency symbols in the page
+                    $('[id^="currencySymbol"]').text(currencySymbol);
+                }
+
+                // If a minimum order value exists and is greater than 0
+                if (data.minimum_order_value > 0) {
+                    // Show minimum order value notice
+                    if (!$('#minimum-order-warning').length) {
+                        $('<div id="minimum-order-warning" class="alert alert-warning mt-3">' +
+                          '<i class="bi bi-exclamation-triangle me-2"></i>' +
+                          'Mindestbestellwert für diesen Lieferanten: <strong>' + data.minimum_order_value + ' ' + currencySymbol + '</strong>' +
+                          '</div>').insertAfter('#itemsTable');
+                    } else {
+                        $('#minimum-order-warning strong').text(data.minimum_order_value + ' ' + currencySymbol);
+                    }
+                } else {
+                    // Remove notice if no minimum order value
+                    $('#minimum-order-warning').remove();
+                }
+
+                // Show the product selection section
+                $('#productSelectionSection').show();
+
+                // For new orders, add a first empty row
+                if ($('#itemsTableBody tr').length === 0) {
+                    addNewItem();
+                } else {
+                    // For existing orders, reinitialize product selects
+                    initializeProductSelects();
+                }
+
+                // Hide loading indicator
+                $('#supplierLoadingIndicator').hide();
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error('Error retrieving supplier data:', textStatus, errorThrown);
+            $('#supplierLoadingIndicator').hide();
+        });
     });
 
     // Toggle product list visibility
@@ -508,7 +517,7 @@ $(document).ready(function() {
 
     // Product selection logic
     function initializeProductSelects() {
-    // Select2 für Produktauswahl initialisieren
+        // Select2 for product selection
         $('.product-select:not(.select2-hidden-accessible)').each(function() {
             $(this).select2({
                 placeholder: 'Produkt suchen (Artikelnummer oder Name)',
@@ -551,21 +560,70 @@ $(document).ready(function() {
                     },
                     cache: true
                 },
-                minimumInputLength: 1,
                 templateResult: formatProduct,
                 templateSelection: formatProductSelection
             }).on('select2:select', function(e) {
-            const productData = e.params.data.product;
-            if (productData) {
-                updateRowWithProductData($(this).closest('tr'), productData);
+                const productData = e.params.data.product;
+                if (productData) {
+                    updateRowWithProductData($(this).closest('tr'), productData);
+                }
+            });
+
+            // Modify the Select2 element for better styling
+            const $select2Container = $(this).next('.select2-container');
+            $select2Container.addClass('form-control-select2-wrapper').css('padding', '0');
+
+            // If this is a pre-populated field (for existing items), load the product data
+            const productId = $(this).val();
+            if (productId) {
+                const $row = $(this).closest('tr');
+
+                // Only fetch if we don't already have the product data in the row
+                if (!$row.data('product-data-loaded')) {
+                    $.ajax({
+                        url: '/order/get-supplier-product-price/',
+                        dataType: 'json',
+                        data: {
+                            supplier_id: $('#id_supplier').val(),
+                            product_id: productId
+                        },
+                        success: function(data) {
+                            if (data.success) {
+                                // Mark this row as having data loaded
+                                $row.data('product-data-loaded', true);
+
+                                // We don't need to update inputs since they're already set,
+                                // but we should make sure tax info is properly set
+                                if (data.tax_id) {
+                                    const itemId = $row.data('item-id');
+
+                                    // Create or update hidden field for tax_id if it doesn't exist
+                                    let $taxIdField = $row.find('.item-tax-id');
+                                    if ($taxIdField.length === 0) {
+                                        $taxIdField = $('<input>')
+                                            .attr('type', 'hidden')
+                                            .addClass('item-tax-id')
+                                            .attr('name', 'item_tax_id_' + itemId)
+                                            .val(data.tax_id)
+                                            .appendTo($row);
+                                    }
+
+                                    // Ensure the tax rate is displayed in the relevant cell
+                                    const $taxRateDisplay = $row.find('.item-tax-rate');
+                                    if ($taxRateDisplay.length > 0 && data.tax_rate) {
+                                        $taxRateDisplay.text(data.tax_rate + '%');
+                                    }
+                                }
+
+                                // Make sure row totals are calculated correctly
+                                updateRowTotal($row);
+                            }
+                        }
+                    });
+                }
             }
         });
-
-        // Modifiziere das Select2-Element zusätzlich, um es besser anzupassen
-        const $select2Container = $(this).next('.select2-container');
-        $select2Container.addClass('form-control-select2-wrapper').css('padding', '0');
-    });
-}
+    }
 
     // Format product options in dropdown
     function formatProduct(product) {
@@ -629,7 +687,7 @@ $(document).ready(function() {
                     .appendTo($row);
             }
 
-            // Set tax rate
+            // Set tax ID
             $taxIdField.val(productData.tax_id);
 
             // Display tax rate
@@ -746,6 +804,17 @@ $(document).ready(function() {
             }
         }
     }
+
+    // Initialize existing data when page loads
+    $(document).ready(function() {
+        // Initialize calculations for existing items
+        $('#itemsTableBody tr').each(function() {
+            updateRowTotal($(this));
+        });
+
+        // Then update all totals
+        updateTotals();
+    });
 
     // Check if there's a pre-selected supplier (e.g., when redirected from supplier page)
     if ($('#id_supplier').val()) {

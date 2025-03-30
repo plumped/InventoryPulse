@@ -53,6 +53,12 @@
                                     <span>Bestelldatum:</span>
                                     <strong>{{ order.order_date|date:"d.m.Y" }}</strong>
                                 </li>
+                                {% if order.supplier.default_currency %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Währung:</span>
+                                    <strong>{{ order.supplier.default_currency.code }} ({{ order.supplier.default_currency.symbol }})</strong>
+                                </li>
+                                {% endif %}
                             </ul>
                         </div>
                     </div>
@@ -78,11 +84,65 @@
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between">
                                     <span>Einzelpreis:</span>
-                                    <strong>{{ item.unit_price }} €</strong>
+                                    <strong>{{ item.unit_price|floatformat:2 }}
+                                        {% if item.currency %}
+                                            {{ item.currency.symbol }}
+                                        {% elif order.supplier.default_currency %}
+                                            {{ order.supplier.default_currency.symbol }}
+                                        {% else %}
+                                            €
+                                        {% endif %}
+                                    </strong>
                                 </li>
                                 <li class="list-group-item d-flex justify-content-between">
-                                    <span>Gesamtpreis:</span>
-                                    <strong>{{ item.line_total }} €</strong>
+                                    <span>Netto-Gesamtpreis:</span>
+                                    <strong>{{ item.line_subtotal|floatformat:2 }}
+                                        {% if item.currency %}
+                                            {{ item.currency.symbol }}
+                                        {% elif order.supplier.default_currency %}
+                                            {{ order.supplier.default_currency.symbol }}
+                                        {% else %}
+                                            €
+                                        {% endif %}
+                                    </strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Mehrwertsteuer:</span>
+                                    <strong>
+                                        {% if item.tax %}
+                                            {{ item.line_tax|floatformat:2 }}
+                                            {% if item.currency %}
+                                                {{ item.currency.symbol }}
+                                            {% elif order.supplier.default_currency %}
+                                                {{ order.supplier.default_currency.symbol }}
+                                            {% else %}
+                                                €
+                                            {% endif %}
+                                            ({{ item.tax.rate|floatformat:1 }}%)
+                                        {% else %}
+                                            0,00
+                                            {% if item.currency %}
+                                                {{ item.currency.symbol }}
+                                            {% elif order.supplier.default_currency %}
+                                                {{ order.supplier.default_currency.symbol }}
+                                            {% else %}
+                                                €
+                                            {% endif %}
+                                            (0%)
+                                        {% endif %}
+                                    </strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Brutto-Gesamtpreis:</span>
+                                    <strong>{{ item.line_total|floatformat:2 }}
+                                        {% if item.currency %}
+                                            {{ item.currency.symbol }}
+                                        {% elif order.supplier.default_currency %}
+                                            {{ order.supplier.default_currency.symbol }}
+                                        {% else %}
+                                            €
+                                        {% endif %}
+                                    </strong>
                                 </li>
                             </ul>
                         </div>

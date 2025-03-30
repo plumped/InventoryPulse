@@ -355,6 +355,55 @@ class PurchaseOrderItem(models.Model):
 
         super().save(*args, **kwargs)
 
+class OrderSplit(models.Model):
+    """
+    Model for tracking when a purchase order is split into multiple planned shipments.
+    """
+    SPLIT_STATUS_CHOICES = [
+        ('planned', 'Geplant'),
+        ('in_transit', 'In Transit'),
+        ('received', 'Erhalten'),
+        ('cancelled', 'Storniert')
+    ]
+
+    purchase_order = models.ForeignKey('PurchaseOrder', on_delete=models.CASCADE, related_name='splits')
+    name = models.CharField(max_length=100, verbose_name="Bezeichnung", help_text="Bezeichnung für diese Teillieferung")
+    expected_delivery = models.DateField(null=True, blank=True, verbose_name="Erwarteter Liefertermin")
+    status = models.CharField(max_length=20, choices=SPLIT_STATUS_CHOICES, default='planned', verbose_name="Status")
+
+    tracking_number = models.CharField(max_length=100, blank=True, verbose_name="Tracking-Nummer")
+    carrier = models.CharField(max_length=100, blank=True, verbose_name="Spediteur/Lieferant")
+
+    notes = models.TextField(blank=True, verbose_name="Anmerkungen")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="created_order_splits")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.purchase_order.order_number}"
+
+    class Meta:
+        verbose_name = "Teillieferung"
+        verbose_name_plural = "Teillieferungen"
+        ordering = ['purchase_order', 'expected_delivery']
+
+
+class OrderSplitItem(models.Model):
+    """
+    Items included in a specific OrderSplit.
+    """
+    order_split = models.ForeignKey(OrderSplit, on_delete=models.CASCADE, related_name='items')
+    order_item = models.ForeignKey('PurchaseOrderItem', on_delete=models.CASCADE, related_name='split_items')
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Menge")
+
+    def __str__(self):
+        return f"{self.order_item.product.name} - {self.quantity} {self.order_item.product.unit}"
+
+    class Meta:
+        verbose_name = "Teillieferungsposition"
+        verbose_name_plural = "Teillieferungspositionen"
+        unique_together = ['order_split', 'order_item']
+
 
 class PurchaseOrderReceipt(models.Model):
     """Dokumentiert den Wareneingang für eine Bestellung"""
@@ -362,7 +411,8 @@ class PurchaseOrderReceipt(models.Model):
     receipt_date = models.DateField(auto_now_add=True)
     received_by = models.ForeignKey(User, on_delete=models.PROTECT)
     notes = models.TextField(blank=True)
-
+    order_split = models.ForeignKey(OrderSplit, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='receipts', verbose_name="Teillieferung")
     def __str__(self):
         return f"Wareneingang für {self.purchase_order} am {self.receipt_date}"
 
@@ -453,3 +503,4 @@ class OrderTemplateItem(models.Model):
         verbose_name = "Vorlagenposition"
         verbose_name_plural = "Vorlagenpositionen"
         unique_together = ['template', 'product']
+

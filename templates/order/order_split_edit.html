@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Teillieferung bearbeiten - {{ split.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_split_list' order.id %}">Teillieferungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_split_detail' order.id split.id %}">{{ split.name }}</a></li>
+                    <li class="breadcrumb-item active">Bearbeiten</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Teillieferung bearbeiten</h1>
+            <p class="text-muted">{{ split.name }} - Bestellung {{ order.order_number }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zu Details
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Hinweis:</strong> Hier können Sie die Details der Teillieferung aktualisieren. Die enthaltenen Artikel können nicht geändert werden.
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Details der Teillieferung</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.expected_delivery.id_for_label }}" class="form-label">{{ form.expected_delivery.label }}</label>
+                            {{ form.expected_delivery }}
+                            {% if form.expected_delivery.errors %}
+                            <div class="invalid-feedback d-block">{{ form.expected_delivery.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.carrier.id_for_label }}" class="form-label">{{ form.carrier.label }}</label>
+                            {{ form.carrier }}
+                            {% if form.carrier.errors %}
+                            <div class="invalid-feedback d-block">{{ form.carrier.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.tracking_number.id_for_label }}" class="form-label">{{ form.tracking_number.label }}</label>
+                            {{ form.tracking_number }}
+                            {% if form.tracking_number.errors %}
+                            <div class="invalid-feedback d-block">{{ form.tracking_number.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Änderungen speichern
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Items in this split (read-only) -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Artikel in dieser Teillieferung</h5>
+                    <span class="badge bg-info">{{ split.items.count }} Artikel</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Artikel</th>
+                                    <th>SKU</th>
+                                    <th class="text-end">Menge</th>
+                                    <th class="text-center">Einheit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in split.items.all %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'product_detail' item.order_item.product.id %}">
+                                            {{ item.order_item.product.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ item.order_item.product.sku }}</td>
+                                    <td class="text-end">{{ item.quantity }}</td>
+                                    <td class="text-center">{{ item.order_item.product.unit }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">
+                                        <span class="text-muted">Keine Artikel in dieser Teillieferung</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

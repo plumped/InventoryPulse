@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}Wareneingang erfassen - {{ split.name }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+  .receipt-item {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .receipt-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .receipt-header {
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_split_list' order.id %}">Teillieferungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_split_detail' order.id split.id %}">{{ split.name }}</a></li>
+                    <li class="breadcrumb-item active">Wareneingang erfassen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Wareneingang für Teillieferung erfassen</h1>
+            <p class="text-muted">{{ split.name }} - Bestellung {{ order.order_number }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur Teillieferung
+            </a>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Hinweis:</strong> Erfassen Sie hier den Wareneingang für diese Teillieferung.
+        Die Mengen sind auf die in dieser Teillieferung enthaltenen Artikel beschränkt.
+    </div>
+
+    <form method="post" id="receiveForm">
+        {% csrf_token %}
+        <input type="hidden" name="split_id" value="{{ split.id }}">
+
+        <div class="row">
+            <!-- Left column: Items to receive -->
+            <div class="col-md-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Empfangene Artikel</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if split_items %}
+                            {% for split_item in split_items %}
+                            <div class="receipt-item">
+                                <div class="row receipt-header">
+                                    <div class="col-md-7">
+                                        <strong>{{ split_item.order_item.product.name }}</strong>
+                                        <div class="small text-muted">SKU: {{ split_item.order_item.product.sku }}</div>
+                                    </div>
+                                    <div class="col-md-5 text-md-end">
+                                        <span class="badge bg-info">
+                                            {{ split_item.quantity }} {{ split_item.order_item.product.unit }} in dieser Teillieferung
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label for="receive_quantity_{{ split_item.id }}" class="form-label">Empfangene Menge</label>
+                                        <input type="number" id="receive_quantity_{{ split_item.id }}"
+                                               name="receive_quantity_{{ split_item.id }}"
+                                               class="form-control"
+                                               value="{{ split_item.quantity }}"
+                                               min="0.01" step="0.01" max="{{ split_item.quantity }}" required>
+                                    </div>
+
+                                    <div class="col-md-8">
+                                        <label for="warehouse_{{ split_item.id }}" class="form-label">Ziellager</label>
+                                        <select id="warehouse_{{ split_item.id }}" name="warehouse_{{ split_item.id }}" class="form-select" required>
+                                            <option value="">-- Lager auswählen --</option>
+                                            {% for warehouse in warehouses %}
+                                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {% if split_item.order_item.product.has_batch_tracking %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="batch_{{ split_item.id }}" class="form-label">Chargennummer</label>
+                                        <input type="text" id="batch_{{ split_item.id }}"
+                                               name="batch_{{ split_item.id }}"
+                                               class="form-control" required>
+                                    </div>
+
+                                    {% if split_item.order_item.product.has_expiry_tracking %}
+                                    <div class="col-md-6">
+                                        <label for="expiry_{{ split_item.id }}" class="form-label">Verfallsdatum</label>
+                                        <input type="date" id="expiry_{{ split_item.id }}"
+                                               name="expiry_{{ split_item.id }}"
+                                               class="form-control" required>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Es sind keine Artikel in dieser Teillieferung vorhanden.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right column: Notes and actions -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">Zusatzinformationen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Anmerkungen</label>
+                            <textarea id="notes" name="notes" class="form-control" rows="4"></textarea>
+                            <div class="form-text">Optionale Informationen zum Wareneingang</div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-box-seam"></i> Wareneingang erfassen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the form validation
+        const form = document.getElementById('receiveForm');
+
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+
+            // Check if at least one item has a quantity greater than 0
+            const quantityInputs = document.querySelectorAll('input[name^="receive_quantity_"]');
+            let hasQuantity = false;
+
+            quantityInputs.forEach(input => {
+                if (parseFloat(input.value) > 0) {
+                    hasQuantity = true;
+                }
+            });
+
+            if (!hasQuantity) {
+                alert('Bitte geben Sie mindestens für einen Artikel eine Menge größer als 0 an.');
+                event.preventDefault();
+                return false;
+            }
+
+            return isValid;
+        });
+    });
+</script>
+{% endblock %}

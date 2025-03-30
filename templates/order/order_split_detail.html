@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Teillieferung {{ split.name }} - {{ order.order_number }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'order_split_list' order.id %}">Teillieferungen</a></li>
+                    <li class="breadcrumb-item active">{{ split.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">{{ split.name }}</h1>
+            <p class="text-muted">Teillieferung für Bestellung {{ order.order_number }} - {{ order.supplier.name }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group">
+                {% if split.status in 'planned,in_transit' %}
+                <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-primary">
+                    <i class="bi bi-box-seam"></i> Wareneingang erfassen
+                </a>
+                {% endif %}
+
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    {% if split.status == 'planned' %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'order_split_update' order.id split.id %}">
+                            <i class="bi bi-pencil me-2"></i>Bearbeiten
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if split.status != 'received' %}
+                    <li>
+                        <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#changeStatusModal">
+                            <i class="bi bi-arrow-repeat me-2"></i>Status ändern
+                        </button>
+                    </li>
+                    {% endif %}
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    {% if split.status == 'planned' and not split.receipts.exists %}
+                    <li>
+                        <a class="dropdown-item text-danger" href="{% url 'order_split_delete' order.id split.id %}">
+                            <i class="bi bi-trash me-2"></i>Löschen
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <a href="{% url 'order_split_list' order.id %}" class="btn btn-outline-secondary ms-2">
+                <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left column: Split details -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Details</h5>
+                    <span class="badge
+                        {% if split.status == 'planned' %}bg-secondary
+                        {% elif split.status == 'in_transit' %}bg-primary
+                        {% elif split.status == 'received' %}bg-success
+                        {% elif split.status == 'cancelled' %}bg-danger{% endif %}">
+                        {{ split.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Name:</dt>
+                        <dd class="col-sm-7">{{ split.name }}</dd>
+
+                        <dt class="col-sm-5">Liefertermin:</dt>
+                        <dd class="col-sm-7">
+                            {% if split.expected_delivery %}
+                            {{ split.expected_delivery|date:"d.m.Y" }}
+                            {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">Spediteur:</dt>
+                        <dd class="col-sm-7">
+                            {% if split.carrier %}
+                            {{ split.carrier }}
+                            {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">Tracking-Nr.:</dt>
+                        <dd class="col-sm-7">
+                            {% if split.tracking_number %}
+                            {{ split.tracking_number }}
+                            {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">Erstellt am:</dt>
+                        <dd class="col-sm-7">{{ split.created_at|date:"d.m.Y H:i" }}</dd>
+
+                        <dt class="col-sm-5">Erstellt von:</dt>
+                        <dd class="col-sm-7">{{ split.created_by.username }}</dd>
+
+                        {% if split.notes %}
+                        <dt class="col-sm-12">Anmerkungen:</dt>
+                        <dd class="col-sm-12">{{ split.notes|linebreaks }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column: Items and receipts -->
+        <div class="col-md-8 mb-4">
+            <!-- Items in this split -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Artikel in dieser Teillieferung</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Artikel</th>
+                                    <th>SKU</th>
+                                    <th class="text-end">Menge</th>
+                                    <th class="text-center">Einheit</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in split.items.all %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'product_detail' item.order_item.product.id %}">
+                                            {{ item.order_item.product.name }}
+                                        </a>
+                                    </td>
+                                    <td>{{ item.order_item.product.sku }}</td>
+                                    <td class="text-end">{{ item.quantity }}</td>
+                                    <td class="text-center">{{ item.order_item.product.unit }}</td>
+                                    <td class="text-center">
+                                        {% if split.status == 'received' %}
+                                        <span class="badge bg-success">Erhalten</span>
+                                        {% elif split.status == 'in_transit' %}
+                                        <span class="badge bg-primary">Unterwegs</span>
+                                        {% elif split.status == 'planned' %}
+                                        <span class="badge bg-secondary">Geplant</span>
+                                        {% elif split.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Storniert</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">
+                                        <span class="text-muted">Keine Artikel in dieser Teillieferung</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receipts for this split -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Wareneingänge</h5>
+                </div>
+                <div class="card-body">
+                    {% if receipts %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Empfangen von</th>
+                                    <th>Anzahl Positionen</th>
+                                    <th>Anmerkungen</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for receipt in receipts %}
+                                <tr>
+                                    <td>{{ receipt.receipt_date|date:"d.m.Y" }}</td>
+                                    <td>{{ receipt.received_by.username }}</td>
+                                    <td>{{ receipt.items.count }}</td>
+                                    <td>
+                                        {% if receipt.notes %}
+                                        {{ receipt.notes|truncatechars:50 }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'purchase_order_receipt_edit' order.id receipt.id %}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-box fs-1 text-muted mb-3 d-block"></i>
+                        <h5>Keine Wareneingänge vorhanden</h5>
+                        <p class="text-muted">Für diese Teillieferung wurden noch keine Wareneingänge erfasst.</p>
+
+                        {% if split.status in 'planned,in_transit' %}
+                        <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-primary">
+                            <i class="bi bi-box-seam me-2"></i>Wareneingang erfassen
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal für Statusänderung -->
+<div class="modal fade" id="changeStatusModal" tabindex="-1" aria-labelledby="changeStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changeStatusModalLabel">Status der Teillieferung ändern</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'order_split_update_status' order.id split.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="statusSelect" class="form-label">Neuer Status:</label>
+                        <select class="form-select" id="statusSelect" name="status">
+                            {% for status_code, status_name in split.SPLIT_STATUS_CHOICES %}
+                            <option value="{{ status_code }}" {% if split.status == status_code %}selected{% endif %}>
+                                {{ status_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Hinweis:</strong>
+                        <ul class="mb-0 ps-3 mt-1">
+                            <li><strong>Geplant:</strong> Die Teillieferung ist noch nicht unterwegs</li>
+                            <li><strong>In Transit:</strong> Die Teillieferung wurde vom Lieferanten versendet</li>
+                            <li><strong>Erhalten:</strong> Die Teillieferung wurde vollständig empfangen</li>
+                            <li><strong>Storniert:</strong> Die Teillieferung wurde abgesagt</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Status ändern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

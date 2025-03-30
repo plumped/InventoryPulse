@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     PurchaseOrder, PurchaseOrderItem, PurchaseOrderReceipt,
-    PurchaseOrderReceiptItem, OrderSuggestion, OrderTemplate, OrderTemplateItem
+    PurchaseOrderReceiptItem, OrderSuggestion, OrderTemplate, OrderTemplateItem, OrderSplitItem, OrderSplit
 )
 
 
@@ -154,6 +154,34 @@ class OrderTemplateAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
 
+class OrderSplitItemInline(admin.TabularInline):
+    model = OrderSplitItem
+    extra = 0
+    fields = ('order_item', 'quantity')
+    autocomplete_fields = ['order_item']
+
+
+class OrderSplitAdmin(admin.ModelAdmin):
+    list_display = ('name', 'purchase_order', 'status', 'expected_delivery', 'carrier', 'created_by')
+    list_filter = ('status', 'expected_delivery', 'created_at')
+    search_fields = ('name', 'purchase_order__order_number', 'carrier', 'tracking_number')
+    date_hierarchy = 'expected_delivery'
+    inlines = [OrderSplitItemInline]
+    autocomplete_fields = ['purchase_order', 'created_by']
+
+    fieldsets = (
+        (None, {
+            'fields': ('purchase_order', 'name', 'status', 'created_by')
+        }),
+        ('Lieferinformationen', {
+            'fields': ('expected_delivery', 'carrier', 'tracking_number')
+        }),
+        ('Zusatzinformationen', {
+            'fields': ('notes',)
+        })
+    )
+
+
 # Register the models
 admin.site.register(OrderTemplate, OrderTemplateAdmin)
 
@@ -162,3 +190,5 @@ admin.site.register(PurchaseOrder, PurchaseOrderAdmin)
 admin.site.register(PurchaseOrderReceipt, PurchaseOrderReceiptAdmin)
 admin.site.register(OrderSuggestion, OrderSuggestionAdmin)
 admin.site.register(PurchaseOrderItem, PurchaseOrderItemAdmin)
+admin.site.register(OrderSplit, OrderSplitAdmin)
+

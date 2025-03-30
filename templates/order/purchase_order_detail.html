@@ -772,6 +772,95 @@
                 </div>
             </div>
             {% endif %}
+            <!-- Teillieferungen Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Teillieferungen</h5>
+                    {% if order.status in 'sent,partially_received' %}
+                    <a href="{% url 'order_split_create' order.id %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-circle"></i> Neue Teillieferung
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if order.splits.exists %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Bezeichnung</th>
+                                    <th>Liefertermin</th>
+                                    <th>Status</th>
+                                    <th>Spediteur</th>
+                                    <th>Artikel</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for split in order.splits.all %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'order_split_detail' order.id split.id %}">{{ split.name }}</a>
+                                    </td>
+                                    <td>
+                                        {% if split.expected_delivery %}
+                                        {{ split.expected_delivery|date:"d.m.Y" }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if split.status == 'planned' %}
+                                        <span class="badge bg-secondary">{{ split.get_status_display }}</span>
+                                        {% elif split.status == 'in_transit' %}
+                                        <span class="badge bg-primary">{{ split.get_status_display }}</span>
+                                        {% elif split.status == 'received' %}
+                                        <span class="badge bg-success">{{ split.get_status_display }}</span>
+                                        {% elif split.status == 'cancelled' %}
+                                        <span class="badge bg-danger">{{ split.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ split.carrier|default:"-" }}</td>
+                                    <td>{{ split.items.count }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if split.status in 'planned,in_transit' %}
+                                            <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-outline-success">
+                                                <i class="bi bi-box-seam"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="bi bi-truck fs-2 d-block mb-2"></i>
+                            <p>Keine Teillieferungen vorhanden.</p>
+                            {% if order.status in 'sent,partially_received' %}
+                            <a href="{% url 'order_split_create' order.id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Teillieferung erstellen
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if order.splits.exists %}
+                <div class="card-footer text-end">
+                    <a href="{% url 'order_split_list' order.id %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-list"></i> Alle Teillieferungen anzeigen
+                    </a>
+                </div>
+                {% endif %}
+            </div>
 
             <!-- Dokumente -->
             <div class="card">

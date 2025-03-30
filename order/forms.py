@@ -1,10 +1,14 @@
+from decimal import Decimal
+
 from django import forms
+from django.core.exceptions import ValidationError
+from django.forms.formsets import formset_factory
 from django.utils import timezone
 
 from suppliers.models import Supplier
 from inventory.models import Warehouse
 
-from .models import PurchaseOrder, PurchaseOrderReceipt
+from .models import PurchaseOrder, PurchaseOrderReceipt, OrderSplit
 
 
 class PurchaseOrderForm(forms.ModelForm):
@@ -126,3 +130,57 @@ class OrderFilterForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Bestellnummer, Lieferant...'})
     )
+
+
+class OrderSplitForm(forms.ModelForm):
+    """Form for creating and editing order splits."""
+
+    class Meta:
+        model = OrderSplit
+        fields = ['name', 'expected_delivery', 'carrier', 'tracking_number', 'notes']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'expected_delivery': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'carrier': forms.TextInput(attrs={'class': 'form-control'}),
+            'tracking_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Set default expected delivery date to one week in the future if it's a new instance
+        if not self.instance.pk and not self.initial.get('expected_delivery'):
+            self.initial['expected_delivery'] = (timezone.now() + timezone.timedelta(days=7)).date()
+
+
+class OrderSplitItemForm(forms.Form):
+    """Form for managing individual items in an order split."""
+
+    item_id = forms.IntegerField(widget=forms.HiddenInput())
+    product_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True}))
+    product_sku = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True}))
+    total_quantity = forms.DecimalField(widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True}))
+    remaining_quantity = forms.DecimalField(widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True}))
+    unit = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'readonly': True}))
+    split_quantity = forms.DecimalField(
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+        required=False
+    )
+
+    def clean_split_quantity(self):
+        """Validate that split quantity is not more than remaining quantity."""
+        split_quantity = self.cleaned_data.get('split_quantity') or Decimal('0')
+        remaining_quantity = self.cleaned_data.get('remaining_quantity')
+
+        if split_quantity > remaining_quantity:
+            raise ValidationError(
+                f"Die Menge kann nicht größer sein als die verbleibende Menge ({remaining_quantity}).")
+
+        if split_quantity < 0:
+            raise ValidationError("Die Menge kann nicht negativ sein.")
+
+        return split_quantity
+
+
+OrderSplitItemFormSet = formset_factory(OrderSplitItemForm, extra=0)

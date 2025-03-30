@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Teillieferungen - {{ order.order_number }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">Teillieferungen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Teillieferungen</h1>
+            <p class="text-muted">Bestellung {{ order.order_number }} - {{ order.supplier.name }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'order_split_create' order.id %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Neue Teillieferung
+            </a>
+            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur Bestellung
+            </a>
+        </div>
+    </div>
+
+    {% if splits %}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Bezeichnung</th>
+                            <th>Liefertermin</th>
+                            <th>Status</th>
+                            <th>Spediteur</th>
+                            <th>Tracking</th>
+                            <th>Artikel</th>
+                            <th>Erstellt am</th>
+                            <th>Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for split in splits %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'order_split_detail' order.id split.id %}">{{ split.name }}</a>
+                            </td>
+                            <td>
+                                {% if split.expected_delivery %}
+                                {{ split.expected_delivery|date:"d.m.Y" }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if split.status == 'planned' %}
+                                <span class="badge bg-secondary">{{ split.get_status_display }}</span>
+                                {% elif split.status == 'in_transit' %}
+                                <span class="badge bg-primary">{{ split.get_status_display }}</span>
+                                {% elif split.status == 'received' %}
+                                <span class="badge bg-success">{{ split.get_status_display }}</span>
+                                {% elif split.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ split.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ split.carrier|default:"-" }}</td>
+                            <td>
+                                {% if split.tracking_number %}
+                                {{ split.tracking_number }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ split.items.count }}</td>
+                            <td>{{ split.created_at|date:"d.m.Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if split.status == 'planned' %}
+                                    <a href="{% url 'order_split_update' order.id split.id %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'order_split_delete' order.id split.id %}" class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if split.status in 'planned,in_transit' %}
+                                    <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-outline-success">
+                                        <i class="bi bi-box-seam"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-truck fs-1 text-muted mb-3 d-block"></i>
+            <h5>Keine Teillieferungen vorhanden</h5>
+            <p class="text-muted">Für diese Bestellung wurden noch keine Teillieferungen angelegt.</p>
+            <a href="{% url 'order_split_create' order.id %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Erste Teillieferung erstellen
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Was sind Teillieferungen?</h5>
+        </div>
+        <div class="card-body">
+            <p>Mit Teillieferungen können Sie große Bestellungen in mehrere Lieferungen aufteilen und deren Eingang separat verfolgen. Dies ist besonders nützlich für:</p>
+
+            <ul>
+                <li><strong>Lange Lieferzeiten:</strong> Der Lieferant versendet verfügbare Artikel sofort und den Rest später</li>
+                <li><strong>Große Mengen:</strong> Der Lieferant versendet eine Bestellung in mehreren Paketen</li>
+                <li><strong>Mehrere Standorte:</strong> Teile der Bestellung werden an verschiedene Standorte geliefert</li>
+            </ul>
+
+            <p>So verwenden Sie Teillieferungen:</p>
+
+            <ol>
+                <li>Erstellen Sie eine Teillieferung und wählen Sie die enthaltenen Artikel und Mengen</li>
+                <li>Aktualisieren Sie den Status, sobald die Lieferung unterwegs ist</li>
+                <li>Erfassen Sie den Wareneingang separat für jede Teillieferung</li>
+            </ol>
+        </div>
+    </div>
+</div>
+{% endblock %}

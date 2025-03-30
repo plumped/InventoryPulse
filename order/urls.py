@@ -34,6 +34,7 @@ urlpatterns = [
 
     # Wareneingang erfassen
     path('<int:pk>/receive/', views.purchase_order_receive, name='purchase_order_receive'),
+    path('<int:pk>/receive/<int:split_id>/', views.purchase_order_receive, name='purchase_order_receive_split'),
 
     # Wareneingang bearbeiten
     path('<int:pk>/receipt/<int:receipt_id>/edit/', views.purchase_order_receipt_edit, name='purchase_order_receipt_edit'),
@@ -71,6 +72,13 @@ urlpatterns = [
     path('<int:pk>/item/<int:item_id>/cancel/', views.purchase_order_item_cancel, name='purchase_order_item_cancel'),
     path('<int:pk>/item/<int:item_id>/edit-cancellation/', views.purchase_order_item_edit_cancellation, name='purchase_order_item_edit_cancellation'),
 
+    path('<int:pk>/splits/', views.order_split_list, name='order_split_list'),
+    path('<int:pk>/splits/create/', views.order_split_create, name='order_split_create'),
+    path('<int:pk>/splits/<int:split_id>/', views.order_split_detail, name='order_split_detail'),
+    path('<int:pk>/splits/<int:split_id>/edit/', views.order_split_update, name='order_split_update'),
+    path('<int:pk>/splits/<int:split_id>/delete/', views.order_split_delete, name='order_split_delete'),
+    path('<int:pk>/splits/<int:split_id>/receive/', views.receive_order_split, name='receive_order_split'),
+    path('<int:pk>/splits/<int:split_id>/status/', views.order_split_update_status, name='order_split_update_status'),
     # AJAX-Endpunkt für Lieferantenproduktpreis
     path('get-supplier-product-price/', views.get_supplier_product_price, name='get_supplier_product_price'),
     path('get-supplier-products-list/', views.get_supplier_products_list, name='get_supplier_products_list'),

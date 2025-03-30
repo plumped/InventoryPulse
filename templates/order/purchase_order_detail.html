@@ -428,106 +428,171 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Artikel</th>
-                                    <th>Artikel-Nr.</th>
-                                    <th>Bestellt</th>
-                                    <th>Erhalten</th>
-                                    <th>Einheit</th>
-                                    <th>Einzelpreis</th>
-                                    <th>MwSt</th>
-                                    <th>Gesamt</th>
-                                    {% if show_conversion %}
-                                    <th>Umgerechnet</th>
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Artikel</th>
+                                <th class="text-center">Artikelnr.</th>
+                                <th class="text-center">Lieferanten-Artikelnr.</th>
+                                <th class="text-end">Menge</th>
+                                <th class="text-end">Preis</th>
+                                <th class="text-end">Summe (Netto)</th>
+                                <th class="text-end">MwSt</th>
+                                <th class="text-end">Summe (Brutto)</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr {% if item.is_canceled %}class="text-muted"{% endif %}>
+                                <td>
+                                    <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                                    {% if item.is_canceled %}
+                                    <div class="small text-danger">
+                                        <i class="bi bi-x-circle"></i> Vollständig storniert
+                                    </div>
                                     {% endif %}
-                                    <th>Aktionen</th> <!-- New column for actions -->
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in order.items.all %}
-                                <tr>
-                                    <td>
-                                        <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
-                                        {% if item.is_canceled or item.is_partially_canceled %}
-                                        <div class="small mt-1">
-                                            <span class="text-danger">
-                                                {% if item.is_canceled %}
-                                                    <i class="bi bi-x-circle"></i> Storniert
-                                                {% else %}
-                                                    <i class="bi bi-x-circle"></i> {{ item.canceled_quantity }} {{ item.product.unit }} storniert
-                                                {% endif %}
-                                                {% if item.canceled_at %}
-                                                    am {{ item.canceled_at|date:"d.m.Y H:i" }}
-                                                {% endif %}
-                                                {% if item.canceled_by %}
-                                                    von {{ item.canceled_by.username }}
-                                                {% endif %}
-                                            </span>
-                                            {% if item.cancellation_reason %}
-                                                <br>
-                                                <span class="text-muted">Grund: {{ item.cancellation_reason }}</span>
-                                            {% endif %}
-                                        </div>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if item.supplier_sku %}
-                                        {{ item.supplier_sku }}
-                                        {% else %}
-                                        {{ item.product.sku }}
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.quantity_ordered }}</td>
-                                    <td>
-                                        {% if item.is_fully_received %}
-                                        <span class="badge bg-success">{{ item.quantity_received }}</span>
-                                        {% elif item.quantity_received > 0 %}
-                                        <span class="badge bg-warning">{{ item.quantity_received }}</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">0</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.product.unit }}</td>
-                                    <td>{{ item.unit_price|floatformat:2 }} {{ supplier_currency.symbol }}</td>
-                                    <td>
-                                        {% if item.tax %}
-                                        {{ item.tax.rate }}%
-                                        {% else %}
-                                        0%
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.line_total|floatformat:2 }} {{ supplier_currency.symbol }}</td>
-                                    {% if show_conversion %}
-                                    <td>{{ item.converted_line_total|floatformat:2 }} {{ system_currency.symbol }}</td>
+                                </td>
+                                <td class="text-center">{{ item.product.sku }}</td>
+                                <td class="text-center">{{ item.supplier_sku }}</td>
+                                <td class="text-end">
+                                    {% if item.is_canceled %}
+                                    <s>{{ item.quantity_ordered }} {{ item.product.unit }}</s>
+                                    <span class="text-danger">0</span>
+                                    {% if item.cancellation_reason %}
+                                    <div class="small text-muted">
+                                        <i class="bi bi-info-circle"></i> Grund: {{ item.cancellation_reason }}
+                                    </div>
                                     {% endif %}
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            {% if item.status == 'active' and item.quantity_received == 0 and order.status not in 'received,cancelled' %}
-                                                <a href="{% url 'purchase_order_item_cancel' order.id item.id %}" class="btn btn-outline-danger"
-                                                title="Position stornieren">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </a>
-                                            {% endif %}
-
-                                            {% if item.status == 'canceled' %}
-                                                <span class="badge bg-danger" title="Storniert">Storniert</span>
-                                            {% elif item.status == 'partially_canceled' %}
-                                                <span class="badge bg-warning" title="Teilweise storniert">
-                                                    {{ item.canceled_quantity }} {{ item.product.unit }} storniert
-                                                </span>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="{% if show_conversion %}10{% else %}9{% endif %}" class="text-center py-3">Keine Positionen vorhanden</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                    {% elif item.is_partially_canceled %}
+                                    <span class="text-warning">{{ item.display_quantity }} {{ item.product.unit }}</span>
+                                    <div class="small text-warning">
+                                        <i class="bi bi-exclamation-triangle"></i> Storniert: {{ item.canceled_quantity }} {{ item.product.unit }}
+                                    </div>
+                                    {% if item.cancellation_reason %}
+                                    <div class="small text-muted">
+                                        <i class="bi bi-info-circle"></i> Grund: {{ item.cancellation_reason }}
+                                    </div>
+                                    {% endif %}
+                                    {% else %}
+                                    {{ item.display_quantity }} {{ item.product.unit }}
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {{ item.unit_price|floatformat:2 }}
+                                    {% if item.currency %}
+                                        {{ item.currency.symbol }}
+                                    {% elif order.supplier.default_currency %}
+                                        {{ order.supplier.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if item.is_canceled %}
+                                    <s>{{ item.line_subtotal|floatformat:2 }}</s>
+                                    <span class="text-danger">0,00</span>
+                                    {% else %}
+                                    {{ item.display_line_subtotal|floatformat:2 }}
+                                    {% endif %}
+                                    {% if item.currency %}
+                                        {{ item.currency.symbol }}
+                                    {% elif order.supplier.default_currency %}
+                                        {{ order.supplier.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if item.is_canceled %}
+                                    <s>{{ item.line_tax|floatformat:2 }}</s>
+                                    <span class="text-danger">0,00</span>
+                                    {% else %}
+                                    {{ item.display_line_tax|floatformat:2 }}
+                                    {% endif %}
+                                    {% if item.currency %}
+                                        {{ item.currency.symbol }}
+                                    {% elif order.supplier.default_currency %}
+                                        {{ order.supplier.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                    {% if item.tax %}
+                                    <div class="small">({{ item.tax.rate }}%)</div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if item.is_canceled %}
+                                    <s>{{ item.line_total|floatformat:2 }}</s>
+                                    <span class="text-danger">0,00</span>
+                                    {% else %}
+                                    {{ item.display_line_total|floatformat:2 }}
+                                    {% endif %}
+                                    {% if item.currency %}
+                                        {{ item.currency.symbol }}
+                                    {% elif order.supplier.default_currency %}
+                                        {{ order.supplier.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if item.is_fully_received %}
+                                    <span class="badge bg-success">Erhalten</span>
+                                    {% elif item.quantity_received > 0 %}
+                                    <span class="badge bg-warning">Teilweise erhalten</span>
+                                    {% elif item.is_canceled %}
+                                    <span class="badge bg-danger">Storniert</span>
+                                    {% elif item.is_partially_canceled %}
+                                    <span class="badge bg-warning">Teilweise storniert</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Ausstehend</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        {% if not item.is_canceled and order.status not in 'sent,partially_received,received,canceled' and item.quantity_received == 0 %}
+                                        <a href="{% url 'purchase_order_item_cancel' order.id item.id %}" class="btn btn-outline-danger">
+                                            <i class="bi bi-x-circle"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-secondary">
+                                <th colspan="5" class="text-end">Zwischensumme:</th>
+                                <th class="text-end">
+                                    {{ order.subtotal|floatformat:2 }}
+                                    {% if order.supplier.default_currency %}
+                                        {{ order.supplier.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </th>
+                                <th class="text-end">
+                                    {{ order.tax|floatformat:2 }}
+                                    {% if order.supplier.default_currency %}
+                                        {{ order.supplier.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </th>
+                                <th class="text-end">
+                                    {{ order.total|floatformat:2 }}
+                                    {% if order.supplier.default_currency %}
+                                        {{ order.supplier.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </th>
+                                <th colspan="2"></th>
+                            </tr>
+                        </tfoot>
+                    </table>
                     </div>
                 </div>
             </div>

@@ -8,9 +8,16 @@ from .models import (
 class PurchaseOrderItemInline(admin.TabularInline):
     model = PurchaseOrderItem
     extra = 0
-    fields = ('product', 'supplier_sku', 'quantity_ordered', 'quantity_received', 'unit_price', 'line_total')
-    readonly_fields = ('line_total',)
+    fields = ('product', 'supplier_sku', 'quantity_ordered', 'canceled_quantity', 'quantity_received', 'unit_price', 'get_line_total', 'status')
+    readonly_fields = ('get_line_total', 'status', 'canceled_quantity')
     autocomplete_fields = ['product']
+
+    def get_line_total(self, obj):
+        """Sichere Methode zum Abrufen des Zeilenwerts"""
+        if obj and obj.line_total is not None:
+            return f"{obj.line_total:.2f}"
+        return "0.00"
+    get_line_total.short_description = "Zeilensumme"
 
 
 class PurchaseOrderReceiptItemInline(admin.TabularInline):
@@ -69,18 +76,50 @@ class OrderSuggestionAdmin(admin.ModelAdmin):
     readonly_fields = ('last_calculated',)
     autocomplete_fields = ['product', 'preferred_supplier']
 
+
 class PurchaseOrderItemAdmin(admin.ModelAdmin):
-    list_display = ('purchase_order', 'product', 'supplier_sku', 'quantity_ordered', 'quantity_received', 'unit_price', 'line_total')
-    list_filter = ('purchase_order__supplier', 'product__category')
+    list_display = (
+    'purchase_order', 'product', 'supplier_sku', 'get_quantity_info', 'status', 'unit_price', 'get_line_total')
+    list_filter = ('purchase_order__supplier', 'product__category', 'status')
     search_fields = ('product__name', 'product__sku', 'supplier_sku')
-    readonly_fields = ('line_total',)
+    readonly_fields = (
+    'get_line_total', 'get_quantity_info', 'canceled_quantity', 'canceled_at', 'canceled_by', 'cancellation_reason')
     autocomplete_fields = ['purchase_order', 'product']
+
+    def get_quantity_info(self, obj):
+        """Zeigt die Bestellmenge und ggf. stornierte Menge an"""
+        if obj.is_canceled:
+            return f"{obj.quantity_ordered} (storniert)"
+        elif obj.is_partially_canceled:
+            return f"{obj.effective_quantity} (von {obj.quantity_ordered}, {obj.canceled_quantity} storniert)"
+        return f"{obj.quantity_ordered}"
+
+    get_quantity_info.short_description = "Menge"
+
+    def get_line_total(self, obj):
+        """Sichere Methode zum Abrufen des Zeilenwerts"""
+        if obj and obj.display_line_total is not None:
+            return f"{obj.display_line_total:.2f}"
+        return "0.00"
+
+    get_line_total.short_description = "Zeilensumme"
+
+    fieldsets = (
+        (None, {
+            'fields': ('purchase_order', 'product', 'supplier_sku', 'quantity_ordered', 'unit_price')
+        }),
+        ('Stornierung', {
+            'fields': ('status', 'canceled_quantity', 'cancellation_reason', 'canceled_at', 'canceled_by'),
+            'classes': ('collapse',),
+            'description': 'Informationen zu Stornierungen dieser Position'
+        }),
+    )
 
     def get_queryset(self, request):
         """
         Optimize the queryset to reduce database queries
         """
-        return super().get_queryset(request).select_related('purchase_order', 'product')
+        return super().get_queryset(request).select_related('purchase_order', 'product', 'canceled_by')
 
 
 class OrderTemplateItemInline(admin.TabularInline):

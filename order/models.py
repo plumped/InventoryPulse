@@ -1,4 +1,6 @@
 # order/models.py
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 from model_utils import FieldTracker
@@ -44,20 +46,24 @@ class PurchaseOrder(models.Model):
                                         verbose_name="Erstellungsvorlage",
                                         help_text="Die Vorlage, aus der diese Bestellung erstellt wurde")
 
-
     def update_totals(self):
-        """Aktualisiert alle Summen basierend auf den Bestellpositionen"""
-        # Subtotal ohne Steuern
-        self.subtotal = sum(item.line_subtotal for item in self.items.all())
+        """Aktualisiert alle Summen basierend auf den Bestellpositionen unter Berücksichtigung von Stornierungen"""
+        # Subtotal ohne Steuern - verwende die display_line_subtotal Eigenschaft
+        self.subtotal = sum(item.display_line_subtotal for item in self.items.all() if not item.is_canceled)
 
         # Steuern berechnen - gruppiert nach Steuermodell
         tax_groups = {}
         for item in self.items.all():
+            # Stornierte Positionen überspringen
+            if item.is_canceled:
+                continue
+
             if item.tax:
                 tax_id = item.tax.id
                 if tax_id not in tax_groups:
                     tax_groups[tax_id] = 0
-                tax_groups[tax_id] += item.line_tax
+                # Verwende die display_line_tax Eigenschaft für stornierte Mengen
+                tax_groups[tax_id] += item.display_line_tax
 
         # Gesamtsteuern
         self.tax = sum(tax_groups.values())
@@ -141,18 +147,22 @@ class PurchaseOrderItem(models.Model):
     @property
     def line_subtotal(self):
         """Zeilensumme ohne Steuer"""
+        if self.quantity_ordered is None or self.unit_price is None:
+            return Decimal('0.00')
         return self.quantity_ordered * self.unit_price
 
     @property
     def line_tax(self):
         """Steueranteil der Zeile"""
-        if self.tax:
-            return self.line_subtotal * (self.tax.rate / 100)
-        return 0
+        if self.tax is None or self.line_subtotal is None:
+            return Decimal('0.00')
+        return self.line_subtotal * (self.tax.rate / 100)
 
     @property
     def line_total(self):
         """Zeilensumme inklusive Steuer"""
+        if self.line_subtotal is None or self.line_tax is None:
+            return Decimal('0.00')
         return self.line_subtotal + self.line_tax
 
     @property
@@ -183,8 +193,57 @@ class PurchaseOrderItem(models.Model):
         """Return the effective quantity after considering cancellations."""
         return self.quantity_ordered - self.canceled_quantity
 
+    @property
+    def display_quantity(self):
+        """
+        Gibt die für den Lieferanten relevante anzuzeigende Menge zurück.
+        Bei stornierten oder teilweise stornierten Positionen ist dies die effektive Menge,
+        sonst die ursprünglich bestellte Menge.
+        """
+        if self.status in ['canceled', 'partially_canceled']:
+            return self.effective_quantity
+        if self.quantity_ordered is None:
+            return Decimal('0.00')
+        return self.quantity_ordered
+
+    @property
+    def display_line_subtotal(self):
+        """Gibt die anzuzeigende Zeilensumme ohne Steuer zurück basierend auf display_quantity."""
+        if self.display_quantity is None or self.unit_price is None:
+            return Decimal('0.00')
+        return self.display_quantity * self.unit_price
+
+    @property
+    def display_line_tax(self):
+        """Gibt den anzuzeigenden Steueranteil der Zeile zurück basierend auf display_quantity."""
+        if self.tax is None or self.display_line_subtotal is None:
+            return Decimal('0.00')
+        return self.display_line_subtotal * (self.tax.rate / 100)
+
+    @property
+    def display_line_total(self):
+        """Gibt die anzuzeigende Zeilensumme inkl. Steuer zurück basierend auf display_quantity."""
+        if self.display_line_subtotal is None or self.display_line_tax is None:
+            return Decimal('0.00')
+        return self.display_line_subtotal + self.display_line_tax
+
+    @property
+    def effective_quantity(self):
+        """Return the effective quantity after considering cancellations."""
+        if self.quantity_ordered is None:
+            return Decimal('0.00')
+        if self.canceled_quantity is None:
+            return self.quantity_ordered
+        return self.quantity_ordered - self.canceled_quantity
+
     def cancel(self, user, quantity=None, reason=''):
         """Cancel this item or a specific quantity of it."""
+        # Prüfen, ob die Bestellung bereits bestellt oder in einem späteren Status ist
+        if self.purchase_order.status in ['sent', 'partially_received', 'received', 'canceled']:
+            raise ValueError(
+                f"Bestellpositionen können nicht storniert werden, wenn die Bestellung bereits den Status '{self.purchase_order.get_status_display()}' hat.")
+
+        # Bestehende Prüfungen
         if self.purchase_order.status in ['received', 'canceled']:
             raise ValueError("Cannot cancel items for orders that are already received or canceled.")
 

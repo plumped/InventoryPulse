@@ -669,7 +669,6 @@ def purchase_order_receive(request, pk):
 
                 # Für jede Position prüfen, ob Menge empfangen wurde
                 items_received = False
-                all_items_fully_received = True
 
                 for item in order.items.all():
                     # Alle quantity-Felder für dieses Item finden (für multiple Batches)
@@ -771,15 +770,23 @@ def purchase_order_receive(request, pk):
                         item.quantity_received += item_received_total
                         item.save()
 
-                        # Prüfen, ob alle Artikel vollständig erhalten wurden
-                        if item.quantity_received < item.quantity_ordered:
-                            all_items_fully_received = False
-
                 # Bestellstatus aktualisieren, falls Artikel empfangen wurden
                 if items_received:
+                    # Hier prüfen wir alle Positionen der Bestellung, um den korrekten Status zu ermitteln
+                    all_items_fully_received = True
+                    any_items_received = False
+
+                    for order_item in order.items.all():
+                        if order_item.quantity_received >= order_item.quantity_ordered:
+                            any_items_received = True
+                        else:
+                            all_items_fully_received = False
+                            if order_item.quantity_received > 0:
+                                any_items_received = True
+
                     if all_items_fully_received:
                         order.status = 'received'
-                    else:
+                    elif any_items_received:
                         order.status = 'partially_received'
                     order.save()
 
@@ -832,10 +839,11 @@ def purchase_order_print(request, pk):
 
     return render(request, 'order/purchase_order_print.html', context)
 
+
 @login_required
 @permission_required('order', 'view')
 def purchase_order_export(request, pk):
-    """Export einer Bestellung als CSV oder PDF."""
+    """Export einer Bestellung als CSV oder PDF mit Berücksichtigung stornierter Mengen."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
     export_format = request.GET.get('format', 'csv')
 
@@ -853,8 +861,12 @@ def purchase_order_export(request, pk):
             ['Bestellnummer', 'Lieferant', 'Datum', 'Status', 'Produkt', 'Lieferanten-SKU', 'Menge',
              'Einheit', 'Einzelpreis', 'Gesamtpreis'])
 
-        # Daten
+        # Daten - verwende display_quantity und überspringe stornierte Positionen
         for item in order.items.all():
+            # Vollständig stornierte Positionen überspringen
+            if item.is_canceled:
+                continue
+
             writer.writerow([
                 order.order_number,
                 order.supplier.name,
@@ -862,10 +874,10 @@ def purchase_order_export(request, pk):
                 order.get_status_display(),
                 item.product.name,
                 item.supplier_sku,
-                item.quantity_ordered,
+                item.display_quantity,  # Statt quantity_ordered
                 item.product.unit,
                 item.unit_price,
-                item.line_total
+                item.display_line_total  # Statt line_total
             ])
 
         return response
@@ -2521,6 +2533,13 @@ def purchase_order_item_cancel(request, pk, item_id):
     """Cancel a specific order item."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
     item = get_object_or_404(PurchaseOrderItem, pk=item_id, purchase_order=order)
+
+    # Prüfen, ob die Bestellung bereits bestellt oder weiter ist
+    # Ein strikter Check, der alle Statuswerte prüft, die "bestellt" oder später sind
+    if order.status in ['sent', 'partially_received', 'received', 'canceled']:
+        messages.error(request,
+                       f'Bestellposition kann nicht storniert werden, da die Bestellung bereits den Status "{order.get_status_display()}" hat und an den Lieferanten übermittelt wurde.')
+        return redirect('purchase_order_detail', pk=order.pk)
 
     # Check if the order is in a state where cancellation is allowed
     if order.status in ['received', 'canceled']:

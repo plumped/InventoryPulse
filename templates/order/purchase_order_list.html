@@ -2,7 +2,6 @@
 
 {% block title %}Bestellungen - InventoryPulse{% endblock %}
 
-
 {% block content %}
 <div class="container-fluid">
     <div class="row mb-3">
@@ -218,7 +217,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="10" class="text-center py-4">
+                                <td colspan="11" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="bi bi-inbox fs-2 d-block mb-2"></i>
                                         <p>Keine Bestellungen gefunden.</p>
@@ -322,8 +321,10 @@
     </div>
   </div>
 </div>
+{% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
 $(document).ready(function() {
     // Select all checkbox
@@ -385,5 +386,4 @@ $(document).ready(function() {
     updateBulkSendButton();
 });
 </script>
-{% endblock %}
 {% endblock %}

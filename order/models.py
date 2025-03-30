@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from model_utils import FieldTracker
+from django.utils import timezone
 
 from core.models import Product, Tax
 from suppliers.models import Supplier
@@ -43,6 +44,7 @@ class PurchaseOrder(models.Model):
                                         verbose_name="Erstellungsvorlage",
                                         help_text="Die Vorlage, aus der diese Bestellung erstellt wurde")
 
+
     def update_totals(self):
         """Aktualisiert alle Summen basierend auf den Bestellpositionen"""
         # Subtotal ohne Steuern
@@ -72,6 +74,25 @@ class PurchaseOrder(models.Model):
         verbose_name = "Bestellung"
         verbose_name_plural = "Bestellungen"
 
+    def update_status_after_item_change(self):
+        """Update order status based on item statuses after a cancellation."""
+        # Skip for orders that are already in final states
+        if self.status in ['received', 'canceled']:
+            return
+
+        # Check if all items are canceled
+        all_items = self.items.all()
+        active_items = all_items.exclude(status='canceled')
+
+        if not active_items.exists():
+            # All items are canceled, so cancel the entire order
+            self.status = 'canceled'
+            self.save()
+        elif active_items.count() < all_items.count():
+            # Some items are canceled, but not all - we could add a 'partially_canceled' status
+            # to the PurchaseOrder model, but for now we'll keep the current status
+            pass
+
 
 class PurchaseOrderItem(models.Model):
     purchase_order = models.ForeignKey(PurchaseOrder, related_name='items', on_delete=models.CASCADE)
@@ -79,6 +100,22 @@ class PurchaseOrderItem(models.Model):
     quantity_ordered = models.DecimalField(max_digits=10, decimal_places=2)
     quantity_received = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Status field for the order item
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('canceled', 'Canceled'),
+        ('partially_canceled', 'Partially Canceled')
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+
+    # Original quantity before any cancellations
+    original_quantity = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    canceled_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    cancellation_reason = models.TextField(blank=True)
+    canceled_at = models.DateTimeField(null=True, blank=True)
+    canceled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='canceled_order_items')
 
     # Add currency field to capture the currency at time of order
     currency = models.ForeignKey('core.Currency', on_delete=models.PROTECT, null=True,
@@ -131,6 +168,54 @@ class PurchaseOrderItem(models.Model):
         else:
             return 'fully_received'
 
+    @property
+    def is_canceled(self):
+        """Check if the item is completely canceled."""
+        return self.status == 'canceled'
+
+    @property
+    def is_partially_canceled(self):
+        """Check if the item is partially canceled."""
+        return self.status == 'partially_canceled'
+
+    @property
+    def effective_quantity(self):
+        """Return the effective quantity after considering cancellations."""
+        return self.quantity_ordered - self.canceled_quantity
+
+    def cancel(self, user, quantity=None, reason=''):
+        """Cancel this item or a specific quantity of it."""
+        if self.purchase_order.status in ['received', 'canceled']:
+            raise ValueError("Cannot cancel items for orders that are already received or canceled.")
+
+        # Store original quantity on first cancellation
+        if self.original_quantity is None:
+            self.original_quantity = self.quantity_ordered
+
+        # If quantity not specified or equals the total quantity, cancel the entire item
+        if quantity is None or quantity >= self.quantity_ordered:
+            self.status = 'canceled'
+            self.canceled_quantity = self.quantity_ordered
+        else:
+            # Partial cancellation
+            if quantity <= 0:
+                raise ValueError("Cancellation quantity must be positive.")
+
+            if quantity > self.quantity_ordered:
+                raise ValueError("Cannot cancel more than the ordered quantity.")
+
+            self.canceled_quantity = quantity
+            self.status = 'partially_canceled'
+
+        # Record cancellation details
+        self.cancellation_reason = reason
+        self.canceled_at = timezone.now()
+        self.canceled_by = user
+        self.save()
+
+        # Update the order status if needed
+        self.purchase_order.update_status_after_item_change()
+
     def __str__(self):
         return f"{self.product.name} ({self.quantity_ordered} {self.product.unit})"
 
@@ -143,6 +228,9 @@ class PurchaseOrderItem(models.Model):
         if not self.currency:
             from core.models import Currency
             self.currency = Currency.get_default_currency()
+
+        if self.canceled_quantity > self.quantity_ordered:
+            self.canceled_quantity = self.quantity_ordered
 
         super().save(*args, **kwargs)
 

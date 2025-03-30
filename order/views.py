@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -2513,3 +2513,67 @@ def handle_recurring_orders():
                 logger.error(f"Error creating recurring order from template {template.id}: {str(e)}")
 
     return orders_created
+
+
+@login_required
+@permission_required('order', 'edit')
+def purchase_order_item_cancel(request, pk, item_id):
+    """Cancel a specific order item."""
+    order = get_object_or_404(PurchaseOrder, pk=pk)
+    item = get_object_or_404(PurchaseOrderItem, pk=item_id, purchase_order=order)
+
+    # Check if the order is in a state where cancellation is allowed
+    if order.status in ['received', 'canceled']:
+        messages.error(request,
+                       f'Bestellposition kann nicht storniert werden, da die Bestellung bereits {order.get_status_display()} ist.')
+        return redirect('purchase_order_detail', pk=order.pk)
+
+    # Check if the item is already received
+    if item.quantity_received > 0:
+        messages.error(request,
+                       'Bestellposition kann nicht storniert werden, da bereits Ware eingegangen ist.')
+        return redirect('purchase_order_detail', pk=order.pk)
+
+    if request.method == 'POST':
+        # Get cancellation parameters
+        cancel_type = request.POST.get('cancel_type', 'full')
+        cancel_quantity = None
+
+        if cancel_type == 'partial':
+            try:
+                cancel_quantity = Decimal(request.POST.get('cancel_quantity', '0'))
+                if cancel_quantity <= 0 or cancel_quantity > item.quantity_ordered:
+                    raise ValueError("Invalid cancellation quantity")
+            except (ValueError, InvalidOperation):
+                messages.error(request, 'Ungültige Stornierungsmenge angegeben.')
+                return redirect('purchase_order_item_cancel', pk=order.pk, item_id=item.id)
+
+        reason = request.POST.get('reason', '')
+
+        try:
+            # Cancel the item
+            item.cancel(request.user, cancel_quantity, reason)
+
+            # Success message
+            if cancel_quantity:
+                messages.success(request,
+                                 f'Bestellposition für {item.product.name} wurde teilweise storniert ({cancel_quantity} {item.product.unit}).')
+            else:
+                messages.success(request,
+                                 f'Bestellposition für {item.product.name} wurde vollständig storniert.')
+
+            # Recalculate order totals to reflect the cancellation
+            order.update_totals()
+
+            return redirect('purchase_order_detail', pk=order.pk)
+        except ValueError as e:
+            messages.error(request, f'Fehler bei der Stornierung: {str(e)}')
+            return redirect('purchase_order_detail', pk=order.pk)
+
+    # For GET request, show the cancellation form
+    context = {
+        'order': order,
+        'item': item,
+    }
+
+    return render(request, 'order/purchase_order_item_cancel.html', context)

@@ -68,6 +68,7 @@ urlpatterns = [
     path('batch-import/result/', batch_order_import_result, name='batch_order_import_result'),
     path('batch-template/<str:format_type>/', download_order_template, name='download_order_template'),
     path('batch-errors/<str:format_type>/', download_error_report, name='download_error_report'),
+    path('<int:pk>/item/<int:item_id>/cancel/', views.purchase_order_item_cancel, name='purchase_order_item_cancel'),
 
     # AJAX-Endpunkt für Lieferantenproduktpreis
     path('get-supplier-product-price/', views.get_supplier_product_price, name='get_supplier_product_price'),

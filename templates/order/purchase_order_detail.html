@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load order_filters %}
 
 {% block title %}Bestellung {{ order.order_number }} - InventoryPulse{% endblock %}
 
@@ -293,6 +294,32 @@
             </div>
             {% endif %}
 
+            <!-- Display information about canceled items -->
+            {% has_canceled_items order as has_cancellations %}
+                {% if has_cancellations %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Stornierte Positionen</h5>
+                        <p>Diese Bestellung enthält stornierte oder teilweise stornierte Positionen.</p>
+                        <ul>
+                            {% get_canceled_items order as canceled_items %}
+                            {% for item in canceled_items %}
+                                <li>
+                                    <strong>{{ item.product.name }}</strong>:
+                                    {% if item.is_canceled %}
+                                        Vollständig storniert ({{ item.quantity_ordered }} {{ item.product.unit }})
+                                    {% else %}
+                                        Teilweise storniert ({{ item.canceled_quantity }} von {{ item.quantity_ordered }} {{ item.product.unit }})
+                                    {% endif %}
+                                    {% if item.cancellation_reason %}
+                                        <br>
+                                        <small class="text-muted">Grund: {{ item.cancellation_reason }}</small>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
             <!-- Expected delivery information -->
             {% if order.expected_delivery and order.status != 'received' %}
             <div class="alert {% if order.expected_delivery < today_date %}alert-danger{% elif order.expected_delivery <= soon_date %}alert-warning{% else %}alert-info{% endif %} mt-3 mb-0">
@@ -415,6 +442,7 @@
                                     {% if show_conversion %}
                                     <th>Umgerechnet</th>
                                     {% endif %}
+                                    <th>Aktionen</th> <!-- New column for actions -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -422,6 +450,27 @@
                                 <tr>
                                     <td>
                                         <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                                        {% if item.is_canceled or item.is_partially_canceled %}
+                                        <div class="small mt-1">
+                                            <span class="text-danger">
+                                                {% if item.is_canceled %}
+                                                    <i class="bi bi-x-circle"></i> Storniert
+                                                {% else %}
+                                                    <i class="bi bi-x-circle"></i> {{ item.canceled_quantity }} {{ item.product.unit }} storniert
+                                                {% endif %}
+                                                {% if item.canceled_at %}
+                                                    am {{ item.canceled_at|date:"d.m.Y H:i" }}
+                                                {% endif %}
+                                                {% if item.canceled_by %}
+                                                    von {{ item.canceled_by.username }}
+                                                {% endif %}
+                                            </span>
+                                            {% if item.cancellation_reason %}
+                                                <br>
+                                                <span class="text-muted">Grund: {{ item.cancellation_reason }}</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if item.supplier_sku %}
@@ -453,10 +502,28 @@
                                     {% if show_conversion %}
                                     <td>{{ item.converted_line_total|floatformat:2 }} {{ system_currency.symbol }}</td>
                                     {% endif %}
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if item.status == 'active' and item.quantity_received == 0 and order.status not in 'received,cancelled' %}
+                                                <a href="{% url 'purchase_order_item_cancel' order.id item.id %}" class="btn btn-outline-danger"
+                                                title="Position stornieren">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </a>
+                                            {% endif %}
+
+                                            {% if item.status == 'canceled' %}
+                                                <span class="badge bg-danger" title="Storniert">Storniert</span>
+                                            {% elif item.status == 'partially_canceled' %}
+                                                <span class="badge bg-warning" title="Teilweise storniert">
+                                                    {{ item.canceled_quantity }} {{ item.product.unit }} storniert
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="{% if show_conversion %}9{% else %}8{% endif %}" class="text-center py-3">Keine Positionen vorhanden</td>
+                                    <td colspan="{% if show_conversion %}10{% else %}9{% endif %}" class="text-center py-3">Keine Positionen vorhanden</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

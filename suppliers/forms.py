@@ -1,6 +1,9 @@
+from datetime import timedelta
+from django.utils import timezone
 from django import forms
+from django.forms.models import inlineformset_factory
 from django_select2 import forms as s2forms
-from .models import Supplier, SupplierProduct
+from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric
 from core.models import Product
 
 
@@ -145,3 +148,132 @@ class SupplierProductForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
+
+
+class DateRangeForm(forms.Form):
+    """Form for selecting a date range for performance analysis."""
+    start_date = forms.DateField(
+        label="Start Date",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        required=True,
+        initial=lambda: (timezone.now().date() - timedelta(days=90))
+    )
+
+    end_date = forms.DateField(
+        label="End Date",
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        required=True,
+        initial=timezone.now().date
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        if start_date and end_date and start_date > end_date:
+            self.add_error('start_date', "Start date cannot be after end date")
+
+        return cleaned_data
+
+
+class SupplierPerformanceForm(forms.ModelForm):
+    """Form for manually entering supplier performance data."""
+
+    class Meta:
+        model = SupplierPerformance
+        fields = ['metric', 'value', 'evaluation_date', 'notes',
+                  'evaluation_period_start', 'evaluation_period_end']
+        widgets = {
+            'metric': forms.Select(attrs={'class': 'form-select'}),
+            'value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'evaluation_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'evaluation_period_start': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'evaluation_period_end': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Only show active metrics
+        self.fields['metric'].queryset = SupplierPerformanceMetric.objects.filter(is_active=True)
+
+        # Set initial values for dates
+        if not self.instance.pk:
+            self.fields['evaluation_date'].initial = timezone.now().date()
+
+            # Set initial period as the last month
+            today = timezone.now().date()
+            self.fields['evaluation_period_end'].initial = today
+            self.fields['evaluation_period_start'].initial = today.replace(day=1)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        period_start = cleaned_data.get('evaluation_period_start')
+        period_end = cleaned_data.get('evaluation_period_end')
+
+        if period_start and period_end and period_start > period_end:
+            self.add_error('evaluation_period_start', "Period start date cannot be after end date")
+
+        return cleaned_data
+
+
+class SupplierPerformanceMetricForm(forms.ModelForm):
+    """Form for creating and editing performance metrics."""
+
+    class Meta:
+        model = SupplierPerformanceMetric
+        fields = ['name', 'code', 'description', 'metric_type', 'weight',
+                  'target_value', 'minimum_value', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'metric_type': forms.Select(attrs={'class': 'form-select'}),
+            'weight': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'max': '10'}),
+            'target_value': forms.NumberInput(
+                attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'minimum_value': forms.NumberInput(
+                attrs={'class': 'form-control', 'step': '0.01', 'min': '0', 'max': '100'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean_code(self):
+        code = self.cleaned_data.get('code')
+        if code:
+            # Convert code to lowercase with underscores for consistency
+            code = code.lower().replace(' ', '_')
+
+            # Check if code is unique (excluding this instance for updates)
+            instance = getattr(self, 'instance', None)
+            if instance and instance.pk:
+                if SupplierPerformanceMetric.objects.filter(code=code).exclude(pk=instance.pk).exists():
+                    raise forms.ValidationError("This code is already in use")
+            else:
+                if SupplierPerformanceMetric.objects.filter(code=code).exists():
+                    raise forms.ValidationError("This code is already in use")
+
+        return code
+
+    def clean(self):
+        cleaned_data = super().clean()
+        minimum = cleaned_data.get('minimum_value')
+        target = cleaned_data.get('target_value')
+
+        if minimum is not None and target is not None and minimum > target:
+            self.add_error('minimum_value', "Minimum value cannot be greater than target value")
+
+        return cleaned_data
+
+
+# Create a formset for multiple performance metrics
+SupplierPerformanceFormSet = inlineformset_factory(
+    Supplier,  # Parent model
+    SupplierPerformance,  # Child model
+    form=SupplierPerformanceForm,
+    extra=1,  # Number of empty forms to display
+    can_delete=True,  # Allow deleting performances
+    max_num=10  # Maximum number of forms
+)

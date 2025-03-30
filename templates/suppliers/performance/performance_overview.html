@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Supplier Performance Overview - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .score-excellent {
+        background-color: #c8e6c9;
+        color: #2e7d32;
+    }
+    
+    .score-good {
+        background-color: #dcedc8;
+        color: #558b2f;
+    }
+    
+    .score-average {
+        background-color: #fff9c4;
+        color: #f9a825;
+    }
+    
+    .score-poor {
+        background-color: #ffccbc;
+        color: #dd2c00;
+    }
+    
+    .score-very-poor {
+        background-color: #ffcdd2;
+        color: #b71c1c;
+    }
+    
+    .performance-table th, .performance-table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+    
+    .metric-header {
+        writing-mode: vertical-lr;
+        transform: rotate(180deg);
+        text-align: center;
+        padding: 10px 5px;
+        height: 180px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Suppliers</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Performance Overview</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Supplier Performance Overview</h1>
+            <p class="text-muted">Compare and evaluate supplier performance metrics</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'supplier_performance_metrics_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-gear"></i> Manage Metrics
+            </a>
+        </div>
+    </div>
+
+    <!-- Date range filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="{{ date_range_form.start_date.id_for_label }}" class="form-label">Start Date</label>
+                    {{ date_range_form.start_date }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ date_range_form.end_date.id_for_label }}" class="form-label">End Date</label>
+                    {{ date_range_form.end_date }}
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Apply Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if not metrics %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        No active performance metrics found. <a href="{% url 'supplier_performance_metrics_list' %}">Manage metrics</a> to get started.
+    </div>
+    {% elif not suppliers_data %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        No supplier performance data available for the selected period.
+    </div>
+    {% else %}
+    <!-- Performance overview table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered performance-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">Supplier</th>
+                            <th rowspan="2">Overall</th>
+                            <th colspan="{{ metrics|length }}">Metrics</th>
+                            <th rowspan="2">Actions</th>
+                        </tr>
+                        <tr>
+                            {% for metric in metrics %}
+                            <th class="metric-header">
+                                {{ metric.name }}
+                                <div class="small text-muted">
+                                    Avg: {{ avg_scores|get:metric.code|default:"N/A" }}%
+                                </div>
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for supplier_data in suppliers_data %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'supplier_detail' supplier_data.supplier.id %}">
+                                    {{ supplier_data.supplier.name }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if supplier_data.avg_score %}
+                                <span class="badge rounded-pill 
+                                    {% if supplier_data.avg_score >= 90 %}score-excellent
+                                    {% elif supplier_data.avg_score >= 80 %}score-good
+                                    {% elif supplier_data.avg_score >= 70 %}score-average
+                                    {% elif supplier_data.avg_score >= 60 %}score-poor
+                                    {% else %}score-very-poor{% endif %}">
+                                    {{ supplier_data.avg_score }}%
+                                </span>
+                                {% else %}
+                                <span class="badge bg-secondary">No data</span>
+                                {% endif %}
+                            </td>
+                            
+                            {% for metric in metrics %}
+                            <td>
+                                {% with metric_data=supplier_data.metrics|get:metric.code %}
+                                {% if metric_data %}
+                                <span class="badge rounded-pill 
+                                    {% if metric_data.value >= 90 %}score-excellent
+                                    {% elif metric_data.value >= 80 %}score-good
+                                    {% elif metric_data.value >= 70 %}score-average
+                                    {% elif metric_data.value >= 60 %}score-poor
+                                    {% else %}score-very-poor{% endif %}">
+                                    {{ metric_data.value }}%
+                                </span>
+                                <div class="small text-muted">
+                                    {{ metric_data.date|date:"M d, Y" }}
+                                </div>
+                                {% else %}
+                                <span class="badge bg-secondary">No data</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            {% endfor %}
+                            
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'supplier_performance_detail' supplier_data.supplier.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'supplier_performance_add' supplier_data.supplier.id %}" class="btn btn-outline-success">
+                                        <i class="bi bi-plus"></i>
+                                    </a>
+                                    <a href="{% url 'supplier_performance_calculate' supplier_data.supplier.id %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="btn btn-outline-info">
+                                        <i class="bi bi-calculator"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Score Legend</h5>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div>
+                            <span class="badge rounded-pill score-excellent">90-100%</span> Excellent
+                        </div>
+                        <div>
+                            <span class="badge rounded-pill score-good">80-89%</span> Good
+                        </div>
+                        <div>
+                            <span class="badge rounded-pill score-average">70-79%</span> Average
+                        </div>
+                        <div>
+                            <span class="badge rounded-pill score-poor">60-69%</span> Poor
+                        </div>
+                        <div>
+                            <span class="badge rounded-pill score-very-poor">0-59%</span> Very Poor
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Overall score is calculated as a weighted average of all metrics.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

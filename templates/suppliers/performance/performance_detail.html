@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ supplier.name }} Performance - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .score-excellent {
+        background-color: #c8e6c9;
+        color: #2e7d32;
+    }
+
+    .score-good {
+        background-color: #dcedc8;
+        color: #558b2f;
+    }
+
+    .score-average {
+        background-color: #fff9c4;
+        color: #f9a825;
+    }
+
+    .score-poor {
+        background-color: #ffccbc;
+        color: #dd2c00;
+    }
+
+    .score-very-poor {
+        background-color: #ffcdd2;
+        color: #b71c1c;
+    }
+
+    .performance-chart {
+        height: 200px;
+    }
+
+    .metric-card {
+        height: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Suppliers</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_performance_overview' %}">Performance Overview</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ supplier.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">{{ supplier.name }} Performance</h1>
+            <p class="text-muted">Performance metrics and trend analysis</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group">
+                <a href="{% url 'supplier_performance_add' supplier.id %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Evaluation
+                </a>
+                <a href="{% url 'supplier_performance_calculate' supplier.id %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="btn btn-outline-primary">
+                    <i class="bi bi-calculator"></i> Auto-Calculate
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date range filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="{{ date_range_form.start_date.id_for_label }}" class="form-label">Start Date</label>
+                    {{ date_range_form.start_date }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ date_range_form.end_date.id_for_label }}" class="form-label">End Date</label>
+                    {{ date_range_form.end_date }}
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Apply Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Performance score overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Performance Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4 text-center">
+                            <h2 class="display-4">
+                                {% if composite_score %}
+                                <span class="
+                                    {% if composite_score >= 90 %}text-success
+                                    {% elif composite_score >= 80 %}text-success
+                                    {% elif composite_score >= 70 %}text-warning
+                                    {% elif composite_score >= 60 %}text-danger
+                                    {% else %}text-danger{% endif %}">
+                                    {{ composite_score }}%
+                                </span>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </h2>
+                            <h5 class="text-muted">Overall Score</h5>
+                            <p class="small text-muted mt-2">
+                                Period: {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+                            </p>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row g-2">
+                                {% for data in metrics_data %}
+                                <div class="col-6 col-lg-4">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body p-3">
+                                            <h6 class="mb-1">{{ data.metric.name }}</h6>
+                                            {% if data.latest %}
+                                            <h3 class="mb-0">
+                                                <span class="
+                                                    {% if data.latest.value >= 90 %}text-success
+                                                    {% elif data.latest.value >= 80 %}text-success
+                                                    {% elif data.latest.value >= 70 %}text-warning
+                                                    {% elif data.latest.value >= 60 %}text-danger
+                                                    {% else %}text-danger{% endif %}">
+                                                    {{ data.latest.value }}%
+                                                </span>
+                                            </h3>
+                                            <small class="text-muted">{{ data.latest.evaluation_date|date:"M d, Y" }}</small>
+                                            {% else %}
+                                            <h3 class="mb-0 text-muted">N/A</h3>
+                                            <small class="text-muted">No data</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance metrics detail -->
+    <div class="row">
+        {% for data in metrics_data %}
+        <div class="col-md-6 mb-4">
+            <div class="card metric-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ data.metric.name }}</h5>
+                    <div>
+                        <a href="{% url 'supplier_performance_add' supplier.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus"></i> Add
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="performance-chart" id="chart-{{ data.metric.code }}"></div>
+
+                    {% if data.performances %}
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="small text-muted">Average</div>
+                            <div class="h5 mb-0">{{ data.stats.avg|floatformat:1 }}%</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">Min</div>
+                            <div class="h5 mb-0">{{ data.stats.min|floatformat:1 }}%</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">Max</div>
+                            <div class="h5 mb-0">{{ data.stats.max|floatformat:1 }}%</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">Entries</div>
+                            <div class="h5 mb-0">{{ data.stats.count }}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="text-muted">
+                            <i class="bi bi-graph-up fs-2 d-block mb-2"></i>
+                            <p>No performance data available for this metric.</p>
+                            <a href="{% url 'supplier_performance_add' supplier.id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Add Evaluation
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Target value: {{ data.metric.target_value }}%
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                No active performance metrics found. <a href="{% url 'supplier_performance_metrics_list' %}">Manage metrics</a> to get started.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent orders -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Orders</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Expected Delivery</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></td>
+                            <td>{{ order.order_date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if order.status == 'received' %}
+                                <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                {% elif order.status == 'partially_received' %}
+                                <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if order.expected_delivery %}
+                                {{ order.expected_delivery|date:"M d, Y" }}
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ order.items.count }}</td>
+                            <td>{{ order.total|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-3">No orders found for this period</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up charts for each metric
+    {% for data in metrics_data %}
+    {% if data.trend_data %}
+    var ctx{{ forloop.counter }} = document.getElementById('chart-{{ data.metric.code }}');
+    if (ctx{{ forloop.counter }}) {
+        new Chart(ctx{{ forloop.counter }}, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: '{{ data.metric.name }}',
+                    data: {{ data.trend_data|safe }},
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.1,
+                    fill: true
+                }, {
+                    label: 'Target',
+                    data: {{ data.trend_data|safe }}.map(item => ({
+                        date: item.date,
+                        value: {{ data.metric.target_value }}
+                    })),
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderDash: [5, 5],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                parsing: {
+                    xAxisKey: 'date',
+                    yAxisKey: 'value'
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Score (%)'
+                        }
+                    },
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day',
+                            displayFormats: {
+                                day: 'MMM d'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                },
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toFixed(1) + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    {% endif %}
+    {% endfor %}
+});
+</script>
+{% endblock %}

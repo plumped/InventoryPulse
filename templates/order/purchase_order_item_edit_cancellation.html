@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Stornierung bearbeiten - {{ order.order_number }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Stornierung bearbeiten</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-pencil-square me-2"></i>Stornierung bearbeiten
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <h5 class="alert-heading">Stornierungsdetails bearbeiten</h5>
+                <p>Hier können Sie die Stornierungsdetails für folgende Bestellposition bearbeiten oder die Stornierung komplett rückgängig machen:</p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Bestellungsdetails</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Bestellnummer:</span>
+                                    <strong>{{ order.order_number }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Lieferant:</span>
+                                    <strong>{{ order.supplier.name }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Status:</span>
+                                    <strong>{{ order.get_status_display }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Bestelldatum:</span>
+                                    <strong>{{ order.order_date|date:"d.m.Y" }}</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Stornierte Position</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Produkt:</span>
+                                    <strong>{{ item.product.name }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Artikelnummer:</span>
+                                    <strong>{{ item.product.sku }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Ursprüngliche Menge:</span>
+                                    <strong>{{ original_quantity }} {{ item.product.unit }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Stornierte Menge:</span>
+                                    <strong>{{ canceled_quantity }} {{ item.product.unit }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Aktuelle Bestellmenge:</span>
+                                    <strong>{{ effective_quantity }} {{ item.product.unit }}</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Stornierungsstatus:</span>
+                                    <strong>{{ item.get_status_display }}</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Stornierung bearbeiten</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="edit">
+
+                                <div class="mb-3">
+                                    <label for="cancel_quantity" class="form-label">Stornierungsmenge</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="cancel_quantity" name="cancel_quantity"
+                                               min="0.01" max="{{ original_quantity }}" step="0.01"
+                                               value="{{ canceled_quantity|floatformat:2 }}" required>
+                                        <span class="input-group-text">{{ item.product.unit }}</span>
+                                    </div>
+                                    <div class="form-text">
+                                        Die maximale Stornierungsmenge beträgt {{ original_quantity }} {{ item.product.unit }}.
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="reason" class="form-label">Stornierungsgrund</label>
+                                    <textarea class="form-control" id="reason" name="reason" rows="3">{{ item.cancellation_reason }}</textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-save me-1"></i> Änderungen speichern
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Stornierung rückgängig machen</h6>
+                        </div>
+                        <div class="card-body">
+                            <p>Sie können die Stornierung komplett rückgängig machen. Die Position wird dann wieder mit der ursprünglichen Menge von {{ original_quantity }} {{ item.product.unit }} bestellt.</p>
+
+                            <form method="post" class="mt-4">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="revert">
+
+                                <button type="submit" class="btn btn-warning w-100" onclick="return confirm('Sind Sie sicher, dass Sie die Stornierung rückgängig machen möchten?')">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Stornierung rückgängig machen
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Zurück zur Bestellung
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

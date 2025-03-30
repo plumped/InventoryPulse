@@ -553,9 +553,14 @@
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
                                         {% if not item.is_canceled and order.status not in 'sent,partially_received,received,canceled' and item.quantity_received == 0 %}
-                                        <a href="{% url 'purchase_order_item_cancel' order.id item.id %}" class="btn btn-outline-danger">
-                                            <i class="bi bi-x-circle"></i>
-                                        </a>
+                                            <a href="{% url 'purchase_order_item_cancel' order.id item.id %}" class="btn btn-outline-danger">
+                                                <i class="bi bi-x-circle"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if item.is_canceled or item.is_partially_canceled %}
+                                            <a href="{% url 'purchase_order_item_edit_cancellation' order.id item.id %}" class="btn btn-sm btn-outline-warning" title="Stornierung bearbeiten">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </a>
                                         {% endif %}
                                     </div>
                                 </td>

@@ -2596,3 +2596,64 @@ def purchase_order_item_cancel(request, pk, item_id):
     }
 
     return render(request, 'order/purchase_order_item_cancel.html', context)
+
+
+@login_required
+@permission_required('order', 'edit')
+def purchase_order_item_edit_cancellation(request, pk, item_id):
+    """Stornierung einer Bestellposition bearbeiten oder rückgängig machen."""
+    order = get_object_or_404(PurchaseOrder, pk=pk)
+    item = get_object_or_404(PurchaseOrderItem, pk=item_id, purchase_order=order)
+
+    # Prüfen, ob Position storniert ist
+    if item.status not in ['canceled', 'partially_canceled']:
+        messages.error(request, 'Nur stornierte Positionen können bearbeitet werden.')
+        return redirect('purchase_order_detail', pk=order.pk)
+
+    if request.method == 'POST':
+        # Aktion bestimmen
+        action = request.POST.get('action', '')
+
+        try:
+            if action == 'edit':
+                # Neue Stornierungsmenge und Grund
+                try:
+                    new_quantity = Decimal(request.POST.get('cancel_quantity', '0'))
+                except (ValueError, InvalidOperation):
+                    messages.error(request, 'Ungültige Stornierungsmenge angegeben.')
+                    return redirect('purchase_order_item_edit_cancellation', pk=order.pk, item_id=item.id)
+
+                new_reason = request.POST.get('reason', '')
+
+                # Stornierung bearbeiten
+                item.edit_cancellation(request.user, new_quantity, new_reason)
+
+                messages.success(request, f'Stornierung für {item.product.name} wurde aktualisiert.')
+
+            elif action == 'revert':
+                # Stornierung vollständig rückgängig machen
+                item.edit_cancellation(request.user, 0, '')
+
+                messages.success(request, f'Stornierung für {item.product.name} wurde rückgängig gemacht.')
+
+            else:
+                messages.error(request, 'Ungültige Aktion.')
+
+            # Summen der Bestellung aktualisieren
+            order.update_totals()
+
+            return redirect('purchase_order_detail', pk=order.pk)
+
+        except ValueError as e:
+            messages.error(request, f'Fehler: {str(e)}')
+
+    # Vorbereitung der Formularansicht
+    context = {
+        'order': order,
+        'item': item,
+        'original_quantity': item.original_quantity,
+        'canceled_quantity': item.canceled_quantity,
+        'effective_quantity': item.effective_quantity,
+    }
+
+    return render(request, 'order/purchase_order_item_edit_cancellation.html', context)

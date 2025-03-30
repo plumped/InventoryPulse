@@ -275,6 +275,68 @@ class PurchaseOrderItem(models.Model):
         # Update the order status if needed
         self.purchase_order.update_status_after_item_change()
 
+    def edit_cancellation(self, user, new_quantity=None, new_reason=None):
+        """Bearbeitet eine bestehende Stornierung oder macht sie rückgängig.
+
+        Args:
+            user: Der Benutzer, der die Änderung vornimmt
+            new_quantity: Die neue Stornierungsmenge (None = vollständig stornieren)
+            new_reason: Der neue Stornierungsgrund (None = bestehenden Grund beibehalten)
+
+        Wenn new_quantity=0 ist, wird die Stornierung komplett rückgängig gemacht.
+        """
+        if self.status not in ['canceled', 'partially_canceled']:
+            raise ValueError("Nur stornierte oder teilweise stornierte Positionen können bearbeitet werden.")
+
+        if self.purchase_order.status in ['received', 'canceled']:
+            raise ValueError(
+                "Stornierungen können nicht bearbeitet werden, wenn die Bestellung bereits abgeschlossen oder komplett storniert ist.")
+
+        # Wenn original_quantity nicht gesetzt ist, kann die Stornierung nicht bearbeitet werden
+        if self.original_quantity is None:
+            raise ValueError("Die Originalstornierung scheint fehlerhaft zu sein und kann nicht bearbeitet werden.")
+
+        # Rückgängig machen der Stornierung
+        if new_quantity == 0:
+            self.status = 'active'
+            self.quantity_ordered = self.original_quantity
+            self.canceled_quantity = Decimal('0')
+            self.original_quantity = None
+            self.cancellation_reason = ""
+            self.canceled_at = None
+            self.canceled_by = None
+            self.save()
+
+            # Bestellstatus aktualisieren
+            self.purchase_order.update_status_after_item_change()
+            return
+
+        # Berechnen der neuen Stornierungsmenge
+        if new_quantity is not None:
+            if new_quantity < 0 or new_quantity > self.original_quantity:
+                raise ValueError(f"Stornierungsmenge muss zwischen 0 und {self.original_quantity} liegen.")
+
+            self.canceled_quantity = new_quantity
+            self.quantity_ordered = self.original_quantity - new_quantity
+
+            # Status aktualisieren (vollständig oder teilweise storniert)
+            if new_quantity >= self.original_quantity:
+                self.status = 'canceled'
+            else:
+                self.status = 'partially_canceled'
+
+        # Stornierungsgrund aktualisieren, falls angegeben
+        if new_reason is not None:
+            self.cancellation_reason = new_reason
+
+        # Stornierungsdatum und Benutzer aktualisieren
+        self.canceled_at = timezone.now()
+        self.canceled_by = user
+        self.save()
+
+        # Bestellstatus aktualisieren
+        self.purchase_order.update_status_after_item_change()
+
     def __str__(self):
         return f"{self.product.name} ({self.quantity_ordered} {self.product.unit})"
 

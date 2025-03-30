@@ -120,12 +120,45 @@ def purchase_order_list(request):
 @login_required
 @permission_required('order', 'view')
 def purchase_order_detail(request, pk):
-    """Detailansicht einer Bestellung."""
+    """
+    Angepasste Funktion für die Bestelldetailseite mit verbesserter Darstellung von Teillieferungen.
+    """
     order = get_object_or_404(
         PurchaseOrder.objects.select_related('supplier', 'created_by', 'approved_by')
         .prefetch_related('items__product', 'receipts', 'items__tax'),
         pk=pk
     )
+
+    # Teillieferungen mit zusätzlichen Informationen laden
+    splits = []
+    for split in order.splits.all():
+        # Anzahl der bereits empfangenen Artikel berechnen
+        received_items_count = 0
+        for receipt in split.receipts.all():
+            received_items_count += receipt.items.count()
+
+        splits.append({
+            'split': split,
+            'received_items_count': received_items_count,
+            'total_items_count': split.items.count(),
+            'completion_percentage': int(received_items_count / max(split.items.count(), 1) * 100)
+        })
+
+    total_ordered = Decimal('0')
+    total_received = Decimal('0')
+
+    for item in order.items.all():
+        if not item.is_canceled:  # Stornierte Positionen ausschließen
+            # Effektive Menge (unter Berücksichtigung von Teilstornierungen)
+            ordered_qty = item.quantity_ordered - item.canceled_quantity
+            total_ordered += ordered_qty
+            total_received += min(item.quantity_received, ordered_qty)  # Nicht mehr als bestellt zählen
+
+    order_completion = {
+        'percentage': int((total_received / total_ordered * 100) if total_ordered else 0),
+        'received_quantity': total_received,
+        'total_quantity': total_ordered
+    }
 
     # Ermitteln, ob Benutzer bestimmte Aktionen durchführen darf
     can_edit = request.user.has_perm('order.edit') and order.status == 'draft'
@@ -217,6 +250,8 @@ def purchase_order_detail(request, pk):
 
     context = {
         'order': order,
+        'order_completion': order_completion,
+        'splits': splits,
         'can_edit': can_edit,
         'can_approve': can_approve,
         'can_receive': can_receive,
@@ -645,262 +680,226 @@ def purchase_order_mark_sent(request, pk):
 
 @login_required
 @permission_required('order', 'receive')
-def purchase_order_receive(request, pk, split_id=None):
-    """Modified version of the existing receiving function to handle splits."""
+def purchase_order_receive(request, pk):
+    """
+    Vereinheitlichte Funktion für Wareneingang, die sowohl normale als auch Teillieferungen unterstützt.
+    """
     order = get_object_or_404(PurchaseOrder, pk=pk)
 
-    # If a split ID is provided, get the split
-    split = None
-    if split_id:
-        split = get_object_or_404(OrderSplit, pk=split_id, purchase_order=order)
-
-    # Only bestellte or teilweise erhaltene Bestellungen können Wareneingänge haben
+    # Nur Bestellungen im Status "bestellt" oder "teilweise erhalten" können Wareneingänge haben
     if order.status not in ['sent', 'partially_received']:
         messages.error(request,
-                       f'Wareneingang kann nicht erfasst werden, da die Bestellung nicht im Status "Bestellt" oder "Teilweise erhalten" ist.')
+                       'Wareneingang kann nicht erfasst werden, da die Bestellung nicht im Status "Bestellt" oder "Teilweise erhalten" ist.')
         return redirect('purchase_order_detail', pk=order.pk)
 
+    # Verfügbare Lager abrufen
+    warehouses = Warehouse.objects.filter(is_active=True)
+
+    # Nur nicht vollständig erhaltene und nicht stornierte Positionen anzeigen
+    items = order.items.filter(
+        quantity_received__lt=F('quantity_ordered'),
+        status__in=['active', 'partially_canceled']
+    ).select_related('product')
+
+    # Überprüfen, ob Produkte Batch- oder Verfallsdatum-Tracking benötigen
+    has_batch_products = any(item.product.has_batch_tracking for item in items)
+    has_expiry_products = any(item.product.has_expiry_tracking for item in items)
+
     if request.method == 'POST':
+        is_complete_delivery = True
+        for item in items:
+            quantity_key = f'receive_quantity_{item.id}'
+            quantity = Decimal(request.POST.get(quantity_key, '0'))
+            remaining = item.quantity_ordered - item.quantity_received
+
+            if quantity < remaining:
+                is_complete_delivery = False
+                break
+
+        create_split = request.POST.get('create_split') == 'yes' and not is_complete_delivery
+        split_name = request.POST.get('split_name', '')
+        expected_delivery = request.POST.get('expected_delivery', None)
+
         try:
             with transaction.atomic():
+                # Bei Bedarf eine neue Teillieferung anlegen
+                split = None
+                if create_split:
+                    split = OrderSplit.objects.create(
+                        purchase_order=order,
+                        name=split_name or f"Teillieferung {timezone.now().strftime('%d.%m.%Y')}",
+                        expected_delivery=expected_delivery if expected_delivery else None,
+                        status='received',  # Da wir direkt den Wareneingang erfassen
+                        created_by=request.user
+                    )
+
                 # Wareneingang erstellen
                 receipt = PurchaseOrderReceipt.objects.create(
                     purchase_order=order,
                     received_by=request.user,
                     notes=request.POST.get('notes', ''),
-                    order_split=split  # Link to the split if provided
+                    order_split=split  # Verknüpfung mit der Teillieferung (falls vorhanden)
                 )
 
-                # Für jede Position prüfen, ob Menge empfangen wurde
+                # Flag, um zu prüfen, ob Artikel empfangen wurden
                 items_received = False
+                # Flag, um zu prüfen, ob eine Teillieferung vorliegt
+                is_partial_receipt = False
 
-                # If split is provided, only process items in the split
-                if split:
-                    items_to_process = split.items.all()
-                else:
-                    items_to_process = order.items.all()
+                # Für jede Position prüfen, ob Menge empfangen wurde
+                for item in items:
+                    # Formularfelder für diese Position finden
+                    quantity_key = f'receive_quantity_{item.id}'
+                    warehouse_key = f'warehouse_{item.id}'
+                    batch_key = f'batch_{item.id}'
+                    expiry_key = f'expiry_{item.id}'
 
-                for item in items_to_process:
-                    # For split items, we need to get the actual order item
-                    if split:
-                        order_item = item.order_item
-                        item_id = item.id
-                        # Get the maximum quantity that can be received for this split item
-                        max_quantity = item.quantity
-                    else:
-                        order_item = item
-                        item_id = item.id
-                        # Get the maximum quantity that can be received for this order item
-                        max_quantity = item.quantity_ordered - item.quantity_received
-
-                    # All quantity-Felder für dieses Item finden (für multiple Batches)
-                    quantity_fields = [key for key in request.POST.keys() if
-                                      key.startswith(f'receive_quantity_{item_id}_')]
-
-                    # If no batch lines, look for simple quantity field
-                    if not quantity_fields:
-                        quantity_fields = [f'receive_quantity_{item_id}'] if f'receive_quantity_{item_id}' in request.POST else []
-
-                    item_received_total = Decimal('0')
-
-                    # Jede Batch-Zeile verarbeiten
-                    for quantity_field in quantity_fields:
-                        # Line-Index aus dem Feldnamen extrahieren (z.B. receive_quantity_5_0, receive_quantity_5_1)
-                        if '_' in quantity_field.split(f'receive_quantity_{item_id}')[1]:
-                            line_index = quantity_field.split('_')[-1]
-                        else:
-                            line_index = '0'  # Default if no batch index
-
-                        quantity_str = request.POST.get(quantity_field, '0')
-
+                    if quantity_key in request.POST:
                         try:
-                            quantity = Decimal(quantity_str)
+                            quantity = Decimal(request.POST[quantity_key])
                         except:
                             quantity = Decimal('0')
 
                         if quantity > 0:
-                            # Zugehörige Felder finden
-                            warehouse_key = f'warehouse_{item_id}_{line_index}' if f'warehouse_{item_id}_{line_index}' in request.POST else f'warehouse_{item_id}'
-                            batch_key = f'batch_{item_id}_{line_index}' if f'batch_{item_id}_{line_index}' in request.POST else f'batch_{item_id}'
-                            expiry_key = f'expiry_{item_id}_{line_index}' if f'expiry_{item_id}_{line_index}' in request.POST else f'expiry_{item_id}'
+                            # Prüfen, ob dies eine Teillieferung ist
+                            remaining = item.quantity_ordered - item.quantity_received
+                            if quantity < remaining:
+                                is_partial_receipt = True
 
-                            if warehouse_key in request.POST:
-                                warehouse_id = request.POST[warehouse_key]
-                                batch = request.POST.get(batch_key, '')
-                                expiry = request.POST.get(expiry_key, '')
+                            # Zielwarenhaus abrufen
+                            warehouse_id = request.POST.get(warehouse_key)
+                            warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
 
-                                # Zielwarehouse abrufen
-                                warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
+                            # Chargen- und Verfallsdatum-Informationen
+                            batch = request.POST.get(batch_key, '')
+                            expiry_date = None
+                            if expiry_key in request.POST and request.POST.get(expiry_key):
+                                try:
+                                    from datetime import date
+                                    expiry_date = date.fromisoformat(request.POST.get(expiry_key))
+                                except ValueError:
+                                    pass
 
-                                # Wareneingangposition erstellen
-                                receipt_item = PurchaseOrderReceiptItem.objects.create(
-                                    receipt=receipt,
-                                    order_item=order_item,
-                                    quantity_received=quantity,
-                                    warehouse=warehouse,
-                                    batch_number=batch
+                            # Wareneingangposition erstellen
+                            receipt_item = PurchaseOrderReceiptItem.objects.create(
+                                receipt=receipt,
+                                order_item=item,
+                                quantity_received=quantity,
+                                warehouse=warehouse,
+                                batch_number=batch,
+                                expiry_date=expiry_date
+                            )
+
+                            # Batch verarbeiten, falls erforderlich
+                            if batch and item.product.has_batch_tracking:
+                                from core.models import BatchNumber
+                                # Erstelle oder aktualisiere Batch-Eintrag
+                                batch_obj, created = BatchNumber.objects.update_or_create(
+                                    product=item.product,
+                                    batch_number=batch,
+                                    defaults={
+                                        'warehouse': warehouse,
+                                        'quantity': quantity,
+                                        'expiry_date': expiry_date,
+                                        'supplier': order.supplier,
+                                        'notes': f'Batch aus Wareneingang: {order.order_number}'
+                                    }
                                 )
 
-                                # Verfallsdatum setzen, falls angegeben
-                                if expiry:
-                                    try:
-                                        receipt_item.expiry_date = date.fromisoformat(expiry)
-                                        receipt_item.save()
-                                    except ValueError:
-                                        pass  # Ungültiges Datum ignorieren
+                                if not created:
+                                    # Falls Batch bereits existiert, Menge erhöhen
+                                    batch_obj.quantity += quantity
+                                    batch_obj.save()
 
-                                if batch and order_item.product.has_batch_tracking:
-                                    from core.models import BatchNumber
-                                    # Erstelle oder aktualisiere den Batch-Eintrag
-                                    batch_obj, created = BatchNumber.objects.update_or_create(
-                                        product=order_item.product,
-                                        batch_number=batch,
-                                        defaults={
-                                            'warehouse': warehouse,
-                                            'quantity': quantity,
-                                            'expiry_date': receipt_item.expiry_date if hasattr(receipt_item,
-                                                                                             'expiry_date') and receipt_item.expiry_date else None,
-                                            'supplier': order.supplier,
-                                            'notes': f'Batch aus Wareneingang: {order.order_number}'
-                                        }
-                                    )
+                            # Bestandsbewegung erstellen
+                            StockMovement.objects.create(
+                                product=item.product,
+                                warehouse=warehouse,
+                                quantity=quantity,
+                                movement_type='in',
+                                reference=f'Wareneingang: {order.order_number}',
+                                notes=f'Erhaltene Menge: {quantity}, Charge: {batch}',
+                                created_by=request.user
+                            )
 
-                                    if not created:
-                                        # Falls der Batch bereits existiert, Menge erhöhen
-                                        batch_obj.quantity += quantity
-                                        batch_obj.save()
+                            # Produktbestand im Lager aktualisieren
+                            product_warehouse, created = ProductWarehouse.objects.get_or_create(
+                                product=item.product,
+                                warehouse=warehouse,
+                                defaults={'quantity': 0}
+                            )
+                            product_warehouse.quantity += quantity
+                            product_warehouse.save()
 
-                                # Bestandsbewegung erstellen
-                                StockMovement.objects.create(
-                                    product=order_item.product,
-                                    warehouse=warehouse,
-                                    quantity=quantity,
-                                    movement_type='in',
-                                    reference=f'Wareneingang: {order.order_number}',
-                                    notes=f'Erhaltene Menge: {quantity}, Charge: {batch}',
-                                    created_by=request.user
+                            # Bestellposition aktualisieren
+                            item.quantity_received += quantity
+                            item.save()
+
+                            # Wenn wir eine Teillieferung haben, auch die entsprechende Position anlegen
+                            if split:
+                                OrderSplitItem.objects.create(
+                                    order_split=split,
+                                    order_item=item,
+                                    quantity=quantity
                                 )
 
-                                # Produktbestand im Lager aktualisieren oder neu anlegen
-                                from core.models import ProductWarehouse
-                                product_warehouse, created = ProductWarehouse.objects.get_or_create(
-                                    product=order_item.product,
-                                    warehouse=warehouse,
-                                    defaults={'quantity': 0}
-                                )
+                            items_received = True
 
-                                product_warehouse.quantity += quantity
-                                product_warehouse.save()
+                # Wenn keine Artikel empfangen wurden, Wareneingang löschen
+                if not items_received:
+                    if split:
+                        split.delete()
+                    receipt.delete()
+                    messages.warning(request, 'Es wurden keine Artikel als empfangen markiert.')
+                    return redirect('purchase_order_detail', pk=order.pk)
 
-                                # Gesamtmenge für dieses Item aktualisieren
-                                item_received_total += quantity
-                                items_received = True
+                # Bestellstatus aktualisieren
+                update_order_status(order)
 
-                    # Bestellposition aktualisieren mit der Gesamtmenge aller Batches
-                    if item_received_total > 0:
-                        order_item.quantity_received += item_received_total
-                        order_item.save()
+                # Automatisch eine neue Teillieferung für ausstehende Artikel anlegen, wenn gewünscht
+                create_future_split = request.POST.get('create_future_split') == 'yes' and is_partial_receipt
+                if create_future_split:
+                    future_split_name = request.POST.get('future_split_name', '')
+                    future_delivery_date = request.POST.get('future_delivery_date', None)
 
-                # Bestellstatus aktualisieren, falls Artikel empfangen wurden
-                if items_received:
-                    # Hier prüfen wir alle Positionen der Bestellung, um den korrekten Status zu ermitteln
-                    all_items_fully_received = True
-                    any_items_received = False
+                    future_split = OrderSplit.objects.create(
+                        purchase_order=order,
+                        name=future_split_name or "Restlieferung",
+                        expected_delivery=future_delivery_date,
+                        status='planned',
+                        created_by=request.user
+                    )
 
-                    for order_item in order.items.all():
-                        if order_item.quantity_received >= order_item.quantity_ordered:
-                            any_items_received = True
-                        else:
-                            all_items_fully_received = False
-                            if order_item.quantity_received > 0:
-                                any_items_received = True
-
-                    if all_items_fully_received:
-                        order.status = 'received'
-                    elif any_items_received:
-                        order.status = 'partially_received'
-                    order.save()
+                    # Für jede Position die ausstehende Menge in die neue Teillieferung aufnehmen
+                    for item in items:
+                        remaining = item.quantity_ordered - item.quantity_received
+                        if remaining > 0:
+                            OrderSplitItem.objects.create(
+                                order_split=future_split,
+                                order_item=item,
+                                quantity=remaining
+                            )
 
                     messages.success(request,
-                                     f'Wareneingang für Bestellung {order.order_number} wurde erfolgreich erfasst.')
+                                     f'Wareneingang wurde erfasst und eine neue geplante Teillieferung "{future_split.name}" wurde angelegt.')
                 else:
-                    messages.warning(request, 'Es wurden keine Artikel als empfangen markiert.')
-
-                # If this receipt is linked to a split, update the split status
-                if split:
-                    # Check if all items in the split have been fully received
-                    all_split_items_received = True
-                    for split_item in split.items.all():
-                        order_item = split_item.order_item
-                        received_for_item = order_item.quantity_received >= split_item.quantity
-
-                        if not received_for_item:
-                            all_split_items_received = False
-                            break
-
-                    # Update split status
-                    if all_split_items_received:
-                        split.status = 'received'
-                        split.save()
-
-                    # Redirect to the split detail page
-                    return redirect('order_split_detail', pk=order.pk, split_id=split.pk)
+                    messages.success(request, 'Wareneingang wurde erfolgreich erfasst.')
 
                 return redirect('purchase_order_detail', pk=order.pk)
 
         except Exception as e:
-            import traceback
-            print(traceback.format_exc())  # Print detailed error to console
             messages.error(request, f'Fehler beim Speichern des Wareneingangs: {str(e)}')
 
-    # Create a simple form just for the notes field
-    form = ReceiveOrderForm()
-
-    # Verfügbare Lager abrufen
-    warehouses = Warehouse.objects.filter(is_active=True)
-
-    # If split is provided, filter items to only show those in the split
-    if split:
-        items = split.items.select_related('order_item__product').all()
-        # Transformed into the format expected by the template
-        transformed_items = []
-        for split_item in items:
-            transformed_items.append({
-                'id': split_item.id,
-                'product': split_item.order_item.product,
-                'quantity_ordered': split_item.quantity,
-                'quantity_received': 0,  # For new receipt
-                'unit': split_item.order_item.product.unit,
-                'has_batch_tracking': split_item.order_item.product.has_batch_tracking,
-                'has_expiry_tracking': split_item.order_item.product.has_expiry_tracking,
-                'is_split_item': True,  # Flag to indicate this is a split item
-                'order_item': split_item.order_item,  # Reference to original order item
-            })
-        items = transformed_items
-    else:
-        # Regular items processing for the whole order
-        items = order.items.filter(
-            quantity_received__lt=models.F('quantity_ordered'),
-            status__in=['active', 'partially_canceled']
-        ).select_related('product')
-
-    # Prüfen, ob Produkte Batch- oder Verfallsdatum-Tracking benötigen
-    has_batch_products = any(getattr(item, 'has_batch_tracking', False) if hasattr(item, 'has_batch_tracking')
-                           else item.product.has_batch_tracking for item in items)
-    has_expiry_products = any(getattr(item, 'has_expiry_tracking', False) if hasattr(item, 'has_expiry_tracking')
-                            else item.product.has_expiry_tracking for item in items)
-
+    # Vorbereiten des Kontexts für die Template-Rendering
     context = {
         'order': order,
-        'form': form,
+        'items': items,
         'warehouses': warehouses,
         'has_batch_products': has_batch_products,
         'has_expiry_products': has_expiry_products,
-        'items': items,
-        'split': split,
     }
 
-    return render(request, 'order/purchase_order_receive.html', context)
+    return render(request, 'order/purchase_order_receive_unified.html', context)
 
 @login_required
 @permission_required('order', 'view')
@@ -1675,6 +1674,7 @@ def purchase_order_receipt_delete(request, pk, receipt_id):
 
     if request.method == 'POST':
         with transaction.atomic():
+            associated_split = receipt.order_split
             # Reverse all stock movements and update product warehouse quantities
             for item in receipt.items.all():
                 # Reverse stock movement
@@ -1704,6 +1704,17 @@ def purchase_order_receipt_delete(request, pk, receipt_id):
 
             # Delete the receipt
             receipt.delete()
+
+            if associated_split:
+                receipts_for_split = PurchaseOrderReceipt.objects.filter(order_split=associated_split)
+                if not receipts_for_split.exists():
+                    # Entweder Teillieferung löschen oder auf "planned" zurücksetzen
+                    associated_split.status = 'planned'
+                    associated_split.save()
+
+                    # Optional: Benachrichtigung hinzufügen
+                    messages.info(request,
+                                  f'Teillieferung "{associated_split.name}" wurde wieder auf "Geplant" gesetzt.')
 
             # Update order status based on remaining receipts
             all_items_received = True
@@ -3109,31 +3120,80 @@ def receive_order_split(request, pk, split_id):
     return render(request, 'order/receive_order_split.html', context)
 
 
-def update_order_status_after_receipt(order):
-    """Update the order status after a receipt has been processed."""
-    # Check if all items are fully received
-    all_items_received = True
+def update_order_status(order):
+    """
+    Aktualisiert den Status einer Bestellung basierend auf dem Wareneingangsstatus aller Positionen.
+    """
+    # Prüfen, ob alle Artikel vollständig erhalten wurden oder teilweise erhalten wurden
+    all_items_fully_received = True
     any_items_received = False
 
-    for order_item in order.items.all():
-        if order_item.is_canceled:
-            # Skip canceled items
+    for item in order.items.all():
+        # Stornierte Positionen überspringen
+        if item.is_canceled:
             continue
 
-        if order_item.quantity_received >= order_item.quantity_ordered:
+        if item.quantity_received >= item.quantity_ordered:
             any_items_received = True
         else:
-            all_items_received = False
-            if order_item.quantity_received > 0:
+            all_items_fully_received = False
+            if item.quantity_received > 0:
                 any_items_received = True
 
-    # Update order status
-    if all_items_received:
+    # Status setzen basierend auf dem Ergebnis
+    if all_items_fully_received:
         order.status = 'received'
     elif any_items_received:
         order.status = 'partially_received'
-
     order.save()
+
+    # Auch den Status aller zugehörigen Teillieferungen aktualisieren
+    for split in order.splits.all():
+        all_split_items_received = True
+
+        for split_item in split.items.all():
+            order_item = split_item.order_item
+            if order_item.quantity_received < split_item.quantity:
+                all_split_items_received = False
+                break
+
+        if all_split_items_received:
+            split.status = 'received'
+        else:
+            # Wenn es bereits Wareneingänge gibt, aber nicht alle
+            if any(receipt.items.exists() for receipt in split.receipts.all()):
+                split.status = 'partially_received'
+
+        split.save()
+
+
+# Ajax-Endpunkt, um zu prüfen ob eine Bestellung Teillieferungen hat
+def check_order_has_splits(request, pk):
+    """
+    AJAX-Endpunkt, der prüft, ob eine Bestellung bereits Teillieferungen hat.
+    """
+    if request.method == 'GET':
+        order = get_object_or_404(PurchaseOrder, pk=pk)
+        has_splits = order.splits.exists()
+
+        # Details zu vorhandenen Teillieferungen zurückgeben
+        splits_data = []
+        if has_splits:
+            for split in order.splits.all():
+                splits_data.append({
+                    'id': split.id,
+                    'name': split.name,
+                    'status': split.get_status_display(),
+                    'expected_delivery': split.expected_delivery.isoformat() if split.expected_delivery else None,
+                    'items_count': split.items.count()
+                })
+
+        return JsonResponse({
+            'has_splits': has_splits,
+            'splits': splits_data
+        })
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 @login_required

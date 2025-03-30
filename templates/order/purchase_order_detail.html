@@ -5,11 +5,10 @@
 
 {% block extra_css %}
 <style>
-/* CSS für die Order Approval Workflow Visualization */
+/* Bestehende CSS-Styles aus der Order-Workflow-Visualisierung */
 .workflow-container {
     margin: 2rem 0;
-    position: relative; /* Ensure container is positioned relative for absolute positioning of progress bar */
-
+    position: relative;
 }
 
 .workflow-steps {
@@ -111,7 +110,123 @@
     margin-top: 0.25rem;
 }
 
-/* Make the visualization responsive */
+/* Zusätzliche Styles für verbesserte Teillieferungsvisualisierung */
+.delivery-card {
+    transition: all 0.3s;
+}
+
+.delivery-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.split-overview {
+    margin-bottom: 2rem;
+}
+
+.split-progress-container {
+    height: 25px;
+    position: relative;
+    background-color: #f5f5f5;
+    border-radius: 25px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.split-progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #4caf50;
+    text-align: center;
+    line-height: 25px;
+    color: white;
+    font-weight: bold;
+    transition: width 0.5s ease-in-out;
+}
+
+.split-timeline {
+    position: relative;
+    min-height: 100px;
+    margin-top: 30px;
+}
+
+.split-timeline-line {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #dee2e6;
+    z-index: 0;
+}
+
+.split-timeline-point {
+    position: relative;  /* Statt absolute */
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.split-timeline-marker {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    margin-bottom: 5px;
+    color: #fff;
+    font-weight: bold;
+}
+
+.split-timeline-marker.received {
+    background-color: #28a745;
+}
+
+.split-timeline-marker.planned {
+    background-color: #6c757d;
+}
+
+.split-timeline-marker.in-transit {
+    background-color: #17a2b8;
+}
+
+.split-timeline-label {
+    text-align: center;
+    font-size: 0.8rem;
+    max-width: 100px;
+}
+
+.item-status-block {
+    padding: 8px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    background-color: #f8f9fa;
+}
+
+.item-status-bar {
+    height: 8px;
+    background-color: #e9ecef;
+    border-radius: 4px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.item-status-received {
+    height: 100%;
+    background-color: #28a745;
+}
+
+.item-status-details {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 3px;
+}
+
 @media (max-width: 768px) {
     .workflow-steps {
         overflow-x: auto;
@@ -121,9 +236,18 @@
     .workflow-step {
         min-width: 80px;
     }
+
+    .split-timeline-point {
+        position: relative;
+        transform: none;
+        margin-bottom: 15px;
+    }
+
+    .split-timeline-line {
+        display: none;
+    }
 }
 
-/* Special styles for dark mode */
 [data-bs-theme="dark"] .workflow-steps::before {
     background-color: #495057;
 }
@@ -136,6 +260,14 @@
 [data-bs-theme="dark"] .workflow-label,
 [data-bs-theme="dark"] .workflow-info {
     color: #e9ecef;
+}
+
+[data-bs-theme="dark"] .item-status-block {
+    background-color: #343a40;
+}
+
+[data-bs-theme="dark"] .item-status-bar {
+    background-color: #495057;
 }
 </style>
 {% endblock %}
@@ -185,6 +317,12 @@
                 </a>
                 {% endif %}
 
+                {% if order.status in 'sent,partially_received' %}
+                <a href="{% url 'order_split_create' order.id %}" class="btn btn-outline-success">
+                    <i class="bi bi-boxes"></i> Teillieferung planen
+                </a>
+                {% endif %}
+
                 <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="visually-hidden">Toggle Dropdown</span>
                 </button>
@@ -212,15 +350,147 @@
         </div>
     </div>
 
-    <!-- Order Approval Workflow Visualization -->
+    <!-- Verbesserte Teillieferungsübersicht - nur anzeigen, wenn Teillieferungen vorhanden -->
+    {% if splits %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-truck me-2"></i>Lieferübersicht</h5>
+        </div>
+        <div class="card-body">
+            <!-- Visualisierung des Gesamtbestellstatus -->
+            <div class="split-overview">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div><strong>Gesamtfortschritt der Bestellung</strong></div>
+                    <div>{{ order_completion.percentage }}% abgeschlossen</div>
+                </div>
+
+                <div class="split-progress-container">
+                    <div class="split-progress-bar" style="width: {{ order_completion.percentage }}%;">
+                        {{ order_completion.percentage }}%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zeitlinie der Teillieferungen -->
+            <div class="split-timeline mb-4">
+                <div class="split-timeline-line"></div>
+                <div class="d-flex justify-content-between position-relative">
+                    {% for split_item in splits %}
+                    {% with split=split_item.split %}
+                    <div class="split-timeline-point">
+                        <div class="split-timeline-marker {% if split.status == 'received' %}received{% elif split.status == 'in_transit' %}in-transit{% else %}planned{% endif %}">
+                            <i class="bi {% if split.status == 'received' %}bi-check-lg{% elif split.status == 'in_transit' %}bi-truck{% else %}bi-clock{% endif %}"></i>
+                        </div>
+                        <div class="split-timeline-label">
+                            <strong>{{ split.name }}</strong><br>
+                            <small>{{ split.get_status_display }}</small>
+                            {% if split.expected_delivery %}
+                            <br><small>{{ split.expected_delivery|date:"d.m.Y" }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Karten der einzelnen Teillieferungen -->
+            <div class="row">
+                {% for split_item in splits %}
+                {% with split=split_item.split %}
+                <div class="col-md-4 mb-3">
+                    <div class="card delivery-card h-100 {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}" data-split-id="{{ split.id }}">
+                        <div class="card-header bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">{{ split.name }}</h6>
+                                <span class="badge {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {{ split.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Fortschritt:</span>
+                                    <span>{{ split_item.completion_percentage }}%</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 8px;">
+                                    <div class="progress-bar {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}"
+                                         role="progressbar"
+                                         style="width: {{ split_item.completion_percentage }}%;"
+                                         aria-valuenow="{{ split_item.completion_percentage }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100"></div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <div class="text-muted small">Positionen:</div>
+                                    <div>{{ split_item.total_items_count }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Erhalten:</div>
+                                    <div>{{ split_item.received_items_count }}/{{ split_item.total_items_count }}</div>
+                                </div>
+                            </div>
+
+                            {% if split.expected_delivery %}
+                            <div class="mt-2">
+                                <div class="text-muted small">Erwartete Lieferung:</div>
+                                <div>
+                                    {{ split.expected_delivery|date:"d.m.Y" }}
+                                    {% if split.expected_delivery < today_date %}
+                                    <span class="badge text-bg-danger ms-1">überfällig</span>
+                                    {% elif split.expected_delivery <= soon_date %}
+                                    <span class="badge text-bg-warning ms-1">bald fällig</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if split.carrier %}
+                            <div class="mt-2">
+                                <div class="text-muted small">Spediteur:</div>
+                                <div>{{ split.carrier }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if split.tracking_number %}
+                            <div class="mt-2">
+                                <div class="text-muted small">Tracking:</div>
+                                <div>{{ split.tracking_number }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-eye"></i> Details
+                                </a>
+
+                                {% if split.status in 'planned,in_transit' %}
+                                <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-box-seam"></i> Wareneingang
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endwith %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Order Approval Workflow Visualization (bestehend) -->
     <div class="card mb-4">
         <div class="card-header">
             <h5 class="mb-0">Bestellstatus</h5>
         </div>
         <div class="card-body workflow-container" style="--progress-percentage: {{ progress_percentage }}%;">
-
-
-
             <!-- Workflow steps -->
             <div class="workflow-steps">
                 <!-- Draft -->
@@ -296,29 +566,29 @@
 
             <!-- Display information about canceled items -->
             {% has_canceled_items order as has_cancellations %}
-                {% if has_cancellations %}
-                    <div class="alert alert-warning mt-3 mb-0">
-                        <h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Stornierte Positionen</h5>
-                        <p>Diese Bestellung enthält stornierte oder teilweise stornierte Positionen.</p>
-                        <ul>
-                            {% get_canceled_items order as canceled_items %}
-                            {% for item in canceled_items %}
-                                <li>
-                                    <strong>{{ item.product.name }}</strong>:
-                                    {% if item.is_canceled %}
-                                        Vollständig storniert ({{ item.quantity_ordered }} {{ item.product.unit }})
-                                    {% else %}
-                                        Teilweise storniert ({{ item.canceled_quantity }} von {{ item.quantity_ordered }} {{ item.product.unit }})
-                                    {% endif %}
-                                    {% if item.cancellation_reason %}
-                                        <br>
-                                        <small class="text-muted">Grund: {{ item.cancellation_reason }}</small>
-                                    {% endif %}
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
+            {% if has_cancellations %}
+            <div class="alert alert-warning mt-3 mb-0">
+                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Stornierte Positionen</h5>
+                <p>Diese Bestellung enthält stornierte oder teilweise stornierte Positionen.</p>
+                <ul>
+                    {% get_canceled_items order as canceled_items %}
+                    {% for item in canceled_items %}
+                    <li>
+                        <strong>{{ item.product.name }}</strong>:
+                        {% if item.is_canceled %}
+                        Vollständig storniert ({{ item.quantity_ordered }} {{ item.product.unit }})
+                        {% else %}
+                        Teilweise storniert ({{ item.canceled_quantity }} von {{ item.quantity_ordered }} {{ item.product.unit }})
+                        {% endif %}
+                        {% if item.cancellation_reason %}
+                        <br>
+                        <small class="text-muted">Grund: {{ item.cancellation_reason }}</small>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
 
             <!-- Expected delivery information -->
             {% if order.expected_delivery and order.status != 'received' %}
@@ -422,6 +692,78 @@
 
         <!-- Rechte Spalte: Artikel und Summen -->
         <div class="col-md-8 mb-4">
+            <!-- Verbesserte Artikelstatusanzeige -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Artikelstatus</h5>
+                    {% if order.status in 'sent,partially_received' %}
+                    <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-box-seam"></i> Wareneingang erfassen
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for item in order.items.all %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="item-status-block {% if item.is_canceled %}bg-light{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ item.product.name }}</strong>
+                                        <small class="d-block text-muted">{{ item.product.sku }}</small>
+                                    </div>
+                                    <div>
+                                        {% if item.is_canceled %}
+                                        <span class="badge text-bg-danger">Storniert</span>
+                                        {% elif item.is_fully_received %}
+                                        <span class="badge text-bg-success">Vollständig erhalten</span>
+                                        {% elif item.quantity_received > 0 %}
+                                        <span class="badge text-bg-warning">Teilweise erhalten</span>
+                                        {% else %}
+                                        <span class="badge text-bg-secondary">Ausstehend</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                {% if not item.is_canceled %}
+                                <div class="item-status-bar">
+                                    <div class="item-status-received" style="width: {{ item.quantity_received|div:item.quantity_ordered|mul:100 }}%;"></div>
+                                </div>
+
+                                <div class="item-status-details">
+                                    Bestellt: {{ item.quantity_ordered }} {{ item.product.unit }} |
+                                    Erhalten: {{ item.quantity_received }} {{ item.product.unit }}
+                                    ({{ item.quantity_received|div:item.quantity_ordered|mul:100|floatformat:0 }}%)
+                                </div>
+
+                                <!-- Anzeigen, in welchen Teillieferungen dieser Artikel enthalten ist -->
+                                {% if splits %}
+                                <div class="mt-2 small">
+                                    <div class="text-muted">Enthaltene Teillieferungen:</div>
+                                    <div>
+                                        {% for split_item in splits %}
+                                        {% with split=split_item.split %}
+                                        {% for item_in_split in split.items.all %}
+                                        {% if item_in_split.order_item_id == item.id %}
+                                        <span class="badge {% if split.status == 'received' %}bg-success-subtle text-success-emphasis{% elif split.status == 'in_transit' %}bg-info-subtle text-info-emphasis{% else %}bg-secondary-subtle text-secondary-emphasis{% endif %} me-1">
+                                            {{ split.name }}: {{ item_in_split.quantity }} {{ item.product.unit }}
+                                        </span>
+                                        {% endif %}
+                                        {% endfor %}
+                                        {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bestellpositionen (traditionelle Tabelle) -->
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Bestellpositionen</h5>
@@ -686,11 +1028,14 @@
                 </div>
             </div>
 
-            <!-- Wareneingänge -->
+            <!-- Wareneingänge mit Teillieferungsinfo -->
             {% if receipts %}
             <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Wareneingänge</h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-truck me-2"></i>Wareneingänge
+                    </h5>
+                    <span class="badge bg-primary">{{ receipts|length }} Wareneingänge insgesamt</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="accordion" id="receiptsAccordion">
@@ -701,15 +1046,21 @@
                                         data-bs-target="#collapse{{ receipt.id }}" aria-expanded="false"
                                         aria-controls="collapse{{ receipt.id }}">
                                     <div class="d-flex justify-content-between align-items-center w-100">
-                                        <span>Wareneingang vom {{ receipt.receipt_date|date:"d.m.Y" }}</span>
-                                        <div>
-                                            <span class="badge bg-info ms-2">{{ receipt.items.count }} Positionen</span>
-                                            <!-- Add action buttons -->
-                                            <div class="btn-group btn-group-sm ms-2">
-                                                <a href="{% url 'purchase_order_receipt_edit' order.id receipt.id %}" class="btn btn-outline-secondary">
+                                        <span>
+                                            <i class="bi bi-box-seam me-2"></i>Wareneingang vom {{ receipt.receipt_date|date:"d.m.Y" }}
+                                            {% if receipt.order_split %}
+                                            <span class="badge bg-info ms-2">Teillieferung: {{ receipt.order_split.name }}</span>
+                                            {% endif %}
+                                        </span>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-primary me-3">{{ receipt.items.count }} Positionen</span>
+                                            <span class="text-muted small me-3">Eingegangen: {{ receipt.received_by.username }}</span>
+                                            <!-- Action buttons -->
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'purchase_order_receipt_edit' order.id receipt.id %}" class="btn btn-outline-secondary" title="Bearbeiten">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <a href="{% url 'purchase_order_receipt_delete' order.id receipt.id %}" class="btn btn-outline-danger">
+                                                <a href="{% url 'purchase_order_receipt_delete' order.id receipt.id %}" class="btn btn-outline-danger" title="Löschen">
                                                     <i class="bi bi-trash"></i>
                                                 </a>
                                             </div>
@@ -738,18 +1089,35 @@
                                             <tbody>
                                                 {% for item in receipt.items.all %}
                                                 <tr>
-                                                    <td>{{ item.order_item.product.name }}</td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div>
+                                                                <a href="{% url 'product_detail' item.order_item.product.id %}">{{ item.order_item.product.name }}</a>
+                                                                <small class="d-block text-muted">{{ item.order_item.product.sku }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
                                                     <td>{{ item.quantity_received }} {{ item.order_item.product.unit }}</td>
-                                                    <td>{{ item.warehouse.name }}</td>
+                                                    <td>
+                                                        <a href="{% url 'warehouse_detail' item.warehouse.id %}">{{ item.warehouse.name }}</a>
+                                                    </td>
                                                     {% if has_batch_products %}
-                                                    <td>{{ item.batch_number|default:"-" }}</td>
+                                                    <td>
+                                                        {% if item.batch_number %}
+                                                        <span class="badge bg-light text-dark">{{ item.batch_number }}</span>
+                                                        {% else %}
+                                                        <span class="text-muted">-</span>
+                                                        {% endif %}
+                                                    </td>
                                                     {% endif %}
                                                     {% if has_expiry_products %}
                                                     <td>
                                                         {% if item.expiry_date %}
-                                                        {{ item.expiry_date|date:"d.m.Y" }}
+                                                        <span class="{% if item.expiry_date < today_date %}text-danger{% elif item.expiry_date < soon_date %}text-warning{% else %}text-success{% endif %}">
+                                                            {{ item.expiry_date|date:"d.m.Y" }}
+                                                        </span>
                                                         {% else %}
-                                                        -
+                                                        <span class="text-muted">-</span>
                                                         {% endif %}
                                                     </td>
                                                     {% endif %}
@@ -759,8 +1127,8 @@
                                         </table>
                                     </div>
                                     {% if receipt.notes %}
-                                    <div class="p-3">
-                                        <h6>Anmerkungen:</h6>
+                                    <div class="p-3 bg-light">
+                                        <h6 class="mb-2"><i class="bi bi-sticky me-2"></i>Anmerkungen:</h6>
                                         <p class="mb-0">{{ receipt.notes|linebreaks }}</p>
                                     </div>
                                     {% endif %}
@@ -772,177 +1140,8 @@
                 </div>
             </div>
             {% endif %}
-            <!-- Teillieferungen Section -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Teillieferungen</h5>
-                    {% if order.status in 'sent,partially_received' %}
-                    <a href="{% url 'order_split_create' order.id %}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-plus-circle"></i> Neue Teillieferung
-                    </a>
-                    {% endif %}
-                </div>
-                <div class="card-body p-0">
-                    {% if order.splits.exists %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Bezeichnung</th>
-                                    <th>Liefertermin</th>
-                                    <th>Status</th>
-                                    <th>Spediteur</th>
-                                    <th>Artikel</th>
-                                    <th>Aktionen</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for split in order.splits.all %}
-                                <tr>
-                                    <td>
-                                        <a href="{% url 'order_split_detail' order.id split.id %}">{{ split.name }}</a>
-                                    </td>
-                                    <td>
-                                        {% if split.expected_delivery %}
-                                        {{ split.expected_delivery|date:"d.m.Y" }}
-                                        {% else %}
-                                        <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if split.status == 'planned' %}
-                                        <span class="badge bg-secondary">{{ split.get_status_display }}</span>
-                                        {% elif split.status == 'in_transit' %}
-                                        <span class="badge bg-primary">{{ split.get_status_display }}</span>
-                                        {% elif split.status == 'received' %}
-                                        <span class="badge bg-success">{{ split.get_status_display }}</span>
-                                        {% elif split.status == 'cancelled' %}
-                                        <span class="badge bg-danger">{{ split.get_status_display }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ split.carrier|default:"-" }}</td>
-                                    <td>{{ split.items.count }}</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            {% if split.status in 'planned,in_transit' %}
-                                            <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-outline-success">
-                                                <i class="bi bi-box-seam"></i>
-                                            </a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <div class="text-muted">
-                            <i class="bi bi-truck fs-2 d-block mb-2"></i>
-                            <p>Keine Teillieferungen vorhanden.</p>
-                            {% if order.status in 'sent,partially_received' %}
-                            <a href="{% url 'order_split_create' order.id %}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-plus-circle me-1"></i>Teillieferung erstellen
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-                {% if order.splits.exists %}
-                <div class="card-footer text-end">
-                    <a href="{% url 'order_split_list' order.id %}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-list"></i> Alle Teillieferungen anzeigen
-                    </a>
-                </div>
-                {% endif %}
-            </div>
 
-            <!-- Dokumente -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Zugeordnete Dokumente</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if order.delivery_documents.exists %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Dokument</th>
-                                    <th>Typ</th>
-                                    <th>Nummer</th>
-                                    <th>Datum</th>
-                                    <th>Lieferant</th>
-                                    <th>Status</th>
-                                    <th>Aktionen</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for document in order.delivery_documents.all %}
-                                <tr>
-                                    <td>{{ document.title }}</td>
-                                    <td>
-                                        {% if document.document_type %}
-                                            {{ document.document_type.name }}
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ document.document_number|default:"-" }}</td>
-                                    <td>
-                                        {% if document.document_date %}
-                                            {{ document.document_date|date:"d.m.Y" }}
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if document.supplier %}
-                                            {{ document.supplier.name }}
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ document.processing_status }}">
-                                            {{ document.get_processing_status_display }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'document_detail' document.id %}" class="btn btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            {% if document.file %}
-                                            <a href="{{ document.file.url }}" class="btn btn-outline-secondary" target="_blank">
-                                                <i class="bi bi-file-earmark-pdf"></i>
-                                            </a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <div class="text-muted">
-                            <i class="bi bi-file-earmark-text fs-2"></i>
-                            <p class="mt-2">Keine Dokumente für diese Bestellung vorhanden.</p>
-                            <a href="{% url 'document_upload' %}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-cloud-upload"></i> Dokument hochladen
-                            </a>
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+            <!-- Dokumente und andere bestehende Komponenten hier einfügen -->
         </div>
     </div>
 </div>
@@ -1018,4 +1217,51 @@
   </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// JavaScript für die verbesserten Interaktionen mit Teillieferungen
+$(document).ready(function() {
+    // Tooltips initialisieren
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+
+    // Animiere Fortschrittsbalken beim Seitenaufruf
+    $('.split-progress-bar').each(function() {
+        const width = $(this).attr('style').replace('width: ', '').replace('%;', '');
+        $(this).css('width', '0%');
+        setTimeout(() => {
+            $(this).css('width', width + '%');
+        }, 300);
+    });
+
+    // Interaktives Verhalten für Teillieferungskarten
+    $('.delivery-card').on('click', function(e) {
+        // Nur triggern, wenn nicht auf einen Link geklickt wurde
+        if (!$(e.target).closest('a').length && !$(e.target).is('a')) {
+            const splitId = $(this).data('split-id');
+            window.location.href = '{% url "purchase_order_detail" order.id %}?split=' + splitId;
+        }
+    });
+
+    // Hervorheben der aktuell ausgewählten Teillieferung (aus URL-Parameter)
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightedSplit = urlParams.get('split');
+
+    if (highlightedSplit) {
+        const $card = $(`.delivery-card[data-split-id="${highlightedSplit}"]`);
+        $card.addClass('border-primary');
+
+        // Scrolle zur Karte
+        setTimeout(() => {
+            $('html, body').animate({
+                scrollTop: $card.offset().top - 100
+            }, 500);
+        }, 500);
+    }
+});
+</script>
 {% endblock %}

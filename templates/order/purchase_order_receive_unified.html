@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+{% load order_filters %}
+
+{% block title %}Wareneingang erfassen - {{ order.order_number }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .batch-field, .expiry-field {
+        display: none;
+    }
+
+    .has-batch .batch-field, .has-expiry .expiry-field {
+        display: block;
+    }
+
+    .split-options-container {
+        display: none;
+    }
+
+    .future-split-options {
+        display: none;
+    }
+
+    .receipt-status-indicator {
+        width: 20px;
+        height: 20px;
+        display: inline-block;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+
+    .status-full {
+        background-color: #28a745;
+    }
+
+    .status-partial {
+        background-color: #ffc107;
+    }
+
+    .status-none {
+        background-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">Wareneingang erfassen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Wareneingang für Bestellung {{ order.order_number }} erfassen</h1>
+            <p class="text-muted">Lieferant: {{ order.supplier.name }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur Bestellung
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Haupt-Wareneingangsformular -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Artikel</h5>
+                    <div class="form-check" id="partialDeliveryDetector">
+                        <input type="checkbox" class="form-check-input" id="detectPartialDelivery" checked>
+                        <label class="form-check-label" for="detectPartialDelivery">Teillieferung automatisch erkennen</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="receiveForm">
+                        {% csrf_token %}
+
+                        <!-- Existierende Teillieferungen (falls vorhanden) -->
+                        <div id="existingSplitsContainer" style="display: none;">
+                            <div class="alert alert-info mb-4">
+                                <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i> Geplante Teillieferungen vorhanden</h5>
+                                <p>Für diese Bestellung wurden bereits Teillieferungen angelegt:</p>
+                                <div id="existingSplitsList" class="list-group mb-3"></div>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="useExistingSplit" name="use_existing_split">
+                                    <label class="form-check-label" for="useExistingSplit">Eine bestehende Teillieferung für diesen Wareneingang verwenden</label>
+                                </div>
+                                <div class="mt-2" id="selectExistingSplitContainer" style="display: none;">
+                                    <select id="existingSplitSelect" name="existing_split_id" class="form-select">
+                                        <option value="">-- Teillieferung auswählen --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Artikeltabelle -->
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">Artikel</th>
+                                        <th style="width: 15%;">Bestellt</th>
+                                        <th style="width: 15%;">Bereits erhalten</th>
+                                        <th style="width: 15%;">Jetzt erhalten</th>
+                                        <th style="width: 15%;">Ziel-Lager</th>
+                                        {% if has_batch_products %}
+                                        <th style="width: 15%;">Chargennummer</th>
+                                        {% endif %}
+                                        {% if has_expiry_products %}
+                                        <th style="width: 15%;">Verfallsdatum</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr class="{% if item.product.has_batch_tracking %}has-batch{% endif %} {% if item.product.has_expiry_tracking %}has-expiry{% endif %}" data-item-id="{{ item.id }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <a href="{% url 'product_detail' item.product.id %}" target="_blank">{{ item.product.name }}</a>
+                                                <span class="badge bg-secondary ms-2">{{ item.product.sku }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {{ item.quantity_ordered }} {{ item.product.unit }}
+                                            <input type="hidden" id="ordered_{{ item.id }}" value="{{ item.quantity_ordered }}">
+                                        </td>
+                                        <td>
+                                            {{ item.quantity_received }} {{ item.product.unit }}
+                                            <input type="hidden" id="received_{{ item.id }}" value="{{ item.quantity_received }}">
+                                            <div class="progress mt-1" style="height: 5px;">
+                                                <div class="progress-bar" role="progressbar"
+                                                     style="width: {{ item.quantity_received|div:item.quantity_ordered|mul:100 }}%;"
+                                                     aria-valuenow="{{ item.quantity_received|div:item.quantity_ordered|mul:100 }}"
+                                                     aria-valuemin="0"
+                                                     aria-valuemax="100"></div>
+                                            </div>
+                                            <input type="hidden" id="remaining_{{ item.id }}" value="{{ item.quantity_ordered|sub:item.quantity_received }}">
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="number" name="receive_quantity_{{ item.id }}"
+                                                       id="receive_quantity_{{ item.id }}"
+                                                       class="form-control receive-quantity"
+                                                       value="{{ item.quantity_ordered|sub:item.quantity_received }}"
+                                                       min="0" max="{{ item.quantity_ordered|sub:item.quantity_received }}"
+                                                       step="0.01" required>
+                                                <span class="input-group-text">{{ item.product.unit }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <select name="warehouse_{{ item.id }}" class="form-select" required>
+                                                <option value="">-- Lager wählen --</option>
+                                                {% for warehouse in warehouses %}
+                                                <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        {% if has_batch_products %}
+                                        <td class="batch-field">
+                                            <input type="text" name="batch_{{ item.id }}"
+                                                   class="form-control"
+                                                   placeholder="Chargennummer"
+                                                   {% if item.product.has_batch_tracking %}required{% endif %}>
+                                        </td>
+                                        {% endif %}
+                                        {% if has_expiry_products %}
+                                        <td class="expiry-field">
+                                            <input type="date" name="expiry_{{ item.id }}"
+                                                   class="form-control"
+                                                   {% if item.product.has_expiry_tracking %}required{% endif %}>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="{% if has_batch_products and has_expiry_products %}7{% elif has_batch_products or has_expiry_products %}6{% else %}5{% endif %}" class="text-center">
+                                            Keine Artikel zur Erfassung verfügbar.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Teillieferungsoptionen -->
+                        <div id="splitOptionsContainer" class="split-options-container mt-4 p-3 border rounded bg-light">
+                            <h5><i class="bi bi-boxes me-2"></i>Teillieferungsinformationen</h5>
+                            <p class="text-info">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Eine oder mehrere Positionen wurden nur teilweise geliefert. Möchten Sie dies als Teillieferung erfassen?
+                            </p>
+
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="createSplit" name="create_split" value="yes" checked>
+                                <label class="form-check-label" for="createSplit">Diese als Teillieferung erfassen</label>
+                            </div>
+
+                            <div id="splitDetailsContainer">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="splitName" class="form-label">Bezeichnung der Teillieferung</label>
+                                        <input type="text" class="form-control" id="splitName" name="split_name"
+                                               placeholder="z.B. Erste Lieferung">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="trackingNumber" class="form-label">Tracking-Nummer</label>
+                                        <input type="text" class="form-control" id="trackingNumber" name="tracking_number" placeholder="Optional">
+                                    </div>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="createFutureSplit" name="create_future_split" value="yes">
+                                    <label class="form-check-label" for="createFutureSplit">Restlieferung automatisch planen</label>
+                                </div>
+
+                                <div id="futureSplitOptions" class="future-split-options mb-3 p-3 border rounded">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="futureSplitName" class="form-label">Bezeichnung der Restlieferung</label>
+                                            <input type="text" class="form-control" id="futureSplitName" name="future_split_name"
+                                                   placeholder="z.B. Restlieferung">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="futureDeliveryDate" class="form-label">Erwartetes Lieferdatum</label>
+                                            <input type="date" class="form-control" id="futureDeliveryDate" name="future_delivery_date">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Anmerkungen -->
+                        <div class="mb-3 mt-4">
+                            <label for="notes" class="form-label">Anmerkungen zum Wareneingang</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Optionale Anmerkungen zum Wareneingang..."></textarea>
+                        </div>
+
+                        <!-- Aktionen -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-box-seam"></i> Wareneingang speichern
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Prüfen, ob die Bestellung bereits Teillieferungen hat
+    $.ajax({
+        url: '/order/check-has-splits/' + orderId + '/',
+        method: 'GET',
+        success: function(data) {
+            if (data.has_splits) {
+                // Existierende Teillieferungen anzeigen
+                $('#existingSplitsContainer').show();
+
+                // Teillieferungen auflisten
+                const $splitsList = $('#existingSplitsList');
+                const $splitsSelect = $('#existingSplitSelect');
+                $splitsList.empty();
+                $splitsSelect.find('option:not(:first-child)').remove();
+
+                data.splits.forEach(function(split) {
+                    // Liste für Anzeige
+                    const statusClass = split.status === 'Geplant' ? 'list-group-item-secondary' :
+                                       (split.status === 'In Transit' ? 'list-group-item-info' : 'list-group-item-success');
+
+                    $splitsList.append(
+                        `<div class="list-group-item ${statusClass} d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${split.name}</strong>
+                                <span class="badge bg-secondary ms-2">${split.status}</span>
+                            </div>
+                            <div>
+                                <span class="badge text-bg-primary">${split.items_count} Positionen</span>
+                            </div>
+                        </div>`
+                    );
+
+                    // Dropdown für Auswahl
+                    if (split.status !== 'Erhalten') {
+                        $splitsSelect.append(
+                            `<option value="${split.id}">${split.name} (${split.status})</option>`
+                        );
+                    }
+                });
+            }
+        }
+    });
+
+    // Option zum Verwenden einer existierenden Teillieferung umschalten
+    $('#useExistingSplit').change(function() {
+        $('#selectExistingSplitContainer').toggle(this.checked);
+    });
+
+    // Alle Mengen-Eingabefelder überwachen, um Teillieferungsstatus zu erkennen
+    let isPartialDelivery = false;
+
+    function checkForPartialDelivery() {
+        isPartialDelivery = false;
+
+        $('.receive-quantity').each(function() {
+            const $row = $(this).closest('tr');
+            const itemId = $row.data('item-id');
+            const receivedQuantity = parseFloat($('#received_' + itemId).val()) || 0;
+            const enteredQuantity = parseFloat($(this).val()) || 0;
+            const orderedQuantity = parseFloat($('#ordered_' + itemId).val()) || 0;
+
+            // Wenn die eingegebene + bereits erhaltene Menge kleiner als die bestellte Menge ist
+            if (receivedQuantity + enteredQuantity < orderedQuantity) {
+                isPartialDelivery = true;
+            }
+        });
+
+        // Teillieferungsoptionen anzeigen/ausblenden
+        if (isPartialDelivery && $('#detectPartialDelivery').is(':checked')) {
+            $('#splitOptionsContainer').slideDown();
+        } else {
+            $('#splitOptionsContainer').slideUp();
+        }
+    }
+
+    // Events registrieren
+    $('.receive-quantity').on('input', checkForPartialDelivery);
+    $('#detectPartialDelivery').change(checkForPartialDelivery);
+
+    // Teillieferungsoptionen umschalten
+    $('#createSplit').change(function() {
+        $('#splitDetailsContainer').toggle(this.checked);
+    });
+
+    // Restlieferungsoptionen umschalten
+    $('#createFutureSplit').change(function() {
+        $('#futureSplitOptions').toggle(this.checked);
+    });
+
+    // Initial check for partial delivery
+    checkForPartialDelivery();
+
+    // Standardwerte für Teillieferungsbezeichnungen setzen
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('de-DE');
+    $('#splitName').val(`Wareneingang vom ${formattedDate}`);
+    $('#futureSplitName').val('Restlieferung');
+
+    // Zukünftiges Lieferdatum standardmäßig auf 2 Wochen setzen
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + 14);
+    $('#futureDeliveryDate').val(futureDate.toISOString().slice(0, 10));
+
+    // Form-Validierung
+    $('#receiveForm').submit(function(e) {
+        // Prüfen, ob mindestens eine Position einen Wert größer als 0 hat
+        let hasReceivedItems = false;
+
+        $('.receive-quantity').each(function() {
+            if (parseFloat($(this).val()) > 0) {
+                hasReceivedItems = true;
+                return false; // break loop
+            }
+        });
+
+        if (!hasReceivedItems) {
+            e.preventDefault();
+            alert('Bitte geben Sie mindestens eine Wareneingangsposition ein.');
+            return false;
+        }
+
+        // Wenn "Existierende Teillieferung verwenden" aktiviert ist, aber keine ausgewählt wurde
+        if ($('#useExistingSplit').is(':checked') && (!$('#existingSplitSelect').val() || $('#existingSplitSelect').val() === '')) {
+            e.preventDefault();
+            alert('Bitte wählen Sie eine existierende Teillieferung aus.');
+            $('#existingSplitSelect').focus();
+            return false;
+        }
+
+        // Wenn "Teillieferung erfassen" aktiviert ist, aber kein Name angegeben wurde
+        if ($('#createSplit').is(':checked') && $('#splitName').val().trim() === '') {
+            e.preventDefault();
+            alert('Bitte geben Sie einen Namen für die Teillieferung ein.');
+            $('#splitName').focus();
+            return false;
+        }
+
+        // Wenn "Restlieferung planen" aktiviert ist, aber kein Name angegeben wurde
+        if ($('#createFutureSplit').is(':checked') && $('#futureSplitName').val().trim() === '') {
+            e.preventDefault();
+            alert('Bitte geben Sie einen Namen für die geplante Restlieferung ein.');
+            $('#futureSplitName').focus();
+            return false;
+        }
+
+        return true;
+    });
+
+    // Batch- und Verfallsdatenfelder initialisieren
+    $('.batch-field, .expiry-field').each(function() {
+        // Nur Felder anzeigen, die für das jeweilige Produkt benötigt werden
+        const $row = $(this).closest('tr');
+        if ($row.hasClass('has-batch')) {
+            $row.find('.batch-field').show();
+        }
+        if ($row.hasClass('has-expiry')) {
+            $row.find('.expiry-field').show();
+        }
+    });
+
+    // Hilfsfunktion zum Formatieren von Datumswerten
+    function formatDate(date) {
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${year}-${month}-${day}`;
+    }
+});
+</script>
+{% endblock %}

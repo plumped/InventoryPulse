@@ -124,6 +124,9 @@
                     <a href="#" class="btn btn-outline-secondary">
                         <i class="fas fa-print me-2"></i>Kontaktdaten drucken
                     </a>
+                    <a href="{% url 'supplier_performance_detail' supplier.id %}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-line me-2"></i>Performance-Analyse
+                    </a>
                 </div>
             </div>
         </div>
@@ -287,6 +290,63 @@
                             <p>Keine aktuellen Bestellungen für diesen Lieferanten.</p>
                             <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-primary">
                                 <i class="bi bi-plus-circle me-1"></i>Neue Bestellung anlegen
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Lieferantenperformance</h5>
+                <a href="{% url 'supplier_performance_detail' supplier.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye"></i> Details
+                </a>
+            </div>
+            <div class="card-body">
+                {% if supplier_performance %}
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="display-4
+                                {% if supplier_performance.composite_score >= 90 %}text-success
+                                {% elif supplier_performance.composite_score >= 80 %}text-success
+                                {% elif supplier_performance.composite_score >= 70 %}text-warning
+                                {% elif supplier_performance.composite_score >= 60 %}text-danger
+                                {% else %}text-danger{% endif %}">
+                                {{ supplier_performance.composite_score }}%
+                            </div>
+                            <div class="text-muted">Gesamtbewertung</div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row">
+                                {% for metric in supplier_performance.metrics %}
+                                    <div class="col-6">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>{{ metric.name }}:</span>
+                                            <span class="badge rounded-pill
+                                                {% if metric.value >= 90 %}bg-success
+                                                {% elif metric.value >= 80 %}bg-success-subtle text-success-emphasis
+                                                {% elif metric.value >= 70 %}bg-warning-subtle text-warning-emphasis
+                                                {% elif metric.value >= 60 %}bg-danger-subtle text-danger-emphasis
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ metric.value }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <div class="text-muted">
+                            <i class="bi bi-graph-up fs-2 d-block mb-2"></i>
+                            <p>Keine Performance-Daten verfügbar.</p>
+                            <a href="{% url 'supplier_performance_calculate' supplier.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-calculator me-1"></i>Leistung berechnen
+                            </a>
+                            <a href="{% url 'supplier_performance_add' supplier.id %}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-plus-circle me-1"></i>Bewertung hinzufügen
                             </a>
                         </div>
                     </div>

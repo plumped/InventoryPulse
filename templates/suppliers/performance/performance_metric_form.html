@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if is_new %}New Performance Metric{% else %}Edit {{ metric.name }}{% endif %} - InventoryPulse
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Suppliers</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_performance_overview' %}">Performance Overview</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_performance_metrics_list' %}">Performance Metrics</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {% if is_new %}New Metric{% else %}Edit {{ metric.name }}{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">
+                {% if is_new %}Create New Performance Metric{% else %}Edit Performance Metric: {{ metric.name }}{% endif %}
+            </h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Metric Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="id_name" class="form-label">Metric Name <span class="text-danger">*</span></label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_code" class="form-label">Metric Code <span class="text-danger">*</span></label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                            <div class="invalid-feedback d-block">{{ form.code.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Unique identifier used in system. Use lowercase with underscores (e.g., "on_time_delivery").
+                                {% if metric and metric.is_system %}
+                                <strong>This code cannot be changed as it is a system metric.</strong>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_description" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_metric_type" class="form-label">Metric Type <span class="text-danger">*</span></label>
+                            {{ form.metric_type }}
+                            {% if form.metric_type.errors %}
+                            <div class="invalid-feedback d-block">{{ form.metric_type.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="id_weight" class="form-label">Weight <span class="text-danger">*</span></label>
+                                {{ form.weight }}
+                                {% if form.weight.errors %}
+                                <div class="invalid-feedback d-block">{{ form.weight.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Higher values give this metric more importance in the overall score.</div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="id_target_value" class="form-label">Target Value (%) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    {{ form.target_value }}
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                {% if form.target_value.errors %}
+                                <div class="invalid-feedback d-block">{{ form.target_value.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Ideal performance level (typically 100%).</div>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="id_minimum_value" class="form-label">Minimum Value (%) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    {{ form.minimum_value }}
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                {% if form.minimum_value.errors %}
+                                <div class="invalid-feedback d-block">{{ form.minimum_value.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Lowest acceptable value (typically 0%).</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="id_is_active">Active</label>
+                            </div>
+                            <div class="form-text">Only active metrics are used in performance evaluations.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'supplier_performance_metrics_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> {% if is_new %}Create{% else %}Update{% endif %} Metric
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Metric Types Guide</h5>
+                </div>
+                <div class="card-body">
+                    <dl>
+                        <dt>On-Time Delivery</dt>
+                        <dd class="small text-muted">Percentage of orders delivered by or before the expected delivery date</dd>
+
+                        <dt>Order Accuracy</dt>
+                        <dd class="small text-muted">Percentage of order items delivered with the correct quantity</dd>
+
+                        <dt>Price Consistency</dt>
+                        <dd class="small text-muted">Consistency of pricing for the same products over time</dd>
+
+                        <dt>Quality</dt>
+                        <dd class="small text-muted">Assessment of product quality (defect rate, returns, etc.)</dd>
+
+                        <dt>Responsiveness</dt>
+                        <dd class="small text-muted">Assessment of supplier's communication and response time</dd>
+
+                        <dt>Custom</dt>
+                        <dd class="small text-muted">Any other metric that doesn't fit the predefined categories</dd>
+                    </dl>
+
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        System metrics (On-Time Delivery, Order Accuracy, Price Consistency) can be automatically calculated based on order data.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

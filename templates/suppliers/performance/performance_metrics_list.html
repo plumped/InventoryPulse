@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Performance Metrics - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Suppliers</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_performance_overview' %}">Performance Overview</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Performance Metrics</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Performance Metrics</h1>
+            <p class="text-muted">Manage performance metric definitions</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'supplier_performance_metric_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Metric
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Target</th>
+                            <th>Weight</th>
+                            <th>Status</th>
+                            <th style="width: 120px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for metric in metrics %}
+                        <tr>
+                            <td>
+                                <strong>{{ metric.name }}</strong>
+                                {% if metric.is_system %}
+                                <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">
+                                    System
+                                </span>
+                                {% endif %}
+                                {% if metric.description %}
+                                <div class="small text-muted">{{ metric.description }}</div>
+                                {% endif %}
+                            </td>
+                            <td><code>{{ metric.code }}</code></td>
+                            <td>{{ metric.get_metric_type_display }}</td>
+                            <td>{{ metric.target_value }}%</td>
+                            <td>{{ metric.weight }}</td>
+                            <td>
+                                {% if metric.is_active %}
+                                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'supplier_performance_metric_edit' metric.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if not metric.is_system %}
+                                    <a href="{% url 'supplier_performance_metric_delete' metric.id %}" class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="bi bi-clipboard-x fs-2 d-block mb-2"></i>
+                                    <p>No performance metrics found.</p>
+                                    <a href="{% url 'supplier_performance_metric_create' %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle me-1"></i>Create First Metric
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description of metric types -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">About Performance Metrics</h5>
+        </div>
+        <div class="card-body">
+            <h6>System Metrics</h6>
+            <p>
+                System metrics are predefined metrics that are automatically calculated based on order data.
+                They cannot be deleted, but they can be customized and deactivated if needed.
+            </p>
+
+            <h6>Metric Types</h6>
+            <dl class="row">
+                <dt class="col-sm-3">On-Time Delivery</dt>
+                <dd class="col-sm-9">Percentage of orders delivered on or before the expected delivery date.</dd>
+
+                <dt class="col-sm-3">Order Accuracy</dt>
+                <dd class="col-sm-9">Percentage of order items delivered with the correct quantity.</dd>
+
+                <dt class="col-sm-3">Price Consistency</dt>
+                <dd class="col-sm-9">Consistency of pricing for the same products over time. A low score indicates high price volatility.</dd>
+
+                <dt class="col-sm-3">Quality</dt>
+                <dd class="col-sm-9">Assessment of product quality. This is typically a manual evaluation.</dd>
+
+                <dt class="col-sm-3">Responsiveness</dt>
+                <dd class="col-sm-9">Assessment of supplier's communication and response time. This is typically a manual evaluation.</dd>
+
+                <dt class="col-sm-3">Custom</dt>
+                <dd class="col-sm-9">Any other metric that doesn't fit the predefined categories.</dd>
+            </dl>
+
+            <h6>Weights</h6>
+            <p>
+                Weights determine how much each metric contributes to the overall supplier score.
+                A metric with a weight of 2 counts twice as much as a metric with a weight of 1.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

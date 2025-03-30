@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Performance Evaluation - {{ supplier.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Suppliers</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_performance_overview' %}">Performance Overview</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_performance_detail' supplier.id %}">{{ supplier.name }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Delete Evaluation</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">Delete Performance Evaluation</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Confirmation Required</h4>
+                <p>Are you sure you want to delete this performance evaluation?</p>
+                <hr>
+                <p class="mb-0">This action cannot be undone.</p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Evaluation Details</h5>
+                    <ul class="list-group mb-4">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Supplier:</span>
+                            <span class="fw-bold">{{ supplier.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Metric:</span>
+                            <span>{{ performance.metric.name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Score:</span>
+                            <span class="badge bg-primary rounded-pill">{{ performance.value }}%</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Evaluation Date:</span>
+                            <span>{{ performance.evaluation_date|date:"M d, Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>Created By:</span>
+                            <span>{{ performance.evaluated_by.username }}</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    {% if performance.notes %}
+                    <h5>Notes</h5>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ performance.notes|linebreaks }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'supplier_performance_detail' supplier.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash"></i> Confirm Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

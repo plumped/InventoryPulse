@@ -84,11 +84,48 @@ def supplier_detail(request, pk):
         status__in=['draft', 'pending', 'approved', 'sent', 'partially_received']
     ).order_by('-order_date')[:5]  # Neueste 5 Bestellungen
 
+    # Get performance data for this supplier
+    supplier_performance = None
+    active_metrics = SupplierPerformanceMetric.objects.filter(is_active=True)
+
+    if active_metrics.exists():
+        # Get the latest performance data for each metric
+        metrics_data = []
+        total_weighted_score = 0
+        total_weight = 0
+
+        for metric in active_metrics:
+            latest_performance = SupplierPerformance.objects.filter(
+                supplier=supplier,
+                metric=metric
+            ).order_by('-evaluation_date').first()
+
+            if latest_performance:
+                metrics_data.append({
+                    'name': metric.name,
+                    'value': latest_performance.value,
+                    'date': latest_performance.evaluation_date,
+                    'weight': metric.weight
+                })
+
+                # Add to weighted score
+                total_weighted_score += latest_performance.value * metric.weight
+                total_weight += metric.weight
+
+        # If we have at least one metric with data
+        if metrics_data and total_weight > 0:
+            composite_score = round(total_weighted_score / total_weight, 1)
+            supplier_performance = {
+                'metrics': metrics_data,
+                'composite_score': composite_score
+            }
+
     context = {
         'supplier': supplier,
         'supplier_products': supplier_products,
         'system_currency': system_currency,
-        'supplier_orders': supplier_orders,  # Neue Kontext-Variable für Bestellungen
+        'supplier_orders': supplier_orders,
+        'supplier_performance': supplier_performance,
     }
 
     return render(request, 'suppliers/supplier_detail.html', context)

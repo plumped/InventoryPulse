@@ -340,6 +340,12 @@
                                 </a>
                             </li>
                             {% endif %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_performance_overview' %}active{% endif %}"
+                                   href="{% url 'supplier_performance_overview' %}">
+                                    <i class="bi bi-graph-up me-2"></i>Lieferantenperformance
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     {% endif %}

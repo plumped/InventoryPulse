@@ -259,6 +259,12 @@
                                     <i class="bi bi-plus-circle me-2"></i>Neue Bestellung
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_order_import' %}active{% endif %}"
+                                   href="{% url 'batch_order_import' %}">
+                                    <i class="bi bi-upload me-2"></i>Batch Order Import
+                                </a>
+                            </li>
                             {% endif %}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'order_suggestions' %}active{% endif %}"

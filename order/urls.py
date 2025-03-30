@@ -1,5 +1,11 @@
 from django.urls import path
 from . import views
+from .batch_processor import (
+    batch_order_import_view,
+    download_order_template,
+    batch_order_import_result,
+    download_error_report
+)
 
 urlpatterns = [
     # Bestellungsübersicht
@@ -58,6 +64,10 @@ urlpatterns = [
     path('templates/<int:pk>/toggle-active/', views.order_template_toggle_active, name='order_template_toggle_active'),
     path('templates/<int:pk>/duplicate/', views.order_template_duplicate, name='order_template_duplicate'),
     path('templates/<int:pk>/create-order/', views.create_order_from_template, name='create_order_from_template'),
+    path('batch-import/', batch_order_import_view, name='batch_order_import'),
+    path('batch-import/result/', batch_order_import_result, name='batch_order_import_result'),
+    path('batch-template/<str:format_type>/', download_order_template, name='download_order_template'),
+    path('batch-errors/<str:format_type>/', download_error_report, name='download_error_report'),
 
     # AJAX-Endpunkt für Lieferantenproduktpreis
     path('get-supplier-product-price/', views.get_supplier_product_price, name='get_supplier_product_price'),

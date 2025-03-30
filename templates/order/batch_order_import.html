@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Batch Order Import - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Orders</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Batch Order Import</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Batch Order Import</h1>
+            <p class="text-muted">Create multiple orders at once by uploading a CSV or Excel file</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group">
+                <a href="{% url 'download_order_template' 'csv' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV Template
+                </a>
+                <a href="{% url 'download_order_template' 'xlsx' %}" class="btn btn-outline-success">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Download Excel Template
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Upload Order File</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">CSV or Excel File</label>
+                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv,.xlsx" required>
+                            <div class="form-text">Upload a CSV or Excel file with your order data. Use the templates available on the right.</div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="delimiter" class="form-label">Delimiter (CSV only)</label>
+                                <select class="form-select" id="delimiter" name="delimiter">
+                                    <option value="," selected>Comma (,)</option>
+                                    <option value=";">Semicolon (;)</option>
+                                    <option value="\t">Tab</option>
+                                    <option value="|">Pipe (|)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="encoding" class="form-label">Encoding</label>
+                                <select class="form-select" id="encoding" name="encoding">
+                                    <option value="utf-8" selected>UTF-8</option>
+                                    <option value="latin1">ISO-8859-1 (Latin-1)</option>
+                                    <option value="cp1252">Windows-1252</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 pt-4">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="skip_header" name="skip_header" checked>
+                                    <label class="form-check-label" for="skip_header">
+                                        Skip Header Row
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'purchase_order_list' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload"></i> Upload and Process
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <p>To create multiple orders at once:</p>
+                    <ol>
+                        <li>Download one of the templates on the right</li>
+                        <li>Fill in your order data in the spreadsheet</li>
+                        <li>Save the file as CSV or Excel</li>
+                        <li>Upload the file using the form on the left</li>
+                    </ol>
+
+                    <h6 class="mt-4">Required Fields:</h6>
+                    <ul class="list-unstyled ps-3">
+                        <li><strong>supplier_name</strong> - Exact name as in the system</li>
+                        <li><strong>product_sku</strong> - SKU of the product</li>
+                        <li><strong>quantity</strong> - Amount to order</li>
+                    </ul>
+
+                    <h6 class="mt-3">Optional Fields:</h6>
+                    <ul class="list-unstyled ps-3">
+                        <li><strong>notes</strong> - Notes for the order</li>
+                        <li><strong>expected_delivery</strong> - YYYY-MM-DD format</li>
+                        <li><strong>shipping_address</strong> - Where to ship</li>
+                        <li><strong>unit_price</strong> - Override supplier price</li>
+                        <li><strong>supplier_sku</strong> - Supplier's product code</li>
+                    </ul>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Multiple lines for the same supplier will be combined into a single order.
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Templates</h5>
+                </div>
+                <div class="card-body">
+                    <p>Download a template to get started quickly:</p>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'download_order_template' 'csv' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-file-earmark-spreadsheet me-2"></i> CSV Template
+                        </a>
+                        <a href="{% url 'download_order_template' 'xlsx' %}" class="btn btn-outline-success">
+                            <i class="bi bi-file-earmark-excel me-2"></i> Excel Template with Instructions
+                        </a>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Make sure supplier names and product SKUs exactly match those in the system.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Detect file type and adjust delimiter field
+    document.getElementById('csv_file').addEventListener('change', function() {
+        const filename = this.value.toLowerCase();
+        const delimiterField = document.getElementById('delimiter');
+        const delimiterLabel = delimiterField.closest('.col-md-4').querySelector('label');
+
+        if (filename.endsWith('.csv')) {
+            delimiterField.disabled = false;
+            delimiterLabel.classList.remove('text-muted');
+        } else {
+            delimiterField.disabled = true;
+            delimiterLabel.classList.add('text-muted');
+        }
+    });
+</script>
+{% endblock %}

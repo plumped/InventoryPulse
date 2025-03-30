@@ -696,11 +696,6 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Artikelstatus</h5>
-                    {% if order.status in 'sent,partially_received' %}
-                    <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-box-seam"></i> Wareneingang erfassen
-                    </a>
-                    {% endif %}
                 </div>
                 <div class="card-body">
                     <div class="row">

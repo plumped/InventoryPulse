@@ -171,7 +171,6 @@
                 </div>
                 <div class="card-body">
                     <div class="performance-chart" id="chart-{{ data.metric.code }}"></div>
-
                     {% if data.performances %}
                     <hr>
                     <div class="row text-center">
@@ -278,15 +277,26 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Zuerst die Zeitbibliothek einbinden -->
+<script src="https://cdn.jsdelivr.net/npm/luxon@2.0.0/build/global/luxon.min.js"></script>
+
+<!-- Dann Chart.js mit dem Date-Adapter -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.0.0/dist/chartjs-adapter-luxon.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Set up charts for each metric
     {% for data in metrics_data %}
     {% if data.trend_data %}
-    var ctx{{ forloop.counter }} = document.getElementById('chart-{{ data.metric.code }}');
-    if (ctx{{ forloop.counter }}) {
-        new Chart(ctx{{ forloop.counter }}, {
+    var chartContainer = document.getElementById('chart-{{ data.metric.code }}');
+    if (chartContainer) {
+        // Prüfen, ob bereits ein Canvas existiert
+        var canvas = document.createElement('canvas');
+        chartContainer.innerHTML = ''; // Bestehenden Inhalt löschen
+        chartContainer.appendChild(canvas);
+
+        new Chart(canvas, {
             type: 'line',
             data: {
                 datasets: [{

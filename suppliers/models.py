@@ -240,6 +240,10 @@ class SupplierPerformanceCalculator:
         """Calculate price consistency based on price variations for the same products."""
         from django.db.models import Avg, StdDev
 
+        # Print the start of the calculation
+        print(f"\n=== Price consistency calculation for supplier: {supplier.name} ===")
+        print(f"Date range: {start_date} to {end_date}")
+
         # Default to last 90 days if no dates specified
         if not end_date:
             end_date = timezone.now().date()
@@ -248,8 +252,10 @@ class SupplierPerformanceCalculator:
 
         # Get all supplier products
         supplier_products = supplier.supplier_products.all()
+        print(f"Found {supplier_products.count()} products for supplier")
 
         if not supplier_products.exists():
+            print("No supplier products found, returning None")
             return None, []
 
         # Get all order items for this supplier's products in the date range
@@ -260,20 +266,31 @@ class SupplierPerformanceCalculator:
             order_date__gte=start_date,
             order_date__lte=end_date
         )
+        print(f"Found {relevant_orders.count()} relevant orders in date range")
 
         # Calculate price variation score
         variation_scores = []
         products_analyzed = 0
 
         for sp in supplier_products:
+            print(f"\nAnalyzing product: {sp.product.name} (ID: {sp.product.id})")
+
             # Get all order items for this product
             order_items = PurchaseOrderItem.objects.filter(
                 purchase_order__in=relevant_orders,
                 product=sp.product
             )
 
+            print(f"  Found {order_items.count()} order items for this product")
+
             if order_items.count() < 2:  # Need at least 2 orders to calculate variation
+                print(f"  Skipping product - less than 2 orders ({order_items.count()})")
                 continue
+
+            # Print all prices to see the raw data
+            print("  Price values:")
+            for item in order_items:
+                print(f"    Order {item.purchase_order.order_number}: {item.unit_price}")
 
             # Calculate coefficient of variation (standard deviation / mean)
             stats = order_items.aggregate(
@@ -284,19 +301,41 @@ class SupplierPerformanceCalculator:
             avg_price = stats['avg_price'] or 0
             stddev_price = stats['stddev_price'] or 0
 
+            print(f"  Stats - Avg price: {avg_price}, StdDev: {stddev_price}")
+
             if avg_price > 0:
                 cv = (stddev_price / avg_price) * 100  # As percentage
+                print(f"  Coefficient of variation: {cv}%")
 
-                # Convert to a score where 0% variation = 100 points, 10%+ variation = 0 points
-                variation_score = max(0, 100 - (cv * 10))
+                # Add a tolerance threshold for very small variations
+                if stddev_price < 0.0001:
+                    print("  StdDev is very small, setting variation_score to 100")
+                    variation_score = 100
+                else:
+                    variation_score = max(0, 100 - (cv * 2))
+
+
+                print(f"  Variation score: {variation_score}")
+
                 variation_scores.append(variation_score)
                 products_analyzed += 1
+            else:
+                print("  Average price is zero, skipping product")
 
         # Calculate average score
+        print(f"\nTotal products analyzed: {products_analyzed}")
+        print(f"Variation scores: {variation_scores}")
+
         if variation_scores:
             avg_score = sum(variation_scores) / len(variation_scores)
+            print(f"Final average score: {avg_score}")
             return round(avg_score, 2), list(relevant_orders)
         else:
+            print("No variation scores calculated, returning None")
+            # Add fallback for when no variation could be calculated but we have products
+            if supplier_products.exists() and relevant_orders.exists():
+                print("Products and orders exist but no scores calculated - assuming perfect consistency (100%)")
+                return 100.0, list(relevant_orders)
             return None, []
 
     @classmethod

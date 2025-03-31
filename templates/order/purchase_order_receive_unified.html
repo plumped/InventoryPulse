@@ -103,6 +103,53 @@
                             </div>
                         </div>
 
+                        <!-- Teillieferungsoptionen -->
+                        <div id="splitOptionsContainer" class="split-options-container mt-4 p-3 border rounded bg-light" style="display: none;">
+                            <h5><i class="bi bi-boxes me-2"></i>Teillieferungsinformationen</h5>
+                            <p class="text-info">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Eine oder mehrere Positionen wurden nur teilweise geliefert. Möchten Sie dies als Teillieferung erfassen?
+                            </p>
+
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="createSplit" name="create_split" value="yes" checked>
+                                <label class="form-check-label" for="createSplit">Diese als Teillieferung erfassen</label>
+                            </div>
+
+                            <div id="splitDetailsContainer">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="splitName" class="form-label">Bezeichnung der Teillieferung</label>
+                                        <input type="text" class="form-control" id="splitName" name="split_name"
+                                                placeholder="z.B. Erste Lieferung">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="trackingNumber" class="form-label">Tracking-Nummer</label>
+                                        <input type="text" class="form-control" id="trackingNumber" name="tracking_number" placeholder="Optional">
+                                    </div>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" class="form-check-input" id="createFutureSplit" name="create_future_split" value="yes">
+                                    <label class="form-check-label" for="createFutureSplit">Restlieferung automatisch planen</label>
+                                </div>
+
+                                <div id="futureSplitOptions" class="future-split-options mb-3 p-3 border rounded" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="futureSplitName" class="form-label">Bezeichnung der Restlieferung</label>
+                                            <input type="text" class="form-control" id="futureSplitName" name="future_split_name"
+                                                    placeholder="z.B. Restlieferung">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="futureDeliveryDate" class="form-label">Erwartetes Lieferdatum</label>
+                                            <input type="date" class="form-control" id="futureDeliveryDate" name="future_delivery_date">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Artikeltabelle -->
                         <div class="table-responsive">
                             <table class="table table-hover">
@@ -265,10 +312,51 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
+    // Get the order ID from the URL or a data attribute
+    const orderId = {{ order.id }};
+
+    // Funktion zur Überprüfung und Anpassung der Form-Validierung basierend auf der Eingabemenge
+    function updateFieldRequirements() {
+        $('.receive-quantity').each(function() {
+            const $this = $(this);
+            const $row = $this.closest('tr');
+            const quantity = parseFloat($this.val()) || 0;
+
+            // ID des aktuellen Elements ermitteln
+            const itemId = $row.data('item-id');
+
+            // Selektoren für zugehörige Felder
+            const $warehouseSelect = $row.find(`select[name="warehouse_${itemId}"]`);
+            const $batchInput = $row.find(`input[name="batch_${itemId}"]`);
+            const $expiryInput = $row.find(`input[name="expiry_${itemId}"]`);
+
+            if (quantity > 0) {
+                // Wenn eine positive Menge eingegeben wurde, Felder als required markieren
+                $warehouseSelect.prop('required', true);
+
+                // Batch-Feld nur als required markieren, wenn Produkt Batch-Tracking hat
+                if ($row.hasClass('has-batch')) {
+                    $batchInput.prop('required', true);
+                }
+
+                // Verfallsdatum-Feld nur als required markieren, wenn Produkt Verfallsdatum-Tracking hat
+                if ($row.hasClass('has-expiry')) {
+                    $expiryInput.prop('required', true);
+                }
+            } else {
+                // Wenn Menge 0 oder leer ist, Felder als nicht required markieren
+                $warehouseSelect.prop('required', false);
+                $batchInput.prop('required', false);
+                $expiryInput.prop('required', false);
+            }
+        });
+    }
+
     // Prüfen, ob die Bestellung bereits Teillieferungen hat
     $.ajax({
-        url: '/order/check-has-splits/' + orderId + '/',
+        url: '/order/' + orderId + '/splits/check/',
         method: 'GET',
+        dataType: 'json',
         success: function(data) {
             if (data.has_splits) {
                 // Existierende Teillieferungen anzeigen
@@ -310,7 +398,21 @@ $(document).ready(function() {
 
     // Option zum Verwenden einer existierenden Teillieferung umschalten
     $('#useExistingSplit').change(function() {
-        $('#selectExistingSplitContainer').toggle(this.checked);
+        const useExistingSplit = $(this).is(':checked');
+        $('#selectExistingSplitContainer').toggle(useExistingSplit);
+
+        // Wenn existierende Teillieferung ausgewählt wird, die Option für neue Teillieferung deaktivieren
+        if (useExistingSplit) {
+            $('#createSplit').prop('checked', false);
+            $('#splitDetailsContainer').hide();
+            // Auch das Container-Element ausblenden
+            $('#splitOptionsContainer').hide();
+        } else {
+            // Wenn die Teillieferungserkennung es erfordert, die Option für neue Teillieferung wieder einblenden
+            if (isPartialDelivery && $('#detectPartialDelivery').is(':checked')) {
+                $('#splitOptionsContainer').show();
+            }
+        }
     });
 
     // Alle Mengen-Eingabefelder überwachen, um Teillieferungsstatus zu erkennen
@@ -327,13 +429,14 @@ $(document).ready(function() {
             const orderedQuantity = parseFloat($('#ordered_' + itemId).val()) || 0;
 
             // Wenn die eingegebene + bereits erhaltene Menge kleiner als die bestellte Menge ist
-            if (receivedQuantity + enteredQuantity < orderedQuantity) {
+            if (receivedQuantity + enteredQuantity < orderedQuantity && enteredQuantity > 0) {
                 isPartialDelivery = true;
+                return false; // exit the loop early if we found a partial delivery
             }
         });
 
         // Teillieferungsoptionen anzeigen/ausblenden
-        if (isPartialDelivery && $('#detectPartialDelivery').is(':checked')) {
+        if (isPartialDelivery && $('#detectPartialDelivery').is(':checked') && !$('#useExistingSplit').is(':checked')) {
             $('#splitOptionsContainer').slideDown();
         } else {
             $('#splitOptionsContainer').slideUp();
@@ -341,12 +444,25 @@ $(document).ready(function() {
     }
 
     // Events registrieren
-    $('.receive-quantity').on('input', checkForPartialDelivery);
-    $('#detectPartialDelivery').change(checkForPartialDelivery);
+    $('.receive-quantity').on('input', function() {
+        checkForPartialDelivery();
+        updateFieldRequirements(); // Zusätzlich die Feld-Requirements aktualisieren
+    });
+
+    $('#detectPartialDelivery').change(function() {
+        checkForPartialDelivery();
+    });
 
     // Teillieferungsoptionen umschalten
     $('#createSplit').change(function() {
-        $('#splitDetailsContainer').toggle(this.checked);
+        const createSplit = $(this).is(':checked');
+        $('#splitDetailsContainer').toggle(createSplit);
+
+        // Wenn neue Teillieferung ausgewählt wird, die Option für existierende Teillieferung deaktivieren
+        if (createSplit) {
+            $('#useExistingSplit').prop('checked', false);
+            $('#selectExistingSplitContainer').hide();
+        }
     });
 
     // Restlieferungsoptionen umschalten
@@ -354,8 +470,9 @@ $(document).ready(function() {
         $('#futureSplitOptions').toggle(this.checked);
     });
 
-    // Initial check for partial delivery
+    // Initial check for partial delivery and field requirements
     checkForPartialDelivery();
+    updateFieldRequirements();
 
     // Standardwerte für Teillieferungsbezeichnungen setzen
     const today = new Date();
@@ -386,16 +503,23 @@ $(document).ready(function() {
             return false;
         }
 
-        // Wenn "Existierende Teillieferung verwenden" aktiviert ist, aber keine ausgewählt wurde
+        // Prüfen, ob sowohl neue als auch existierende Teillieferung ausgewählt wurden (sollte nicht möglich sein)
+        if ($('#useExistingSplit').is(':checked') && $('#createSplit').is(':checked')) {
+            e.preventDefault();
+            alert('Sie können nicht gleichzeitig eine bestehende Teillieferung verwenden und eine neue erstellen. Bitte wählen Sie eine Option.');
+            return false;
+        }
+
+        // Wenn bestehende Teillieferung ausgewählt ist, aber keine ausgewählt wurde
         if ($('#useExistingSplit').is(':checked') && (!$('#existingSplitSelect').val() || $('#existingSplitSelect').val() === '')) {
             e.preventDefault();
-            alert('Bitte wählen Sie eine existierende Teillieferung aus.');
+            alert('Bitte wählen Sie eine existierende Teillieferung aus dem Dropdown-Menü.');
             $('#existingSplitSelect').focus();
             return false;
         }
 
         // Wenn "Teillieferung erfassen" aktiviert ist, aber kein Name angegeben wurde
-        if ($('#createSplit').is(':checked') && $('#splitName').val().trim() === '') {
+        if (isPartialDelivery && $('#createSplit').is(':checked') && $('#splitName').val().trim() === '') {
             e.preventDefault();
             alert('Bitte geben Sie einen Namen für die Teillieferung ein.');
             $('#splitName').focus();
@@ -407,6 +531,53 @@ $(document).ready(function() {
             e.preventDefault();
             alert('Bitte geben Sie einen Namen für die geplante Restlieferung ein.');
             $('#futureSplitName').focus();
+            return false;
+        }
+
+        // Zusätzliche Validierung für Felder mit Menge > 0
+        let formValid = true;
+        $('.receive-quantity').each(function() {
+            const $this = $(this);
+            const $row = $this.closest('tr');
+            const quantity = parseFloat($this.val()) || 0;
+            const itemId = $row.data('item-id');
+
+            if (quantity > 0) {
+                // Lager muss ausgewählt sein
+                const $warehouse = $row.find(`select[name="warehouse_${itemId}"]`);
+                if (!$warehouse.val()) {
+                    formValid = false;
+                    alert('Bitte wählen Sie ein Ziellager für alle Positionen mit Wareneingangsmenge > 0.');
+                    $warehouse.focus();
+                    return false;  // break loop
+                }
+
+                // Batch-Nummer prüfen, falls erforderlich
+                if ($row.hasClass('has-batch')) {
+                    const $batch = $row.find(`input[name="batch_${itemId}"]`);
+                    if (!$batch.val().trim()) {
+                        formValid = false;
+                        alert('Bitte geben Sie eine Chargennummer für alle Produkte mit Chargen-Tracking ein.');
+                        $batch.focus();
+                        return false;  // break loop
+                    }
+                }
+
+                // Verfallsdatum prüfen, falls erforderlich
+                if ($row.hasClass('has-expiry')) {
+                    const $expiry = $row.find(`input[name="expiry_${itemId}"]`);
+                    if (!$expiry.val()) {
+                        formValid = false;
+                        alert('Bitte geben Sie ein Verfallsdatum für alle Produkte mit Verfallsdatum-Tracking ein.');
+                        $expiry.focus();
+                        return false;  // break loop
+                    }
+                }
+            }
+        });
+
+        if (!formValid) {
+            e.preventDefault();
             return false;
         }
 

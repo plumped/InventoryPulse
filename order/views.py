@@ -716,15 +716,32 @@ def purchase_order_receive(request, pk):
                 is_complete_delivery = False
                 break
 
-        create_split = request.POST.get('create_split') == 'yes' and not is_complete_delivery
+        # Prüfen, ob eine existierende Teillieferung verwendet werden soll
+        use_existing_split = request.POST.get('use_existing_split') == 'on'
+        existing_split_id = request.POST.get('existing_split_id')
+
+        # Prüfen, ob eine neue Teillieferung erstellt werden soll
+        create_split = request.POST.get('create_split') == 'yes' and not is_complete_delivery and not use_existing_split
         split_name = request.POST.get('split_name', '')
         expected_delivery = request.POST.get('expected_delivery', None)
 
         try:
             with transaction.atomic():
-                # Bei Bedarf eine neue Teillieferung anlegen
+                # Bei Bedarf eine neue Teillieferung anlegen oder eine bestehende verwenden
                 split = None
-                if create_split:
+
+                if use_existing_split and existing_split_id:
+                    # Bestehende Teillieferung verwenden
+                    try:
+                        split = OrderSplit.objects.get(pk=existing_split_id, purchase_order=order)
+                        # Status auf 'received' setzen, da wir Waren für diese Teillieferung empfangen
+                        split.status = 'received'
+                        split.save()
+                    except OrderSplit.DoesNotExist:
+                        messages.error(request, 'Die ausgewählte Teillieferung konnte nicht gefunden werden.')
+                        return redirect('purchase_order_receive', pk=order.pk)
+                elif create_split:
+                    # Neue Teillieferung erstellen
                     split = OrderSplit.objects.create(
                         purchase_order=order,
                         name=split_name or f"Teillieferung {timezone.now().strftime('%d.%m.%Y')}",
@@ -797,8 +814,8 @@ def purchase_order_receive(request, pk):
                                 batch_obj, created = BatchNumber.objects.update_or_create(
                                     product=item.product,
                                     batch_number=batch,
+                                    warehouse=warehouse,
                                     defaults={
-                                        'warehouse': warehouse,
                                         'quantity': quantity,
                                         'expiry_date': expiry_date,
                                         'supplier': order.supplier,
@@ -835,19 +852,43 @@ def purchase_order_receive(request, pk):
                             item.quantity_received += quantity
                             item.save()
 
-                            # Wenn wir eine Teillieferung haben, auch die entsprechende Position anlegen
-                            if split:
+                            # Wenn wir eine Teillieferung haben und diese neu erstellt wurde,
+                            # auch die entsprechende Position anlegen
+                            if split and create_split:
                                 OrderSplitItem.objects.create(
                                     order_split=split,
                                     order_item=item,
                                     quantity=quantity
                                 )
+                            # Wenn wir eine bestehende Teillieferung verwenden,
+                            # prüfen, ob ein SplitItem existiert und aktualisieren oder erstellen
+                            elif split and use_existing_split:
+                                # Prüfen, ob bereits ein Split-Item für diesen Order-Item existiert
+                                try:
+                                    split_item = OrderSplitItem.objects.get(
+                                        order_split=split,
+                                        order_item=item
+                                    )
+                                    # Hier NICHT die Menge erhöhen, sondern die Gesamtmenge aktualisieren
+                                    # Das ist der Fehler in deinem Code
+                                    if quantity > 0:
+                                        # Nur aktualisieren, wenn eine Menge eingegeben wurde
+                                        split_item.quantity = quantity
+                                        split_item.save()
+                                except OrderSplitItem.DoesNotExist:
+                                    # Wenn nicht, neues Split-Item erstellen
+                                    if quantity > 0:
+                                        OrderSplitItem.objects.create(
+                                            order_split=split,
+                                            order_item=item,
+                                            quantity=quantity
+                                        )
 
                             items_received = True
 
                 # Wenn keine Artikel empfangen wurden, Wareneingang löschen
                 if not items_received:
-                    if split:
+                    if split and create_split:
                         split.delete()
                     receipt.delete()
                     messages.warning(request, 'Es wurden keine Artikel als empfangen markiert.')
@@ -883,7 +924,11 @@ def purchase_order_receive(request, pk):
                     messages.success(request,
                                      f'Wareneingang wurde erfasst und eine neue geplante Teillieferung "{future_split.name}" wurde angelegt.')
                 else:
-                    messages.success(request, 'Wareneingang wurde erfolgreich erfasst.')
+                    if use_existing_split and split:
+                        messages.success(request,
+                                         f'Wareneingang für Teillieferung "{split.name}" wurde erfolgreich erfasst.')
+                    else:
+                        messages.success(request, 'Wareneingang wurde erfolgreich erfasst.')
 
                 return redirect('purchase_order_detail', pk=order.pk)
 
@@ -1672,9 +1717,15 @@ def purchase_order_receipt_delete(request, pk, receipt_id):
                        f'Wareneingang kann nicht gelöscht werden, da die Bestellung im Status "{order.get_status_display()}" ist.')
         return redirect('purchase_order_detail', pk=order.pk)
 
+    # Get reference to the associated split before anything else
+    associated_split = receipt.order_split
+    delete_split = False  # Default: Do not delete the split
+
     if request.method == 'POST':
+        # Check if user wants to delete the split too
+        delete_split = request.POST.get('delete_split') == 'yes'
+
         with transaction.atomic():
-            associated_split = receipt.order_split
             # Reverse all stock movements and update product warehouse quantities
             for item in receipt.items.all():
                 # Reverse stock movement
@@ -1702,56 +1753,48 @@ def purchase_order_receipt_delete(request, pk, receipt_id):
                 order_item.quantity_received -= item.quantity_received
                 order_item.save()
 
-            # Delete the receipt
+            # Delete the receipt first
             receipt.delete()
 
+            # Handle the associated split if it exists
             if associated_split:
-                receipts_for_split = PurchaseOrderReceipt.objects.filter(order_split=associated_split)
-                if not receipts_for_split.exists():
-                    # Entweder Teillieferung löschen oder auf "planned" zurücksetzen
-                    associated_split.status = 'planned'
-                    associated_split.save()
+                # Check if there are any remaining receipts for this split
+                remaining_receipts = PurchaseOrderReceipt.objects.filter(order_split=associated_split).exists()
 
-                    # Optional: Benachrichtigung hinzufügen
-                    messages.info(request,
-                                  f'Teillieferung "{associated_split.name}" wurde wieder auf "Geplant" gesetzt.')
+                if not remaining_receipts:
+                    if delete_split:
+                        # User has chosen to delete the split as well since it has no more receipts
+                        split_name = associated_split.name
+                        associated_split.delete()
+                        messages.info(request, f'Teillieferung "{split_name}" wurde vollständig gelöscht.')
+                    else:
+                        # Just reset the status to 'planned'
+                        associated_split.status = 'planned'
+                        associated_split.save()
+                        messages.info(request,
+                                      f'Teillieferung "{associated_split.name}" wurde zurück auf "Geplant" gesetzt.')
 
-            # Update order status based on remaining receipts
-            all_items_received = True
-            any_items_received = False
-
-            for order_item in order.items.all():
-                if order_item.quantity_received >= order_item.quantity_ordered:
-                    any_items_received = True
-                else:
-                    all_items_received = False
-                    if order_item.quantity_received > 0:
-                        any_items_received = True
-
-            if all_items_received:
-                order.status = 'received'
-            elif any_items_received:
-                order.status = 'partially_received'
-            else:
-                order.status = 'sent'
-
-            order.save()
+            # Update order status using the helper function
+            update_order_status_after_receipt(order)
 
             messages.success(request, f'Wareneingang für Bestellung {order.order_number} wurde erfolgreich gelöscht.')
 
         return redirect('purchase_order_detail', pk=order.pk)
 
+    # Check if this is the only receipt for its split
+    is_only_receipt = False
+    if associated_split:
+        is_only_receipt = PurchaseOrderReceipt.objects.filter(order_split=associated_split).count() == 1
+
     context = {
         'order': order,
         'receipt': receipt,
+        'associated_split': associated_split,
+        'is_only_receipt': is_only_receipt,
     }
 
     return render(request, 'order/purchase_order_receipt_confirm_delete.html', context)
 
-
-# Add this function to order/views.py
-
-# Add this function to order/views.py
 
 @login_required
 def get_supplier_products_list(request):
@@ -3167,6 +3210,71 @@ def update_order_status(order):
         split.save()
 
 
+def update_order_status_after_receipt(order):
+    """
+    Updates the order status after a receipt is processed or deleted.
+    Takes into account cancelled items.
+    """
+    # Check if all non-cancelled items are fully received or partially received
+    all_items_received = True
+    any_items_received = False
+
+    for item in order.items.all():
+        # Skip cancelled items
+        if item.is_canceled:
+            continue
+
+        # For partially cancelled items, use the effective quantity
+        effective_ordered = item.effective_quantity
+
+        if item.quantity_received >= effective_ordered:
+            any_items_received = True
+        else:
+            all_items_received = False
+            if item.quantity_received > 0:
+                any_items_received = True
+
+    # Set status based on the result
+    if all_items_received:
+        order.status = 'received'
+    elif any_items_received:
+        order.status = 'partially_received'
+    else:
+        order.status = 'sent'
+
+    order.save()
+
+    # Also update the status of all associated splits
+    for split in order.splits.all():
+        all_split_items_received = True
+        any_split_items_received = False
+
+        for split_item in split.items.select_related('order_item').all():
+            order_item = split_item.order_item
+
+            # Calculate how much of this split item has been received
+            # This is complex because receipts are linked to order items, not split items
+            total_received = order_item.quantity_received
+
+            if total_received >= split_item.quantity:
+                any_split_items_received = True
+            else:
+                all_split_items_received = False
+                if total_received > 0:
+                    any_split_items_received = True
+
+        # Update split status
+        if all_split_items_received:
+            split.status = 'received'
+        elif any_split_items_received:
+            split.status = 'partially_received'
+        elif split.status == 'received' or split.status == 'partially_received':
+            # If it was previously received but now isn't, reset to planned
+            split.status = 'planned'
+
+        split.save()
+
+
 # Ajax-Endpunkt, um zu prüfen ob eine Bestellung Teillieferungen hat
 def check_order_has_splits(request, pk):
     """
@@ -3220,3 +3328,33 @@ def order_split_update_status(request, pk, split_id):
 
     # If not a POST request, redirect to the detail page
     return redirect('order_split_detail', pk=order.pk, split_id=split.pk)
+
+
+@login_required
+def check_order_splits(request, pk):
+    """
+    AJAX endpoint that checks if an order has any planned splits.
+    Returns data about existing splits.
+    """
+    if request.method == 'GET':
+        order = get_object_or_404(PurchaseOrder, pk=pk)
+        splits = order.splits.exclude(status='received').order_by('expected_delivery')
+
+        # Get split details for the response
+        splits_data = []
+        if splits.exists():
+            for split in splits:
+                splits_data.append({
+                    'id': split.id,
+                    'name': split.name,
+                    'status': split.get_status_display(),
+                    'expected_delivery': split.expected_delivery.isoformat() if split.expected_delivery else None,
+                    'items_count': split.items.count()
+                })
+
+        return JsonResponse({
+            'has_splits': splits.exists(),
+            'splits': splits_data
+        })
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)

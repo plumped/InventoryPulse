@@ -83,4 +83,6 @@ urlpatterns = [
     path('get-supplier-product-price/', views.get_supplier_product_price, name='get_supplier_product_price'),
     path('get-supplier-products-list/', views.get_supplier_products_list, name='get_supplier_products_list'),
     path('bulk-send/', views.bulk_send_orders, name='bulk_send_orders'),
+    path('<int:pk>/splits/check/', views.check_order_splits, name='check_order_splits'),
+
 ]

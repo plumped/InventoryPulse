@@ -395,91 +395,100 @@
             </div>
 
             <!-- Karten der einzelnen Teillieferungen -->
-            <div class="row">
-                {% for split_item in splits %}
-                {% with split=split_item.split %}
-                <div class="col-md-4 mb-3">
-                    <div class="card delivery-card h-100 {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}" data-split-id="{{ split.id }}">
-                        <div class="card-header bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0">{{ split.name }}</h6>
-                                <span class="badge {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}">
-                                    {{ split.get_status_display }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-2">
-                                <div class="d-flex justify-content-between">
-                                    <span>Fortschritt:</span>
-                                    <span>{{ split_item.completion_percentage }}%</span>
-                                </div>
-                                <div class="progress mt-1" style="height: 8px;">
-                                    <div class="progress-bar {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}"
-                                         role="progressbar"
-                                         style="width: {{ split_item.completion_percentage }}%;"
-                                         aria-valuenow="{{ split_item.completion_percentage }}"
-                                         aria-valuemin="0"
-                                         aria-valuemax="100"></div>
-                                </div>
-                            </div>
-
-                            <div class="row mt-3">
-                                <div class="col-6">
-                                    <div class="text-muted small">Positionen:</div>
-                                    <div>{{ split_item.total_items_count }}</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="text-muted small">Erhalten:</div>
-                                    <div>{{ split_item.received_items_count }}/{{ split_item.total_items_count }}</div>
-                                </div>
-                            </div>
-
-                            {% if split.expected_delivery %}
-                            <div class="mt-2">
-                                <div class="text-muted small">Erwartete Lieferung:</div>
-                                <div>
-                                    {{ split.expected_delivery|date:"d.m.Y" }}
-                                    {% if split.expected_delivery < today_date %}
-                                    <span class="badge text-bg-danger ms-1">überfällig</span>
-                                    {% elif split.expected_delivery <= soon_date %}
-                                    <span class="badge text-bg-warning ms-1">bald fällig</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endif %}
-
-                            {% if split.carrier %}
-                            <div class="mt-2">
-                                <div class="text-muted small">Spediteur:</div>
-                                <div>{{ split.carrier }}</div>
-                            </div>
-                            {% endif %}
-
-                            {% if split.tracking_number %}
-                            <div class="mt-2">
-                                <div class="text-muted small">Tracking:</div>
-                                <div>{{ split.tracking_number }}</div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="card-footer bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
-                            <div class="d-flex justify-content-between">
-                                <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-eye"></i> Details
-                                </a>
-
-                                {% if split.status in 'planned,in_transit' %}
-                                <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-sm btn-success">
-                                    <i class="bi bi-box-seam"></i> Wareneingang
-                                </a>
-                                {% endif %}
-                            </div>
-                        </div>
+<div class="row">
+    {% for split_item in splits %}
+    {% with split=split_item.split %}
+    <div class="col-md-4 mb-3">
+        <div class="card delivery-card h-100 {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}" data-split-id="{{ split.id }}">
+            <div class="card-header bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">{{ split.name }}</h6>
+                    <span class="badge {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}">
+                        {{ split.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between">
+                        <span>Fortschritt:</span>
+                        <span>{{ split_item.completion_percentage }}%</span>
+                    </div>
+                    <div class="progress mt-1" style="height: 8px;">
+                        <div class="progress-bar {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}"
+                             role="progressbar"
+                             style="width: {{ split_item.completion_percentage }}%;"
+                             aria-valuenow="{{ split_item.completion_percentage }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100"></div>
                     </div>
                 </div>
-                {% endwith %}
-                {% endfor %}
+
+                <div class="row mt-3">
+                    <div class="col-6">
+                        <div class="text-muted small">Positionen:</div>
+                        <div>{{ split_item.total_items_count }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted small">Erhalten:</div>
+                        <div>{{ split_item.received_items_count }}/{{ split_item.total_items_count }}</div>
+                    </div>
+                </div>
+
+                {% if split.status == 'received' %}
+                    {% with last_receipt=split.receipts.last %}
+                    {% if last_receipt %}
+                    <div class="mt-2">
+                        <div class="text-muted small">Geliefert am:</div>
+                        <div>{{ last_receipt.receipt_date|date:"d.m.Y" }}</div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                {% elif split.expected_delivery %}
+                <div class="mt-2">
+                    <div class="text-muted small">Erwartete Lieferung:</div>
+                    <div>
+                        {{ split.expected_delivery|date:"d.m.Y" }}
+                        {% if split.expected_delivery < today_date %}
+                        <span class="badge text-bg-danger ms-1">überfällig</span>
+                        {% elif split.expected_delivery <= soon_date %}
+                        <span class="badge text-bg-warning ms-1">bald fällig</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if split.carrier %}
+                <div class="mt-2">
+                    <div class="text-muted small">Spediteur:</div>
+                    <div>{{ split.carrier }}</div>
+                </div>
+                {% endif %}
+
+                {% if split.tracking_number %}
+                <div class="mt-2">
+                    <div class="text-muted small">Tracking:</div>
+                    <div>{{ split.tracking_number }}</div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-eye"></i> Details
+                    </a>
+
+                    {% if split.status in 'planned,in_transit' %}
+                    <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-sm btn-success">
+                        <i class="bi bi-box-seam"></i> Wareneingang
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
             </div>
         </div>
     </div>

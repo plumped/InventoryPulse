@@ -238,7 +238,29 @@ def purchase_order_detail(request, pk):
                 if result:
                     # Bestellung als gesendet markieren
                     order.status = 'sent'
-                    order.save(update_fields=['status'])
+
+                    # Versuchen, die längste lead_time_days für Produkte in dieser Bestellung zu finden
+                    max_lead_time = 7  # Standardwert, falls keine Lieferantenprodukte gefunden werden
+                    for item in order.items.all():
+                        try:
+                            supplier_product = SupplierProduct.objects.get(
+                                supplier=order.supplier,
+                                product=item.product
+                            )
+                            if supplier_product.lead_time_days and supplier_product.lead_time_days > max_lead_time:
+                                max_lead_time = supplier_product.lead_time_days
+                        except SupplierProduct.DoesNotExist:
+                            continue
+
+                    # soon_date auf heute + längste lead_time_days setzen
+                    soon_date = date.today() + timedelta(days=max_lead_time)
+                    order.soon_date = soon_date
+
+                    # expected_delivery auf soon_date setzen
+                    order.expected_delivery = soon_date
+
+                    # Bestellstatus und Lieferdatum speichern
+                    order.save()
 
                     messages.success(request,
                                      f'Bestellung {order.order_number} wurde erfolgreich gesendet und als "Bestellt" markiert.')
@@ -264,7 +286,8 @@ def purchase_order_detail(request, pk):
         'has_expiry_products': has_expiry_products,
         'progress_percentage': progress_percentage,
         'today_date': today_date,
-        'soon_date': soon_date
+        'soon_date': soon_date,
+        'expected_delivery': order.expected_delivery,
     }
 
     return render(request, 'order/purchase_order_detail.html', context)

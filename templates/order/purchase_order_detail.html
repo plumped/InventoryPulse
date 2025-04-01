@@ -601,16 +601,36 @@
 
             <!-- Expected delivery information -->
             {% if order.expected_delivery and order.status != 'received' %}
-            <div class="alert {% if order.expected_delivery < today_date %}alert-danger{% elif order.expected_delivery <= soon_date %}alert-warning{% else %}alert-info{% endif %} mt-3 mb-0">
-                <i class="bi bi-calendar-check me-2"></i>
-                Erwartetes Lieferdatum: <strong>{{ order.expected_delivery|date:"d.m.Y" }}</strong>
-                {% if order.expected_delivery < today_date %}
-                (überfällig)
-                {% elif order.expected_delivery <= soon_date %}
-                (bald fällig)
+                <div class="alert
+                    {% if order.expected_delivery < today_date %}alert-danger
+                    {% elif order.expected_delivery <= soon_date %}alert-warning
+                    {% else %}alert-info{% endif %} mt-3 mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>
+
+                    {% if order.status == 'approved' %}
+                    <span class="badge bg-info float-end">Vorläufiges Datum</span>
+                    {% endif %}
+
+                    Erwartetes Lieferdatum: <strong>{{ order.expected_delivery|date:"d.m.Y" }}</strong>
+
+                    {% if order.status in 'sent,partially_received' %}
+                        {% if order.expected_delivery < today_date %}
+                        (überfällig)
+                        {% elif order.expected_delivery <= soon_date %}
+                        (bald fällig)
+                        {% endif %}
+                    {% endif %}
+
+                    {% if order.status == 'approved' %}
+                    <hr class="my-2">
+                    <small class="d-block mt-2">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Der Liefertermin kann sich nach Versand der Bestellung aufgrund der
+                        individuellen Lieferzeiten der Lieferantenprodukte ändern.
+                    </small>
+                    {% endif %}
+                </div>
                 {% endif %}
-            </div>
-            {% endif %}
         </div>
     </div>
 

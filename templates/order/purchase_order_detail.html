@@ -670,7 +670,7 @@
                         {% if supplier_currency %}
                         <dt class="col-sm-5">Währung:</dt>
                         <dd class="col-sm-7">
-                            <span class="badge text-dark">
+                            <span class="badge bg-secondary">
                                 {{ supplier_currency.code }} ({{ supplier_currency.symbol }})
                             </span>
                             {% if show_conversion %}
@@ -730,7 +730,7 @@
                     <div class="row">
                         {% for item in order.items.all %}
                         <div class="col-md-6 col-lg-4 mb-3">
-                            <div class="item-status-block {% if item.is_canceled %}bg-light{% endif %}">
+                            <div class="item-status-block {% if item.is_canceled %}{% endif %}">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <strong>{{ item.product.name }}</strong>
@@ -934,7 +934,7 @@
                             {% endfor %}
                         </tbody>
                         <tfoot>
-                            <tr class="table-secondary">
+                            <tr class="table">
                                 <th colspan="5" class="text-end">Zwischensumme:</th>
                                 <th class="text-end">
                                     {{ order.subtotal|floatformat:2 }}
@@ -978,7 +978,7 @@
                         <table class="table table-bordered">
                             <thead>
                                 {% if show_conversion %}
-                                <tr class="table-light">
+                                <tr class="table">
                                     <th></th>
                                     <th class="text-center">{{ supplier_currency.code }}</th>
                                     <th class="text-center">{{ system_currency.code }}</th>
@@ -1151,7 +1151,7 @@
                                         </table>
                                     </div>
                                     {% if receipt.notes %}
-                                    <div class="p-3 bg-light">
+                                    <div class="p-3">
                                         <h6 class="mb-2"><i class="bi bi-sticky me-2"></i>Anmerkungen:</h6>
                                         <p class="mb-0">{{ receipt.notes|linebreaks }}</p>
                                     </div>

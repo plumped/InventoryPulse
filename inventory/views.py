@@ -1895,7 +1895,7 @@ def bulk_warehouse_transfer(request):
                                 product=product,
                                 warehouse=destination_warehouse,
                                 quantity=quantity,
-                                movement_type='transfer_in',
+                                movement_type='Transfer',
                                 reference=f'Umlagerung von {source_warehouse.name}',
                                 notes=f'Charge: {batch.batch_number}, Menge: {quantity} {notes}',
                                 created_by=request.user
@@ -1963,7 +1963,7 @@ def bulk_warehouse_transfer(request):
                             product=product,
                             warehouse=source_warehouse,
                             quantity=-quantity,  # Negative Menge für Abgang
-                            movement_type='Transfer',
+                            movement_type='Transfer Abgang',
                             reference=f'Umlagerung nach {destination_warehouse.name}',
                             notes=notes,
                             created_by=request.user
@@ -1974,7 +1974,7 @@ def bulk_warehouse_transfer(request):
                             product=product,
                             warehouse=destination_warehouse,
                             quantity=quantity,
-                            movement_type='transfer_in',
+                            movement_type='Transfer Zugang',
                             reference=f'Umlagerung von {source_warehouse.name}',
                             notes=notes,
                             created_by=request.user

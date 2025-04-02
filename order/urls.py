@@ -84,5 +84,8 @@ urlpatterns = [
     path('get-supplier-products-list/', views.get_supplier_products_list, name='get_supplier_products_list'),
     path('bulk-send/', views.bulk_send_orders, name='bulk_send_orders'),
     path('<int:pk>/splits/check/', views.check_order_splits, name='check_order_splits'),
+    path('<int:pk>/comments/', views.purchase_order_comments, name='purchase_order_comments'),
+    path('<int:pk>/comments/add/', views.add_order_comment, name='add_order_comment'),
+    path('<int:pk>/comments/<int:comment_id>/delete/', views.delete_order_comment, name='delete_order_comment'),
 
 ]

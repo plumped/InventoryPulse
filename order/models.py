@@ -504,3 +504,56 @@ class OrderTemplateItem(models.Model):
         verbose_name_plural = "Vorlagenpositionen"
         unique_together = ['template', 'product']
 
+
+class PurchaseOrderComment(models.Model):
+    """
+    Model for storing comments and notes related to purchase orders.
+    Also automatically tracks status changes through signals.
+    """
+    COMMENT_TYPES = [
+        ('note', 'Note'),
+        ('status_change', 'Status Change'),
+        ('system', 'System Notification'),
+    ]
+
+    purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='order_comments')
+    comment_type = models.CharField(max_length=20, choices=COMMENT_TYPES, default='note')
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_public = models.BooleanField(default=True,
+                                    help_text="If true, the comment will be visible to suppliers in the supplier portal")
+
+    # For status changes
+    old_status = models.CharField(max_length=20, blank=True, null=True)
+    new_status = models.CharField(max_length=20, blank=True, null=True)
+
+    # For attaching files
+    attachment = models.FileField(upload_to='order_comments/', blank=True, null=True)
+    attachment_name = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Bestellkommentar"
+        verbose_name_plural = "Bestellkommentare"
+
+    def __str__(self):
+        return f"Comment on {self.purchase_order.order_number} by {self.user.username if self.user else 'System'}"
+
+    def get_comment_type_icon(self):
+        """Returns Bootstrap icon class based on comment type"""
+        icons = {
+            'note': 'bi-chat-left-text',
+            'status_change': 'bi-arrow-repeat',
+            'system': 'bi-info-circle',
+        }
+        return icons.get(self.comment_type, 'bi-chat-left-text')
+
+    def get_comment_type_display_class(self):
+        """Returns Bootstrap class for styling based on comment type"""
+        classes = {
+            'note': 'border-primary',
+            'status_change': 'border-success',
+            'system': 'border-info',
+        }
+        return classes.get(self.comment_type, '')

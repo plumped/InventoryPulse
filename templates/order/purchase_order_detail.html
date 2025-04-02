@@ -269,6 +269,90 @@
 [data-bs-theme="dark"] .item-status-bar {
     background-color: #495057;
 }
+
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        height: 100%;
+        width: 2px;
+        background-color: #dee2e6;
+        left: 6px;
+        top: 0;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: #6c757d;
+        left: -30px;
+        top: 6px;
+    }
+
+    .timeline-marker.note {
+        background-color: #0d6efd;
+    }
+
+    .timeline-marker.status_change {
+        background-color: #198754;
+    }
+
+    .timeline-marker.system {
+        background-color: #0dcaf0;
+    }
+
+    .timeline-content {
+        padding: 1rem;
+        border-radius: 0.375rem;
+        border-width: 1px;
+        border-style: solid;
+        border-color: #dee2e6;
+        background-color: #fff;
+    }
+
+    .timeline-time {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .timeline-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .timeline-avatar i {
+        color: #6c757d;
+    }
+
+    .comment-attachment {
+        padding: 0.5rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        margin-top: 0.5rem;
+    }
+
+    .status-change-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        margin-right: 0.25rem;
+    }
 </style>
 {% endblock %}
 
@@ -1243,6 +1327,148 @@
                         </div>
                     </div>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Comments & Timeline Section -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-left-text me-2"></i>Kommentare & Aktivitäten
+                </h5>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addCommentModal">
+                        <i class="bi bi-plus-circle"></i> Kommentar
+                    </button>
+                    <a href="{% url 'purchase_order_comments' order.id %}" class="btn btn-sm btn-outline-secondary ms-1">
+                        <i class="bi bi-list"></i> Alle anzeigen
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Timeline of recent comments -->
+                <div class="timeline">
+                    {% for comment in order.comments.all|slice:":5" %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker {{ comment.comment_type }}"></div>
+                            <div class="timeline-content {{ comment.get_comment_type_display_class }}">
+                                <div class="d-flex align-items-center mb-2">
+                                    <!-- User avatar or icon -->
+                                    <div class="timeline-avatar">
+                                        {% if comment.user %}
+                                            {% if comment.user.profile.avatar %}
+                                                <img src="{{ comment.user.profile.avatar.url }}" alt="{{ comment.user.username }}" width="32" height="32">
+                                            {% else %}
+                                                <i class="bi bi-person-fill"></i>
+                                            {% endif %}
+                                        {% else %}
+                                            <i class="bi bi-gear-fill"></i>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- User name and timestamp -->
+                                    <div>
+                                        <span class="fw-bold">{{ comment.user.username|default:"System" }}</span>
+                                        <span class="timeline-time">
+                                            {{ comment.created_at|date:"d.m.Y H:i" }}
+                                        </span>
+
+                                        <!-- Comment type badge -->
+                                        <span class="badge
+                                            {% if comment.comment_type == 'note' %}bg-primary-subtle text-primary-emphasis
+                                            {% elif comment.comment_type == 'status_change' %}bg-success-subtle text-success-emphasis
+                                            {% else %}bg-info-subtle text-info-emphasis{% endif %}
+                                            border rounded-pill ms-2">
+                                            <i class="bi {{ comment.get_comment_type_icon }} me-1"></i>
+                                            {{ comment.get_comment_type_display }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Comment content -->
+                                <div class="mt-2">
+                                    {% if comment.comment_type == 'status_change' %}
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge status-change-badge bg-secondary">{{ comment.old_status|default:"" }}</span>
+                                            <i class="bi bi-arrow-right mx-2"></i>
+                                            <span class="badge status-change-badge
+                                                {% if comment.new_status == 'draft' %}bg-secondary
+                                                {% elif comment.new_status == 'pending' %}bg-warning
+                                                {% elif comment.new_status == 'approved' %}bg-info
+                                                {% elif comment.new_status == 'sent' %}bg-primary
+                                                {% elif comment.new_status == 'partially_received' %}bg-primary
+                                                {% elif comment.new_status == 'received' %}bg-success
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ comment.new_status|default:"" }}
+                                            </span>
+                                        </div>
+                                    {% endif %}
+
+                                    <p class="mb-0">{{ comment.comment|linebreaks }}</p>
+
+                                    <!-- Attachment if present -->
+                                    {% if comment.attachment %}
+                                        <div class="comment-attachment">
+                                            <i class="bi bi-paperclip me-2"></i>
+                                            <a href="{{ comment.attachment.url }}" target="_blank">
+                                                {{ comment.attachment_name|default:"Anhang" }}
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-3">
+                            <i class="bi bi-chat-square-text text-muted" style="font-size: 2rem;"></i>
+                            <p class="mt-2 text-muted">Keine Kommentare oder Aktivitäten.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if order.comments.count > 5 %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'purchase_order_comments' order.id %}" class="btn btn-sm btn-outline-secondary">
+                            Alle {{ order.comments.count }} Kommentare & Aktivitäten anzeigen
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Add Comment Modal -->
+        <div class="modal fade" id="addCommentModal" tabindex="-1" aria-labelledby="addCommentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addCommentModalLabel">Neuen Kommentar hinzufügen</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" action="{% url 'add_order_comment' order.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Kommentar</label>
+                                <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="attachment" class="form-label">Anhang (optional)</label>
+                                <input class="form-control" type="file" id="attachment" name="attachment">
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="is_public" name="is_public" checked>
+                                <label class="form-check-label" for="is_public">
+                                    Öffentlicher Kommentar (auch für Lieferanten sichtbar)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                            <button type="submit" class="btn btn-primary">Kommentar speichern</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

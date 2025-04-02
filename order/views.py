@@ -1,5 +1,5 @@
 import uuid
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
@@ -21,7 +21,8 @@ from inventory.models import Warehouse, StockMovement
 
 from .models import (
     PurchaseOrder, PurchaseOrderItem, PurchaseOrderReceipt,
-    PurchaseOrderReceiptItem, OrderSuggestion, OrderTemplate, OrderTemplateItem, OrderSplit, OrderSplitItem
+    PurchaseOrderReceiptItem, OrderSuggestion, OrderTemplate, OrderTemplateItem, OrderSplit, OrderSplitItem,
+    PurchaseOrderComment
 )
 from .forms import PurchaseOrderForm, ReceiveOrderForm, OrderSplitForm, OrderSplitItemFormSet
 from .services import generate_order_suggestions
@@ -3381,3 +3382,130 @@ def check_order_splits(request, pk):
         })
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+@login_required
+@permission_required('order', 'view')
+def purchase_order_comments(request, pk):
+    """View for displaying all comments for an order."""
+    order = get_object_or_404(
+        PurchaseOrder.objects.select_related('supplier', 'created_by'),
+        pk=pk
+    )
+
+    # Get all comments
+    comments = order.comments.select_related('user').order_by('-created_at')
+
+    # Add filter capabilities
+    comment_type = request.GET.get('type', '')
+    if comment_type:
+        comments = comments.filter(comment_type=comment_type)
+
+    # Search functionality
+    search = request.GET.get('search', '')
+    if search:
+        comments = comments.filter(comment__icontains=search)
+
+    # Date range filtering
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, '%Y-%m-%d')
+            comments = comments.filter(created_at__gte=from_date)
+        except ValueError:
+            pass
+
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, '%Y-%m-%d')
+            to_date = to_date.replace(hour=23, minute=59, second=59)
+            comments = comments.filter(created_at__lte=to_date)
+        except ValueError:
+            pass
+
+    context = {
+        'order': order,
+        'comments': comments,
+        'comment_type': comment_type,
+        'search': search,
+        'date_from': date_from,
+        'date_to': date_to,
+    }
+
+    return render(request, 'order/purchase_order_comments.html', context)
+
+
+@login_required
+@permission_required('order', 'edit')
+def add_order_comment(request, pk):
+    """Add a comment to a purchase order."""
+    order = get_object_or_404(PurchaseOrder, pk=pk)
+
+    if request.method == 'POST':
+        comment_text = request.POST.get('comment', '').strip()
+        is_public = request.POST.get('is_public', 'off') == 'on'
+        attachment = request.FILES.get('attachment', None)
+
+        if comment_text:
+            comment = PurchaseOrderComment.objects.create(
+                purchase_order=order,
+                user=request.user,
+                comment_type='note',
+                comment=comment_text,
+                is_public=is_public
+            )
+
+            # Handle attachment if present
+            if attachment:
+                comment.attachment = attachment
+                comment.attachment_name = attachment.name
+                comment.save()
+
+            messages.success(request, 'Kommentar wurde erfolgreich hinzugefügt.')
+
+            # If this is an AJAX request, return JSON
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True,
+                    'comment_id': comment.id,
+                    'created_at': comment.created_at.strftime('%d.%m.%Y %H:%M'),
+                    'username': request.user.username,
+                    'comment': comment_text,
+                    'is_public': is_public,
+                    'attachment_name': comment.attachment_name if attachment else None,
+                    'attachment_url': comment.attachment.url if attachment else None,
+                })
+        else:
+            messages.error(request, 'Der Kommentar darf nicht leer sein.')
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Der Kommentar darf nicht leer sein.'})
+
+    # For non-AJAX requests or GET requests
+    return redirect('purchase_order_detail', pk=order.pk)
+
+
+@login_required
+@permission_required('order', 'delete')
+def delete_order_comment(request, pk, comment_id):
+    """Delete a comment from a purchase order."""
+    order = get_object_or_404(PurchaseOrder, pk=pk)
+    comment = get_object_or_404(PurchaseOrderComment, pk=comment_id, purchase_order=order)
+
+    # Only allow deletion of user's own comments or if user has admin privileges
+    if comment.user == request.user or request.user.has_perm('order.admin'):
+        comment.delete()
+        messages.success(request, 'Kommentar wurde gelöscht.')
+    else:
+        messages.error(request, 'Sie haben keine Berechtigung, diesen Kommentar zu löschen.')
+
+    # If this is an AJAX request, return JSON
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True if not messages.get_messages(request) else False
+        })
+
+    # Redirect back to where the user came from
+    return redirect(request.META.get('HTTP_REFERER', 'purchase_order_detail') + f'?tab=comments')

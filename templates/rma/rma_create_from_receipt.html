@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+
+{% block title %}RMA für mangelhafte Wareneingänge erstellen - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_list' %}">Bestellungen</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active">RMA für mangelhafte Artikel erstellen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">RMA für mangelhafte Artikel erstellen</h1>
+            <p class="text-muted">
+                Erstellen Sie eine RMA für die mangelhaften Artikel aus dem Wareneingang.
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left column: Form -->
+        <div class="col-md-8 mb-4">
+            <!-- Items Preview -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Ausgewählte mangelhafte Artikel</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Artikel</th>
+                                    <th>Problem</th>
+                                    <th class="text-center">Menge</th>
+                                    <th class="text-end">Stückpreis</th>
+                                    <th class="text-end">Wert</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in preview_items %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                                            <small class="d-block text-muted">{{ item.product.sku }}</small>
+
+                                            {% if item.batch_number %}
+                                            <small class="d-block text-muted">Charge: {{ item.batch_number }}</small>
+                                            {% endif %}
+
+                                            {% if item.expiry_date %}
+                                            <small class="d-block text-muted">Verfallsdatum: {{ item.expiry_date|date:"d.m.Y" }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <span class="badge {% if item.issue_type == 'defective' %}bg-danger{% elif item.issue_type == 'damaged' %}bg-warning{% elif item.issue_type == 'wrong_item' %}bg-primary{% elif item.issue_type == 'wrong_quantity' %}bg-info{% elif item.issue_type == 'expired' %}bg-dark{% else %}bg-secondary{% endif %}">
+                                                {{ item.issue_type_display }}
+                                            </span>
+
+                                            <small class="d-block mt-1">{{ item.issue_description|truncatechars:50 }}</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ item.quantity }} {{ item.product.unit }}</td>
+                                    <td class="text-end">{{ item.unit_price|floatformat:2 }} €</td>
+                                    <td class="text-end">{{ item.value|floatformat:2 }} €</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">
+                                        <div class="text-muted">
+                                            <i class="bi bi-exclamation-circle fs-2 d-block mb-2"></i>
+                                            <p>Keine mangelhaften Artikel ausgewählt.</p>
+                                            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-sm btn-outline-secondary">
+                                                Zurück zur Bestellung
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            {% if preview_items %}
+                            <tfoot>
+                                <tr class="table-active fw-bold">
+                                    <td>Gesamt</td>
+                                    <td></td>
+                                    <td class="text-center">{{ preview_items|length }} Position(en)</td>
+                                    <td></td>
+                                    <td class="text-end">
+                                        {% with total_value=0 %}
+                                            {% for item in preview_items %}
+                                                {% with item_value=item.value %}
+                                                    {% with new_total=total_value|add:item_value %}
+                                                        {% if forloop.last %}{{ new_total|floatformat:2 }} €{% endif %}
+                                                        {% with total_value=new_total %}{% endwith %}
+                                                    {% endwith %}
+                                                {% endwith %}
+                                            {% endfor %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RMA Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">RMA Informationen</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.supplier.id_for_label }}" class="form-label">Lieferant *</label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                <div class="invalid-feedback d-block">{{ form.supplier.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.related_order.id_for_label }}" class="form-label">Zugehörige Bestellung</label>
+                                {{ form.related_order }}
+                                {% if form.related_order.errors %}
+                                <div class="invalid-feedback d-block">{{ form.related_order.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.rma_warehouse.id_for_label }}" class="form-label">RMA-Lager *</label>
+                            {{ form.rma_warehouse }}
+                            {% if form.rma_warehouse.errors %}
+                            <div class="invalid-feedback d-block">{{ form.rma_warehouse.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Das Lager, in dem die defekten Artikel aufbewahrt werden</div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.contact_person.id_for_label }}" class="form-label">Kontaktperson</label>
+                                {{ form.contact_person }}
+                                {% if form.contact_person.errors %}
+                                <div class="invalid-feedback d-block">{{ form.contact_person.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.contact_phone.id_for_label }}" class="form-label">Telefon</label>
+                                {{ form.contact_phone }}
+                                {% if form.contact_phone.errors %}
+                                <div class="invalid-feedback d-block">{{ form.contact_phone.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.contact_email.id_for_label }}" class="form-label">E-Mail</label>
+                            {{ form.contact_email }}
+                            {% if form.contact_email.errors %}
+                            <div class="invalid-feedback d-block">{{ form.contact_email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.shipping_address.id_for_label }}" class="form-label">Rücksendeadresse</label>
+                            {{ form.shipping_address }}
+                            {% if form.shipping_address.errors %}
+                            <div class="invalid-feedback d-block">{{ form.shipping_address.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> RMA erstellen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column: Info -->
+        <div class="col-md-4 mb-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Lieferung</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Bestellung:</dt>
+                        <dd class="col-sm-8">
+                            <a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a>
+                        </dd>
+
+                        <dt class="col-sm-4">Lieferant:</dt>
+                        <dd class="col-sm-8">
+                            <a href="{% url 'supplier_detail' order.supplier.id %}">{{ order.supplier.name }}</a>
+                        </dd>
+
+                        <dt class="col-sm-4">Wareneingang:</dt>
+                        <dd class="col-sm-8">{{ receipt.receipt_date|date:"d.m.Y" }}</dd>
+
+                        <dt class="col-sm-4">Status:</dt>
+                        <dd class="col-sm-8">{{ order.get_status_display }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Hinweise</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">Wichtige Information</h5>
+                        <p>
+                            Die ausgewählten defekten Artikel werden automatisch vom ursprünglichen Lager in das RMA-Lager transferiert, sobald Sie die RMA erstellen.
+                        </p>
+                    </div>
+
+                    <h6 class="fw-bold mt-4">Nächste Schritte:</h6>
+                    <ol>
+                        <li>Nach dem Erstellen können Sie Fotos der defekten Artikel hinzufügen, um den Schaden zu dokumentieren.</li>
+                        <li>Reichen Sie die RMA zur Bearbeitung ein, um den Prozess zu starten.</li>
+                        <li>Nach Genehmigung können Sie die defekten Artikel an den Lieferanten zurücksenden.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for dropdowns if available
+    if($.fn.select2) {
+        $('.form-select').select2({
+            theme: 'bootstrap-5'
+        });
+    }
+});
+</script>
+{% endblock %}

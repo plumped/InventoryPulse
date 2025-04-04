@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # Bestandsbewegungen
     path('movements/', views.stock_movement_list, name='stock_movement_list'),
+
     
     # Inventur
     path('stock-takes/', views.stock_take_list, name='stock_take_list'),

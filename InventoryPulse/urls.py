@@ -26,6 +26,8 @@ urlpatterns = [
     # === User Profile ===
     path('profile/', core_views.profile, name='profile'),
 
+    path('rma/', include('rma.urls')),
+
     # === Products ===
     path('products/', include([
         path('', core_views.product_list, name='product_list'),

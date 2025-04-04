@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block title %}RMA Übersicht - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h1 class="h3 mb-0">RMA Verwaltung</h1>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'rma_create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Neue RMA
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    {{ form.status }}
+                </div>
+                <div class="col-md-3">
+                    <label for="supplier" class="form-label">Lieferant</label>
+                    {{ form.supplier }}
+                </div>
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">Von</label>
+                    {{ form.date_from }}
+                </div>
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">Bis</label>
+                    {{ form.date_to }}
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-outline-primary w-100">Filtern</button>
+                </div>
+
+                <div class="col-md-12 mt-3">
+                    <div class="input-group">
+                        {{ form.search }}
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RMA List -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>RMA-Nummer</th>
+                            <th>Lieferant</th>
+                            <th>Datum</th>
+                            <th>Status</th>
+                            <th>Artikel</th>
+                            <th>Gesamtwert</th>
+                            <th>Erstellt von</th>
+                            <th style="width: 150px;">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rma in rmas %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'rma_detail' rma.id %}">{{ rma.rma_number }}</a>
+                            </td>
+                            <td>
+                                <a href="{% url 'supplier_detail' rma.supplier.id %}">{{ rma.supplier.name }}</a>
+                            </td>
+                            <td>{{ rma.created_at|date:"d.m.Y" }}</td>
+                            <td>
+                                {% if rma.status == 'draft' %}
+                                <span class="badge bg-secondary">{{ rma.get_status_display }}</span>
+                                {% elif rma.status == 'pending' %}
+                                <span class="badge bg-warning">{{ rma.get_status_display }}</span>
+                                {% elif rma.status == 'approved' %}
+                                <span class="badge bg-info">{{ rma.get_status_display }}</span>
+                                {% elif rma.status == 'sent' %}
+                                <span class="badge bg-primary">{{ rma.get_status_display }}</span>
+                                {% elif rma.status == 'resolved' %}
+                                <span class="badge bg-success">{{ rma.get_status_display }}</span>
+                                {% elif rma.status == 'rejected' %}
+                                <span class="badge bg-danger">{{ rma.get_status_display }}</span>
+                                {% elif rma.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ rma.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ rma.item_count }}</td>
+                            <td>{{ rma.total_value|floatformat:2 }} €</td>
+                            <td>{{ rma.created_by.username }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'rma_detail' rma.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if rma.status == 'draft' %}
+                                    <a href="{% url 'rma_update' rma.id %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'rma_delete' rma.id %}" class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+
+                                    <a href="{% url 'rma_print' rma.id %}" class="btn btn-outline-secondary" target="_blank">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    <p>Keine RMAs gefunden.</p>
+                                    <a href="{% url 'rma_create' %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle me-1"></i>Neue RMA anlegen
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if rmas.has_other_pages %}
+    <nav aria-label="Pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if rmas.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ rmas.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+            </li>
+            {% endif %}
+
+            {% for num in page_range %}
+                {% if rmas.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if rmas.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ rmas.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ rmas.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for dropdowns if available
+    if($.fn.select2) {
+        $('.form-select').select2({
+            theme: 'bootstrap-5'
+        });
+    }
+});
+</script>
+{% endblock %}

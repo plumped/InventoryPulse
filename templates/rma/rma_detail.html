@@ -1,0 +1,931 @@
+{% extends 'base.html' %}
+
+{% block title %}RMA {{ rma.rma_number }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+.status-badge {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 2px;
+    background-color: #dee2e6;
+    left: 6px;
+    top: 0;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    left: -30px;
+    top: 6px;
+}
+
+.timeline-content {
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #dee2e6;
+}
+
+.timeline-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.item-photo-thumbnail {
+    max-width: 100px;
+    max-height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.item-photo-thumbnail:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.rma-status-flow {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.rma-status-flow::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #dee2e6;
+    z-index: 1;
+}
+
+.status-step {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.status-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    border: 2px solid transparent;
+    color: #6c757d;
+    position: relative;
+}
+
+.status-step.active .status-circle,
+.status-step.completed .status-circle {
+    background-color: #0d6efd;
+    color: white;
+    border-color: #0a58ca;
+}
+
+.status-step.completed .status-circle {
+    background-color: #198754;
+    border-color: #146c43;
+}
+
+.status-label {
+    font-size: 0.8rem;
+    text-align: center;
+    font-weight: 500;
+    color: #6c757d;
+    max-width: 90px;
+}
+
+.status-step.active .status-label {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.status-step.completed .status-label {
+    color: #198754;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'rma_list' %}">RMAs</a></li>
+                    <li class="breadcrumb-item active">{{ rma.rma_number }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">
+                RMA {{ rma.rma_number }}
+                <span class="status-badge badge {% if rma.status == 'draft' %}bg-secondary{% elif rma.status == 'pending' %}bg-warning{% elif rma.status == 'approved' %}bg-info{% elif rma.status == 'sent' %}bg-primary{% elif rma.status == 'resolved' %}bg-success{% elif rma.status == 'rejected' %}bg-danger{% elif rma.status == 'cancelled' %}bg-danger{% endif %}">
+                    {{ rma.get_status_display }}
+                </span>
+            </h1>
+            <p class="text-muted">
+                Erstellt am {{ rma.created_at|date:"d.m.Y" }} von {{ rma.created_by.username }}
+                {% if rma.related_order %}
+                | Bestellung: <a href="{% url 'purchase_order_detail' rma.related_order.id %}">{{ rma.related_order.order_number }}</a>
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="btn-group">
+                {% if can_edit %}
+                <a href="{% url 'rma_update' rma.id %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil-square"></i> Bearbeiten
+                </a>
+                {% endif %}
+
+                <a href="{% url 'rma_print' rma.id %}" class="btn btn-outline-secondary" target="_blank">
+                    <i class="bi bi-printer"></i> Drucken
+                </a>
+
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="visually-hidden">Toggle Dropdown</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    {% if can_edit %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'rma_add_item' rma.id %}">
+                            <i class="bi bi-plus-circle me-2"></i>Position hinzufügen
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li>
+                        <a class="dropdown-item" href="{% url 'rma_add_document' rma.id %}">
+                            <i class="bi bi-file-earmark-plus me-2"></i>Dokument hinzufügen
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item" href="{% url 'rma_history' rma.id %}">
+                            <i class="bi bi-clock-history me-2"></i>Vollständiger Verlauf
+                        </a>
+                    </li>
+
+                    {% if rma.status == 'draft' %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="{% url 'rma_delete' rma.id %}">
+                            <i class="bi bi-trash me-2"></i>Löschen
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Flow Visualization -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="rma-status-flow">
+                <!-- Draft -->
+                <div class="status-step {% if rma.status == 'draft' %}active{% elif rma.status in 'pending,approved,sent,resolved' %}completed{% endif %}">
+                    <div class="status-circle">
+                        <i class="bi bi-pencil"></i>
+                    </div>
+                    <div class="status-label">Entwurf</div>
+                </div>
+
+                <!-- Pending -->
+                <div class="status-step {% if rma.status == 'pending' %}active{% elif rma.status in 'approved,sent,resolved' %}completed{% endif %}">
+                    <div class="status-circle">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <div class="status-label">In Bearbeitung</div>
+                </div>
+
+                <!-- Approved -->
+                <div class="status-step {% if rma.status == 'approved' %}active{% elif rma.status in 'sent,resolved' %}completed{% endif %}">
+                    <div class="status-circle">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <div class="status-label">Genehmigt</div>
+                </div>
+
+                <!-- Sent -->
+                <div class="status-step {% if rma.status == 'sent' %}active{% elif rma.status in 'resolved' %}completed{% endif %}">
+                    <div class="status-circle">
+                        <i class="bi bi-send"></i>
+                    </div>
+                    <div class="status-label">An Lieferant gesendet</div>
+                </div>
+
+                <!-- Resolved -->
+                <div class="status-step {% if rma.status == 'resolved' %}active completed{% endif %}">
+                    <div class="status-circle">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="status-label">Erledigt</div>
+                </div>
+            </div>
+
+            <!-- Additional status information -->
+            {% if rma.status == 'cancelled' %}
+            <div class="alert alert-danger mt-3 mb-0">
+                <i class="bi bi-x-circle me-2"></i>Diese RMA wurde storniert.
+            </div>
+            {% elif rma.status == 'rejected' %}
+            <div class="alert alert-danger mt-3 mb-0">
+                <i class="bi bi-x-circle me-2"></i>Diese RMA wurde abgelehnt.
+                {% if rma.history.first.note %}
+                <p class="mt-2 mb-0"><strong>Grund:</strong> {{ rma.history.first.note }}</p>
+                {% endif %}
+            </div>
+            {% elif rma.status == 'draft' %}
+            <div class="alert alert-info mt-3 mb-0">
+                <i class="bi bi-info-circle me-2"></i>Diese RMA ist im Entwurfsstatus. Sie können Artikel hinzufügen und die Informationen bearbeiten.
+                {% if rma.items.count > 0 %}
+                <div class="mt-2">
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_status">
+                        <input type="hidden" name="status" value="pending">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>RMA zur Bearbeitung einreichen
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+            {% elif rma.status == 'pending' and can_approve %}
+            <div class="alert alert-warning mt-3">
+                <i class="bi bi-exclamation-circle me-2"></i>Diese RMA wartet auf Genehmigung.
+                <div class="mt-2 d-flex gap-2">
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_status">
+                        <input type="hidden" name="status" value="approved">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Genehmigen
+                        </button>
+                    </form>
+
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle me-2"></i>Ablehnen
+                    </button>
+                </div>
+            </div>
+            {% elif rma.status == 'approved' %}
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle me-2"></i>Diese RMA wurde genehmigt und kann an den Lieferanten gesendet werden.
+                <div class="mt-2">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#markSentModal">
+                        <i class="bi bi-send me-2"></i>Als versendet markieren
+                    </button>
+                </div>
+            </div>
+            {% elif rma.status == 'sent' and can_resolve %}
+            <div class="alert alert-primary mt-3">
+                <i class="bi bi-truck me-2"></i>Diese RMA wurde an den Lieferanten gesendet und wartet auf Bearbeitung.
+                <div class="mt-2">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal">
+                        <i class="bi bi-check-circle me-2"></i>Als erledigt markieren
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left column: RMA Info and Items -->
+        <div class="col-md-8">
+            <!-- RMA Items -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">RMA Positionen</h5>
+                    {% if can_edit %}
+                    <a href="{% url 'rma_add_item' rma.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle"></i> Position hinzufügen
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if rma.items.exists %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Artikel</th>
+                                    <th>Problem</th>
+                                    <th class="text-center">Menge</th>
+                                    <th class="text-end">Preis</th>
+                                    <th class="text-end">Wert</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Fotos</th>
+                                    <th class="text-center">Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if unresolved_items %}
+                                {% for item in unresolved_items %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                                            <small class="d-block text-muted">{{ item.product.sku }}</small>
+
+                                            {% if item.batch_number %}
+                                            <small class="d-block text-muted">Charge: {{ item.batch_number }}</small>
+                                            {% endif %}
+
+                                            {% if item.expiry_date %}
+                                            <small class="d-block text-muted">Verfallsdatum: {{ item.expiry_date|date:"d.m.Y" }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <span class="badge {% if item.issue_type == 'defective' %}bg-danger{% elif item.issue_type == 'damaged' %}bg-warning{% elif item.issue_type == 'wrong_item' %}bg-primary{% elif item.issue_type == 'wrong_quantity' %}bg-info{% elif item.issue_type == 'expired' %}bg-dark{% else %}bg-secondary{% endif %}">
+                                                {{ item.get_issue_type_display }}
+                                            </span>
+
+                                            <small class="d-block mt-1">{{ item.issue_description|truncatechars:50 }}</small>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ item.quantity }} {{ item.product.unit }}</td>
+                                    <td class="text-end">{{ item.unit_price|floatformat:2 }} €</td>
+                                    <td class="text-end">{{ item.value|floatformat:2 }} €</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">Offen</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if item.has_photos %}
+                                        <a href="{% url 'rma_add_photos' rma.id item.id %}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-images"></i> Anzeigen
+                                        </a>
+                                        {% else %}
+                                        <a href="{% url 'rma_add_photos' rma.id item.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-camera"></i> Hinzufügen
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            {% if rma.status == 'draft' %}
+                                            <a href="{% url 'rma_edit_item' rma.id item.id %}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'rma_delete_item' rma.id item.id %}" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                            {% elif rma.status in 'approved,sent,resolved' %}
+                                            <a href="{% url 'rma_toggle_item_resolved' rma.id item.id %}" class="btn btn-outline-success">
+                                                <i class="bi bi-check-circle"></i> Erledigt
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+
+                                {% if resolved_items %}
+                                <tr>
+                                    <td colspan="8" class="bg-light">
+                                        <div class="p-2 d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">Erledigte Positionen</h6>
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#resolvedItemsCollapse">
+                                                <i class="bi bi-chevron-down"></i> Anzeigen
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="8" class="p-0">
+                                        <div class="collapse" id="resolvedItemsCollapse">
+                                            <table class="table mb-0">
+                                                {% for item in resolved_items %}
+                                                <tr class="table-success">
+                                                    <td>
+                                                        <div>
+                                                            <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                                                            <small class="d-block text-muted">{{ item.product.sku }}</small>
+
+                                                            {% if item.batch_number %}
+                                                            <small class="d-block text-muted">Charge: {{ item.batch_number }}</small>
+                                                            {% endif %}
+
+                                                            {% if item.expiry_date %}
+                                                            <small class="d-block text-muted">Verfallsdatum: {{ item.expiry_date|date:"d.m.Y" }}</small>
+                                                            {% endif %}
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div>
+                                                            <span class="badge {% if item.issue_type == 'defective' %}bg-danger{% elif item.issue_type == 'damaged' %}bg-warning{% elif item.issue_type == 'wrong_item' %}bg-primary{% elif item.issue_type == 'wrong_quantity' %}bg-info{% elif item.issue_type == 'expired' %}bg-dark{% else %}bg-secondary{% endif %}">
+                                                                {{ item.get_issue_type_display }}
+                                                            </span>
+
+                                                            <small class="d-block mt-1">{{ item.issue_description|truncatechars:50 }}</small>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center">{{ item.quantity }} {{ item.product.unit }}</td>
+                                                    <td class="text-end">{{ item.unit_price|floatformat:2 }} €</td>
+                                                    <td class="text-end">{{ item.value|floatformat:2 }} €</td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-success">Erledigt</span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        {% if item.has_photos %}
+                                                        <a href="{% url 'rma_add_photos' rma.id item.id %}" class="btn btn-sm btn-info">
+                                                            <i class="bi bi-images"></i> Anzeigen
+                                                        </a>
+                                                        {% else %}
+                                                        <a href="{% url 'rma_add_photos' rma.id item.id %}" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="bi bi-camera"></i> Hinzufügen
+                                                        </a>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="btn-group btn-group-sm">
+                                                            <a href="{% url 'rma_toggle_item_resolved' rma.id item.id %}" class="btn btn-outline-secondary">
+                                                                <i class="bi bi-arrow-counterclockwise"></i> Wiedereröffnen
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-active fw-bold">
+                                    <td>Gesamt</td>
+                                    <td></td>
+                                    <td class="text-center">{{ rma.items.count }} Position(en)</td>
+                                    <td></td>
+                                    <td class="text-end">{{ rma.total_value|floatformat:2 }} €</td>
+                                    <td colspan="3"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-box2 text-muted" style="font-size: 3rem;"></i>
+                        <p class="mt-3 text-muted">Noch keine Artikel in dieser RMA.</p>
+                        {% if can_edit %}
+                        <a href="{% url 'rma_add_item' rma.id %}" class="btn btn-primary mt-2">
+                            <i class="bi bi-plus-circle me-2"></i>Position hinzufügen
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Dokumente</h5>
+                    <a href="{% url 'rma_add_document' rma.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-file-earmark-plus"></i> Dokument hinzufügen
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if rma.documents.exists %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Titel</th>
+                                    <th>Typ</th>
+                                    <th>Datum</th>
+                                    <th>Hochgeladen von</th>
+                                    <th class="text-center">Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in rma.documents.all %}
+                                <tr>
+                                    <td>{{ document.title }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ document.get_document_type_display }}</span>
+                                    </td>
+                                    <td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td>
+                                    <td>{{ document.uploaded_by.username }}</td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ document.file.url }}" class="btn btn-outline-primary" target="_blank">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ document.file.url }}" class="btn btn-outline-secondary" download>
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                            <a href="{% url 'rma_delete_document' rma.id document.id %}" class="btn btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-file-earmark-text text-muted" style="font-size: 2rem;"></i>
+                        <p class="mt-2 text-muted">Keine Dokumente vorhanden</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column: RMA Info and Comments -->
+        <div class="col-md-4">
+            <!-- RMA Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">RMA Informationen</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">RMA-Nummer:</dt>
+                        <dd class="col-sm-7">{{ rma.rma_number }}</dd>
+
+                        <dt class="col-sm-5">Status:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge {% if rma.status == 'draft' %}bg-secondary{% elif rma.status == 'pending' %}bg-warning{% elif rma.status == 'approved' %}bg-info{% elif rma.status == 'sent' %}bg-primary{% elif rma.status == 'resolved' %}bg-success{% elif rma.status == 'rejected' %}bg-danger{% elif rma.status == 'cancelled' %}bg-danger{% endif %}">
+                                {{ rma.get_status_display }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-5">Lieferant:</dt>
+                        <dd class="col-sm-7">
+                            <a href="{% url 'supplier_detail' rma.supplier.id %}">{{ rma.supplier.name }}</a>
+                        </dd>
+
+                        <dt class="col-sm-5">Bestellung:</dt>
+                        <dd class="col-sm-7">
+                            {% if rma.related_order %}
+                            <a href="{% url 'purchase_order_detail' rma.related_order.id %}">{{ rma.related_order.order_number }}</a>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">RMA-Lager:</dt>
+                        <dd class="col-sm-7">
+                            <a href="{% url 'warehouse_detail' rma.rma_warehouse.id %}">{{ rma.rma_warehouse.name }}</a>
+                        </dd>
+
+                        <dt class="col-sm-5">Erstellt am:</dt>
+                        <dd class="col-sm-7">{{ rma.created_at|date:"d.m.Y H:i" }}</dd>
+
+                        <dt class="col-sm-5">Erstellt von:</dt>
+                        <dd class="col-sm-7">{{ rma.created_by.username }}</dd>
+
+                        <dt class="col-sm-5">Eingereicht am:</dt>
+                        <dd class="col-sm-7">
+                            {% if rma.submission_date %}{{ rma.submission_date|date:"d.m.Y H:i" }}{% else %}<span class="text-muted">-</span>{% endif %}
+                        </dd>
+
+                        {% if rma.approved_by %}
+                        <dt class="col-sm-5">Genehmigt von:</dt>
+                        <dd class="col-sm-7">{{ rma.approved_by.username }}</dd>
+                        {% endif %}
+
+                        {% if rma.status == 'sent' %}
+                        <dt class="col-sm-5">Versanddatum:</dt>
+                        <dd class="col-sm-7">
+                            {% if rma.shipping_date %}{{ rma.shipping_date|date:"d.m.Y" }}{% else %}<span class="text-muted">-</span>{% endif %}
+                        </dd>
+
+                        <dt class="col-sm-5">Tracking-Nr.:</dt>
+                        <dd class="col-sm-7">
+                            {% if rma.tracking_number %}{{ rma.tracking_number }}{% else %}<span class="text-muted">-</span>{% endif %}
+                        </dd>
+                        {% endif %}
+
+                        {% if rma.status == 'resolved' %}
+                        <dt class="col-sm-5">Erledigt am:</dt>
+                        <dd class="col-sm-7">{{ rma.resolution_date|date:"d.m.Y H:i" }}</dd>
+
+                        <dt class="col-sm-5">Lösung:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-info">{{ rma.get_resolution_type_display }}</span>
+                        </dd>
+                        {% endif %}
+
+                        <dt class="col-sm-5">Kontaktperson:</dt>
+                        <dd class="col-sm-7">{{ rma.contact_person|default:"-" }}</dd>
+
+                        <dt class="col-sm-5">Kontakt E-Mail:</dt>
+                        <dd class="col-sm-7">{{ rma.contact_email|default:"-" }}</dd>
+
+                        <dt class="col-sm-5">Kontakt Telefon:</dt>
+                        <dd class="col-sm-7">{{ rma.contact_phone|default:"-" }}</dd>
+
+                        <dt class="col-sm-5">Rücksendeadresse:</dt>
+                        <dd class="col-sm-7">{{ rma.shipping_address|default:"-"|linebreaks }}</dd>
+
+                        {% if rma.notes %}
+                        <dt class="col-sm-12">Anmerkungen:</dt>
+                        <dd class="col-sm-12">{{ rma.notes|linebreaks }}</dd>
+                        {% endif %}
+
+                        {% if rma.resolution_notes %}
+                        <dt class="col-sm-12">Lösungsdetails:</dt>
+                        <dd class="col-sm-12">{{ rma.resolution_notes|linebreaks }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Kommentare</h5>
+                    <a href="{% url 'rma_comments' rma.id %}" class="text-decoration-none small">Alle anzeigen</a>
+                </div>
+                <div class="card-body">
+                    <!-- Comment form -->
+                    <form method="post" action="" enctype="multipart/form-data" class="mb-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_comment">
+                        <div class="mb-3">
+                            {{ comment_form.comment }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ comment_form.attachment.id_for_label }}" class="form-label">Anhang (optional)</label>
+                            {{ comment_form.attachment }}
+                        </div>
+                        <div class="form-check mb-3">
+                            {{ comment_form.is_public }}
+                            <label class="form-check-label" for="{{ comment_form.is_public.id_for_label }}">
+                                Öffentlich sichtbar (auch für Lieferanten)
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Kommentar hinzufügen</button>
+                    </form>
+
+                    <!-- Recent comments -->
+                    <h6 class="border-bottom pb-2 mb-3">Letzte Kommentare</h6>
+
+                    <div class="timeline">
+                        {% for comment in recent_comments %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ comment.user.username }}</strong>
+                                        {% if comment.is_public %}
+                                        <span class="badge bg-info ms-1">Öffentlich</span>
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">{{ comment.created_at|date:"d.m.Y H:i" }}</small>
+                                </div>
+                                <div class="mt-2">
+                                    {{ comment.comment|linebreaks }}
+
+                                    {% if comment.attachment %}
+                                    <div class="mt-2 p-2 bg-light rounded">
+                                        <a href="{{ comment.attachment.url }}" class="d-flex align-items-center text-decoration-none" target="_blank">
+                                            <i class="bi bi-paperclip me-2"></i>
+                                            <span>{{ comment.attachment_name|default:"Anhang" }}</span>
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end mt-1">
+                                    {% if comment.user == request.user or request.user.has_perm 'rma.admin' %}
+                                    <a href="{% url 'rma_delete_comment' rma.id comment.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center">Noch keine Kommentare vorhanden.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Verlauf</h5>
+                    <a href="{% url 'rma_history' rma.id %}" class="text-decoration-none small">Vollständig anzeigen</a>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for entry in recent_history %}
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <i class="bi bi-clock-history me-2 text-muted"></i>
+                                    {{ entry.note }}
+                                </div>
+                                <small class="text-muted">{{ entry.timestamp|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            {% if entry.changed_by %}
+                            <div class="ms-4 mt-1 small text-muted">
+                                Von: {{ entry.changed_by.username }}
+                            </div>
+                            {% endif %}
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center text-muted">Kein Verlauf vorhanden.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_status">
+                <input type="hidden" name="status" value="rejected">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">RMA ablehnen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Ablehnungsgrund</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-danger">Ablehnen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Mark Sent Modal -->
+<div class="modal fade" id="markSentModal" tabindex="-1" aria-labelledby="markSentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_status">
+                <input type="hidden" name="status" value="sent">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="markSentModalLabel">RMA als versendet markieren</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="shipping_date" class="form-label">Versanddatum</label>
+                        <input type="date" class="form-control" id="shipping_date" name="shipping_date"
+                               value="{{ today|date:'Y-m-d' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="tracking_number" class="form-label">Tracking-Nummer (optional)</label>
+                        <input type="text" class="form-control" id="tracking_number" name="tracking_number">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary">Als versendet markieren</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Resolution Modal -->
+<div class="modal fade" id="resolveModal" tabindex="-1" aria-labelledby="resolveModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="resolve">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="resolveModalLabel">RMA als erledigt markieren</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="resolution_type" class="form-label">Art der Lösung</label>
+                        {{ resolution_form.resolution_type }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="resolution_notes" class="form-label">Detaillierte Beschreibung der Lösung</label>
+                        {{ resolution_form.resolution_notes }}
+                    </div>
+
+                    <!-- Conditional fields for replacement -->
+                    <div id="replacementFields" style="display: none;">
+                        <div class="mb-3 form-check">
+                            {{ resolution_form.received_replacement }}
+                            <label class="form-check-label" for="{{ resolution_form.received_replacement.id_for_label }}">
+                                Ersatz erhalten
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ resolution_form.replacement_date.id_for_label }}" class="form-label">Ersatz erhalten am</label>
+                            {{ resolution_form.replacement_date }}
+                        </div>
+                    </div>
+
+                    <!-- Conditional fields for refund -->
+                    <div id="refundFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="{{ resolution_form.refund_amount.id_for_label }}" class="form-label">Rückerstattungsbetrag</label>
+                            <div class="input-group">
+                                {{ resolution_form.refund_amount }}
+                                <span class="input-group-text">€</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ resolution_form.refund_date.id_for_label }}" class="form-label">Rückerstattung erhalten am</label>
+                            {{ resolution_form.refund_date }}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-success">Als erledigt markieren</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Show/hide conditional fields based on resolution type
+    $('#id_resolution_type').change(function() {
+        const resolutionType = $(this).val();
+
+        // Hide all conditional field sets
+        $('#replacementFields, #refundFields').hide();
+
+        // Show only the relevant fields
+        if (resolutionType === 'replacement') {
+            $('#replacementFields').show();
+        } else if (resolutionType === 'refund') {
+            $('#refundFields').show();
+        }
+    });
+
+    // Trigger change event to set initial state
+    $('#id_resolution_type').trigger('change');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_new %}Neue RMA{% else %}RMA {{ rma.rma_number }} bearbeiten{% endif %} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'rma_list' %}">RMAs</a></li>
+                    {% if is_new %}
+                    <li class="breadcrumb-item active">Neue RMA</li>
+                    {% else %}
+                    <li class="breadcrumb-item"><a href="{% url 'rma_detail' rma.id %}">{{ rma.rma_number }}</a></li>
+                    <li class="breadcrumb-item active">Bearbeiten</li>
+                    {% endif %}
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-0">{% if is_new %}Neue RMA erstellen{% else %}RMA {{ rma.rma_number }} bearbeiten{% endif %}</h1>
+            <p class="text-muted">
+                Erfassen Sie die grundlegenden Informationen für die RMA.
+                {% if is_new %}
+                Artikel können nach dem Erstellen hinzugefügt werden.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">RMA Informationen</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.supplier.id_for_label }}" class="form-label">Lieferant *</label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                <div class="invalid-feedback d-block">{{ form.supplier.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.related_order.id_for_label }}" class="form-label">Zugehörige Bestellung</label>
+                                {{ form.related_order }}
+                                {% if form.related_order.errors %}
+                                <div class="invalid-feedback d-block">{{ form.related_order.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">Optional: Zuordnung zu einer Bestellung</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.rma_warehouse.id_for_label }}" class="form-label">RMA-Lager *</label>
+                            {{ form.rma_warehouse }}
+                            {% if form.rma_warehouse.errors %}
+                            <div class="invalid-feedback d-block">{{ form.rma_warehouse.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Das Lager, in dem die defekten Artikel aufbewahrt werden</div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.contact_person.id_for_label }}" class="form-label">Kontaktperson</label>
+                                {{ form.contact_person }}
+                                {% if form.contact_person.errors %}
+                                <div class="invalid-feedback d-block">{{ form.contact_person.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.contact_phone.id_for_label }}" class="form-label">Telefon</label>
+                                {{ form.contact_phone }}
+                                {% if form.contact_phone.errors %}
+                                <div class="invalid-feedback d-block">{{ form.contact_phone.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.contact_email.id_for_label }}" class="form-label">E-Mail</label>
+                            {{ form.contact_email }}
+                            {% if form.contact_email.errors %}
+                            <div class="invalid-feedback d-block">{{ form.contact_email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.shipping_address.id_for_label }}" class="form-label">Rücksendeadresse</label>
+                            {{ form.shipping_address }}
+                            {% if form.shipping_address.errors %}
+                            <div class="invalid-feedback d-block">{{ form.shipping_address.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">Adresse, an die die Artikel zurückgesendet werden sollen</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="invalid-feedback d-block">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% if is_new %}{% url 'rma_list' %}{% else %}{% url 'rma_detail' rma.id %}{% endif %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> {% if is_new %}RMA erstellen{% else %}Änderungen speichern{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Hinweise</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">Was ist eine RMA?</h5>
+                        <p>RMA (Return Merchandise Authorization) ist der Prozess für die Rücksendung defekter oder mangelhafter Waren an den Lieferanten.</p>
+                    </div>
+
+                    <h6 class="fw-bold mt-4">RMA Ablauf:</h6>
+                    <ol>
+                        <li>RMA erstellen</li>
+                        <li>Mangelhafte Artikel hinzufügen</li>
+                        <li>RMA zur Bearbeitung einreichen</li>
+                        <li>Nach Genehmigung an Lieferant senden</li>
+                        <li>Rücksendung/Erstattung/Reparatur durch Lieferanten</li>
+                        <li>RMA als erledigt markieren</li>
+                    </ol>
+
+                    <h6 class="fw-bold mt-4">Wichtige Informationen:</h6>
+                    <ul>
+                        <li>Wählen Sie das korrekte RMA-Lager, in dem die defekten Artikel aufbewahrt werden.</li>
+                        <li>Fügen Sie nach dem Erstellen der RMA die mangelhaften Artikel hinzu.</li>
+                        <li>Fügen Sie möglichst Fotos der defekten Artikel hinzu, um den Schaden zu dokumentieren.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize Select2 for dropdowns if available
+    if($.fn.select2) {
+        $('.form-select').select2({
+            theme: 'bootstrap-5'
+        });
+    }
+
+    // When supplier changes, update related orders dropdown
+    $('#{{ form.supplier.id_for_label }}').change(function() {
+        const supplierId = $(this).val();
+        if (!supplierId) return;
+
+        // Clear and disable orders dropdown while loading
+        const ordersDropdown = $('#{{ form.related_order.id_for_label }}');
+        ordersDropdown.empty().prop('disabled', true).append('<option value="">Wird geladen...</option>');
+
+        $.ajax({
+            url: '{% url 'get_supplier_products' %}',
+            data: {
+                'supplier_id': supplierId
+            },
+            success: function(data) {
+                if (data.success) {
+                    // Reload the orders for this supplier
+                    // This would work better with a dedicated endpoint for orders by supplier
+                    window.location.href = "{% url 'rma_create' %}?supplier=" + supplierId;
+                }
+            },
+            error: function() {
+                ordersDropdown.empty().prop('disabled', false)
+                    .append('<option value="">Fehler beim Laden der Bestellungen</option>');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -78,6 +78,35 @@
     border-color: #d35400;
 }
 
+/* Neue Styles für "Erhalten mit Mängeln" Status */
+.workflow-step.with-issues .workflow-circle {
+    background-color: #f39c12;
+    color: white;
+    border-color: #d35400;
+}
+
+/* Hinzufügen einer Warnungsmarkierung für Qualitätsprobleme */
+.quality-issues-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid white;
+}
+
+.workflow-step.with-issues .workflow-label {
+    color: #f39c12;
+    font-weight: 600;
+}
+
 .workflow-label {
     font-size: 0.8rem;
     text-align: center;
@@ -221,10 +250,61 @@
     background-color: #28a745;
 }
 
+/* Neues Styling für die qualitätsprobleme-Bar */
+.item-status-issue {
+    height: 100%;
+    background-color: #dc3545;
+}
+
 .item-status-details {
     font-size: 0.85rem;
     color: #6c757d;
     margin-top: 3px;
+}
+
+/* Styles für die RMA-Benachrichtigungsbox */
+.quality-issues-alert {
+    background-color: #fff3cd;
+    border-left: 4px solid #f39c12;
+    padding: 1rem;
+    margin-top: 1rem;
+    display: flex;
+    align-items: flex-start;
+}
+
+.quality-issues-alert i {
+    color: #f39c12;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.quality-issues-alert .badge {
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+}
+
+.quality-issues-info {
+    flex: 1;
+}
+
+.quality-issues-info ul {
+    margin-bottom: 0;
+    padding-left: 1.25rem;
+}
+
+.quality-issues-actions {
+    margin-left: 1rem;
+}
+
+/* Animation für Aufmerksamkeit auf den Badge */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.pulse-animation {
+    animation: pulse 1.5s infinite;
 }
 
 @media (max-width: 768px) {
@@ -270,89 +350,114 @@
     background-color: #495057;
 }
 
-    .timeline {
-        position: relative;
-        padding-left: 30px;
-    }
+[data-bs-theme="dark"] .quality-issues-alert {
+    background-color: #343a40;
+    border-left-color: #f39c12;
+}
 
-    .timeline::before {
-        content: '';
-        position: absolute;
-        height: 100%;
-        width: 2px;
-        background-color: #dee2e6;
-        left: 6px;
-        top: 0;
-    }
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
 
-    .timeline-item {
-        position: relative;
-        margin-bottom: 1.5rem;
-    }
+.timeline::before {
+    content: '';
+    position: absolute;
+    height: 100%;
+    width: 2px;
+    background-color: #dee2e6;
+    left: 6px;
+    top: 0;
+}
 
-    .timeline-marker {
-        position: absolute;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background-color: #6c757d;
-        left: -30px;
-        top: 6px;
-    }
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
 
-    .timeline-marker.note {
-        background-color: #0d6efd;
-    }
+.timeline-marker {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    left: -30px;
+    top: 6px;
+}
 
-    .timeline-marker.status_change {
-        background-color: #198754;
-    }
+.timeline-marker.note {
+    background-color: #0d6efd;
+}
 
-    .timeline-marker.system {
-        background-color: #0dcaf0;
-    }
+.timeline-marker.status_change {
+    background-color: #198754;
+}
 
-    .timeline-content {
-        padding: 1rem;
-        border-radius: 0.375rem;
-        border-width: 1px;
-        border-style: solid;
-        border-color: #dee2e6;
-        background-color: #fff;
-    }
+.timeline-marker.system {
+    background-color: #0dcaf0;
+}
 
-    .timeline-time {
-        font-size: 0.8rem;
-        color: #6c757d;
-    }
+.timeline-content {
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #dee2e6;
+}
 
-    .timeline-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        margin-right: 0.5rem;
-        background-color: #e9ecef;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+.timeline-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
 
-    .timeline-avatar i {
-        color: #6c757d;
-    }
+.timeline-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    .comment-attachment {
-        padding: 0.5rem;
-        background-color: #f8f9fa;
-        border-radius: 0.25rem;
-        margin-top: 0.5rem;
-    }
+.timeline-avatar i {
+    color: #6c757d;
+}
 
-    .status-change-badge {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        margin-right: 0.25rem;
-    }
+.comment-attachment {
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.status-change-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.25rem;
+}
+
+/* Item mit Qualitätsproblemen */
+.has-quality-issues {
+    position: relative;
+    border-left: 3px solid #dc3545 !important;
+}
+
+.has-quality-issues::before {
+    content: "⚠️";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: #dc3545;
+    font-size: 1.2rem;
+}
+
+/* Tooltip für das Qualitätsproblem */
+.tooltip-inner {
+    max-width: 300px;
+    text-align: left;
+}
 </style>
 {% endblock %}
 
@@ -372,7 +477,14 @@
 
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1 class="h3 mb-0">Bestellung {{ order.order_number }}</h1>
+            <h1 class="h3 mb-0">
+                Bestellung {{ order.order_number }}
+                {% if order.status == 'received_with_issues' %}
+                <span class="badge bg-warning ms-2">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Mängel gemeldet
+                </span>
+                {% endif %}
+            </h1>
             <p class="text-muted">{{ order.get_status_display }} | Erstellt am {{ order.order_date|date:"d.m.Y" }} von {{ order.created_by.username }}</p>
         </div>
         <div class="col-md-4 text-md-end">
@@ -395,15 +507,21 @@
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#sendOrderModal">
                     <i class="bi bi-send"></i> Bestellung versenden
                 </button>
-                {% elif order.status in 'sent,partially_received' and can_receive %}
+                {% elif order.status in 'sent,partially_received,received_with_issues' and can_receive %}
                 <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-primary">
                     <i class="bi bi-box-seam"></i> Wareneingang erfassen
                 </a>
                 {% endif %}
 
-                {% if order.status in 'sent,partially_received' %}
+                {% if order.status in 'sent,partially_received,received_with_issues' %}
                 <a href="{% url 'order_split_create' order.id %}" class="btn btn-outline-success">
                     <i class="bi bi-boxes"></i> Teillieferung planen
+                </a>
+                {% endif %}
+
+                {% if order.status == 'received_with_issues' %}
+                <a href="{% url 'rma_list' %}?order={{ order.id }}" class="btn btn-warning">
+                    <i class="bi bi-exclamation-triangle"></i> RMAs verwalten
                 </a>
                 {% endif %}
 
@@ -433,6 +551,38 @@
             </div>
         </div>
     </div>
+
+    {% if order.status == 'received_with_issues' %}
+    <!-- Neue RMA-Benachrichtigungsbox -->
+    <div class="quality-issues-alert mb-4">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div class="quality-issues-info">
+            <h5 class="mb-2">Qualitätsmängel gemeldet</h5>
+            <p>Diese Bestellung enthält Artikel mit gemeldeten Qualitätsmängeln. Es wurden folgende RMA-Vorgänge erstellt, die bearbeitet werden müssen:</p>
+
+            <ul>
+                {% for rma in related_rmas %}
+                <li>
+                    <strong>{{ rma.rma_number }}</strong> -
+                    {{ rma.items.count }} Position(en) -
+                    <span class="badge {% if rma.status == 'draft' %}bg-secondary{% elif rma.status == 'pending' %}bg-primary{% elif rma.status == 'resolved' %}bg-success{% else %}bg-info{% endif %}">
+                        {{ rma.get_status_display }}
+                    </span>
+                </li>
+                {% empty %}
+                <li>
+                    <span class="text-muted">RMA-Informationen werden geladen...</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="quality-issues-actions">
+            <a href="{% url 'rma_list' %}?order={{ order.id }}" class="btn btn-warning">
+                <i class="bi bi-box-arrow-right"></i> RMAs verwalten
+            </a>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Verbesserte Teillieferungsübersicht - nur anzeigen, wenn Teillieferungen vorhanden -->
     {% if splits %}
@@ -479,106 +629,106 @@
             </div>
 
             <!-- Karten der einzelnen Teillieferungen -->
-<div class="row">
-    {% for split_item in splits %}
-    {% with split=split_item.split %}
-    <div class="col-md-4 mb-3">
-        <div class="card delivery-card h-100 {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}" data-split-id="{{ split.id }}">
-            <div class="card-header bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">{{ split.name }}</h6>
-                    <span class="badge {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}">
-                        {{ split.get_status_display }}
-                    </span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="mb-2">
-                    <div class="d-flex justify-content-between">
-                        <span>Fortschritt:</span>
-                        <span>{{ split_item.completion_percentage }}%</span>
-                    </div>
-                    <div class="progress mt-1" style="height: 8px;">
-                        <div class="progress-bar {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}"
-                             role="progressbar"
-                             style="width: {{ split_item.completion_percentage }}%;"
-                             aria-valuenow="{{ split_item.completion_percentage }}"
-                             aria-valuemin="0"
-                             aria-valuemax="100"></div>
-                    </div>
-                </div>
+            <div class="row">
+                {% for split_item in splits %}
+                {% with split=split_item.split %}
+                <div class="col-md-4 mb-3">
+                    <div class="card delivery-card h-100 {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}" data-split-id="{{ split.id }}">
+                        <div class="card-header bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">{{ split.name }}</h6>
+                                <span class="badge {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {{ split.get_status_display }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Fortschritt:</span>
+                                    <span>{{ split_item.completion_percentage }}%</span>
+                                </div>
+                                <div class="progress mt-1" style="height: 8px;">
+                                    <div class="progress-bar {% if split.status == 'received' %}bg-success{% elif split.status == 'in_transit' %}bg-info{% else %}bg-secondary{% endif %}"
+                                        role="progressbar"
+                                        style="width: {{ split_item.completion_percentage }}%;"
+                                        aria-valuenow="{{ split_item.completion_percentage }}"
+                                        aria-valuemin="0"
+                                        aria-valuemax="100"></div>
+                                </div>
+                            </div>
 
-                <div class="row mt-3">
-                    <div class="col-6">
-                        <div class="text-muted small">Positionen:</div>
-                        <div>{{ split_item.total_items_count }}</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-muted small">Erhalten:</div>
-                        <div>{{ split_item.received_items_count }}/{{ split_item.total_items_count }}</div>
-                    </div>
-                </div>
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                    <div class="text-muted small">Positionen:</div>
+                                    <div>{{ split_item.total_items_count }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Erhalten:</div>
+                                    <div>{{ split_item.received_items_count }}/{{ split_item.total_items_count }}</div>
+                                </div>
+                            </div>
 
-                {% if split.status == 'received' %}
-                    {% with last_receipt=split.receipts.last %}
-                    {% if last_receipt %}
-                    <div class="mt-2">
-                        <div class="text-muted small">Geliefert am:</div>
-                        <div>{{ last_receipt.receipt_date|date:"d.m.Y" }}</div>
+                            {% if split.status == 'received' %}
+                                {% with last_receipt=split.receipts.last %}
+                                {% if last_receipt %}
+                                <div class="mt-2">
+                                    <div class="text-muted small">Geliefert am:</div>
+                                    <div>{{ last_receipt.receipt_date|date:"d.m.Y" }}</div>
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            {% elif split.expected_delivery %}
+                            <div class="mt-2">
+                                <div class="text-muted small">Erwartete Lieferung:</div>
+                                <div>
+                                    {{ split.expected_delivery|date:"d.m.Y" }}
+                                    {% if split.expected_delivery < today_date %}
+                                    <span class="badge text-bg-danger ms-1">überfällig</span>
+                                    {% elif split.expected_delivery <= soon_date %}
+                                    <span class="badge text-bg-warning ms-1">bald fällig</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if split.carrier %}
+                            <div class="mt-2">
+                                <div class="text-muted small">Spediteur:</div>
+                                <div>{{ split.carrier }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if split.tracking_number %}
+                            <div class="mt-2">
+                                <div class="text-muted small">Tracking:</div>
+                                <div>{{ split.tracking_number }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-eye"></i> Details
+                                </a>
+
+                                {% if split.status in 'planned,in_transit' %}
+                                <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-box-seam"></i> Wareneingang
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    {% endif %}
-                    {% endwith %}
-                {% elif split.expected_delivery %}
-                <div class="mt-2">
-                    <div class="text-muted small">Erwartete Lieferung:</div>
-                    <div>
-                        {{ split.expected_delivery|date:"d.m.Y" }}
-                        {% if split.expected_delivery < today_date %}
-                        <span class="badge text-bg-danger ms-1">überfällig</span>
-                        {% elif split.expected_delivery <= soon_date %}
-                        <span class="badge text-bg-warning ms-1">bald fällig</span>
-                        {% endif %}
-                    </div>
                 </div>
-                {% endif %}
-
-                {% if split.carrier %}
-                <div class="mt-2">
-                    <div class="text-muted small">Spediteur:</div>
-                    <div>{{ split.carrier }}</div>
-                </div>
-                {% endif %}
-
-                {% if split.tracking_number %}
-                <div class="mt-2">
-                    <div class="text-muted small">Tracking:</div>
-                    <div>{{ split.tracking_number }}</div>
-                </div>
-                {% endif %}
-            </div>
-            <div class="card-footer bg-transparent {% if split.status == 'received' %}border-success{% elif split.status == 'in_transit' %}border-info{% else %}border-secondary{% endif %}">
-                <div class="d-flex justify-content-between">
-                    <a href="{% url 'order_split_detail' order.id split.id %}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-eye"></i> Details
-                    </a>
-
-                    {% if split.status in 'planned,in_transit' %}
-                    <a href="{% url 'receive_order_split' order.id split.id %}" class="btn btn-sm btn-success">
-                        <i class="bi bi-box-seam"></i> Wareneingang
-                    </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endwith %}
-    {% endfor %}
+                {% endwith %}
+                {% endfor %}
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- Order Approval Workflow Visualization (bestehend) -->
+    <!-- Order Approval Workflow Visualization (erweitert mit Status "received_with_issues") -->
     <div class="card mb-4">
         <div class="card-header">
             <h5 class="mb-0">Bestellstatus</h5>
@@ -587,7 +737,7 @@
             <!-- Workflow steps -->
             <div class="workflow-steps">
                 <!-- Draft -->
-                <div class="workflow-step {% if order.status == 'draft' %}active{% elif order.status in 'pending,approved,sent,partially_received,received' %}completed{% endif %}">
+                <div class="workflow-step {% if order.status == 'draft' %}active{% elif order.status in 'pending,approved,sent,partially_received,received,received_with_issues' %}completed{% endif %}">
                     <div class="workflow-circle">
                         <i class="bi bi-pencil"></i>
                     </div>
@@ -600,7 +750,7 @@
                 </div>
 
                 <!-- Pending -->
-                <div class="workflow-step {% if order.status == 'pending' %}active{% elif order.status in 'approved,sent,partially_received,received' %}completed{% elif order.status == 'draft' %}{% else %}disabled{% endif %}">
+                <div class="workflow-step {% if order.status == 'pending' %}active{% elif order.status in 'approved,sent,partially_received,received,received_with_issues' %}completed{% elif order.status == 'draft' %}{% else %}disabled{% endif %}">
                     <div class="workflow-circle">
                         <i class="bi bi-clock"></i>
                     </div>
@@ -608,7 +758,7 @@
                 </div>
 
                 <!-- Approved -->
-                <div class="workflow-step {% if order.status == 'approved' %}active{% elif order.status in 'sent,partially_received,received' %}completed{% elif order.status in 'draft,pending' %}{% else %}disabled{% endif %}">
+                <div class="workflow-step {% if order.status == 'approved' %}active{% elif order.status in 'sent,partially_received,received,received_with_issues' %}completed{% elif order.status in 'draft,pending' %}{% else %}disabled{% endif %}">
                     <div class="workflow-circle">
                         <i class="bi bi-check-lg"></i>
                     </div>
@@ -621,7 +771,7 @@
                 </div>
 
                 <!-- Sent -->
-                <div class="workflow-step {% if order.status == 'sent' %}active{% elif order.status in 'partially_received,received' %}completed{% elif order.status in 'draft,pending,approved' %}{% else %}disabled{% endif %}">
+                <div class="workflow-step {% if order.status == 'sent' %}active{% elif order.status in 'partially_received,received,received_with_issues' %}completed{% elif order.status in 'draft,pending,approved' %}{% else %}disabled{% endif %}">
                     <div class="workflow-circle">
                         <i class="bi bi-send"></i>
                     </div>
@@ -629,7 +779,7 @@
                 </div>
 
                 <!-- Partially Received -->
-                <div class="workflow-step {% if order.status == 'partially_received' %}active{% elif order.status == 'received' %}completed{% elif order.status in 'draft,pending,approved,sent' %}{% else %}disabled{% endif %}">
+                <div class="workflow-step {% if order.status == 'partially_received' %}active{% elif order.status in 'received,received_with_issues' %}completed{% elif order.status in 'draft,pending,approved,sent' %}{% else %}disabled{% endif %}">
                     <div class="workflow-circle">
                         <i class="bi bi-box-seam"></i>
                     </div>
@@ -637,12 +787,26 @@
                 </div>
 
                 <!-- Received -->
-                <div class="workflow-step {% if order.status == 'received' %}active completed{% elif order.status in 'draft,pending,approved,sent,partially_received' %}{% else %}disabled{% endif %}">
+                <div class="workflow-step {% if order.status == 'received' %}active completed{% elif order.status in 'draft,pending,approved,sent,partially_received,received_with_issues' %}{% else %}disabled{% endif %}">
                     <div class="workflow-circle">
                         <i class="bi bi-check-circle"></i>
                     </div>
                     <div class="workflow-label">Vollständig erhalten</div>
-                    {% if order.status == 'received' and order.receipts.all.0 %}
+                        {% if order.status == 'received' and order.receipts.all.0 %}
+                    <div class="workflow-info">
+                        {{ order.receipts.all.0.receipt_date|date:"d.m.Y" }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Received with Issues (neuer Status) -->
+                <div class="workflow-step with-issues {% if order.status == 'received_with_issues' %}active{% else %}{% endif %}">
+                    <div class="workflow-circle">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <span class="quality-issues-badge pulse-animation" data-bs-toggle="tooltip" title="Mängel gemeldet">!</span>
+                    </div>
+                    <div class="workflow-label">Erhalten mit Mängeln</div>
+                    {% if order.status == 'received_with_issues' and order.receipts.all.0 %}
                     <div class="workflow-info">
                         {{ order.receipts.all.0.receipt_date|date:"d.m.Y" }}
                     </div>
@@ -684,7 +848,7 @@
             {% endif %}
 
             <!-- Expected delivery information -->
-            {% if order.expected_delivery and order.status != 'received' %}
+            {% if order.expected_delivery and order.status != 'received' and order.status != 'received_with_issues' %}
                 <div class="alert
                     {% if order.expected_delivery < today_date %}alert-danger
                     {% elif order.expected_delivery <= soon_date %}alert-warning
@@ -741,6 +905,11 @@
                             <span class="badge bg-primary">{{ order.get_status_display }}</span>
                             {% elif order.status == 'received' %}
                             <span class="badge bg-success">{{ order.get_status_display }}</span>
+                            {% elif order.status == 'received_with_issues' %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Erhalten mit Mängeln
+                            </span>
                             {% elif order.status == 'cancelled' %}
                             <span class="badge bg-danger">{{ order.get_status_display }}</span>
                             {% endif %}
@@ -798,6 +967,16 @@
                         <dt class="col-sm-12">Anmerkungen:</dt>
                         <dd class="col-sm-12">{{ order.notes|linebreaks }}</dd>
                         {% endif %}
+
+                        {% if order.status == 'received_with_issues' %}
+                        <dt class="col-sm-5">RMA-Vorgänge:</dt>
+                        <dd class="col-sm-7">
+                            <span class="badge bg-warning">{{ related_rmas|length }}</span>
+                            <a href="{% url 'rma_list' %}?order={{ order.id }}" class="small ms-2">
+                                <i class="bi bi-arrow-right-circle"></i> Verwalten
+                            </a>
+                        </dd>
+                        {% endif %}
                     </dl>
                 </div>
             </div>
@@ -814,7 +993,7 @@
                     <div class="row">
                         {% for item in order.items.all %}
                         <div class="col-md-6 col-lg-4 mb-3">
-                            <div class="item-status-block {% if item.is_canceled %}{% endif %}">
+                            <div class="item-status-block {% if item.has_quality_issues %}has-quality-issues{% endif %} {% if item.is_canceled %}{% endif %}">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <strong>{{ item.product.name }}</strong>
@@ -823,6 +1002,10 @@
                                     <div>
                                         {% if item.is_canceled %}
                                         <span class="badge text-bg-danger">Storniert</span>
+                                        {% elif item.has_quality_issues %}
+                                        <span class="badge text-bg-warning" data-bs-toggle="tooltip" title="Qualitätsmängel gemeldet">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>Mängel
+                                        </span>
                                         {% elif item.is_fully_received %}
                                         <span class="badge text-bg-success">Vollständig erhalten</span>
                                         {% elif item.quantity_received > 0 %}
@@ -835,13 +1018,24 @@
 
                                 {% if not item.is_canceled %}
                                 <div class="item-status-bar">
+                                    {% if item.has_quality_issues %}
+                                    <div class="item-status-issue" style="width: {{ item.quantity_received|div:item.quantity_ordered|mul:100 }}%;"></div>
+                                    {% else %}
                                     <div class="item-status-received" style="width: {{ item.quantity_received|div:item.quantity_ordered|mul:100 }}%;"></div>
+                                    {% endif %}
                                 </div>
 
                                 <div class="item-status-details">
                                     Bestellt: {{ item.quantity_ordered }} {{ item.product.unit }} |
                                     Erhalten: {{ item.quantity_received }} {{ item.product.unit }}
                                     ({{ item.quantity_received|div:item.quantity_ordered|mul:100|floatformat:0 }}%)
+                                    {% if item.has_quality_issues %}
+                                    <br>
+                                    <span class="text-danger">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                        Mangel: {{ item.defective_quantity }} {{ item.product.unit }} mit Qualitätsproblemen
+                                    </span>
+                                    {% endif %}
                                 </div>
 
                                 <!-- Anzeigen, in welchen Teillieferungen dieser Artikel enthalten ist -->
@@ -859,6 +1053,20 @@
                                         {% endif %}
                                         {% endfor %}
                                         {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Link zu zugehöriger RMA, falls vorhanden -->
+                                {% if item.has_quality_issues and item.rma_items.exists %}
+                                <div class="mt-2 small">
+                                    <div class="text-danger">RMA-Vorgänge:</div>
+                                    <div>
+                                        {% for rma_item in item.rma_items.all %}
+                                        <a href="{% url 'rma_detail' rma_item.rma.id %}" class="badge bg-warning text-dark me-1">
+                                            {{ rma_item.rma.rma_number }}
+                                        </a>
                                         {% endfor %}
                                     </div>
                                 </div>
@@ -895,12 +1103,17 @@
                         </thead>
                         <tbody>
                             {% for item in order.items.all %}
-                            <tr {% if item.is_canceled %}class="text-muted"{% endif %}>
+                            <tr {% if item.is_canceled %}class="text-muted"{% endif %} {% if item.has_quality_issues %}class="table-warning"{% endif %}>
                                 <td>
                                     <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
                                     {% if item.is_canceled %}
                                     <div class="small text-danger">
                                         <i class="bi bi-x-circle"></i> Vollständig storniert
+                                    </div>
+                                    {% endif %}
+                                    {% if item.has_quality_issues %}
+                                    <div class="small text-danger">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Qualitätsmängel gemeldet
                                     </div>
                                     {% endif %}
                                 </td>
@@ -925,6 +1138,11 @@
                                         <i class="bi bi-info-circle"></i> Grund: {{ item.cancellation_reason }}
                                     </div>
                                     {% endif %}
+                                    {% elif item.has_quality_issues %}
+                                    <span>{{ item.display_quantity }} {{ item.product.unit }}</span>
+                                    <div class="small text-danger">
+                                        <i class="bi bi-exclamation-triangle"></i> Mangelhaft: {{ item.defective_quantity }} {{ item.product.unit }}
+                                    </div>
                                     {% else %}
                                     {{ item.display_quantity }} {{ item.product.unit }}
                                     {% endif %}
@@ -988,7 +1206,11 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-center">
-                                    {% if item.is_fully_received %}
+                                    {% if item.has_quality_issues %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>Mängel
+                                    </span>
+                                    {% elif item.is_fully_received %}
                                     <span class="badge bg-success">Erhalten</span>
                                     {% elif item.quantity_received > 0 %}
                                     <span class="badge bg-warning">Teilweise erhalten</span>
@@ -1002,7 +1224,7 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group btn-group-sm">
-                                        {% if not item.is_canceled and order.status not in 'sent,partially_received,received,canceled' and item.quantity_received == 0 %}
+                                        {% if not item.is_canceled and order.status not in 'sent,partially_received,received,received_with_issues,canceled' and item.quantity_received == 0 %}
                                             <a href="{% url 'purchase_order_item_cancel' order.id item.id %}" class="btn btn-outline-danger">
                                                 <i class="bi bi-x-circle"></i>
                                             </a>
@@ -1010,6 +1232,11 @@
                                         {% if item.is_canceled or item.is_partially_canceled %}
                                             <a href="{% url 'purchase_order_item_edit_cancellation' order.id item.id %}" class="btn btn-sm btn-outline-warning" title="Stornierung bearbeiten">
                                                 <i class="bi bi-pencil-fill"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if item.has_quality_issues and item.rma_items.exists %}
+                                            <a href="{% url 'rma_detail' item.rma_items.first.rma.id %}" class="btn btn-sm btn-warning" title="RMA anzeigen">
+                                                <i class="bi bi-exclamation-triangle"></i>
                                             </a>
                                         {% endif %}
                                     </div>
@@ -1471,11 +1698,65 @@
                     </form>
                 </div>
             </div>
+                {% if order.status == 'received_with_issues' and related_rmas %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>RMA-Vorgänge für diese Bestellung</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>RMA-Nummer</th>
+                                            <th>Status</th>
+                                            <th>Erstellungsdatum</th>
+                                            <th>Positionen</th>
+                                            <th>Gesamtwert</th>
+                                            <th>Aktionen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for rma in related_rmas %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'rma_detail' rma.id %}">{{ rma.rma_number }}</a>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if rma.status == 'draft' %}bg-secondary{% elif rma.status == 'pending' %}bg-primary{% elif rma.status == 'approved' %}bg-info{% elif rma.status == 'sent' %}bg-warning{% elif rma.status == 'resolved' %}bg-success{% else %}bg-danger{% endif %}">
+                                                    {{ rma.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ rma.created_at|date:"d.m.Y" }}</td>
+                                            <td>{{ rma.items.count }}</td>
+                                            <td>
+                                                {{ rma.total_value|floatformat:2 }}
+                                                {% if order.supplier.default_currency %}
+                                                    {{ order.supplier.default_currency.symbol }}
+                                                {% else %}
+                                                    €
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'rma_detail' rma.id %}" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
         </div>
     </div>
 </div>
 
-<!-- Modal für die Schnittstellenauswahl -->
 {% if order.status == 'approved' %}
 <div class="modal fade" id="sendOrderModal" tabindex="-1" aria-labelledby="sendOrderModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -1546,6 +1827,121 @@
   </div>
 </div>
 {% endif %}
+
+<!-- Modal für RMA-Informationen -->
+{% if order.status == 'received_with_issues' %}
+<div class="modal fade" id="rmaDetailsModal" tabindex="-1" aria-labelledby="rmaDetailsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="rmaDetailsModalLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            RMA-Detailinformationen
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-4">
+            <h5>RMA-Übersicht</h5>
+            <p>Hier finden Sie detaillierte Informationen zu den offenen RMA-Vorgängen für diese Bestellung:</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>RMA-Nummer</th>
+                            <th>Status</th>
+                            <th>Erstellungsdatum</th>
+                            <th>Positionen</th>
+                            <th>Lösung</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rma-details-table">
+                        <!-- Wird per AJAX geladen -->
+                        {% for rma in related_rmas %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'rma_detail' rma.id %}" target="_blank">{{ rma.rma_number }}</a>
+                            </td>
+                            <td>
+                                <span class="badge {% if rma.status == 'draft' %}bg-secondary{% elif rma.status == 'pending' %}bg-primary{% elif rma.status == 'approved' %}bg-info{% elif rma.status == 'sent' %}bg-warning{% elif rma.status == 'resolved' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ rma.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ rma.created_at|date:"d.m.Y" }}</td>
+                            <td>{{ rma.items.count }}</td>
+                            <td>
+                                {% if rma.resolution_type %}
+                                {{ rma.get_resolution_type_display }}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">
+                                <div class="py-3 text-muted">
+                                    <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                                    Keine RMA-Informationen verfügbar
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <h5>Betroffene Artikel</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Artikel</th>
+                            <th>SKU</th>
+                            <th>Menge mit Mängeln</th>
+                            <th>Problemtyp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="affected-items-table">
+                        <!-- Wird per AJAX geladen -->
+                        {% for rma in related_rmas %}
+                            {% for item in rma.items.all %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.product.sku }}</td>
+                                <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                                <td>{{ item.get_issue_type_display }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">
+                                <div class="py-3 text-muted">
+                                    <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                                    Keine Artikelinformationen verfügbar
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+        <a href="{% url 'rma_list' %}?order={{ order.id }}" class="btn btn-warning">
+            <i class="bi bi-list-check me-2"></i>
+            Alle RMAs anzeigen
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}
@@ -1591,6 +1987,21 @@ $(document).ready(function() {
             }, 500);
         }, 500);
     }
+
+    // Automatisch das RMA-Modal anzeigen, wenn entsprechender URL-Parameter vorhanden ist
+    if (urlParams.get('show_rma_details') === 'true') {
+        $('#rmaDetailsModal').modal('show');
+    }
+
+    // Qualitätsprobleme-Elemente mit speziellen Hover-Effekten
+    $('.has-quality-issues').hover(
+        function() {
+            $(this).css('box-shadow', '0 0 0 2px #dc3545');
+        },
+        function() {
+            $(this).css('box-shadow', 'none');
+        }
+    );
 });
 </script>
 {% endblock %}

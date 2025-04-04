@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Position aus RMA entfernen - {{ rma.rma_number }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'rma_list' %}">RMAs</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'rma_detail' rma.id %}">{{ rma.rma_number }}</a></li>
+                    <li class="breadcrumb-item active">Position löschen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Position aus RMA entfernen</h1>
+            <p class="text-muted">RMA: {{ rma.rma_number }} | Lieferant: {{ rma.supplier.name }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'rma_detail' rma.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur RMA
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Position löschen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <p><i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Warnung:</strong> Sie sind dabei, folgende Position aus der RMA zu entfernen:</p>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">{{ item.product.name }}</h6>
+                                <span class="badge bg-secondary">{{ item.product.sku }}</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Menge:</strong> {{ item.quantity }} {{ item.product.unit }}</p>
+                                    <p class="mb-1"><strong>Stückpreis:</strong> {{ item.unit_price }}</p>
+                                    <p class="mb-0"><strong>Gesamtwert:</strong> {{ item.value }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1"><strong>Problemtyp:</strong> {{ item.get_issue_type_display }}</p>
+                                    <p class="mb-0"><strong>Beschreibung:</strong> {{ item.issue_description|truncatechars:50 }}</p>
+                                </div>
+                            </div>
+                            {% if item.batch_number %}
+                            <p class="mt-2 mb-0"><strong>Chargennummer:</strong> {{ item.batch_number }}</p>
+                            {% endif %}
+                            {% if item.serial_number %}
+                            <p class="mt-2 mb-0"><strong>Seriennummer:</strong> {{ item.serial_number }}</p>
+                            {% endif %}
+                            {% if item.expiry_date %}
+                            <p class="mt-2 mb-0"><strong>Verfallsdatum:</strong> {{ item.expiry_date|date:"d.m.Y" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="return_to_origin" id="return_to_origin" value="yes">
+                            <label class="form-check-label" for="return_to_origin">
+                                Artikel zurück in das ursprüngliche Lager transferieren
+                                {% if item.receipt_item %}
+                                ({{ item.receipt_item.warehouse.name }})
+                                {% endif %}
+                            </label>
+                        </div>
+
+                        <div class="alert alert-danger">
+                            <p class="mb-0">
+                                <i class="bi bi-exclamation-circle me-2"></i>
+                                <strong>Hinweis:</strong> Das Löschen kann nicht rückgängig gemacht werden. Die Position und alle zugehörigen Daten werden dauerhaft entfernt.
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'rma_detail' rma.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Position endgültig löschen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

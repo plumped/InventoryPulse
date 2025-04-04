@@ -18,6 +18,7 @@ class PurchaseOrder(models.Model):
         ('sent', 'Bestellt'),
         ('partially_received', 'Teilweise erhalten'),
         ('received', 'Vollständig erhalten'),
+        ('received_with_issues', 'Erhalten mit Mängeln'),  # Neuer Status
         ('cancelled', 'Storniert')
     ]
 

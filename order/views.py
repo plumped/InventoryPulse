@@ -16,6 +16,7 @@ from django.db import models
 
 from accessmanagement.decorators import permission_required
 from core.models import Product, ProductWarehouse, Currency
+from rma.models import RMA
 from suppliers.models import Supplier, SupplierProduct
 from inventory.models import Warehouse, StockMovement
 
@@ -3269,18 +3270,17 @@ def update_order_status(order):
 def update_order_status_after_receipt(order):
     """
     Updates the order status after a receipt is processed or deleted.
-    Takes into account cancelled items.
+    Takes into account cancelled items and quality issues.
     """
-    # Check if all non-cancelled items are fully received or partially received
+    # Bestehende Prüfung für Vollständigkeit der Lieferung
     all_items_received = True
     any_items_received = False
 
     for item in order.items.all():
-        # Skip cancelled items
+        # Stornierte Positionen überspringen
         if item.is_canceled:
             continue
 
-        # For partially cancelled items, use the effective quantity
         effective_ordered = item.effective_quantity
 
         if item.quantity_received >= effective_ordered:
@@ -3290,12 +3290,24 @@ def update_order_status_after_receipt(order):
             if item.quantity_received > 0:
                 any_items_received = True
 
-    # Set status based on the result
+    # Prüfen, ob es aktive RMAs für diese Bestellung gibt
+    has_active_rmas = RMA.objects.filter(
+        related_order=order,
+        status__in=['draft', 'pending', 'approved', 'sent']
+    ).exists()
+
+    # Status basierend auf Lieferstatus und RMAs setzen
     if all_items_received:
-        order.status = 'received'
+        if has_active_rmas:
+            order.status = 'received_with_issues'
+        else:
+            order.status = 'received'
     elif any_items_received:
         order.status = 'partially_received'
     else:
+        order.status = 'sent'
+
+    if order.status == 'received_with_issues' and not any_items_received:
         order.status = 'sent'
 
     order.save()

@@ -40,7 +40,6 @@
         border-radius: 0.5rem;
         padding: 2rem;
         text-align: center;
-        background-color: #f8f9fa;
         cursor: pointer;
         transition: all 0.3s ease;
     }
@@ -153,7 +152,9 @@
                                 </div>
                                 <div class="col-md-6">
                                     <strong>Problemtyp:</strong> {{ item.get_issue_type_display }}<br>
-                                    <strong>Problem:</strong> {{ item.issue_description|truncatechars:50 }}
+                                    <strong>Problem:</strong> {{ item.issue_description|truncatechars:50 }}<br>
+                                    <strong>Chargennummer:</strong> {{ item.batch_number }}<br>
+                                    <strong>Seriennummer:</strong> {{ item.serial_number }}<br>
                                 </div>
                             </div>
                         </div>

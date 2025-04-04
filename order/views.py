@@ -749,6 +749,17 @@ def purchase_order_receive(request, pk):
         split_name = request.POST.get('split_name', '')
         expected_delivery = request.POST.get('expected_delivery', None)
 
+        # Defekte Artikel aus dem Formular abrufen
+        defective_items = []
+        defective_items_data = request.POST.get('defective_items', '')
+        if defective_items_data:
+            try:
+                import json
+                defective_items = json.loads(defective_items_data)
+            except (json.JSONDecodeError, ValueError):
+                # Fehler beim Parsen ignorieren
+                pass
+
         try:
             with transaction.atomic():
                 # Bei Bedarf eine neue Teillieferung anlegen oder eine bestehende verwenden
@@ -953,6 +964,24 @@ def purchase_order_receive(request, pk):
                                          f'Wareneingang für Teillieferung "{split.name}" wurde erfolgreich erfasst.')
                     else:
                         messages.success(request, 'Wareneingang wurde erfolgreich erfasst.')
+
+                # Wenn defekte Artikel gemeldet wurden, in der Session speichern und zur RMA-Erstellung weiterleiten
+                if defective_items:
+                    # Defekte Artikel mit Wareneingangspositionen verknüpfen
+                    for item_data in defective_items:
+                        item_data['receipt_item_id'] = next(
+                            (ri.id for ri in receipt.items.all() if
+                             ri.order_item.id == int(item_data['receipt_item_id'])),
+                            None
+                        )
+
+                    # In Session speichern
+                    request.session['defective_items'] = defective_items
+
+                    # Zur RMA-Erstellung weiterleiten, wenn mindestens ein Artikel für RMA markiert ist
+                    create_rma = any(item.get('create_rma', False) for item in defective_items)
+                    if create_rma:
+                        return redirect('rma_create_from_receipt', order_id=order.pk, receipt_id=receipt.pk)
 
                 return redirect('purchase_order_detail', pk=order.pk)
 

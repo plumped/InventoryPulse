@@ -1242,3 +1242,4 @@ def rma_create_from_receipt(request, order_id, receipt_id):
     }
 
     return render(request, 'rma/rma_create_from_receipt.html', context)
+

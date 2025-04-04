@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}Fotos hinzufügen - RMA {{ rma.rma_number }} - InventoryPulse{% endblock %}
+
+{% block extra_css %}
+<style>
+    .photo-preview {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .photo-preview img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.25rem;
+    }
+
+    .photo-caption {
+        margin-top: 0.5rem;
+    }
+
+    .photo-controls {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+    }
+
+    .photo-delete {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dropzone {
+        border: 2px dashed #dee2e6;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        text-align: center;
+        background-color: #f8f9fa;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .dropzone:hover, .dropzone.drag-over {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .dropzone-icon {
+        font-size: 2.5rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
+    .dropzone-text {
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'rma_list' %}">RMAs</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'rma_detail' rma.id %}">{{ rma.rma_number }}</a></li>
+                    <li class="breadcrumb-item active">Fotos hinzufügen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Fotos zu Artikel hinzufügen</h1>
+            <p class="text-muted">
+                RMA {{ rma.rma_number }} | Artikel: {{ item.product.name }}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'rma_detail' rma.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur RMA
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Linke Spalte: Bereits vorhandene Fotos -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Vorhandene Fotos</h5>
+                    <span class="badge bg-secondary">{{ photos|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if photos %}
+                        <div class="row">
+                            {% for photo in photos %}
+                            <div class="col-md-12 mb-3">
+                                <div class="photo-preview">
+                                    <img src="{{ photo.image.url }}" alt="{{ photo.caption|default:'RMA Foto' }}" class="img-fluid shadow-sm">
+
+                                    <div class="photo-controls">
+                                        <a href="{% url 'rma_delete_photo' rma.id item.id photo.id %}" class="btn btn-sm btn-light photo-delete"
+                                           title="Foto löschen">
+                                            <i class="bi bi-trash text-danger"></i>
+                                        </a>
+                                    </div>
+
+                                    {% if photo.caption %}
+                                    <div class="photo-caption">
+                                        <small class="text-muted">{{ photo.caption }}</small>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-image" style="font-size: 3rem;"></i>
+                            <p class="mt-3">Keine Fotos vorhanden</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Rechte Spalte: Fotoupload-Formular -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Neue Fotos hinzufügen</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Artikeldetails zur Orientierung -->
+                        <div class="alert alert-info mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Artikel:</strong> {{ item.product.name }}<br>
+                                    <strong>SKU:</strong> {{ item.product.sku }}<br>
+                                    <strong>Menge:</strong> {{ item.quantity }} {{ item.product.unit }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Problemtyp:</strong> {{ item.get_issue_type_display }}<br>
+                                    <strong>Problem:</strong> {{ item.issue_description|truncatechars:50 }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropzone für Fotos -->
+                        <div class="mb-4">
+                            <label for="photos" class="form-label">Fotos auswählen</label>
+                            <div id="dropzone" class="dropzone">
+                                <input type="file" name="photos" id="photos" accept="image/*" multiple class="d-none">
+                                <div class="dropzone-content">
+                                    <div class="dropzone-icon">
+                                        <i class="bi bi-cloud-arrow-up"></i>
+                                    </div>
+                                    <div class="dropzone-text">
+                                        <p>Ziehen Sie Fotos hierher oder klicken Sie zum Auswählen</p>
+                                        <small class="text-muted">Unterstützte Formate: JPG, PNG, GIF</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Foto-Beschriftungen -->
+                        <div id="captions-container" class="mb-4" style="display: none;">
+                            <h6>Beschriftungen (optional)</h6>
+                            <div id="captions-list"></div>
+                        </div>
+
+                        <!-- Submit-Button -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'rma_detail' rma.id %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submit-button" disabled>
+                                <i class="bi bi-cloud-upload"></i> Fotos hochladen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('photos');
+        const captionsContainer = document.getElementById('captions-container');
+        const captionsList = document.getElementById('captions-list');
+        const submitButton = document.getElementById('submit-button');
+
+        // Drag & Drop-Funktionalität
+        dropzone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropzone.classList.add('drag-over');
+        });
+
+        dropzone.addEventListener('dragleave', function() {
+            dropzone.classList.remove('drag-over');
+        });
+
+        dropzone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+
+        // Klick-Funktion
+        dropzone.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // Dateien-Auswahl-Handler
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            const files = fileInput.files;
+
+            if (files.length > 0) {
+                // Aktiviere den Submit-Button
+                submitButton.disabled = false;
+
+                // Zeige die Dropzone als aktiviert an
+                dropzone.classList.add('border-primary');
+
+                // Zeige ausgewählte Dateien an
+                dropzone.querySelector('.dropzone-text').innerHTML = `
+                    <p>${files.length} Foto${files.length !== 1 ? 's' : ''} ausgewählt</p>
+                    <small class="text-muted">Klicken, um andere Fotos auszuwählen</small>
+                `;
+
+                // Beschriftungsfelder erzeugen
+                captionsList.innerHTML = '';
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+
+                    // Container für Vorschau und Beschriftung
+                    const previewContainer = document.createElement('div');
+                    previewContainer.className = 'mb-3 border p-3 rounded';
+
+                    // Vorschau
+                    const preview = document.createElement('div');
+                    preview.className = 'mb-2';
+
+                    // Dateiname und Größe
+                    const fileInfo = document.createElement('div');
+                    fileInfo.className = 'd-flex align-items-center mb-2';
+                    fileInfo.innerHTML = `
+                        <i class="bi bi-image me-2"></i>
+                        <span class="me-auto">${file.name}</span>
+                        <small class="text-muted">${formatFileSize(file.size)}</small>
+                    `;
+
+                    // Beschriftungsfeld
+                    const captionInput = document.createElement('div');
+                    captionInput.className = 'mb-0';
+                    captionInput.innerHTML = `
+                        <label for="caption_${i}" class="form-label small">Beschriftung für Foto ${i+1}</label>
+                        <input type="text" class="form-control form-control-sm" id="caption_${i}" name="captions" placeholder="Optionale Beschreibung">
+                    `;
+
+                    // Alles zusammenfügen
+                    previewContainer.appendChild(fileInfo);
+                    previewContainer.appendChild(captionInput);
+                    captionsList.appendChild(previewContainer);
+                }
+
+                // Beschriftungscontainer anzeigen
+                captionsContainer.style.display = 'block';
+            } else {
+                // Reset
+                submitButton.disabled = true;
+                dropzone.classList.remove('border-primary');
+                dropzone.querySelector('.dropzone-text').innerHTML = `
+                    <p>Ziehen Sie Fotos hierher oder klicken Sie zum Auswählen</p>
+                    <small class="text-muted">Unterstützte Formate: JPG, PNG, GIF</small>
+                `;
+                captionsContainer.style.display = 'none';
+            }
+        }
+
+        // Hilfsfunktion zur Formatierung der Dateigröße
+        function formatFileSize(bytes) {
+            if (bytes < 1024) {
+                return bytes + ' B';
+            } else if (bytes < 1024 * 1024) {
+                return (bytes / 1024).toFixed(1) + ' KB';
+            } else {
+                return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            }
+        }
+    });
+</script>
+{% endblock %}

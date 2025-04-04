@@ -805,6 +805,7 @@ def purchase_order_receive(request, pk):
                     warehouse_key = f'warehouse_{item.id}'
                     batch_key = f'batch_{item.id}'
                     expiry_key = f'expiry_{item.id}'
+                    has_quality_issue_key = f'has_quality_issue_{item.id}'
 
                     if quantity_key in request.POST:
                         try:
@@ -905,7 +906,6 @@ def purchase_order_receive(request, pk):
                                         order_item=item
                                     )
                                     # Hier NICHT die Menge erhöhen, sondern die Gesamtmenge aktualisieren
-                                    # Das ist der Fehler in deinem Code
                                     if quantity > 0:
                                         # Nur aktualisieren, wenn eine Menge eingegeben wurde
                                         split_item.quantity = quantity
@@ -969,18 +969,21 @@ def purchase_order_receive(request, pk):
                 if defective_items:
                     # Defekte Artikel mit Wareneingangspositionen verknüpfen
                     for item_data in defective_items:
-                        item_data['receipt_item_id'] = next(
-                            (ri.id for ri in receipt.items.all() if
-                             ri.order_item.id == int(item_data['receipt_item_id'])),
-                            None
-                        )
+                        item_id = item_data.get('receipt_item_id')
+                        # Suche die entsprechende ReceiptItem für diese Position
+                        for ri in receipt.items.all():
+                            if str(ri.order_item.id) == str(item_id):
+                                item_data['receipt_item_id'] = ri.id
+                                break
 
                     # In Session speichern
                     request.session['defective_items'] = defective_items
 
-                    # Zur RMA-Erstellung weiterleiten, wenn mindestens ein Artikel für RMA markiert ist
+                    # Prüfen, ob mindestens ein Artikel für RMA markiert ist
                     create_rma = any(item.get('create_rma', False) for item in defective_items)
                     if create_rma:
+                        messages.info(request,
+                                      'Es wurden mangelhafte Artikel erfasst. Sie werden zur RMA-Erstellung weitergeleitet.')
                         return redirect('rma_create_from_receipt', order_id=order.pk, receipt_id=receipt.pk)
 
                 return redirect('purchase_order_detail', pk=order.pk)

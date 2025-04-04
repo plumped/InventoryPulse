@@ -58,6 +58,17 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
         })
     )
 
+@admin.register(PurchaseOrderReceiptItem)
+class PurchaseOrderReceiptItemAdmin(admin.ModelAdmin):
+    list_display = ('receipt', 'order_item', 'quantity_received', 'warehouse')
+    search_fields = (
+        'order_item__product__name',
+        'batch_number',
+        'receipt__id',
+    )
+    list_filter = ('warehouse',)
+    autocomplete_fields = ('receipt', 'order_item', 'warehouse')
+
 
 class PurchaseOrderReceiptAdmin(admin.ModelAdmin):
     list_display = ('id', 'purchase_order', 'receipt_date', 'received_by')

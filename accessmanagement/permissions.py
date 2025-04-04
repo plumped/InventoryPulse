@@ -23,6 +23,9 @@ PERMISSION_GROUPS = {
     'order_admin': 'Bestellungs-Administrator',
     'order_manager': 'Bestellungs-Manager',
     'order_viewer': 'Bestellungs-Betrachter',
+    'rma_admin': 'RMA-Administrator',
+    'rma_manager': 'RMA-Manager',
+    'rma_viewer': 'RMA-Betrachter',
 }
 
 # Functional areas
@@ -33,6 +36,7 @@ PERMISSION_AREAS = {
     'report': 'Berichtswesen',
     'import': 'Datenimport',
     'order': 'Bestellverwaltung',
+    'rma': 'RMA-Verwaltung',
 }
 
 # Permission levels

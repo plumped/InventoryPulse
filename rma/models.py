@@ -235,8 +235,9 @@ class RMAItem(models.Model):
 
     @property
     def value(self):
-        """Calculate the total value of this item."""
-        return self.quantity * self.unit_price
+        if self.quantity is not None and self.unit_price is not None:
+            return self.quantity * self.unit_price
+        return None
 
     class Meta:
         verbose_name = "RMA-Position"

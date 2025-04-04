@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from core.models import Product
 from inventory.models import Warehouse
-from order.models import PurchaseOrderReceiptItem
+from order.models import PurchaseOrderReceiptItem, PurchaseOrder
 from suppliers.models import Supplier
 
 from .models import RMA, RMAItem, RMAComment, RMAIssueType, RMAStatus, RMAResolutionType
@@ -58,8 +58,9 @@ class RMAForm(forms.ModelForm):
                 self.fields['related_order'].initial = receipt_item.order_item.purchase_order.pk
 
                 # Filter related_order queryset to only show orders from the selected supplier
-                self.fields[
-                    'related_order'].queryset = receipt_item.order_item.purchase_order.supplier.purchase_orders_created.all()
+                self.fields['related_order'].queryset = PurchaseOrder.objects.filter(
+                    supplier=receipt_item.order_item.purchase_order.supplier
+                )
 
             except PurchaseOrderReceiptItem.DoesNotExist:
                 pass
@@ -70,16 +71,18 @@ class RMAForm(forms.ModelForm):
             self.fields['related_order'].initial = purchase_order.pk
 
             # Filter related_order queryset to only show orders from the selected supplier
-            self.fields['related_order'].queryset = purchase_order.supplier.purchase_orders_created.all()
+            self.fields['related_order'].queryset = PurchaseOrder.objects.filter(
+                supplier=purchase_order.supplier
+            )
 
         else:
             # By default limit to orders from the past year
             from datetime import timedelta
             one_year_ago = timezone.now().date() - timedelta(days=365)
-            from order.models import PurchaseOrder
             self.fields['related_order'].queryset = PurchaseOrder.objects.filter(
                 order_date__gte=one_year_ago
             ).order_by('-order_date')
+
 
 
 class RMAItemForm(forms.ModelForm):

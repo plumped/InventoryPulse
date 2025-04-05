@@ -6,6 +6,7 @@ from decimal import Decimal
 from core.models import Product
 from inventory.models import Warehouse, StockMovement
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem
+from suppliers.models import SupplierProduct
 
 
 class RMAStatus(models.TextChoices):
@@ -238,6 +239,14 @@ class RMAItem(models.Model):
         if self.quantity is not None and self.unit_price is not None:
             return self.quantity * self.unit_price
         return None
+
+    @property
+    def currency(self):
+        try:
+            sp = self.product.supplier_products.get(supplier=self.rma.supplier)
+            return sp.currency or self.rma.supplier.default_currency
+        except SupplierProduct.DoesNotExist:
+            return self.rma.supplier.default_currency
 
     class Meta:
         verbose_name = "RMA-Position"

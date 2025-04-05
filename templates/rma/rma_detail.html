@@ -386,8 +386,9 @@
                                         </div>
                                     </td>
                                     <td class="text-center">{{ item.quantity }} {{ item.product.unit }}</td>
-                                    <td class="text-end">{{ item.unit_price|floatformat:2 }} €</td>
-                                    <td class="text-end">{{ item.value|floatformat:2 }} €</td>
+                                    <td class="text-end">{{ item.unit_price|floatformat:2 }} {{ item.currency.symbol }}</td>
+                                    <td class="text-end">{{ item.value|floatformat:2 }} {{ item.currency.symbol }}</td>
+
                                     <td class="text-center">
                                         <span class="badge bg-secondary">Offen</span>
                                     </td>

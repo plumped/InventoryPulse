@@ -1464,6 +1464,7 @@ def get_supplier_product_price(request):
                 default_currency.symbol if default_currency else '')
         }
 
+        # Fügen Sie diese beiden Zeilen zur ersten return JsonResponse-Antwort hinzu
         return JsonResponse({
             'success': True,
             'price': float(supplier_product.purchase_price),
@@ -1471,7 +1472,9 @@ def get_supplier_product_price(request):
             'tax_rate': float(product.get_tax_rate) if hasattr(product, 'get_tax_rate') else 0,
             'tax_id': product.tax.id if product.tax else None,
             'unit': product.unit,
-            'currency': currency_info
+            'currency': currency_info,
+            'name': product.name,  # Produktname hinzufügen
+            'sku': product.sku  # Produkt-SKU hinzufügen
         })
     except SupplierProduct.DoesNotExist:
         # Wenn keine spezifische Lieferanten-Produkt-Beziehung existiert,
@@ -1495,6 +1498,8 @@ def get_supplier_product_price(request):
                 'tax_id': product.tax.id if product.tax else None,
                 'unit': product.unit,
                 'currency': currency_info,
+                'name': product.name,  # Produktname hinzufügen
+                'sku': product.sku,  # Produkt-SKU hinzufügen
                 'message': 'Keine spezifischen Lieferanteninformationen gefunden'
             })
         except Product.DoesNotExist:
@@ -1905,83 +1910,6 @@ def get_supplier_products_list(request):
     supplier_id = request.GET.get('supplier_id')
     search_query = request.GET.get('q', '')
     page = int(request.GET.get('page', 1))
-    page_size = 50  # Increased number of results per page
-
-    if not supplier_id:
-        return JsonResponse({
-            'success': False,
-            'message': 'Lieferanten-ID erforderlich'
-        })
-
-    try:
-        # Base query - products that have a relationship with this supplier
-        queryset = SupplierProduct.objects.filter(
-            supplier_id=supplier_id
-        ).select_related('product', 'product__tax')
-
-        # Apply search filter if provided
-        if search_query:
-            queryset = queryset.filter(
-                Q(product__name__icontains=search_query) |
-                Q(product__sku__icontains=search_query) |
-                Q(supplier_sku__icontains=search_query)
-            )
-
-        # Calculate total and paginate
-        total_count = queryset.count()
-        start = (page - 1) * page_size
-        end = start + page_size
-
-        # Get the paginated results
-        supplier_products = queryset[start:end]
-
-        # Format the response
-        products_data = []
-        for sp in supplier_products:
-            product = sp.product
-
-            # Get tax information
-            tax_id = None
-            tax_rate = 0
-            if product.tax:
-                tax_id = product.tax.id
-                tax_rate = product.tax.rate
-
-            products_data.append({
-                'id': product.id,
-                'name': product.name,
-                'sku': product.sku,
-                'supplier_sku': sp.supplier_sku or '',
-                'price': float(sp.purchase_price),
-                'unit': product.unit,
-                'tax_id': tax_id,
-                'tax_rate': tax_rate
-            })
-
-        return JsonResponse({
-            'success': True,
-            'products': products_data,
-            'total': total_count,
-            'more': (page * page_size) < total_count  # Whether there are more results
-        })
-
-    except Exception as e:
-        return JsonResponse({
-            'success': False,
-            'message': f'Fehler: {str(e)}'
-        })
-
-
-# Add this to suppliers/views.py
-
-# Add this function to order/views.py
-
-@login_required
-def get_supplier_products_list(request):
-    """AJAX-Endpunkt für die Suche nach Produkten eines Lieferanten."""
-    supplier_id = request.GET.get('supplier_id')
-    search_query = request.GET.get('q', '')
-    page = int(request.GET.get('page', 1))
     page_size = 100  # Increased number of results per page for better matches
 
     if not supplier_id:
@@ -2059,8 +1987,6 @@ def get_supplier_products_list(request):
             'message': f'Fehler: {str(e)}'
         })
 
-
-# Add this to suppliers/views.py
 
 @login_required
 def get_supplier_products(request):

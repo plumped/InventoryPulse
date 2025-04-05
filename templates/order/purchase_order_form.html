@@ -7,6 +7,37 @@
 <style>
 /* Anpassungen für Select2, um es wie ein reguläres Eingabefeld aussehen zu lassen */
 
+.product-item-container {
+    padding: 0;
+    transition: background-color 0.2s;
+}
+
+.product-item-container:hover {
+    background-color: #f8f9fa;
+}
+
+.product-item {
+    display: block;
+    padding: 0.75rem 1.25rem;
+    color: #212529;
+    text-decoration: none;
+}
+
+.product-item:hover {
+    text-decoration: none;
+    color: #212529;
+}
+
+.product-details-link {
+    margin-right: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.list-group-item.product-item-container:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+    border-color: rgba(0, 123, 255, 0.15);
+}
+
 .select2-container--default .select2-selection--single {
     height: calc(1.5em + 0.75rem + 2px) !important;
     padding: 0.375rem 0.75rem !important;
@@ -62,6 +93,19 @@
     line-height: 1.5 !important;
     color: #495057 !important;
 }
+
+[data-bs-theme="dark"] .product-item-container strong {
+    color: #f8f9fa;
+}
+
+[data-bs-theme="dark"] .product-item-container .text-muted {
+    color: #ced4da !important;
+}
+
+[data-bs-theme="dark"] .product-item-container .text-end {
+    color: #e0e0e0;
+}
+
 
 
 </style>
@@ -604,6 +648,9 @@ $(document).ready(function() {
                 // Show the product selection section
                 $('#productSelectionSection').show();
 
+                // Lade Produkte des Lieferanten und zeige sie an
+                loadSupplierProducts(supplierId);
+
                 // For new orders, add a first empty row
                 if ($('#itemsTableBody tr').length === 0) {
                     addNewItem();
@@ -621,10 +668,254 @@ $(document).ready(function() {
         });
     });
 
-    // Toggle product list visibility
+    // Toggle product list visibility - verbessert mit automatischem Laden der Produkte
     $('#toggleProductsBtn').click(function() {
-        $('#productListContainer').toggle();
+        const $container = $('#productListContainer');
+
+        if ($container.is(':visible')) {
+            $container.hide();
+            $(this).html('<i class="bi bi-list-ul"></i> Produkte anzeigen');
+        } else {
+            $container.show();
+            $(this).html('<i class="bi bi-list-ul"></i> Produkte ausblenden');
+
+            // Wenn der Container angezeigt wird und noch keine Produkte geladen wurden,
+            // lade diese jetzt
+            if ($('#productList .product-item').length === 0) {
+                const supplierId = $('#id_supplier').val();
+                if (supplierId) {
+                    loadSupplierProducts(supplierId);
+                }
+            }
+        }
     });
+
+    // Funktion zum Laden der Produkte vom Server
+    function loadSupplierProducts(supplierId) {
+        $('#productListContainer').show(); // Container anzeigen
+        $('#productList').html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Lädt...</span></div><p class="mt-2">Produkte werden geladen...</p></div>');
+
+        $.getJSON('/order/get-supplier-products-list/', {
+            supplier_id: supplierId,
+            q: '',
+            page: 1
+        }).done(function(data) {
+            if (data.success && data.products && data.products.length > 0) {
+                let productsHtml = '<div class="input-group mb-3">';
+                productsHtml += '<input type="text" class="form-control" id="productSearchInput" placeholder="Produkt suchen...">';
+                productsHtml += '<button class="btn btn-outline-secondary" type="button" id="productSearchButton"><i class="bi bi-search"></i></button>';
+                productsHtml += '</div>';
+
+                productsHtml += '<div class="list-group product-list-container">';
+
+                // Produkte anzeigen
+                for (let product of data.products) {
+                    productsHtml += `
+                    <div class="list-group-item product-item-container">
+                        <a href="#" class="product-item" data-product-id="${product.id}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${product.name}</strong>
+                                    <div class="text-muted small">SKU: ${product.sku}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div>${product.price !== null ? product.price : '-'} ${currencySymbol}</div>
+                                    <div class="text-muted small">Lieferant-SKU: ${product.supplier_sku || '-'}</div>
+                                </div>
+                            </div>
+                        </a>
+                        <div class="mt-1 text-end">
+                            <a href="/products/${product.id}/" target="_blank" class="btn btn-sm btn-outline-secondary product-details-link">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Details
+                            </a>
+                        </div>
+                    </div>`;
+                }
+
+                productsHtml += '</div>';
+
+                if (data.more) {
+                    productsHtml += '<div class="mt-3 text-center"><button id="loadMoreProducts" class="btn btn-outline-primary">Weitere Produkte laden</button></div>';
+                }
+
+                $('#productList').html(productsHtml);
+
+                // Event-Handler für die Produktauswahl einrichten
+                $('.product-item').on('click', function(e) {
+                    e.preventDefault();
+                    const productId = $(this).data('product-id');
+                    addProductToOrder(productId);
+                });
+
+                // Stellen Sie sicher, dass der Details-Link nicht das Produkt zur Bestellung hinzufügt
+                $('.product-details-link').on('click', function(e) {
+                    e.stopPropagation();
+                });
+
+                // Event-Handler für die Produktsuche
+                $('#productSearchInput').on('keyup', function() {
+                    const searchTerm = $(this).val().toLowerCase();
+                    $('.product-item-container').each(function() {
+                        const productText = $(this).text().toLowerCase();
+                        $(this).toggle(productText.indexOf(searchTerm) > -1);
+                    });
+                });
+
+                // Load more button
+                $('#loadMoreProducts').on('click', function() {
+                    loadMoreProducts(supplierId, 2);
+                });
+
+            } else {
+                $('#productList').html('<div class="alert alert-info">Keine Produkte für diesen Lieferanten gefunden.</div>');
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error('Error loading supplier products:', textStatus, errorThrown);
+            $('#productList').html('<div class="alert alert-danger">Fehler beim Laden der Produkte. Bitte versuchen Sie es erneut.</div>');
+        });
+    }
+
+    // Funktion zum Laden weiterer Produkte (Paginierung)
+    function loadMoreProducts(supplierId, page) {
+        const $loadMoreBtn = $('#loadMoreProducts');
+        $loadMoreBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Lädt...').prop('disabled', true);
+
+        $.getJSON('/order/get-supplier-products-list/', {
+            supplier_id: supplierId,
+            q: '',
+            page: page
+        }).done(function(data) {
+            if (data.success && data.products && data.products.length > 0) {
+                let productsHtml = '';
+
+                // Neue Produkte zur Liste hinzufügen
+                for (let product of data.products) {
+                    productsHtml += `
+                    <div class="list-group-item product-item-container">
+                        <a href="#" class="product-item" data-product-id="${product.id}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${product.name}</strong>
+                                    <div class="text-muted small">SKU: ${product.sku}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div>${product.price !== null ? product.price : '-'} ${currencySymbol}</div>
+                                    <div class="text-muted small">Lieferant-SKU: ${product.supplier_sku || '-'}</div>
+                                </div>
+                            </div>
+                        </a>
+                        <div class="mt-1 text-end">
+                            <a href="/products/${product.id}/" target="_blank" class="btn btn-sm btn-outline-secondary product-details-link">
+                                <i class="bi bi-box-arrow-up-right me-1"></i>Details
+                            </a>
+                        </div>
+                    </div>`;
+                }
+
+                // Produkte an die Liste anhängen
+                $('.product-list-container').append(productsHtml);
+
+                // Event-Handler für die neuen Produkte
+                $('.product-item').off('click').on('click', function(e) {
+                    e.preventDefault();
+                    const productId = $(this).data('product-id');
+                    addProductToOrder(productId);
+                });
+
+                // Stellen Sie sicher, dass die Detail-Links nicht das Produkt zur Bestellung hinzufügen
+                $('.product-details-link').off('click').on('click', function(e) {
+                    e.stopPropagation();
+                });
+
+                // "Weitere laden"-Button aktualisieren
+                if (data.more) {
+                    $loadMoreBtn.html('Weitere Produkte laden').prop('disabled', false);
+                    $loadMoreBtn.off('click').on('click', function() {
+                        loadMoreProducts(supplierId, page + 1);
+                    });
+                } else {
+                    $loadMoreBtn.parent().remove();
+                }
+
+                // Suchfilter aktualisieren, falls aktiv
+                const searchTerm = $('#productSearchInput').val().toLowerCase();
+                if (searchTerm) {
+                    $('.product-item-container').each(function() {
+                        const productText = $(this).text().toLowerCase();
+                        $(this).toggle(productText.indexOf(searchTerm) > -1);
+                    });
+                }
+
+            } else {
+                $loadMoreBtn.parent().remove();
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            console.error('Error loading more supplier products:', textStatus, errorThrown);
+            $loadMoreBtn.html('Weitere Produkte laden').prop('disabled', false);
+        });
+    }
+
+    // Funktion zum Hinzufügen eines Produkts zur Bestellung
+    function addProductToOrder(productId) {
+        // Neue Zeile hinzufügen, falls noch keine Zeilen vorhanden sind
+        if ($('#itemsTableBody tr').length === 0) {
+            addNewItem();
+        }
+
+        // Letzte Zeile auswählen oder neue Zeile hinzufügen, wenn alle Zeilen bereits Produkte haben
+        let $row = null;
+        let $emptySelect = $('#itemsTableBody .product-select').filter(function() {
+            return !$(this).val();
+        }).first();
+
+        if ($emptySelect.length) {
+            $row = $emptySelect.closest('tr');
+        } else {
+            addNewItem();
+            $row = $('#itemsTableBody tr:last');
+            $emptySelect = $row.find('.product-select');
+        }
+
+        // Produkt in Select2 auswählen
+        if ($emptySelect.length) {
+            // Daten über die API abrufen
+            $.getJSON('/order/get-supplier-product-price/', {
+                supplier_id: $('#id_supplier').val(),
+                product_id: productId
+            }).done(function(data) {
+                if (data.success) {
+                    // Verwende die name und sku Felder direkt aus der API-Antwort
+                    const productName = data.name || `Produkt #${productId}`;
+                    const productSku = data.sku || '';
+                    const displayText = productSku ? `${productSku} - ${productName}` : productName;
+
+                    // Option zum Select hinzufügen
+                    const newOption = new Option(displayText, productId, true, true);
+                    $emptySelect.append(newOption).trigger('change');
+
+                    // Die Zeile mit den API-Daten aktualisieren
+                    updateRowWithProductData($row, {
+                        id: productId,
+                        name: productName,
+                        sku: productSku,
+                        supplier_sku: data.supplier_sku || '',
+                        price: data.price || 0,
+                        unit: data.unit || '',
+                        tax_id: data.tax_id || null,
+                        tax_rate: data.tax_rate || 0
+                    });
+
+                    // Fokuswechsel auf das Mengenfeld
+                    $row.find('.item-quantity').focus().select();
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                console.error('Error retrieving product price:', textStatus, errorThrown);
+
+                // Fallback: Nur die ID setzen, ohne zusätzliche Daten
+                $emptySelect.val(productId).trigger('change');
+            });
+        }
+    }
 
     // Add item button
     $('#addItemButton').click(function() {
@@ -785,7 +1076,7 @@ $(document).ready(function() {
                     <div class="text-muted small">SKU: ${product.product.sku}</div>
                 </div>
                 <div class="text-end">
-                    <div>${product.product.price} ${currencySymbol}</div>
+                    <div>${product.product.price !== null ? product.product.price : '-'} ${currencySymbol}</div>
                     <div class="text-muted small">Lieferant-SKU: ${product.product.supplier_sku || '-'}</div>
                 </div>
             </div>

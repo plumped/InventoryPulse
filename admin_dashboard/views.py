@@ -17,7 +17,8 @@ from core.models import Tax
 from inventory.models import Department, Warehouse
 
 from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
-    WarehouseAccessForm, TaxForm
+    WarehouseAccessForm, TaxForm, CompanyAddressForm
+from .models import CompanyAddress, CompanyAddressType
 
 
 @login_required
@@ -913,3 +914,100 @@ def interface_type_delete(request, type_id):
     }
     
     return render(request, 'admin_dashboard/interface_type_confirm_delete.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def company_address_management(request):
+    """Verwaltung der Unternehmensadressen."""
+    # Adressen nach Typ gruppieren
+    addresses_by_type = []
+
+    for address_type, address_type_display in CompanyAddressType.choices:
+        addresses = CompanyAddress.objects.filter(address_type=address_type)
+        if addresses.exists() or address_type in ['headquarters', 'billing']:  # Wichtige Typen immer anzeigen
+            addresses_by_type.append({
+                'type': address_type,
+                'display': address_type_display,
+                'addresses': addresses,
+                'has_default': addresses.filter(is_default=True).exists()
+            })
+
+    context = {
+        'addresses_by_type': addresses_by_type,
+        'section': 'company_addresses'
+    }
+
+    return render(request, 'admin_dashboard/company_address_management.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def company_address_create(request):
+    """Neue Unternehmensadresse erstellen."""
+    if request.method == 'POST':
+        form = CompanyAddressForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Unternehmensadresse wurde erfolgreich erstellt.')
+            return redirect('admin_company_address_management')
+    else:
+        # Optional: Vorausgewählter Adresstyp aus URL-Parameter
+        initial = {}
+        address_type = request.GET.get('type')
+        if address_type and address_type in dict(CompanyAddressType.choices):
+            initial['address_type'] = address_type
+
+        form = CompanyAddressForm(initial=initial)
+
+    context = {
+        'form': form,
+        'section': 'company_addresses'
+    }
+
+    return render(request, 'admin_dashboard/company_address_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def company_address_edit(request, address_id):
+    """Unternehmensadresse bearbeiten."""
+    address = get_object_or_404(CompanyAddress, pk=address_id)
+
+    if request.method == 'POST':
+        form = CompanyAddressForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Adresse "{address.name}" wurde erfolgreich aktualisiert.')
+            return redirect('admin_company_address_management')
+    else:
+        form = CompanyAddressForm(instance=address)
+
+    context = {
+        'form': form,
+        'address': address,
+        'section': 'company_addresses'
+    }
+
+    return render(request, 'admin_dashboard/company_address_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def company_address_delete(request, address_id):
+    """Unternehmensadresse löschen."""
+    address = get_object_or_404(CompanyAddress, pk=address_id)
+
+    if request.method == 'POST':
+        address_name = address.name
+        address_type_display = address.get_address_type_display()
+        address.delete()
+        messages.success(request, f'Adresse "{address_name}" ({address_type_display}) wurde erfolgreich gelöscht.')
+        return redirect('admin_company_address_management')
+
+    context = {
+        'address': address,
+        'section': 'company_addresses'
+    }
+
+    return render(request, 'admin_dashboard/company_address_confirm_delete.html', context)

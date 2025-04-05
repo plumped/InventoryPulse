@@ -26,6 +26,11 @@ urlpatterns = [
     path('departments/<int:department_id>/delete/', views.department_delete, name='admin_department_delete'),
     path('departments/<int:department_id>/details/', views.get_department_details, name='admin_get_department_details'),
 
+    path('company-addresses/', views.company_address_management, name='admin_company_address_management'),
+    path('company-addresses/create/', views.company_address_create, name='admin_company_address_create'),
+    path('company-addresses/<int:address_id>/edit/', views.company_address_edit, name='admin_company_address_edit'),
+    path('company-addresses/<int:address_id>/delete/', views.company_address_delete, name='admin_company_address_delete'),
+
     # Systemeinstellungen
     path('system-settings/', views.system_settings, name='admin_system_settings'),
 

@@ -1,5 +1,6 @@
 # admin_dashboard/models.py
 from django.db import models
+from django.db import transaction
 from django.conf import settings
 
 
@@ -76,3 +77,76 @@ class SystemSettings(models.Model):
     class Meta:
         verbose_name = "Systemeinstellungen"
         verbose_name_plural = "Systemeinstellungen"
+
+
+class CompanyAddressType(models.TextChoices):
+    HEADQUARTERS = 'headquarters', 'Hauptsitz'
+    WAREHOUSE = 'warehouse', 'Lager'
+    SHIPPING = 'shipping', 'Versandadresse'
+    RETURN = 'return', 'Rücksendeadresse'
+    BILLING = 'billing', 'Rechnungsadresse'
+    OTHER = 'other', 'Sonstige'
+
+
+class CompanyAddress(models.Model):
+    """Model für Unternehmensadressen"""
+    name = models.CharField(max_length=100, verbose_name="Bezeichnung")
+    address_type = models.CharField(
+        max_length=20,
+        choices=CompanyAddressType.choices,
+        verbose_name="Adresstyp"
+    )
+    is_default = models.BooleanField(
+        default=False,
+        verbose_name="Standardadresse für diesen Typ"
+    )
+    street = models.CharField(max_length=255, verbose_name="Straße und Hausnummer")
+    zip_code = models.CharField(max_length=20, verbose_name="PLZ")
+    city = models.CharField(max_length=100, verbose_name="Ort")
+    country = models.CharField(max_length=100, verbose_name="Land")
+    contact_person = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Ansprechpartner"
+    )
+    phone = models.CharField(max_length=50, blank=True, verbose_name="Telefon")
+    email = models.EmailField(blank=True, verbose_name="E-Mail")
+    notes = models.TextField(blank=True, verbose_name="Anmerkungen")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Erstellt am")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Aktualisiert am")
+
+    class Meta:
+        verbose_name = "Unternehmensadresse"
+        verbose_name_plural = "Unternehmensadressen"
+        ordering = ['address_type', 'name']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['address_type', 'is_default'],
+                condition=models.Q(is_default=True),
+                name='unique_default_company_address_per_type'  # Geändert, um eindeutig zu sein
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.name} ({self.get_address_type_display()})"
+
+    @property
+    def full_address(self):
+        """Gibt eine formatierte vollständige Adresse zurück"""
+        address = f"{self.street}\n{self.zip_code} {self.city}"
+        if self.country:
+            address += f"\n{self.country}"
+        return address
+
+    def save(self, *args, **kwargs):
+        """Überschreibe save, um sicherzustellen, dass nur eine Standardadresse
+        pro Adresstyp existiert."""
+        if self.is_default:
+            # Wenn diese Adresse als Standard markiert ist, setze alle anderen
+            # Adressen desselben Typs auf nicht-Standard
+            with transaction.atomic():
+                CompanyAddress.objects.filter(
+                    address_type=self.address_type,
+                    is_default=True
+                ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)

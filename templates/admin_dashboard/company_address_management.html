@@ -1,0 +1,185 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Unternehmensadressen verwalten{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_company_address_create' %}" class="btn btn-sm btn-outline-primary">
+        <i class="bi bi-plus-circle"></i> Neue Adresse hinzufügen
+    </a>
+    <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+        <span class="visually-hidden">Menü öffnen</span>
+    </button>
+    <ul class="dropdown-menu">
+        {% for address_type, address_type_display in address_types %}
+        <li>
+            <a class="dropdown-item" href="{% url 'admin_company_address_create' %}?type={{ address_type }}">
+                <i class="bi bi-plus-circle me-2"></i>Neue {{ address_type_display }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Unternehmensadressen</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if addresses_by_type %}
+                    <div class="accordion" id="addressesAccordion">
+                        {% for group in addresses_by_type %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading-{{ group.type }}">
+                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#collapse-{{ group.type }}"
+                                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse-{{ group.type }}">
+                                        {{ group.display }} ({{ group.addresses.count }})
+                                        {% if group.has_default %}
+                                            <span class="badge bg-success ms-2">Standard vorhanden</span>
+                                        {% else %}
+                                            <span class="badge bg-warning ms-2">Kein Standard</span>
+                                        {% endif %}
+                                    </button>
+                                </h2>
+                                <div id="collapse-{{ group.type }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                     aria-labelledby="heading-{{ group.type }}" data-bs-parent="#addressesAccordion">
+                                    <div class="accordion-body p-0">
+                                        <div class="list-group list-group-flush">
+                                            {% for address in group.addresses %}
+                                                <div class="list-group-item">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <div>
+                                                            <h6 class="mb-1">{{ address.name }}</h6>
+                                                            <p class="mb-1">{{ address.full_address|linebreaks }}</p>
+
+                                                            {% if address.contact_person or address.phone or address.email %}
+                                                            <div class="mt-2 mb-1">
+                                                                {% if address.contact_person %}
+                                                                <small class="text-muted d-block">
+                                                                    <i class="bi bi-person me-1"></i>{{ address.contact_person }}
+                                                                </small>
+                                                                {% endif %}
+
+                                                                {% if address.phone %}
+                                                                <small class="text-muted d-block">
+                                                                    <i class="bi bi-telephone me-1"></i>{{ address.phone }}
+                                                                </small>
+                                                                {% endif %}
+
+                                                                {% if address.email %}
+                                                                <small class="text-muted d-block">
+                                                                    <i class="bi bi-envelope me-1"></i>{{ address.email }}
+                                                                </small>
+                                                                {% endif %}
+                                                            </div>
+                                                            {% endif %}
+
+                                                            {% if address.is_default %}
+                                                                <span class="badge bg-primary">Standardadresse</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            {% if not address.is_default %}
+                                                            <a href="{% url 'admin_company_address_edit' address.id %}" class="btn btn-outline-success" title="Als Standard festlegen">
+                                                                <i class="bi bi-star"></i>
+                                                            </a>
+                                                            {% endif %}
+                                                            <a href="{% url 'admin_company_address_edit' address.id %}" class="btn btn-outline-primary" title="Bearbeiten">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </a>
+                                                            <a href="{% url 'admin_company_address_delete' address.id %}" class="btn btn-outline-danger" title="Löschen">
+                                                                <i class="bi bi-trash"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+
+                                            <div class="list-group-item bg-light">
+                                                <a href="{% url 'admin_company_address_create' %}?type={{ group.type }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-plus-circle me-2"></i>Neue {{ group.display }} hinzufügen
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-building fs-1 text-muted"></i>
+                        </div>
+                        <h5 class="text-muted mb-3">Noch keine Unternehmensadressen vorhanden</h5>
+                        <p class="text-muted mb-4">Fügen Sie Adressen für Ihren Hauptsitz, Lager und Versandzwecke hinzu.</p>
+                        <a href="{% url 'admin_company_address_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-2"></i>Erste Adresse erstellen
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Über Unternehmensadressen</h6>
+            </div>
+            <div class="card-body">
+                <p>Unternehmensadressen werden in verschiedenen Teilen des Systems verwendet:</p>
+                <ul>
+                    <li><strong>Hauptsitz</strong> - Die offizielle Geschäftsadresse Ihres Unternehmens</li>
+                    <li><strong>Versandadressen</strong> - Werden für ausgehende Bestellungen verwendet</li>
+                    <li><strong>Rücksendeadressen</strong> - Für RMA-Prozesse und Rücksendungen</li>
+                    <li><strong>Rechnungsadressen</strong> - Erscheinen auf Rechnungen und Dokumenten</li>
+                </ul>
+                <p>Für jeden Adresstyp können Sie eine Standardadresse festlegen, die automatisch vorausgewählt wird.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Verwendung in Bestellungen</h6>
+            </div>
+            <div class="card-body">
+                <p>Bei der Erstellung einer neuen Bestellung haben Sie die Möglichkeit, eine Versandadresse auszuwählen:</p>
+                <ul>
+                    <li>Die als Standard markierte Versandadresse wird vorausgewählt</li>
+                    <li>Sie können jederzeit eine andere Adresse aus der Liste wählen</li>
+                    <li>Adressdetails werden automatisch auf den Bestelldokumenten angezeigt</li>
+                </ul>
+                <p>Stellen Sie sicher, dass Sie mindestens eine Versandadresse und eine Rechnungsadresse angelegt haben.</p>
+
+                <div class="text-center mt-3">
+                    <a href="{% url 'admin_company_address_create' %}?type=shipping" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Versandadresse hinzufügen
+                    </a>
+                    <a href="{% url 'admin_company_address_create' %}?type=billing" class="btn btn-sm btn-outline-primary ms-2">
+                        <i class="bi bi-plus-circle me-2"></i>Rechnungsadresse hinzufügen
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

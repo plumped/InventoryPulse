@@ -51,13 +51,18 @@
 
                         <li class="nav-item">
                             <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Systemeinstellungen</h6>
+                                <h6 class="m-0 font-weight-bold text-primary">Unternehmenseinstellungen</h6>
                             </div>
                         </li>
 
                         <li class="nav-item">
                             <a class="nav-link {% if section == 'system_settings' %}active bg-light{% endif %}" href="{% url 'admin_system_settings' %}">
                                 <i class="bi bi-gear me-2"></i> Systemeinstellungen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'company_addresses' %}active bg-light{% endif %}" href="{% url 'admin_company_address_management' %}">
+                                <i class="bi bi-building me-2"></i> Unternehmensadressen
                             </a>
                         </li>
                         <li class="nav-item">

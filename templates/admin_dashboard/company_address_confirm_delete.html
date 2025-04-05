@@ -1,0 +1,85 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Unternehmensadresse löschen{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_company_address_management' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Zurück zur Übersicht
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-danger text-white">
+        <h6 class="m-0 font-weight-bold">Unternehmensadresse löschen</h6>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Achtung:</strong> Das Löschen einer Adresse kann nicht rückgängig gemacht werden.
+            {% if address.is_default %}
+            Diese Adresse ist aktuell als Standardadresse für "{{ address.get_address_type_display }}" festgelegt.
+            {% endif %}
+        </div>
+
+        <p>Sind Sie sicher, dass Sie die folgende Unternehmensadresse löschen möchten?</p>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">Adressdetails</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Name:</dt>
+                    <dd class="col-sm-9">{{ address.name }}</dd>
+
+                    <dt class="col-sm-3">Adresstyp:</dt>
+                    <dd class="col-sm-9">{{ address.get_address_type_display }}</dd>
+
+                    <dt class="col-sm-3">Standardadresse:</dt>
+                    <dd class="col-sm-9">{% if address.is_default %}Ja{% else %}Nein{% endif %}</dd>
+
+                    <dt class="col-sm-3">Adresse:</dt>
+                    <dd class="col-sm-9">{{ address.full_address|linebreaks }}</dd>
+
+                    {% if address.contact_person %}
+                    <dt class="col-sm-3">Ansprechpartner:</dt>
+                    <dd class="col-sm-9">{{ address.contact_person }}</dd>
+                    {% endif %}
+
+                    {% if address.phone %}
+                    <dt class="col-sm-3">Telefon:</dt>
+                    <dd class="col-sm-9">{{ address.phone }}</dd>
+                    {% endif %}
+
+                    {% if address.email %}
+                    <dt class="col-sm-3">E-Mail:</dt>
+                    <dd class="col-sm-9">{{ address.email }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+        </div>
+
+        {% if address.is_default %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-circle-fill me-2"></i>
+            <strong>Hinweis:</strong> Das Löschen einer Standardadresse kann dazu führen, dass in bestimmten Funktionen
+            des Systems keine Standardadresse mehr für "{{ address.get_address_type_display }}" verfügbar ist.
+            Es wird empfohlen, zuerst eine andere Adresse dieses Typs als Standard festzulegen.
+        </div>
+        {% endif %}
+
+        <form method="post" class="d-flex justify-content-between">
+            {% csrf_token %}
+            <a href="{% url 'admin_company_address_management' %}" class="btn btn-secondary">
+                <i class="bi bi-x-circle me-2"></i>Abbrechen
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash me-2"></i>Adresse endgültig löschen
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

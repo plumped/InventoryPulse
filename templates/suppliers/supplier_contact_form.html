@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if is_new %}Kontakt hinzufügen{% else %}Kontakt bearbeiten{% endif %} - {{ supplier.name }} - InventoryPulse
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Lieferanten</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_detail' supplier.id %}">{{ supplier.name }}</a></li>
+                    <li class="breadcrumb-item active">{% if is_new %}Kontakt hinzufügen{% else %}Kontakt bearbeiten{% endif %}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">{% if is_new %}Neuer Kontakt für {{ supplier.name }}{% else %}Kontakt bearbeiten{% endif %}</h1>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'supplier_detail' supplier.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zum Lieferanten
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Kontaktinformationen</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.contact_type.id_for_label }}" class="form-label">Kontakttyp</label>
+                                {{ form.contact_type }}
+                                {% if form.contact_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.contact_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Titel/Anrede (optional)</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.title.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ form.is_default }}
+                            <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                                Als Standardkontakt für diesen Kontakttyp festlegen
+                            </label>
+                            {% if form.is_default.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.is_default.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">Vorname</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.first_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">Nachname</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.last_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.position.id_for_label }}" class="form-label">Position/Abteilung (optional)</label>
+                            {{ form.position }}
+                            {% if form.position.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.position.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">E-Mail</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">Telefon</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.mobile.id_for_label }}" class="form-label">Mobiltelefon (optional)</label>
+                                {{ form.mobile }}
+                                {% if form.mobile.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.mobile.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen (optional)</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'supplier_detail' supplier.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-save"></i> Speichern
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Hinweise</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Kontakttypen</h5>
+                        <ul class="mb-0">
+                            <li><strong>Allgemeiner Kontakt:</strong> Allgemeine Ansprechperson</li>
+                            <li><strong>Vertrieb:</strong> Für Bestellungen und Angebote</li>
+                            <li><strong>Support:</strong> Für technischen Support</li>
+                            <li><strong>Buchhaltung:</strong> Für Rechnungen und Zahlungen</li>
+                            <li><strong>RMA/Reklamationen:</strong> Für Rücksendungen und Reklamationen</li>
+                            <li><strong>Technischer Kontakt:</strong> Für technische Fragen zu Produkten</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3">
+                        <p>Für jeden Kontakttyp kann ein Standardkontakt definiert werden.</p>
+                        <p>Der Standardkontakt wird automatisch als vorgeschlagener Kontakt verwendet, wenn dieser Kontakttyp benötigt wird.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialisierung von Select2 für Dropdown-Felder, falls verfügbar
+    if($.fn.select2) {
+        $('.form-select').select2({
+            theme: 'bootstrap-5'
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -11,10 +11,10 @@ from django.db.models import Q, Count
 from accessmanagement.decorators import permission_required
 
 from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric, \
-    SupplierPerformanceCalculator
+    SupplierPerformanceCalculator, SupplierContact, SupplierAddress, AddressType, ContactType
 from core.models import Product
 from .forms import SupplierForm, SupplierProductForm, SupplierPerformanceForm, DateRangeForm, \
-    SupplierPerformanceMetricForm
+    SupplierPerformanceMetricForm, SupplierContactForm, SupplierAddressForm
 
 
 @login_required
@@ -120,12 +120,41 @@ def supplier_detail(request, pk):
                 'composite_score': composite_score
             }
 
+    # Adressen und Kontakte nach Typ gruppieren
+    address_types = AddressType.choices
+    contact_types = ContactType.choices
+
+    # Vorbereiten der Adressen und Kontakte für das Template
+    addresses_by_type = []
+    for address_type, type_display in address_types:
+        addresses = supplier.addresses.filter(address_type=address_type)
+        if addresses.exists():
+            addresses_by_type.append({
+                'type': address_type,
+                'display': type_display,
+                'addresses': addresses
+            })
+
+    contacts_by_type = []
+    for contact_type, type_display in contact_types:
+        contacts = supplier.contacts.filter(contact_type=contact_type)
+        if contacts.exists():
+            contacts_by_type.append({
+                'type': contact_type,
+                'display': type_display,
+                'contacts': contacts
+            })
+
     context = {
         'supplier': supplier,
         'supplier_products': supplier_products,
         'system_currency': system_currency,
         'supplier_orders': supplier_orders,
         'supplier_performance': supplier_performance,
+        'address_types': address_types,
+        'contact_types': contact_types,
+        'addresses_by_type': addresses_by_type,
+        'contacts_by_type': contacts_by_type,
     }
 
     return render(request, 'suppliers/supplier_detail.html', context)
@@ -936,3 +965,332 @@ def get_supplier_performance_data(request, supplier_id):
         },
         'data': data
     })
+
+@login_required
+@permission_required('supplier', 'edit')
+def supplier_address_create(request, supplier_id):
+    """Create a new address for a supplier."""
+    supplier = get_object_or_404(Supplier, pk=supplier_id)
+
+    if request.method == 'POST':
+        form = SupplierAddressForm(request.POST)
+        if form.is_valid():
+            address = form.save(commit=False)
+            address.supplier = supplier
+
+            # Wenn diese Adresse als Standard markiert ist, entferne den Standard bei anderen
+            if address.is_default:
+                supplier.addresses.filter(
+                    address_type=address.address_type,
+                    is_default=True
+                ).update(is_default=False)
+
+            address.save()
+            messages.success(request, f'Adresse für {supplier.name} wurde erfolgreich hinzugefügt.')
+            return redirect('supplier_detail', pk=supplier.id)
+    else:
+        form = SupplierAddressForm(initial={'supplier': supplier})
+
+    context = {
+        'form': form,
+        'supplier': supplier,
+        'is_new': True,
+    }
+
+    return render(request, 'suppliers/supplier_address_form.html', context)
+
+
+@login_required
+@permission_required('supplier', 'edit')
+def supplier_address_update(request, pk):
+    """Update an existing supplier address."""
+    address = get_object_or_404(SupplierAddress, pk=pk)
+    supplier = address.supplier
+
+    if request.method == 'POST':
+        form = SupplierAddressForm(request.POST, instance=address)
+        if form.is_valid():
+            # Wenn diese Adresse als Standard markiert ist, entferne den Standard bei anderen
+            if form.cleaned_data.get('is_default'):
+                supplier.addresses.filter(
+                    address_type=form.cleaned_data.get('address_type'),
+                    is_default=True
+                ).exclude(pk=address.pk).update(is_default=False)
+
+            form.save()
+            messages.success(request, f'Adresse wurde erfolgreich aktualisiert.')
+            return redirect('supplier_detail', pk=supplier.id)
+    else:
+        form = SupplierAddressForm(instance=address)
+
+    context = {
+        'form': form,
+        'supplier': supplier,
+        'address': address,
+        'is_new': False,
+    }
+
+    return render(request, 'suppliers/supplier_address_form.html', context)
+
+
+@login_required
+@permission_required('supplier', 'delete')
+def supplier_address_delete(request, pk):
+    """Delete a supplier address."""
+    address = get_object_or_404(SupplierAddress, pk=pk)
+    supplier = address.supplier
+
+    if request.method == 'POST':
+        # Wenn dies eine Standardadresse war, versuche eine neue Standardadresse zu setzen
+        if address.is_default:
+            next_default = supplier.addresses.filter(
+                address_type=address.address_type
+            ).exclude(pk=address.pk).first()
+
+            if next_default:
+                next_default.is_default = True
+                next_default.save()
+
+        address.delete()
+        messages.success(request, f'Adresse wurde erfolgreich gelöscht.')
+        return redirect('supplier_detail', pk=supplier.id)
+
+    context = {
+        'address': address,
+        'supplier': supplier,
+    }
+
+    return render(request, 'suppliers/supplier_address_confirm_delete.html', context)
+
+
+@login_required
+@permission_required('supplier', 'edit')
+def supplier_contact_create(request, supplier_id):
+    """Create a new contact for a supplier."""
+    supplier = get_object_or_404(Supplier, pk=supplier_id)
+
+    if request.method == 'POST':
+        form = SupplierContactForm(request.POST)
+        if form.is_valid():
+            contact = form.save(commit=False)
+            contact.supplier = supplier
+
+            # Wenn dieser Kontakt als Standard markiert ist, entferne den Standard bei anderen
+            if contact.is_default:
+                supplier.contacts.filter(
+                    contact_type=contact.contact_type,
+                    is_default=True
+                ).update(is_default=False)
+
+            contact.save()
+            messages.success(request, f'Kontakt für {supplier.name} wurde erfolgreich hinzugefügt.')
+            return redirect('supplier_detail', pk=supplier.id)
+    else:
+        form = SupplierContactForm(initial={'supplier': supplier})
+
+    context = {
+        'form': form,
+        'supplier': supplier,
+        'is_new': True,
+    }
+
+    return render(request, 'suppliers/supplier_contact_form.html', context)
+
+
+@login_required
+@permission_required('supplier', 'edit')
+def supplier_contact_update(request, pk):
+    """Update an existing supplier contact."""
+    contact = get_object_or_404(SupplierContact, pk=pk)
+    supplier = contact.supplier
+
+    if request.method == 'POST':
+        form = SupplierContactForm(request.POST, instance=contact)
+        if form.is_valid():
+            # Wenn dieser Kontakt als Standard markiert ist, entferne den Standard bei anderen
+            if form.cleaned_data.get('is_default'):
+                supplier.contacts.filter(
+                    contact_type=form.cleaned_data.get('contact_type'),
+                    is_default=True
+                ).exclude(pk=contact.pk).update(is_default=False)
+
+            form.save()
+            messages.success(request, f'Kontakt wurde erfolgreich aktualisiert.')
+            return redirect('supplier_detail', pk=supplier.id)
+    else:
+        form = SupplierContactForm(instance=contact)
+
+    context = {
+        'form': form,
+        'supplier': supplier,
+        'contact': contact,
+        'is_new': False,
+    }
+
+    return render(request, 'suppliers/supplier_contact_form.html', context)
+
+
+@login_required
+@permission_required('supplier', 'delete')
+def supplier_contact_delete(request, pk):
+    """Delete a supplier contact."""
+    contact = get_object_or_404(SupplierContact, pk=pk)
+    supplier = contact.supplier
+
+    if request.method == 'POST':
+        # Wenn dies ein Standardkontakt war, versuche einen neuen Standardkontakt zu setzen
+        if contact.is_default:
+            next_default = supplier.contacts.filter(
+                contact_type=contact.contact_type
+            ).exclude(pk=contact.pk).first()
+
+            if next_default:
+                next_default.is_default = True
+                next_default.save()
+
+        contact.delete()
+        messages.success(request, f'Kontakt wurde erfolgreich gelöscht.')
+        return redirect('supplier_detail', pk=supplier.id)
+
+    context = {
+        'contact': contact,
+        'supplier': supplier,
+    }
+
+    return render(request, 'suppliers/supplier_contact_confirm_delete.html', context)
+
+
+# AJAX-Endpunkte für den Zugriff auf Adressen und Kontakte
+
+@login_required
+def get_supplier_addresses(request):
+    """AJAX endpoint to get addresses for a supplier."""
+    supplier_id = request.GET.get('supplier_id')
+    address_type = request.GET.get('address_type', None)
+
+    if not supplier_id:
+        return JsonResponse({'success': False, 'message': 'Supplier ID is required'})
+
+    try:
+        supplier = Supplier.objects.get(pk=supplier_id)
+
+        # Filtere Adressen nach Typ, falls angegeben
+        addresses = supplier.addresses.all()
+        if address_type:
+            addresses = addresses.filter(address_type=address_type)
+
+        # Formatiere Adressen für die JSON-Antwort
+        addresses_data = []
+        for addr in addresses:
+            addresses_data.append({
+                'id': addr.id,
+                'type': addr.address_type,
+                'type_display': addr.get_address_type_display(),
+                'is_default': addr.is_default,
+                'name': addr.name,
+                'street': addr.street,
+                'street_number': addr.street_number,
+                'postal_code': addr.postal_code,
+                'city': addr.city,
+                'state': addr.state,
+                'country': addr.country,
+                'full_address': addr.full_address()
+            })
+
+        return JsonResponse({
+            'success': True,
+            'addresses': addresses_data
+        })
+    except Supplier.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Supplier not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@login_required
+def get_supplier_contacts(request):
+    """AJAX endpoint to get contacts for a supplier."""
+    supplier_id = request.GET.get('supplier_id')
+    contact_type = request.GET.get('contact_type', None)
+
+    if not supplier_id:
+        return JsonResponse({'success': False, 'message': 'Supplier ID is required'})
+
+    try:
+        supplier = Supplier.objects.get(pk=supplier_id)
+
+        # Filtere Kontakte nach Typ, falls angegeben
+        contacts = supplier.contacts.all()
+        if contact_type:
+            contacts = contacts.filter(contact_type=contact_type)
+
+        # Formatiere Kontakte für die JSON-Antwort
+        contacts_data = []
+        for contact in contacts:
+            contacts_data.append({
+                'id': contact.id,
+                'type': contact.contact_type,
+                'type_display': contact.get_contact_type_display(),
+                'is_default': contact.is_default,
+                'title': contact.title,
+                'first_name': contact.first_name,
+                'last_name': contact.last_name,
+                'full_name': contact.full_name(),
+                'position': contact.position,
+                'email': contact.email,
+                'phone': contact.phone,
+                'mobile': contact.mobile
+            })
+
+        return JsonResponse({
+            'success': True,
+            'contacts': contacts_data
+        })
+    except Supplier.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Supplier not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+
+@login_required
+def get_supplier_rma_info(request):
+    """AJAX endpoint to get RMA-specific information for a supplier."""
+    supplier_id = request.GET.get('supplier_id')
+
+    if not supplier_id:
+        return JsonResponse({'success': False, 'message': 'Supplier ID is required'})
+
+    try:
+        supplier = Supplier.objects.get(pk=supplier_id)
+
+        # RMA-Adresse abrufen
+        rma_address = supplier.get_rma_address()
+        rma_address_data = None
+        if rma_address:
+            rma_address_data = {
+                'id': rma_address.id,
+                'name': rma_address.name,
+                'full_address': rma_address.full_address()
+            }
+
+        # RMA-Kontakt abrufen
+        rma_contact = supplier.get_rma_contact()
+        rma_contact_data = None
+        if rma_contact:
+            rma_contact_data = {
+                'id': rma_contact.id,
+                'full_name': rma_contact.full_name(),
+                'email': rma_contact.email,
+                'phone': rma_contact.phone
+            }
+
+        return JsonResponse({
+            'success': True,
+            'supplier_name': supplier.name,
+            'rma_address': rma_address_data,
+            'rma_contact': rma_contact_data
+        })
+    except Supplier.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Supplier not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})

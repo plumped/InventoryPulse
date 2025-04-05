@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Adresse löschen - {{ supplier.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Lieferanten</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_detail' supplier.id %}">{{ supplier.name }}</a></li>
+                    <li class="breadcrumb-item active">Adresse löschen</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">Adresse löschen</h1>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'supplier_detail' supplier.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zum Lieferanten
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Adresse löschen</h5>
+                </div>
+                <div class="card-body">
+                    <p>Möchten Sie die folgende Adresse wirklich löschen?</p>
+
+                    <div class="alert alert-info mb-4">
+                        <h6 class="mb-2">{{ address.get_address_type_display }}{% if address.name %} - {{ address.name }}{% endif %}</h6>
+                        <p class="mb-0">{{ address.full_address|linebreaks }}</p>
+                    </div>
+
+                    {% if address.is_default %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Achtung:</strong> Dies ist die Standardadresse für den Typ "{{ address.get_address_type_display }}".
+                        Wenn vorhanden, wird eine andere Adresse dieses Typs zur neuen Standardadresse.
+                    </div>
+                    {% endif %}
+
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Achtung:</strong> Das Löschen kann nicht rückgängig gemacht werden.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'supplier_detail' supplier.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Adresse endgültig löschen
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

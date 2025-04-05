@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load supplier_tags %}
 {% block title %}{{ supplier.name }} - InventoryPulse{% endblock %}
 
 {% block content %}
@@ -21,90 +21,120 @@
     </div>
 </div>
 
-<div class="row">
-    <!-- Lieferantendetails -->
-    <div class="col-md-4">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Lieferantendetails</h5>
-            </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-5 fw-bold">Kontaktperson:</div>
-                    <div class="col-md-7">
-                        {% if supplier.contact_person %}
-                            {{ supplier.contact_person }}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Lieferantendetails</h5>
+    </div>
+    <div class="card-body">
+        {# Hauptinformationen #}
+        <div class="row mb-3">
+            <div class="col-md-5 fw-bold">Hauptkontakt:</div>
+            <div class="col-md-7">
+                {% if supplier.contacts.exists %}
+                    {% with default_contact=supplier.get_default_contact %}
+                        {% if default_contact %}
+                            <div>{{ default_contact.full_name }}</div>
+                            {% if default_contact.position %}<small class="text-muted">{{ default_contact.position }}</small>{% endif %}
                         {% else %}
-                            <span class="text-muted">Nicht angegeben</span>
+                            <span class="text-muted">Kein Standardkontakt festgelegt</span>
                         {% endif %}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-5 fw-bold">E-Mail:</div>
-                    <div class="col-md-7">
-                        {% if supplier.email %}
-                            <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
-                        {% else %}
-                            <span class="text-muted">Nicht angegeben</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-5 fw-bold">Telefon:</div>
-                    <div class="col-md-7">
-                        {% if supplier.phone %}
-                            <a href="tel:{{ supplier.phone }}">{{ supplier.phone }}</a>
-                        {% else %}
-                            <span class="text-muted">Nicht angegeben</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-5 fw-bold">Adresse:</div>
-                    <div class="col-md-7">
-                        {% if supplier.address %}
-                            {{ supplier.address|linebreaks }}
-                        {% else %}
-                            <span class="text-muted">Nicht angegeben</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Standardwährung des Lieferanten -->
-                <div class="row mb-3">
-                    <div class="col-md-5 fw-bold">Standardwährung:</div>
-                    <div class="col-md-7">
-                        {% if supplier.default_currency %}
-                            <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis">{{ supplier.default_currency.code }} ({{ supplier.default_currency.symbol }})</span>
-                        {% else %}
-                            <span class="text-muted">Nicht angegeben</span>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Felder für Versandkosten und Mindestbestellwert -->
-                <div class="row mb-3">
-                    <div class="col-md-5 fw-bold">Versandkosten:</div>
-                    <div class="col-md-7">
-                        {% if supplier.shipping_cost > 0 %}
-                            <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis">{{ supplier.shipping_cost }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
-                        {% else %}
-                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Kostenlos</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-5 fw-bold">Mindestbestellwert:</div>
-                    <div class="col-md-7">
-                        {% if supplier.minimum_order_value > 0 %}
-                            <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis">{{ supplier.minimum_order_value }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
-                        {% else %}
-                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis">Kein Minimum</span>
-                        {% endif %}
-                    </div>
-                </div>
+                    {% endwith %}
+                {% elif supplier.contact_person %}
+                    {{ supplier.contact_person }}
+                {% else %}
+                    <span class="text-muted">Nicht angegeben</span>
+                {% endif %}
             </div>
         </div>
+
+        <div class="row mb-3">
+            <div class="col-md-5 fw-bold">E-Mail:</div>
+            <div class="col-md-7">
+                {% if supplier.contacts.exists %}
+                    {% with default_contact=supplier.get_default_contact %}
+                        {% if default_contact and default_contact.email %}
+                            <a href="mailto:{{ default_contact.email }}">{{ default_contact.email }}</a>
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    {% endwith %}
+                {% elif supplier.email %}
+                    <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
+                {% else %}
+                    <span class="text-muted">Nicht angegeben</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-5 fw-bold">Telefon:</div>
+            <div class="col-md-7">
+                {% if supplier.contacts.exists %}
+                    {% with default_contact=supplier.get_default_contact %}
+                        {% if default_contact and default_contact.phone %}
+                            <a href="tel:{{ default_contact.phone }}">{{ default_contact.phone }}</a>
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    {% endwith %}
+                {% elif supplier.phone %}
+                    <a href="tel:{{ supplier.phone }}">{{ supplier.phone }}</a>
+                {% else %}
+                    <span class="text-muted">Nicht angegeben</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-5 fw-bold">Rechnungsadresse:</div>
+            <div class="col-md-7">
+                {% with billing_address=supplier|get_address_by_type:'billing' %}
+                    {% if billing_address %}
+                        {{ billing_address.full_address|linebreaks }}
+                    {% elif supplier.address %}
+                        {{ supplier.address|linebreaks }}
+                    {% else %}
+                        <span class="text-muted">Nicht angegeben</span>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <!-- Standardwährung des Lieferanten -->
+        <div class="row mb-3">
+            <div class="col-md-5 fw-bold">Standardwährung:</div>
+            <div class="col-md-7">
+                {% if supplier.default_currency %}
+                    <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis">{{ supplier.default_currency.code }} ({{ supplier.default_currency.symbol }})</span>
+                {% else %}
+                    <span class="text-muted">Nicht angegeben</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Felder für Versandkosten und Mindestbestellwert -->
+        <div class="row mb-3">
+            <div class="col-md-5 fw-bold">Versandkosten:</div>
+            <div class="col-md-7">
+                {% if supplier.shipping_cost > 0 %}
+                    <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis">{{ supplier.shipping_cost }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
+                {% else %}
+                    <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Kostenlos</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-5 fw-bold">Mindestbestellwert:</div>
+            <div class="col-md-7">
+                {% if supplier.minimum_order_value > 0 %}
+                    <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis">{{ supplier.minimum_order_value }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
+                {% else %}
+                    <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis">Kein Minimum</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
         <div class="card mb-4">
             <div class="card-header">
@@ -131,6 +161,145 @@
             </div>
         </div>
     </div>
+
+    <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Adressen</h5>
+        <a href="{% url 'supplier_address_create' supplier.id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-plus-circle"></i> Adresse hinzufügen
+        </a>
+    </div>
+    <div class="card-body p-0">
+        {% if supplier.addresses.exists %}
+            <div class="accordion" id="addressesAccordion">
+                {% for address_group in addresses_by_type %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-address-{{ address_group.type }}">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#collapse-address-{{ address_group.type }}"
+                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse-address-{{ address_group.type }}">
+                                {{ address_group.display }} ({{ address_group.addresses.count }})
+                            </button>
+                        </h2>
+                        <div id="collapse-address-{{ address_group.type }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                             aria-labelledby="heading-address-{{ address_group.type }}" data-bs-parent="#addressesAccordion">
+                            <div class="accordion-body p-0">
+                                <div class="list-group list-group-flush">
+                                    {% for address in address_group.addresses %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    {% if address.name %}<h6 class="mb-1">{{ address.name }}</h6>{% endif %}
+                                                    <p class="mb-1">{{ address.full_address|linebreaks }}</p>
+                                                    {% if address.is_default %}
+                                                        <span class="badge bg-primary">Standardadresse</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'supplier_address_update' address.id %}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="{% url 'supplier_address_delete' address.id %}" class="btn btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <div class="text-muted">
+                    <i class="fas fa-map-marker-alt fs-2 d-block mb-2"></i>
+                    <p class="mt-3">Keine Adressen vorhanden.</p>
+                    <a href="{% url 'supplier_address_create' supplier.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Adresse hinzufügen
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Kontakte</h5>
+        <a href="{% url 'supplier_contact_create' supplier.id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-plus-circle"></i> Kontakt hinzufügen
+        </a>
+    </div>
+    <div class="card-body p-0">
+        {% if supplier.contacts.exists %}
+            <div class="accordion" id="contactsAccordion">
+                {% for contact_group in contacts_by_type %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-contact-{{ contact_group.type }}">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
+                                    data-bs-toggle="collapse" data-bs-target="#collapse-contact-{{ contact_group.type }}"
+                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse-contact-{{ contact_group.type }}">
+                                {{ contact_group.display }} ({{ contact_group.contacts.count }})
+                            </button>
+                        </h2>
+                        <div id="collapse-contact-{{ contact_group.type }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                             aria-labelledby="heading-contact-{{ contact_group.type }}" data-bs-parent="#contactsAccordion">
+                            <div class="accordion-body p-0">
+                                <div class="list-group list-group-flush">
+                                    {% for contact in contact_group.contacts %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">{{ contact.full_name }}</h6>
+                                                    {% if contact.position %}<p class="mb-1 text-muted">{{ contact.position }}</p>{% endif %}
+                                                    <div class="mb-1">
+                                                        {% if contact.email %}
+                                                            <div><i class="bi bi-envelope me-2"></i><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></div>
+                                                        {% endif %}
+                                                        {% if contact.phone %}
+                                                            <div><i class="bi bi-telephone me-2"></i><a href="tel:{{ contact.phone }}">{{ contact.phone }}</a></div>
+                                                        {% endif %}
+                                                        {% if contact.mobile %}
+                                                            <div><i class="bi bi-phone me-2"></i><a href="tel:{{ contact.mobile }}">{{ contact.mobile }}</a></div>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if contact.is_default %}
+                                                        <span class="badge bg-primary">Standardkontakt</span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'supplier_contact_update' contact.id %}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="{% url 'supplier_contact_delete' contact.id %}" class="btn btn-outline-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <div class="text-muted">
+                    <i class="fas fa-users fs-2 d-block mb-2"></i>
+                    <p class="mt-3">Keine Kontakte vorhanden.</p>
+                    <a href="{% url 'supplier_contact_create' supplier.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>Kontakt hinzufügen
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
 
     <!-- Produktliste des Lieferanten -->
     <div class="col-md-8">

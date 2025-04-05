@@ -9,6 +9,15 @@ urlpatterns = [
     path('create/', views.supplier_create, name='supplier_create'),
     path('<int:pk>/', views.supplier_detail, name='supplier_detail'),
     path('<int:pk>/update/', views.supplier_update, name='supplier_update'),
+
+    path('<int:supplier_id>/address/add/', views.supplier_address_create, name='supplier_address_create'),
+    path('address/<int:pk>/update/', views.supplier_address_update, name='supplier_address_update'),
+    path('address/<int:pk>/delete/', views.supplier_address_delete, name='supplier_address_delete'),
+
+    path('<int:supplier_id>/contact/add/', views.supplier_contact_create, name='supplier_contact_create'),
+    path('contact/<int:pk>/update/', views.supplier_contact_update, name='supplier_contact_update'),
+    path('contact/<int:pk>/delete/', views.supplier_contact_delete, name='supplier_contact_delete'),
+
     path('product/add/', views.supplier_product_add, name='supplier_product_add'),
     path('product/<int:pk>/update/', views.supplier_product_update, name='supplier_product_update'),
     path('product/<int:pk>/delete/', views.supplier_product_delete, name='supplier_product_delete'),
@@ -36,4 +45,7 @@ urlpatterns = [
     # AJAX endpoint for chart data
     path('performance/<int:supplier_id>/data/', views.get_supplier_performance_data,
          name='get_supplier_performance_data'),
+    path('get-supplier-addresses/', views.get_supplier_addresses, name='get_supplier_addresses'),
+    path('get-supplier-contacts/', views.get_supplier_contacts, name='get_supplier_contacts'),
+    path('get-supplier-rma-info/', views.get_supplier_rma_info, name='get_supplier_rma_info'),
 ]

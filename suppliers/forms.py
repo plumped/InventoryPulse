@@ -3,9 +3,96 @@ from django.utils import timezone
 from django import forms
 from django.forms.models import inlineformset_factory
 from django_select2 import forms as s2forms
-from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric
+from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric, SupplierContact, \
+    SupplierAddress
 from core.models import Product
 
+class SupplierAddressForm(forms.ModelForm):
+    """Form für Lieferantenadressen."""
+
+    class Meta:
+        model = SupplierAddress
+        fields = ['address_type', 'is_default', 'name', 'street', 'street_number', 'postal_code',
+                  'city', 'state', 'country', 'notes']
+        widgets = {
+            'address_type': forms.Select(attrs={'class': 'form-select'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'street': forms.TextInput(attrs={'class': 'form-control'}),
+            'street_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'postal_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
+            'state': forms.TextInput(attrs={'class': 'form-control'}),
+            'country': forms.TextInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('is_default'):
+            # Prüfen, ob bereits eine Standardadresse für diesen Typ existiert
+            supplier = self.instance.supplier if self.instance.pk else self.initial.get('supplier')
+            address_type = cleaned_data.get('address_type')
+
+            if supplier and address_type:
+                existing_default = SupplierAddress.objects.filter(
+                    supplier=supplier,
+                    address_type=address_type,
+                    is_default=True
+                )
+
+                if self.instance.pk:
+                    existing_default = existing_default.exclude(pk=self.instance.pk)
+
+                if existing_default.exists():
+                    # Keine Validierung auslösen, später wird die alte Standardadresse aktualisiert
+                    pass
+
+        return cleaned_data
+
+
+class SupplierContactForm(forms.ModelForm):
+    """Form für Lieferantenkontakte."""
+
+    class Meta:
+        model = SupplierContact
+        fields = ['contact_type', 'is_default', 'title', 'first_name', 'last_name',
+                  'position', 'email', 'phone', 'mobile', 'notes']
+        widgets = {
+            'contact_type': forms.Select(attrs={'class': 'form-select'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'mobile': forms.TextInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('is_default'):
+            # Prüfen, ob bereits ein Standardkontakt für diesen Typ existiert
+            supplier = self.instance.supplier if self.instance.pk else self.initial.get('supplier')
+            contact_type = cleaned_data.get('contact_type')
+
+            if supplier and contact_type:
+                existing_default = SupplierContact.objects.filter(
+                    supplier=supplier,
+                    contact_type=contact_type,
+                    is_default=True
+                )
+
+                if self.instance.pk:
+                    existing_default = existing_default.exclude(pk=self.instance.pk)
+
+                if existing_default.exists():
+                    # Keine Validierung auslösen, später wird der alte Standardkontakt aktualisiert
+                    pass
+
+        return cleaned_data
 
 class SupplierForm(forms.ModelForm):
     """Form for creating and updating suppliers."""
@@ -38,6 +125,13 @@ class SupplierForm(forms.ModelForm):
             if default_currency:
                 self.initial['default_currency'] = default_currency
 
+        # Hinweis für veraltete Felder hinzufügen
+        self.fields[
+            'contact_person'].help_text = "Veraltet - Bitte verwenden Sie stattdessen das Kontaktpersonen-Modell"
+        self.fields['email'].help_text = "Veraltet - Bitte verwenden Sie stattdessen das Kontaktpersonen-Modell"
+        self.fields['phone'].help_text = "Veraltet - Bitte verwenden Sie stattdessen das Kontaktpersonen-Modell"
+        self.fields['address'].help_text = "Veraltet - Bitte verwenden Sie stattdessen das Adressen-Modell"
+
     def clean_name(self):
         """Ensure supplier name is unique."""
         name = self.cleaned_data.get('name')
@@ -54,6 +148,25 @@ class SupplierForm(forms.ModelForm):
             raise forms.ValidationError('Ein Lieferant mit diesem Namen existiert bereits.')
 
         return name
+
+
+# Formset für Lieferantenadressen
+SupplierAddressFormSet = inlineformset_factory(
+    Supplier,
+    SupplierAddress,
+    form=SupplierAddressForm,
+    extra=1,
+    can_delete=True
+)
+
+# Formset für Lieferantenkontakte
+SupplierContactFormSet = inlineformset_factory(
+    Supplier,
+    SupplierContact,
+    form=SupplierContactForm,
+    extra=1,
+    can_delete=True
+)
 
 
 # Widget für die Produktsuche
@@ -277,3 +390,5 @@ SupplierPerformanceFormSet = inlineformset_factory(
     can_delete=True,  # Allow deleting performances
     max_num=10  # Maximum number of forms
 )
+
+

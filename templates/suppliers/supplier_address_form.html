@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if is_new %}Adresse hinzufügen{% else %}Adresse bearbeiten{% endif %} - {{ supplier.name }} - InventoryPulse
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Lieferanten</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_detail' supplier.id %}">{{ supplier.name }}</a></li>
+                    <li class="breadcrumb-item active">{% if is_new %}Adresse hinzufügen{% else %}Adresse bearbeiten{% endif %}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">{% if is_new %}Neue Adresse für {{ supplier.name }}{% else %}Adresse bearbeiten{% endif %}</h1>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'supplier_detail' supplier.id %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zum Lieferanten
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Adressinformationen</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.address_type.id_for_label }}" class="form-label">Adresstyp</label>
+                                {{ form.address_type }}
+                                {% if form.address_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.address_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Adressname (optional)</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">z.B. "Hauptsitz" oder "Lager Nord"</div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            {{ form.is_default }}
+                            <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                                Als Standardadresse für diesen Adresstyp festlegen
+                            </label>
+                            {% if form.is_default.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.is_default.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="{{ form.street.id_for_label }}" class="form-label">Straße</label>
+                                {{ form.street }}
+                                {% if form.street.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.street.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.street_number.id_for_label }}" class="form-label">Hausnummer</label>
+                                {{ form.street_number }}
+                                {% if form.street_number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.street_number.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.postal_code.id_for_label }}" class="form-label">PLZ</label>
+                                {{ form.postal_code }}
+                                {% if form.postal_code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.postal_code.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-8">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">Stadt</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.city.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.state.id_for_label }}" class="form-label">Bundesland/Region (optional)</label>
+                                {{ form.state }}
+                                {% if form.state.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.state.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">Land</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.country.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Anmerkungen (optional)</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'supplier_detail' supplier.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-save"></i> Speichern
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Hinweise</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>Adresstypen</h5>
+                        <ul class="mb-0">
+                            <li><strong>Rechnungsadresse:</strong> Für Rechnungen und Buchhaltung</li>
+                            <li><strong>Lieferadresse:</strong> Für Warenlieferungen</li>
+                            <li><strong>RMA-Rücksendeadresse:</strong> Für Rücksendungen und Reklamationen</li>
+                            <li><strong>Lageradresse:</strong> Für Lagerstandorte des Lieferanten</li>
+                            <li><strong>Büro:</strong> Für Büro- oder Verwaltungsadressen</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3">
+                        <p>Für jeden Adresstyp kann eine Standardadresse definiert werden.</p>
+                        <p>Die Standardadresse wird automatisch als vorgeschlagene Adresse verwendet, wenn dieser Adresstyp benötigt wird.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialisierung von Select2 für Dropdown-Felder, falls verfügbar
+    if($.fn.select2) {
+        $('.form-select').select2({
+            theme: 'bootstrap-5'
+        });
+    }
+});
+</script>
+{% endblock %}

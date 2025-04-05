@@ -15,6 +15,7 @@ from django.db import models
 
 
 from accessmanagement.decorators import permission_required
+from admin_dashboard.models import CompanyAddress
 from core.models import Product, ProductWarehouse, Currency
 from rma.models import RMA
 from suppliers.models import Supplier, SupplierProduct
@@ -308,6 +309,8 @@ def purchase_order_create(request):
     except:
         system_settings = None
 
+    order = None
+
     if request.method == 'POST':
         form = PurchaseOrderForm(request.POST)
         if form.is_valid():
@@ -372,10 +375,26 @@ def purchase_order_create(request):
     # Produktliste für Dropdown
     products = Product.objects.all().order_by('name')
 
+    # Alle Adressen
+    all_company_addresses = CompanyAddress.objects.all()
+    shipping_addresses = all_company_addresses.filter(address_type='shipping')
+    billing_addresses = all_company_addresses.filter(address_type='billing')
+
+    # Vorausgewählte Adressen (nur bei Bearbeiten verfügbar)
+    selected_shipping_address = getattr(order, 'shipping_address', None)
+    selected_billing_address = getattr(order, 'billing_address', None)
+
     context = {
         'form': form,
         'products': products,
+        'all_company_addresses': all_company_addresses,
+        'shipping_addresses': shipping_addresses,
+        'billing_addresses': billing_addresses,
+        'selected_shipping_address': selected_shipping_address,
+        'selected_billing_address': selected_billing_address,
     }
+
+
 
     return render(request, 'order/purchase_order_form.html', context)
 
@@ -413,9 +432,23 @@ def purchase_order_update(request, pk):
     # Produktliste für Dropdown
     products = Product.objects.all().order_by('name')
 
+    # Alle Adressen
+    all_company_addresses = CompanyAddress.objects.all()
+    shipping_addresses = all_company_addresses.filter(address_type='shipping')
+    billing_addresses = all_company_addresses.filter(address_type='billing')
+
+    # Vorausgewählte Adressen aus dem bestehenden Auftrag
+    selected_shipping_address = getattr(order, 'shipping_address', None)
+    selected_billing_address = getattr(order, 'billing_address', None)
+
     context = {
         'form': form,
         'products': products,
+        'all_company_addresses': all_company_addresses,
+        'shipping_addresses': shipping_addresses,
+        'billing_addresses': billing_addresses,
+        'selected_shipping_address': selected_shipping_address,
+        'selected_billing_address': selected_billing_address,
     }
 
     return render(request, 'order/purchase_order_form.html', context)

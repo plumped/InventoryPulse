@@ -6,6 +6,7 @@
 {% block extra_css %}
 <style>
 /* Anpassungen für Select2, um es wie ein reguläres Eingabefeld aussehen zu lassen */
+
 .select2-container--default .select2-selection--single {
     height: calc(1.5em + 0.75rem + 2px) !important;
     padding: 0.375rem 0.75rem !important;
@@ -52,6 +53,17 @@
     display: block;
     width: 100% !important;
 }
+
+.select2-container--default .select2-search--inline .select2-search__field {
+    width: auto !important;
+    min-width: 10em !important;
+    padding: 0.375rem 0.5rem !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    color: #495057 !important;
+}
+
+
 </style>
 {% endblock %}
 
@@ -196,7 +208,7 @@
                                 </div>
 
                                 <div class="mt-2">
-                                    <div id="shipping_address_preview" class="p-3 border rounded bg-light mb-3 {% if not selected_shipping_address %}d-none{% endif %}">
+                                    <div id="shipping_address_preview" class="p-3 border rounded mb-3 {% if not selected_shipping_address %}d-none{% endif %}">
                                         <h6 class="mb-2">Ausgewählte Versandadresse:</h6>
                                         <p class="mb-0" id="shipping_address_details">
                                             {% if selected_shipping_address %}
@@ -205,7 +217,7 @@
                                         </p>
                                     </div>
 
-                                    <div id="billing_address_preview" class="p-3 border rounded bg-light {% if not selected_billing_address %}d-none{% endif %}">
+                                    <div id="billing_address_preview" class="p-3 border rounded {% if not selected_billing_address %}d-none{% endif %}">
                                         <h6 class="mb-2">Ausgewählte Rechnungsadresse:</h6>
                                         <p class="mb-0" id="billing_address_details">
                                             {% if selected_billing_address %}

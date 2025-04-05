@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load supplier_tags %}
+
 {% block title %}{{ supplier.name }} - InventoryPulse{% endblock %}
 
 {% block content %}
@@ -21,121 +22,126 @@
     </div>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header">
-        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Lieferantendetails</h5>
-    </div>
-    <div class="card-body">
-        {# Hauptinformationen #}
-        <div class="row mb-3">
-            <div class="col-md-5 fw-bold">Hauptkontakt:</div>
-            <div class="col-md-7">
-                {% if supplier.contacts.exists %}
-                    {% with default_contact=supplier.get_default_contact %}
-                        {% if default_contact %}
-                            <div>{{ default_contact.full_name }}</div>
-                            {% if default_contact.position %}<small class="text-muted">{{ default_contact.position }}</small>{% endif %}
-                        {% else %}
-                            <span class="text-muted">Kein Standardkontakt festgelegt</span>
-                        {% endif %}
-                    {% endwith %}
-                {% elif supplier.contact_person %}
-                    {{ supplier.contact_person }}
-                {% else %}
-                    <span class="text-muted">Nicht angegeben</span>
-                {% endif %}
+<div class="row">
+    <!-- Left Column: Supplier info and actions -->
+    <div class="col-md-4">
+        <!-- Supplier Details Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Lieferantendetails</h5>
             </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-5 fw-bold">E-Mail:</div>
-            <div class="col-md-7">
-                {% if supplier.contacts.exists %}
-                    {% with default_contact=supplier.get_default_contact %}
-                        {% if default_contact and default_contact.email %}
-                            <a href="mailto:{{ default_contact.email }}">{{ default_contact.email }}</a>
+            <div class="card-body">
+                {# Hauptinformationen #}
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Hauptkontakt:</div>
+                    <div class="col-md-7">
+                        {% if supplier.contacts.exists %}
+                            {% with default_contact=supplier.get_default_contact %}
+                                {% if default_contact %}
+                                    <div>{{ default_contact.full_name }}</div>
+                                    {% if default_contact.position %}<small class="text-muted">{{ default_contact.position }}</small>{% endif %}
+                                {% else %}
+                                    <span class="text-muted">Kein Standardkontakt festgelegt</span>
+                                {% endif %}
+                            {% endwith %}
+                        {% elif supplier.contact_person %}
+                            {{ supplier.contact_person }}
                         {% else %}
                             <span class="text-muted">Nicht angegeben</span>
                         {% endif %}
-                    {% endwith %}
-                {% elif supplier.email %}
-                    <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
-                {% else %}
-                    <span class="text-muted">Nicht angegeben</span>
-                {% endif %}
-            </div>
-        </div>
+                    </div>
+                </div>
 
-        <div class="row mb-3">
-            <div class="col-md-5 fw-bold">Telefon:</div>
-            <div class="col-md-7">
-                {% if supplier.contacts.exists %}
-                    {% with default_contact=supplier.get_default_contact %}
-                        {% if default_contact and default_contact.phone %}
-                            <a href="tel:{{ default_contact.phone }}">{{ default_contact.phone }}</a>
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">E-Mail:</div>
+                    <div class="col-md-7">
+                        {% if supplier.contacts.exists %}
+                            {% with default_contact=supplier.get_default_contact %}
+                                {% if default_contact and default_contact.email %}
+                                    <a href="mailto:{{ default_contact.email }}">{{ default_contact.email }}</a>
+                                {% else %}
+                                    <span class="text-muted">Nicht angegeben</span>
+                                {% endif %}
+                            {% endwith %}
+                        {% elif supplier.email %}
+                            <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
                         {% else %}
                             <span class="text-muted">Nicht angegeben</span>
                         {% endif %}
-                    {% endwith %}
-                {% elif supplier.phone %}
-                    <a href="tel:{{ supplier.phone }}">{{ supplier.phone }}</a>
-                {% else %}
-                    <span class="text-muted">Nicht angegeben</span>
-                {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Telefon:</div>
+                    <div class="col-md-7">
+                        {% if supplier.contacts.exists %}
+                            {% with default_contact=supplier.get_default_contact %}
+                                {% if default_contact and default_contact.phone %}
+                                    <a href="tel:{{ default_contact.phone }}">{{ default_contact.phone }}</a>
+                                {% else %}
+                                    <span class="text-muted">Nicht angegeben</span>
+                                {% endif %}
+                            {% endwith %}
+                        {% elif supplier.phone %}
+                            <a href="tel:{{ supplier.phone }}">{{ supplier.phone }}</a>
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Rechnungsadresse:</div>
+                    <div class="col-md-7">
+                        {% with billing_address=supplier|get_address_by_type:'billing' %}
+                            {% if billing_address %}
+                                {{ billing_address.full_address|linebreaks }}
+                            {% elif supplier.address %}
+                                {{ supplier.address|linebreaks }}
+                            {% else %}
+                                <span class="text-muted">Nicht angegeben</span>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+
+                <!-- Standardwährung des Lieferanten -->
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Standardwährung:</div>
+                    <div class="col-md-7">
+                        {% if supplier.default_currency %}
+                            <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis">{{ supplier.default_currency.code }} ({{ supplier.default_currency.symbol }})</span>
+                        {% else %}
+                            <span class="text-muted">Nicht angegeben</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Felder für Versandkosten und Mindestbestellwert -->
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Versandkosten:</div>
+                    <div class="col-md-7">
+                        {% if supplier.shipping_cost > 0 %}
+                            <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis">{{ supplier.shipping_cost }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
+                        {% else %}
+                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Kostenlos</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-5 fw-bold">Mindestbestellwert:</div>
+                    <div class="col-md-7">
+                        {% if supplier.minimum_order_value > 0 %}
+                            <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis">{{ supplier.minimum_order_value }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
+                        {% else %}
+                            <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis">Kein Minimum</span>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-5 fw-bold">Rechnungsadresse:</div>
-            <div class="col-md-7">
-                {% with billing_address=supplier|get_address_by_type:'billing' %}
-                    {% if billing_address %}
-                        {{ billing_address.full_address|linebreaks }}
-                    {% elif supplier.address %}
-                        {{ supplier.address|linebreaks }}
-                    {% else %}
-                        <span class="text-muted">Nicht angegeben</span>
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </div>
-
-        <!-- Standardwährung des Lieferanten -->
-        <div class="row mb-3">
-            <div class="col-md-5 fw-bold">Standardwährung:</div>
-            <div class="col-md-7">
-                {% if supplier.default_currency %}
-                    <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis">{{ supplier.default_currency.code }} ({{ supplier.default_currency.symbol }})</span>
-                {% else %}
-                    <span class="text-muted">Nicht angegeben</span>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Felder für Versandkosten und Mindestbestellwert -->
-        <div class="row mb-3">
-            <div class="col-md-5 fw-bold">Versandkosten:</div>
-            <div class="col-md-7">
-                {% if supplier.shipping_cost > 0 %}
-                    <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis">{{ supplier.shipping_cost }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
-                {% else %}
-                    <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">Kostenlos</span>
-                {% endif %}
-            </div>
-        </div>
-        <div class="row mb-3">
-            <div class="col-md-5 fw-bold">Mindestbestellwert:</div>
-            <div class="col-md-7">
-                {% if supplier.minimum_order_value > 0 %}
-                    <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis">{{ supplier.minimum_order_value }} {% if supplier.default_currency %}{{ supplier.default_currency.symbol }}{% else %}€{% endif %}</span>
-                {% else %}
-                    <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis">Kein Minimum</span>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
+        <!-- Actions Card -->
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Aktionen</h5>
@@ -160,312 +166,9 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Adressen</h5>
-        <a href="{% url 'supplier_address_create' supplier.id %}" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-plus-circle"></i> Adresse hinzufügen
-        </a>
-    </div>
-    <div class="card-body p-0">
-        {% if supplier.addresses.exists %}
-            <div class="accordion" id="addressesAccordion">
-                {% for address_group in addresses_by_type %}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading-address-{{ address_group.type }}">
-                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
-                                    data-bs-toggle="collapse" data-bs-target="#collapse-address-{{ address_group.type }}"
-                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse-address-{{ address_group.type }}">
-                                {{ address_group.display }} ({{ address_group.addresses.count }})
-                            </button>
-                        </h2>
-                        <div id="collapse-address-{{ address_group.type }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
-                             aria-labelledby="heading-address-{{ address_group.type }}" data-bs-parent="#addressesAccordion">
-                            <div class="accordion-body p-0">
-                                <div class="list-group list-group-flush">
-                                    {% for address in address_group.addresses %}
-                                        <div class="list-group-item">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <div>
-                                                    {% if address.name %}<h6 class="mb-1">{{ address.name }}</h6>{% endif %}
-                                                    <p class="mb-1">{{ address.full_address|linebreaks }}</p>
-                                                    {% if address.is_default %}
-                                                        <span class="badge bg-primary">Standardadresse</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{% url 'supplier_address_update' address.id %}" class="btn btn-outline-primary">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                    <a href="{% url 'supplier_address_delete' address.id %}" class="btn btn-outline-danger">
-                                                        <i class="bi bi-trash"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="text-center py-4">
-                <div class="text-muted">
-                    <i class="fas fa-map-marker-alt fs-2 d-block mb-2"></i>
-                    <p class="mt-3">Keine Adressen vorhanden.</p>
-                    <a href="{% url 'supplier_address_create' supplier.id %}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Adresse hinzufügen
-                    </a>
-                </div>
-            </div>
-        {% endif %}
-    </div>
-</div>
-
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Kontakte</h5>
-        <a href="{% url 'supplier_contact_create' supplier.id %}" class="btn btn-sm btn-outline-primary">
-            <i class="bi bi-plus-circle"></i> Kontakt hinzufügen
-        </a>
-    </div>
-    <div class="card-body p-0">
-        {% if supplier.contacts.exists %}
-            <div class="accordion" id="contactsAccordion">
-                {% for contact_group in contacts_by_type %}
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="heading-contact-{{ contact_group.type }}">
-                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
-                                    data-bs-toggle="collapse" data-bs-target="#collapse-contact-{{ contact_group.type }}"
-                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse-contact-{{ contact_group.type }}">
-                                {{ contact_group.display }} ({{ contact_group.contacts.count }})
-                            </button>
-                        </h2>
-                        <div id="collapse-contact-{{ contact_group.type }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
-                             aria-labelledby="heading-contact-{{ contact_group.type }}" data-bs-parent="#contactsAccordion">
-                            <div class="accordion-body p-0">
-                                <div class="list-group list-group-flush">
-                                    {% for contact in contact_group.contacts %}
-                                        <div class="list-group-item">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <div>
-                                                    <h6 class="mb-1">{{ contact.full_name }}</h6>
-                                                    {% if contact.position %}<p class="mb-1 text-muted">{{ contact.position }}</p>{% endif %}
-                                                    <div class="mb-1">
-                                                        {% if contact.email %}
-                                                            <div><i class="bi bi-envelope me-2"></i><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></div>
-                                                        {% endif %}
-                                                        {% if contact.phone %}
-                                                            <div><i class="bi bi-telephone me-2"></i><a href="tel:{{ contact.phone }}">{{ contact.phone }}</a></div>
-                                                        {% endif %}
-                                                        {% if contact.mobile %}
-                                                            <div><i class="bi bi-phone me-2"></i><a href="tel:{{ contact.mobile }}">{{ contact.mobile }}</a></div>
-                                                        {% endif %}
-                                                    </div>
-                                                    {% if contact.is_default %}
-                                                        <span class="badge bg-primary">Standardkontakt</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{% url 'supplier_contact_update' contact.id %}" class="btn btn-outline-primary">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                    <a href="{% url 'supplier_contact_delete' contact.id %}" class="btn btn-outline-danger">
-                                                        <i class="bi bi-trash"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="text-center py-4">
-                <div class="text-muted">
-                    <i class="fas fa-users fs-2 d-block mb-2"></i>
-                    <p class="mt-3">Keine Kontakte vorhanden.</p>
-                    <a href="{% url 'supplier_contact_create' supplier.id %}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle me-1"></i>Kontakt hinzufügen
-                    </a>
-                </div>
-            </div>
-        {% endif %}
-    </div>
-</div>
-
-    <!-- Produktliste des Lieferanten -->
-    <div class="col-md-8">
+        <!-- Performance Card -->
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-box me-2"></i>Produkte dieses Lieferanten</h5>
-                <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-plus-circle"></i> Produkt hinzufügen
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Produkt</th>
-                                <th>Artikelnr. Lieferant</th>
-                                <th>Einkaufspreis</th>
-                                <th>Wechselkurs</th>
-                                <th>Lieferzeit</th>
-                                <th>Bevorzugt</th>
-                                <th>Aktionen</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for sp in supplier_products %}
-                            <tr>
-                                <td>
-                                    <a href="{% url 'product_detail' sp.product.id %}">{{ sp.product.name }}</a>
-                                </td>
-                                <td>{{ sp.supplier_sku|default:"-" }}</td>
-                                <td>
-                                    {{ sp.purchase_price }}
-                                    {% if sp.currency %}
-                                        {{ sp.currency.symbol }}
-                                        {% if sp.currency != supplier.default_currency %}
-                                            <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill" title="Abweichende Währung">{{ sp.currency.code }}</span>
-                                        {% endif %}
-                                    {% else %}
-                                        {{ supplier.default_currency.symbol }}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if sp.converted_price %}
-                                        {{ sp.converted_price|floatformat:2 }} {{ sp.system_currency.symbol }}
-                                    {% else %}
-                                        <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ sp.lead_time_days }} Tage</td>
-                                <td>
-                                    {% if sp.is_preferred %}
-                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"><i class="bi bi-check"></i></span>
-                                    {% else %}
-                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill"><i class="bi bi-x"></i></span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{% url 'supplier_product_update' sp.id %}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <a href="{% url 'supplier_product_delete' sp.id %}" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center">Keine Produkte für diesen Lieferanten</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Aktuelle Bestellungen -->
-        <div class="card mt-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Aktuelle Bestellungen</h5>
-                <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-plus-circle"></i> Neue Bestellung
-                </a>
-            </div>
-            <div class="card-body">
-                {% if supplier_orders %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Bestellnummer</th>
-                                    <th>Datum</th>
-                                    <th>Status</th>
-                                    <th>Wert</th>
-                                    <th>Positionen</th>
-                                    <th>Aktionen</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for order in supplier_orders %}
-                                <tr>
-                                    <td><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></td>
-                                    <td>{{ order.order_date|date:"d.m.Y" }}</td>
-                                    <td>
-                                        {% if order.status == 'draft' %}
-                                        <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ order.get_status_display }}</span>
-                                        {% elif order.status == 'pending' %}
-                                        <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
-                                        {% elif order.status == 'approved' %}
-                                        <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">{{ order.get_status_display }}</span>
-                                        {% elif order.status == 'sent' %}
-                                        <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">{{ order.get_status_display }}</span>
-                                        {% elif order.status == 'partially_received' %}
-                                        <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
-                                        {% elif order.status == 'received' %}
-                                        <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ order.get_status_display }}</span>
-                                        {% elif order.status == 'cancelled' %}
-                                        <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ order.total|floatformat:2 }}
-                                        {% if supplier.default_currency %}
-                                            {{ supplier.default_currency.symbol }}
-                                        {% else %}
-                                            €
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ order.items.count }}</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-primary">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            {% if order.status == 'draft' %}
-                                                <a href="{% url 'purchase_order_update' order.id %}" class="btn btn-outline-secondary">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                            {% elif order.status == 'sent' or order.status == 'partially_received' %}
-                                                <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-outline-info">
-                                                    <i class="bi bi-truck"></i>
-                                                </a>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <div class="text-center py-4">
-                        <div class="text-muted">
-                            <i class="bi bi-cart fs-2 d-block mb-2"></i>
-                            <p>Keine aktuellen Bestellungen für diesen Lieferanten.</p>
-                            <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-plus-circle me-1"></i>Neue Bestellung anlegen
-                            </a>
-                        </div>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-        <div class="card mt-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Lieferantenperformance</h5>
                 <a href="{% url 'supplier_performance_detail' supplier.id %}" class="btn btn-sm btn-outline-primary">
@@ -523,5 +226,389 @@
             </div>
         </div>
     </div>
+
+    <!-- Right Column: Tab-based content -->
+    <div class="col-md-8">
+        <!-- Tabs for organizing content -->
+        <ul class="nav nav-tabs mb-4" id="supplierTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" type="button" role="tab" aria-controls="products" aria-selected="true">
+                    <i class="fas fa-box me-2"></i>Produkte
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#orders" type="button" role="tab" aria-controls="orders" aria-selected="false">
+                    <i class="fas fa-shopping-cart me-2"></i>Bestellungen
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contacts-tab" data-bs-toggle="tab" data-bs-target="#contacts" type="button" role="tab" aria-controls="contacts" aria-selected="false">
+                    <i class="fas fa-users me-2"></i>Kontakte
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="addresses-tab" data-bs-toggle="tab" data-bs-target="#addresses" type="button" role="tab" aria-controls="addresses" aria-selected="false">
+                    <i class="fas fa-map-marker-alt me-2"></i>Adressen
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab content -->
+        <div class="tab-content" id="supplierTabsContent">
+            <!-- Products Tab -->
+            <div class="tab-pane fade show active" id="products" role="tabpanel" aria-labelledby="products-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-box me-2"></i>Produkte dieses Lieferanten</h5>
+                        <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Produkt hinzufügen
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Produkt</th>
+                                        <th>Artikelnr. Lieferant</th>
+                                        <th>Einkaufspreis</th>
+                                        <th>Wechselkurs</th>
+                                        <th>Lieferzeit</th>
+                                        <th>Bevorzugt</th>
+                                        <th>Aktionen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sp in supplier_products %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'product_detail' sp.product.id %}">{{ sp.product.name }}</a>
+                                        </td>
+                                        <td>{{ sp.supplier_sku|default:"-" }}</td>
+                                        <td>
+                                            {{ sp.purchase_price }}
+                                            {% if sp.currency %}
+                                                {{ sp.currency.symbol }}
+                                                {% if sp.currency != supplier.default_currency %}
+                                                    <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill" title="Abweichende Währung">{{ sp.currency.code }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                {{ supplier.default_currency.symbol }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if sp.converted_price %}
+                                                {{ sp.converted_price|floatformat:2 }} {{ sp.system_currency.symbol }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ sp.lead_time_days }} Tage</td>
+                                        <td>
+                                            {% if sp.is_preferred %}
+                                                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"><i class="bi bi-check"></i></span>
+                                            {% else %}
+                                                <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill"><i class="bi bi-x"></i></span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'supplier_product_update' sp.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="{% url 'supplier_product_delete' sp.id %}" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <div class="py-4">
+                                                <i class="fas fa-box fs-2 text-muted mb-2"></i>
+                                                <p class="mt-2">Keine Produkte für diesen Lieferanten</p>
+                                                <a href="{% url 'supplier_product_add' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-plus-circle me-1"></i>Produkt hinzufügen
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Aktuelle Bestellungen</h5>
+                        <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Neue Bestellung
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if supplier_orders %}
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Bestellnummer</th>
+                                            <th>Datum</th>
+                                            <th>Status</th>
+                                            <th>Wert</th>
+                                            <th>Umgerechnet</th>
+                                            <th>Positionen</th>
+                                            <th>Aktionen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for order in supplier_orders %}
+                                        <tr>
+                                            <td><a href="{% url 'purchase_order_detail' order.id %}">{{ order.order_number }}</a></td>
+                                            <td>{{ order.order_date|date:"d.m.Y" }}</td>
+                                            <td>
+                                                {% if order.status == 'draft' %}
+                                                <span class="badge bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'pending' %}
+                                                <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'approved' %}
+                                                <span class="badge bg-info-subtle border border-info-subtle text-info-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'sent' %}
+                                                <span class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'partially_received' %}
+                                                <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'received' %}
+                                                <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'received_with_issues' %}
+                                                <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">
+                                                    <i class="bi bi-exclamation-triangle me-1"></i>Mängel gemeldet
+                                                </span>
+                                                {% elif order.status == 'cancelled' %}
+                                                <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.total|floatformat:2 }}
+                                                {% if supplier.default_currency %}
+                                                    {{ supplier.default_currency.symbol }}
+                                                {% else %}
+                                                    €
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if order.converted_total %}
+                                                    {{ order.converted_total|floatformat:2 }} {{ order.system_currency.symbol }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.items.count }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'purchase_order_detail' order.id %}" class="btn btn-outline-primary">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    {% if order.status == 'draft' %}
+                                                        <a href="{% url 'purchase_order_update' order.id %}" class="btn btn-outline-secondary">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    {% elif order.status == 'sent' or order.status == 'partially_received' %}
+                                                        <a href="{% url 'purchase_order_receive' order.id %}" class="btn btn-outline-info">
+                                                            <i class="bi bi-truck"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="bi bi-cart fs-2 d-block mb-2"></i>
+                                    <p>Keine aktuellen Bestellungen für diesen Lieferanten.</p>
+                                    <a href="{% url 'purchase_order_create' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle me-1"></i>Neue Bestellung anlegen
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contacts Tab -->
+            <div class="tab-pane fade" id="contacts" role="tabpanel" aria-labelledby="contacts-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Kontakte</h5>
+                        <a href="{% url 'supplier_contact_create' supplier.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Kontakt hinzufügen
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if supplier.contacts.exists %}
+                            <div class="accordion" id="contactsAccordion">
+                                {% for contact_group in contacts_by_type %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading-contact-{{ contact_group.type }}">
+                                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
+                                                    data-bs-toggle="collapse" data-bs-target="#collapse-contact-{{ contact_group.type }}"
+                                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse-contact-{{ contact_group.type }}">
+                                                {{ contact_group.display }} ({{ contact_group.contacts.count }})
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-contact-{{ contact_group.type }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                             aria-labelledby="heading-contact-{{ contact_group.type }}" data-bs-parent="#contactsAccordion">
+                                            <div class="accordion-body p-0">
+                                                <div class="list-group list-group-flush">
+                                                    {% for contact in contact_group.contacts %}
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-start">
+                                                                <div>
+                                                                    <h6 class="mb-1">{{ contact.full_name }}</h6>
+                                                                    {% if contact.position %}<p class="mb-1 text-muted">{{ contact.position }}</p>{% endif %}
+                                                                    <div class="mb-1">
+                                                                        {% if contact.email %}
+                                                                            <div><i class="bi bi-envelope me-2"></i><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></div>
+                                                                        {% endif %}
+                                                                        {% if contact.phone %}
+                                                                            <div><i class="bi bi-telephone me-2"></i><a href="tel:{{ contact.phone }}">{{ contact.phone }}</a></div>
+                                                                        {% endif %}
+                                                                        {% if contact.mobile %}
+                                                                            <div><i class="bi bi-phone me-2"></i><a href="tel:{{ contact.mobile }}">{{ contact.mobile }}</a></div>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    {% if contact.is_default %}
+                                                                        <span class="badge bg-primary">Standardkontakt</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="btn-group btn-group-sm" role="group">
+                                                                    <a href="{% url 'supplier_contact_update' contact.id %}" class="btn btn-outline-primary">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </a>
+                                                                    <a href="{% url 'supplier_contact_delete' contact.id %}" class="btn btn-outline-danger">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-users fs-2 d-block mb-2"></i>
+                                    <p class="mt-3">Keine Kontakte vorhanden.</p>
+                                    <a href="{% url 'supplier_contact_create' supplier.id %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle me-1"></i>Kontakt hinzufügen
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Addresses Tab -->
+            <div class="tab-pane fade" id="addresses" role="tabpanel" aria-labelledby="addresses-tab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Adressen</h5>
+                        <a href="{% url 'supplier_address_create' supplier.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Adresse hinzufügen
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if supplier.addresses.exists %}
+                            <div class="accordion" id="addressesAccordion">
+                                {% for address_group in addresses_by_type %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="heading-address-{{ address_group.type }}">
+                                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button"
+                                                    data-bs-toggle="collapse" data-bs-target="#collapse-address-{{ address_group.type }}"
+                                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse-address-{{ address_group.type }}">
+                                                {{ address_group.display }} ({{ address_group.addresses.count }})
+                                            </button>
+                                        </h2>
+                                        <div id="collapse-address-{{ address_group.type }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                                             aria-labelledby="heading-address-{{ address_group.type }}" data-bs-parent="#addressesAccordion">
+                                            <div class="accordion-body p-0">
+                                                <div class="list-group list-group-flush">
+                                                    {% for address in address_group.addresses %}
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-start">
+                                                                <div>
+                                                                    {% if address.name %}<h6 class="mb-1">{{ address.name }}</h6>{% endif %}
+                                                                    <p class="mb-1">{{ address.full_address|linebreaks }}</p>
+                                                                    {% if address.is_default %}
+                                                                        <span class="badge bg-primary">Standardadresse</span>
+                                                                    {% endif %}
+                                                                </div>
+                                                                <div class="btn-group btn-group-sm" role="group">
+                                                                    <a href="{% url 'supplier_address_update' address.id %}" class="btn btn-outline-primary">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </a>
+                                                                    <a href="{% url 'supplier_address_delete' address.id %}" class="btn btn-outline-danger">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-map-marker-alt fs-2 d-block mb-2"></i>
+                                    <p class="mt-3">Keine Adressen vorhanden.</p>
+                                    <a href="{% url 'supplier_address_create' supplier.id %}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle me-1"></i>Adresse hinzufügen
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Select active tab from URL if present
+    const url = new URL(window.location);
+    const activeTab = url.searchParams.get('tab');
+    if (activeTab) {
+        $(`#${activeTab}-tab`).tab('show');
+    }
+
+    // Update URL when tabs are changed
+    $('.nav-link').on('shown.bs.tab', function (e) {
+        const id = $(e.target).attr('id').replace('-tab', '');
+        url.searchParams.set('tab', id);
+        window.history.replaceState({}, '', url);
+    });
+});
+</script>
+{% endblock %}
+
 {% endblock %}

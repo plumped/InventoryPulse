@@ -210,6 +210,7 @@ def purchase_order_detail(request, pk):
     product_ids = [item.product.id for item in order.items.all()]
     has_batch_products = Product.objects.filter(id__in=product_ids, has_batch_tracking=True).exists()
     has_expiry_products = Product.objects.filter(id__in=product_ids, has_expiry_tracking=True).exists()
+    related_rmas = RMA.objects.filter(related_order=order)
 
     # Daten für die Workflow-Visualization
     progress_percentage = 0
@@ -290,6 +291,7 @@ def purchase_order_detail(request, pk):
         'today_date': today_date,
         'soon_date': soon_date,
         'expected_delivery': order.expected_delivery,
+        'related_rmas': related_rmas,
     }
 
     return render(request, 'order/purchase_order_detail.html', context)
@@ -931,7 +933,8 @@ def purchase_order_receive(request, pk):
                     return redirect('purchase_order_detail', pk=order.pk)
 
                 # Bestellstatus aktualisieren
-                update_order_status(order)
+                update_order_status_after_receipt(order)
+                order.refresh_from_db()
 
                 # Automatisch eine neue Teillieferung für ausstehende Artikel anlegen, wenn gewünscht
                 create_future_split = request.POST.get('create_future_split') == 'yes' and is_partial_receipt
@@ -968,14 +971,24 @@ def purchase_order_receive(request, pk):
 
                 # Wenn defekte Artikel gemeldet wurden, in der Session speichern und zur RMA-Erstellung weiterleiten
                 if defective_items:
-                    # Defekte Artikel mit Wareneingangspositionen verknüpfen
                     for item_data in defective_items:
                         item_id = item_data.get('receipt_item_id')
-                        # Suche die entsprechende ReceiptItem für diese Position
                         for ri in receipt.items.all():
                             if str(ri.order_item.id) == str(item_id):
                                 item_data['receipt_item_id'] = ri.id
+
+                                try:
+                                    order_item = ri.order_item
+                                    order_item.has_quality_issues = True
+                                    order_item.defective_quantity += Decimal(item_data.get('quantity', 0))
+                                    order_item.save()
+                                except Exception as e:
+                                    print(f"[WARN] Fehler beim Setzen von has_quality_issues: {e}")
                                 break
+
+                    # 🔥 Jetzt nochmal Status aktualisieren, damit „Erhalten mit Mängeln“ auch greift
+                    update_order_status_after_receipt(order)
+                    order.refresh_from_db()
 
                     # In Session speichern
                     request.session['defective_items'] = defective_items
@@ -3219,55 +3232,9 @@ def receive_order_split(request, pk, split_id):
 
     return render(request, 'order/receive_order_split.html', context)
 
-
-def update_order_status(order):
-    """
-    Aktualisiert den Status einer Bestellung basierend auf dem Wareneingangsstatus aller Positionen.
-    """
-    # Prüfen, ob alle Artikel vollständig erhalten wurden oder teilweise erhalten wurden
-    all_items_fully_received = True
-    any_items_received = False
-
-    for item in order.items.all():
-        # Stornierte Positionen überspringen
-        if item.is_canceled:
-            continue
-
-        if item.quantity_received >= item.quantity_ordered:
-            any_items_received = True
-        else:
-            all_items_fully_received = False
-            if item.quantity_received > 0:
-                any_items_received = True
-
-    # Status setzen basierend auf dem Ergebnis
-    if all_items_fully_received:
-        order.status = 'received'
-    elif any_items_received:
-        order.status = 'partially_received'
-    order.save()
-
-    # Auch den Status aller zugehörigen Teillieferungen aktualisieren
-    for split in order.splits.all():
-        all_split_items_received = True
-
-        for split_item in split.items.all():
-            order_item = split_item.order_item
-            if order_item.quantity_received < split_item.quantity:
-                all_split_items_received = False
-                break
-
-        if all_split_items_received:
-            split.status = 'received'
-        else:
-            # Wenn es bereits Wareneingänge gibt, aber nicht alle
-            if any(receipt.items.exists() for receipt in split.receipts.all()):
-                split.status = 'partially_received'
-
-        split.save()
-
-
 def update_order_status_after_receipt(order):
+    print(f"[DEBUG] update_order_status_after_receipt aufgerufen für Bestellung {order.pk}")
+
     """
     Updates the order status after a receipt is processed or deleted.
     Takes into account cancelled items and quality issues.
@@ -3275,6 +3242,7 @@ def update_order_status_after_receipt(order):
     # Bestehende Prüfung für Vollständigkeit der Lieferung
     all_items_received = True
     any_items_received = False
+    has_quality_issues = False
 
     for item in order.items.all():
         # Stornierte Positionen überspringen
@@ -3290,15 +3258,24 @@ def update_order_status_after_receipt(order):
             if item.quantity_received > 0:
                 any_items_received = True
 
-    # Prüfen, ob es aktive RMAs für diese Bestellung gibt
-    has_active_rmas = RMA.objects.filter(
+        # Prüfen, ob dieses Item Qualitätsprobleme hat
+        # (Dies sollte in den Daten gespeichert sein oder durch eine Eigenschaft abgefragt werden)
+        if item.has_quality_issues:
+            has_quality_issues = True
+
+    # Prüfen, ob es RMAs für diese Bestellung gibt
+    from rma.models import RMA
+    has_rmas = RMA.objects.filter(
         related_order=order,
         status__in=['draft', 'pending', 'approved', 'sent']
     ).exists()
 
-    # Status basierend auf Lieferstatus und RMAs setzen
+    # Kombinierte Bedingung: Es gibt entweder gemeldete Qualitätsprobleme oder RMAs
+    has_quality_issues = has_quality_issues or has_rmas
+
+    # Status basierend auf Lieferstatus und Qualitätsproblemen setzen
     if all_items_received:
-        if has_active_rmas:
+        if has_quality_issues:
             order.status = 'received_with_issues'
         else:
             order.status = 'received'
@@ -3306,10 +3283,6 @@ def update_order_status_after_receipt(order):
         order.status = 'partially_received'
     else:
         order.status = 'sent'
-
-    if order.status == 'received_with_issues' and not any_items_received:
-        order.status = 'sent'
-
     order.save()
 
     # Also update the status of all associated splits

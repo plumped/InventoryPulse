@@ -18,7 +18,7 @@ class PurchaseOrder(models.Model):
         ('sent', 'Bestellt'),
         ('partially_received', 'Teilweise erhalten'),
         ('received', 'Vollständig erhalten'),
-        ('received_with_issues', 'Erhalten mit Mängeln'),  # Neuer Status
+        ('received_with_issues', 'Erhalten mit Mängeln'),  # Dieser Eintrag ist wichtig
         ('cancelled', 'Storniert')
     ]
 
@@ -123,6 +123,9 @@ class PurchaseOrderItem(models.Model):
     canceled_at = models.DateTimeField(null=True, blank=True)
     canceled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                     related_name='canceled_order_items')
+
+    has_quality_issues = models.BooleanField(default=False)
+    defective_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     # Add currency field to capture the currency at time of order
     currency = models.ForeignKey('core.Currency', on_delete=models.PROTECT, null=True,

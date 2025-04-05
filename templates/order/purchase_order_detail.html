@@ -292,9 +292,6 @@
     padding-left: 1.25rem;
 }
 
-.quality-issues-actions {
-    margin-left: 1rem;
-}
 
 /* Animation für Aufmerksamkeit auf den Badge */
 @keyframes pulse {
@@ -563,8 +560,12 @@
             <ul>
                 {% for rma in related_rmas %}
                 <li>
-                    <strong>{{ rma.rma_number }}</strong> -
-                    {{ rma.items.count }} Position(en) -
+                    <strong>
+                        <a href="{% url 'rma_detail' rma.id %}" class="text-decoration-none">
+                            {{ rma.rma_number }}
+                        </a>
+                    </strong> –
+                    {{ rma.items.count }} Position(en) –
                     <span class="badge {% if rma.status == 'draft' %}bg-secondary{% elif rma.status == 'pending' %}bg-primary{% elif rma.status == 'resolved' %}bg-success{% else %}bg-info{% endif %}">
                         {{ rma.get_status_display }}
                     </span>
@@ -575,11 +576,7 @@
                 </li>
                 {% endfor %}
             </ul>
-        </div>
-        <div class="quality-issues-actions">
-            <a href="{% url 'rma_list' %}?order={{ order.id }}" class="btn btn-warning">
-                <i class="bi bi-box-arrow-right"></i> RMAs verwalten
-            </a>
+
         </div>
     </div>
     {% endif %}
@@ -778,7 +775,7 @@
                     <div class="workflow-label">Bestellt</div>
                 </div>
 
-                <!-- Partially Received -->
+                    <!-- Teilweise erhalten -->
                 <div class="workflow-step {% if order.status == 'partially_received' %}active{% elif order.status in 'received,received_with_issues' %}completed{% elif order.status in 'draft,pending,approved,sent' %}{% else %}disabled{% endif %}">
                     <div class="workflow-circle">
                         <i class="bi bi-box-seam"></i>
@@ -786,32 +783,33 @@
                     <div class="workflow-label">Teilweise erhalten</div>
                 </div>
 
-                <!-- Received -->
+                <!-- Vollständig erhalten - nur aktiv, wenn Status tatsächlich 'received' ist -->
                 <div class="workflow-step {% if order.status == 'received' %}active completed{% elif order.status in 'draft,pending,approved,sent,partially_received,received_with_issues' %}{% else %}disabled{% endif %}">
                     <div class="workflow-circle">
                         <i class="bi bi-check-circle"></i>
                     </div>
                     <div class="workflow-label">Vollständig erhalten</div>
-                        {% if order.status == 'received' and order.receipts.all.0 %}
+                    {% if order.status == 'received' and order.receipts.all.0 %}
                     <div class="workflow-info">
                         {{ order.receipts.all.0.receipt_date|date:"d.m.Y" }}
                     </div>
                     {% endif %}
                 </div>
 
-                <!-- Received with Issues (neuer Status) -->
-                <div class="workflow-step with-issues {% if order.status == 'received_with_issues' %}active{% else %}{% endif %}">
+                {% if order.status == 'received_with_issues' %}
+                <div class="workflow-step with-issues active">
                     <div class="workflow-circle">
                         <i class="bi bi-exclamation-circle"></i>
                         <span class="quality-issues-badge pulse-animation" data-bs-toggle="tooltip" title="Mängel gemeldet">!</span>
                     </div>
                     <div class="workflow-label">Erhalten mit Mängeln</div>
-                    {% if order.status == 'received_with_issues' and order.receipts.all.0 %}
+                    {% if order.receipts.all.0 %}
                     <div class="workflow-info">
                         {{ order.receipts.all.0.receipt_date|date:"d.m.Y" }}
                     </div>
                     {% endif %}
                 </div>
+                {% endif %}
             </div>
 
             <!-- Additional status information -->

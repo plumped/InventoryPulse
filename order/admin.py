@@ -90,7 +90,7 @@ class OrderSuggestionAdmin(admin.ModelAdmin):
 
 class PurchaseOrderItemAdmin(admin.ModelAdmin):
     list_display = (
-    'purchase_order', 'product', 'supplier_sku', 'get_quantity_info', 'status', 'unit_price', 'get_line_total')
+    'purchase_order', 'product', 'supplier_sku', 'get_quantity_info', 'status', 'unit_price', 'get_line_total', 'has_quality_issues', 'defective_quantity',)
     list_filter = ('purchase_order__supplier', 'product__category', 'status')
     search_fields = ('product__name', 'product__sku', 'supplier_sku')
     readonly_fields = (
@@ -124,6 +124,11 @@ class PurchaseOrderItemAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
             'description': 'Informationen zu Stornierungen dieser Position'
         }),
+        ('Qualitätsmängel', {
+            'fields': ('has_quality_issues', 'defective_quantity'),
+            'classes': ('collapse',),
+        }),
+
     )
 
     def get_queryset(self, request):

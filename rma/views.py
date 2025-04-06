@@ -12,6 +12,7 @@ from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
 from accessmanagement.decorators import permission_required
+from admin_dashboard.models import CompanyAddress, CompanyAddressType
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem, PurchaseOrderReceipt
 from inventory.models import StockMovement, Warehouse
 from order.views import update_order_status_after_receipt
@@ -332,7 +333,32 @@ def rma_create(request):
 
                 return redirect('rma_detail', pk=rma.pk)
     else:
-        form = RMAForm(user=request.user, receipt_item_id=receipt_item_id, purchase_order=purchase_order)
+        initial = {}
+
+        # Supplier-ID aus Query-Param (z. B. durch Dropdown-Auswahl)
+        supplier_id = request.GET.get('supplier') or (purchase_order.supplier_id if purchase_order else None)
+
+        if supplier_id:
+            try:
+                supplier = Supplier.objects.get(pk=supplier_id)
+                rma_contact = supplier.get_rma_contact()
+                if rma_contact:
+                    initial.update({
+                        'contact_person': rma_contact.full_name(),
+                        'contact_email': rma_contact.email,
+                        'contact_phone': rma_contact.phone,
+                        'supplier': supplier.id,  # optional: gleich den Lieferanten vorauswählen
+                    })
+            except Supplier.DoesNotExist:
+                pass
+        try:
+            return_address = CompanyAddress.objects.get(address_type=CompanyAddressType.RETURN, is_default=True)
+            initial['shipping_address'] = return_address.full_address
+        except CompanyAddress.DoesNotExist:
+            pass
+
+        form = RMAForm(user=request.user, receipt_item_id=receipt_item_id, purchase_order=purchase_order, initial=initial)
+
 
     context = {
         'form': form,

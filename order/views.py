@@ -212,6 +212,8 @@ def purchase_order_detail(request, pk):
     has_batch_products = Product.objects.filter(id__in=product_ids, has_batch_tracking=True).exists()
     has_expiry_products = Product.objects.filter(id__in=product_ids, has_expiry_tracking=True).exists()
     related_rmas = RMA.objects.filter(related_order=order)
+    resolved_rmas = related_rmas.filter(status='resolved')
+    open_rmas = related_rmas.exclude(status='resolved')
 
     # Daten für die Workflow-Visualization
     progress_percentage = 0
@@ -293,6 +295,8 @@ def purchase_order_detail(request, pk):
         'soon_date': soon_date,
         'expected_delivery': order.expected_delivery,
         'related_rmas': related_rmas,
+        'resolved_rmas': resolved_rmas,
+        'open_rmas': open_rmas,
     }
 
     return render(request, 'order/purchase_order_detail.html', context)

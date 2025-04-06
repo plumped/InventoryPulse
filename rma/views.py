@@ -14,6 +14,7 @@ from decimal import Decimal, InvalidOperation
 from accessmanagement.decorators import permission_required
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem, PurchaseOrderReceipt
 from inventory.models import StockMovement, Warehouse
+from order.views import update_order_status_after_receipt
 from suppliers.models import Supplier
 
 from .models import (
@@ -223,6 +224,14 @@ def rma_detail(request, pk):
                 try:
                     rma.resolve(request.user, resolution_type, resolution_notes)
                     messages.success(request, f'RMA {rma.rma_number} wurde als erledigt markiert.')
+
+                    for item in rma.items.filter(is_resolved=True):
+                        if item.receipt_item and item.receipt_item.order_item:
+                            order_item = item.receipt_item.order_item
+                            order_item.has_quality_issues = False
+                            order_item.save()
+                        if rma.related_order:
+                            update_order_status_after_receipt(rma.related_order)
 
                     # Handle additional resolution data
                     if resolution_type == RMAResolutionType.REPLACEMENT and resolution_form.cleaned_data.get(

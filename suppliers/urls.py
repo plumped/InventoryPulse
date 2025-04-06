@@ -32,6 +32,9 @@ urlpatterns = [
     path('performance/delete/<int:pk>/', views.supplier_performance_delete, name='supplier_performance_delete'),
     path('performance/<int:supplier_id>/calculate/', views.supplier_performance_calculate,
          name='supplier_performance_calculate'),
+    path('performance/<int:supplier_id>/rma-data/', views.get_supplier_rma_performance,
+         name='get_supplier_rma_performance'),
+    path('<int:pk>/rmas/', views.supplier_rma_overview, name='supplier_rma_overview'),
 
     # Performance metric management
     path('performance/metrics/', views.supplier_performance_metrics_list, name='supplier_performance_metrics_list'),

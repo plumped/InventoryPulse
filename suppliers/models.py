@@ -382,6 +382,129 @@ class SupplierPerformanceCalculator:
                 return 100.0, list(relevant_orders)
             return None, []
 
+    # Füge diese Methode zur SupplierPerformanceCalculator-Klasse in suppliers/models.py hinzu
+
+    @classmethod
+    def calculate_rma_quality(cls, supplier, start_date=None, end_date=None):
+        """
+        Berechnet die Qualitätsrate basierend auf RMAs im Verhältnis zu Bestellungen.
+
+        Ein niedrigerer Prozentsatz von RMAs im Vergleich zu erhaltenen Bestellungen
+        führt zu einer höheren Qualitätsbewertung.
+
+        Returns:
+            tuple: (quality_score, relevant_orders)
+                - quality_score: Prozentsatz (0-100) der Qualitätsbewertung
+                - relevant_orders: Liste der relevanten Bestellungen
+        """
+        from django.db.models import Count, Q, Sum
+        from order.models import PurchaseOrder, PurchaseOrderItem
+        from rma.models import RMA, RMAStatus, RMAItem, RMAIssueType
+
+        # Default auf die letzten 90 Tage, wenn keine Daten angegeben sind
+        if not end_date:
+            end_date = timezone.now().date()
+        if not start_date:
+            start_date = end_date - timedelta(days=90)
+
+        # Hole alle empfangenen Bestellungen für diesen Lieferanten im Zeitraum
+        orders = PurchaseOrder.objects.filter(
+            supplier=supplier,
+            status__in=['received', 'partially_received', 'received_with_issues'],
+            receipts__receipt_date__gte=start_date,
+            receipts__receipt_date__lte=end_date
+        ).distinct()
+
+        if not orders.exists():
+            return None, []
+
+        # Gesamtwert und Anzahl der Bestellungen
+        order_count = orders.count()
+        total_order_items = PurchaseOrderItem.objects.filter(purchase_order__in=orders).count()
+
+        try:
+            total_order_value = sum(order.total_amount for order in orders)
+        except:
+            # Fallback, falls total_amount nicht für alle Bestellungen verfügbar ist
+            total_order_value = PurchaseOrderItem.objects.filter(
+                purchase_order__in=orders
+            ).aggregate(
+                total=Sum('quantity_ordered') * Sum('unit_price')
+            )['total'] or 0
+
+        # RMAs für diese Bestellungen im gleichen Zeitraum
+        rmas = RMA.objects.filter(
+            supplier=supplier,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date,
+            status__in=[
+                RMAStatus.PENDING,
+                RMAStatus.APPROVED,
+                RMAStatus.SENT,
+                RMAStatus.RESOLVED
+            ]
+        ).exclude(status__in=[RMAStatus.DRAFT, RMAStatus.CANCELLED])
+
+        # Gesamtmenge und Wert der RMA-Positionen
+        rma_items = RMAItem.objects.filter(rma__in=rmas)
+        rma_item_count = rma_items.count()
+        rma_value = sum(item.value or 0 for item in rma_items)
+
+        # RMAs nach Problemtyp gruppieren und gewichten
+        # Defekte oder beschädigte Artikel sind schwerwiegender als Lieferfehler
+        severity_weights = {
+            RMAIssueType.DEFECTIVE: 1.0,  # Defekt: volle Gewichtung
+            RMAIssueType.DAMAGED: 0.8,  # Beschädigt: 80% Gewichtung
+            RMAIssueType.EXPIRED: 0.7,  # Abgelaufen: 70% Gewichtung
+            RMAIssueType.WRONG_ITEM: 0.6,  # Falscher Artikel: 60% Gewichtung
+            RMAIssueType.WRONG_QUANTITY: 0.5,  # Falsche Menge: 50% Gewichtung
+            RMAIssueType.OTHER: 0.7  # Sonstiges: 70% Gewichtung
+        }
+
+        # Gewichtete Anzahl von RMA-Positionen berechnen
+        weighted_rma_items = 0
+        for issue_type, weight in severity_weights.items():
+            type_count = rma_items.filter(issue_type=issue_type).count()
+            weighted_rma_items += type_count * weight
+
+        # Mehrere Faktoren für die Bewertung berücksichtigen
+
+        # Faktor 1: Verhältnis von RMAs zu Bestellungen
+        if order_count > 0:
+            rma_order_ratio = rmas.count() / order_count
+        else:
+            rma_order_ratio = 0
+
+        # Faktor 2: Verhältnis von RMA-Positionen zu Bestellpositionen
+        if total_order_items > 0:
+            rma_item_ratio = weighted_rma_items / total_order_items
+        else:
+            rma_item_ratio = 0
+
+        # Faktor 3: Verhältnis von RMA-Wert zu Bestellwert
+        if total_order_value > 0:
+            rma_value_ratio = rma_value / total_order_value
+        else:
+            rma_value_ratio = 0
+
+        # Kombinierter Score (niedrigere Raten sind besser)
+        # Die verschiedenen Faktoren werden gewichtet
+        combined_ratio = (
+                float(rma_order_ratio) * 0.3 +
+                float(rma_item_ratio) * 0.5 +
+                float(rma_value_ratio) * 0.2
+        )
+
+        # Umwandlung in eine Qualitätsbewertung (0-100%)
+        # Wenn combined_ratio = 0, ist die Qualität 100%
+        # Wenn combined_ratio >= 0.3 (30% Probleme), ist die Qualität 0%
+        if combined_ratio >= 0.3:
+            quality_score = 0
+        else:
+            quality_score = 100 - (combined_ratio * (100 / 0.3))  # Linear abfallend von 100% bis 0%
+
+        return round(quality_score, 2), list(orders)
+
     @classmethod
     def calculate_all_metrics(cls, supplier, start_date=None, end_date=None, save_results=True):
         """Calculate all performance metrics for a supplier and optionally save them."""
@@ -398,6 +521,10 @@ class SupplierPerformanceCalculator:
         # Calculate price consistency
         consistency_score, consistency_orders = cls.calculate_price_consistency(supplier, start_date, end_date)
         results['price_consistency'] = {'score': consistency_score, 'orders': consistency_orders}
+
+        # Calculate RMA quality
+        quality_score, quality_orders = cls.calculate_rma_quality(supplier, start_date, end_date)
+        results['product_quality'] = {'score': quality_score, 'orders': quality_orders}
 
         # Save the results if requested
         if save_results:
@@ -429,6 +556,16 @@ class SupplierPerformanceCalculator:
                         'name': 'Price Consistency',
                         'description': 'Consistency of pricing for the same products over time',
                         'metric_type': 'price_consistency',
+                        'is_system': True
+                    }
+                )
+
+                quality_metric, _ = SupplierPerformanceMetric.objects.get_or_create(
+                    code='product_quality',
+                    defaults={
+                        'name': 'Product Quality',
+                        'description': 'Product quality based on the rate of RMAs (Return Merchandise Authorizations)',
+                        'metric_type': 'quality',
                         'is_system': True
                     }
                 )
@@ -480,6 +617,21 @@ class SupplierPerformanceCalculator:
                     )
                     if consistency_orders and created:
                         perf.reference_orders.set(consistency_orders)
+
+                if quality_score is not None:
+                    perf, created = SupplierPerformance.objects.update_or_create(
+                        supplier=supplier,
+                        metric=quality_metric,
+                        evaluation_date=today,
+                        defaults={
+                            'value': quality_score,
+                            'evaluation_period_start': start_date,
+                            'evaluation_period_end': end_date,
+                            'notes': f'Automatically calculated based on RMA rate for {len(quality_orders)} orders'
+                        }
+                    )
+                    if quality_orders and created:
+                        perf.reference_orders.set(quality_orders)
 
             except Exception as e:
                 # Log the error but don't re-raise

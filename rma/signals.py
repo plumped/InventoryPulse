@@ -1,11 +1,15 @@
+from datetime import timedelta
+from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db.models import Q
 
+from suppliers.models import SupplierPerformanceCalculator
 from .models import RMA, RMAStatus
 from order.models import PurchaseOrder, PurchaseOrderComment
 
 
+@receiver(post_save, sender=RMA)
 @receiver(post_save, sender=RMA)
 def update_order_status_after_rma_resolution(sender, instance, **kwargs):
     """
@@ -54,3 +58,63 @@ def update_order_status_after_rma_resolution(sender, instance, **kwargs):
                     new_status=order.status,
                     is_public=True
                 )
+
+
+@receiver(post_save, sender=RMA)
+def update_supplier_performance_after_rma_change(sender, instance, created, **kwargs):
+    """
+    Aktualisiert die Leistungsbewertung des Lieferanten, wenn ein RMA erstellt
+    oder auf "resolved" gesetzt wird. Dies beeinflusst die Qualitätsbewertung.
+    """
+    # Nur weitermachen, wenn RMA erstellt wurde oder Status auf RESOLVED oder CANCELLED geändert wurde
+    if created or instance.status in [RMAStatus.RESOLVED, RMAStatus.CANCELLED]:
+        supplier = instance.supplier
+
+        # Letzten 90 Tage als Zeitraum für Neuberechnung verwenden
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=90)
+
+        # Lieferantenperformance aktualisieren - konzentriere dich auf die Qualitätsmetrik
+        try:
+            # Nur die Qualitätsmetrik neu berechnen, um Performance zu verbessern
+            quality_score, quality_orders = SupplierPerformanceCalculator.calculate_rma_quality(
+                supplier, start_date, end_date
+            )
+
+            # Wenn ein gültiger Score berechnet wurde, speichere ihn
+            if quality_score is not None:
+                from suppliers.models import SupplierPerformanceMetric, SupplierPerformance
+
+                # Qualitätsmetrik abrufen oder erstellen
+                quality_metric, _ = SupplierPerformanceMetric.objects.get_or_create(
+                    code='product_quality',
+                    defaults={
+                        'name': 'Product Quality',
+                        'description': 'Product quality based on the rate of RMAs (Return Merchandise Authorizations)',
+                        'metric_type': 'quality',
+                        'is_system': True
+                    }
+                )
+
+                # Performance-Eintrag aktualisieren oder erstellen
+                perf, created_perf = SupplierPerformance.objects.update_or_create(
+                    supplier=supplier,
+                    metric=quality_metric,
+                    evaluation_date=end_date,
+                    defaults={
+                        'value': quality_score,
+                        'evaluation_period_start': start_date,
+                        'evaluation_period_end': end_date,
+                        'notes': f'Automatically updated after RMA {instance.rma_number} change'
+                    }
+                )
+
+                # Referenz-Bestellungen verknüpfen, wenn ein neuer Performance-Eintrag erstellt wurde
+                if created_perf and quality_orders:
+                    perf.reference_orders.set(quality_orders)
+
+        except Exception as e:
+            # Fehler loggen, aber nicht weitergeben
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error updating supplier performance after RMA change: {e}")

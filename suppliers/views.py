@@ -9,6 +9,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count
 
 from accessmanagement.decorators import permission_required
+from rma.models import RMA, RMAStatus
 
 from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric, \
     SupplierPerformanceCalculator, SupplierContact, SupplierAddress, AddressType, ContactType
@@ -144,6 +145,62 @@ def supplier_detail(request, pk):
                 'display': type_display,
                 'contacts': contacts
             })
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=90)
+
+    # Aktive RMAs zählen
+    active_rmas = RMA.objects.filter(
+        supplier=supplier,
+        created_at__date__gte=start_date,
+        status__in=[RMAStatus.PENDING, RMAStatus.APPROVED, RMAStatus.SENT]
+    ).count()
+
+    # RMA-Rate berechnen (Anteil der Bestellungen mit RMAs)
+    total_orders = PurchaseOrder.objects.filter(
+        supplier=supplier,
+        order_date__gte=start_date,
+        order_date__lte=end_date
+    ).count()
+
+    rma_orders = RMA.objects.filter(
+        supplier=supplier,
+        created_at__date__gte=start_date,
+        created_at__date__lte=end_date
+    ).exclude(status=RMAStatus.DRAFT).values('related_order').distinct().count()
+
+    rma_rate = 0
+    if total_orders > 0:
+        rma_rate = (rma_orders / total_orders) * 100
+
+    # Durchschnittliche Bearbeitungszeit berechnen
+    resolved_rmas = RMA.objects.filter(
+        supplier=supplier,
+        status=RMAStatus.RESOLVED,
+        submission_date__isnull=False,
+        resolution_date__isnull=False
+    )
+
+    avg_processing_time = None
+    if resolved_rmas.exists():
+        processing_times = []
+        for rma in resolved_rmas:
+            delta = rma.resolution_date - rma.submission_date
+            processing_times.append(delta.days)
+
+        if processing_times:
+            avg_processing_time = sum(processing_times) / len(processing_times)
+
+    # RMA-Qualitätsscore berechnen
+    rma_quality_score, _ = SupplierPerformanceCalculator.calculate_rma_quality(
+        supplier, start_date, end_date
+    )
+
+    # RMA-Performance-Daten zum Kontext hinzufügen
+    if supplier_performance:
+        supplier_performance['rma_quality'] = rma_quality_score
+        supplier_performance['active_rmas'] = active_rmas
+        supplier_performance['rma_rate'] = rma_rate
+        supplier_performance['avg_processing_time'] = avg_processing_time
 
     context = {
         'supplier': supplier,
@@ -1294,3 +1351,272 @@ def get_supplier_rma_info(request):
         return JsonResponse({'success': False, 'message': 'Supplier not found'})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+
+# Füge diese Funktion zu suppliers/views.py hinzu, um RMA-Daten für das Dashboard bereitzustellen
+
+@login_required
+def get_supplier_rma_performance(request, supplier_id):
+    """AJAX-Endpunkt für RMA-Performance-Daten des Lieferanten."""
+    try:
+        from django.http import JsonResponse
+        from django.db.models import Count, Avg, Sum
+        from django.utils import timezone
+        from datetime import timedelta, datetime
+        from suppliers.models import Supplier
+        from rma.models import RMA, RMAStatus, RMAIssueType, RMAItem
+
+        supplier = get_object_or_404(Supplier, pk=supplier_id)
+
+        # Datumsbereich aus der Anfrage oder Standard (letzte 12 Monate)
+        start_date_str = request.GET.get('start_date')
+        end_date_str = request.GET.get('end_date')
+
+        try:
+            if start_date_str:
+                start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            else:
+                start_date = timezone.now().date() - timedelta(days=365)
+
+            if end_date_str:
+                end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            else:
+                end_date = timezone.now().date()
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid date format. Please use YYYY-MM-DD.'
+            })
+
+        # RMAs des Lieferanten im Zeitraum abrufen
+        rmas = RMA.objects.filter(
+            supplier=supplier,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        ).exclude(status=RMAStatus.DRAFT)
+
+        # Grundlegende Statistiken
+        total_rmas = rmas.count()
+        resolved_rmas = rmas.filter(status=RMAStatus.RESOLVED).count()
+        cancelled_rmas = rmas.filter(status=RMAStatus.CANCELLED).count()
+        active_rmas = total_rmas - resolved_rmas - cancelled_rmas
+
+        # Durchschnittliche Bearbeitungszeit berechnen (nur für erledigte RMAs)
+        avg_processing_time = None
+        resolved_rmas_queryset = rmas.filter(
+            status=RMAStatus.RESOLVED,
+            submission_date__isnull=False,
+            resolution_date__isnull=False
+        )
+
+        if resolved_rmas_queryset.exists():
+            processing_times = []
+            for rma in resolved_rmas_queryset:
+                delta = rma.resolution_date - rma.submission_date
+                processing_times.append(delta.days)
+
+            if processing_times:
+                avg_processing_time = sum(processing_times) / len(processing_times)
+
+        # RMA-Positionen nach Problemtyp
+        rma_items = RMAItem.objects.filter(rma__in=rmas)
+        issue_types_count = {}
+
+        for issue_type, display in RMAIssueType.choices:
+            count = rma_items.filter(issue_type=issue_type).count()
+            if count > 0:
+                issue_types_count[issue_type] = {
+                    'count': count,
+                    'display': display
+                }
+
+        # Zeitreihen-Daten für monatliche RMAs
+        monthly_data = []
+
+        # Start mit dem ersten Tag des Monats von start_date
+        current_month = start_date.replace(day=1)
+        end_month = end_date.replace(day=1)
+
+        while current_month <= end_month:
+            # Nächster Monat berechnen
+            if current_month.month == 12:
+                next_month = current_month.replace(year=current_month.year + 1, month=1)
+            else:
+                next_month = current_month.replace(month=current_month.month + 1)
+
+            # RMAs in diesem Monat zählen
+            month_rmas = rmas.filter(
+                created_at__gte=current_month,
+                created_at__lt=next_month
+            )
+
+            monthly_data.append({
+                'month': current_month.strftime('%Y-%m'),
+                'display': current_month.strftime('%b %Y'),
+                'count': month_rmas.count(),
+                'resolved': month_rmas.filter(status=RMAStatus.RESOLVED).count(),
+                'total_value': float(month_rmas.aggregate(total=Sum('total_value'))['total'] or 0)
+            })
+
+            # Zum nächsten Monat weitergehen
+            current_month = next_month
+
+        # Berechnung der durchschnittlichen Kosten pro RMA
+        total_rma_value = rmas.aggregate(total=Sum('total_value'))['total'] or 0
+        avg_rma_value = 0
+        if total_rmas > 0:
+            avg_rma_value = float(total_rma_value) / total_rmas
+
+        # Die neuesten RMAs für eine Tabelle
+        latest_rmas = []
+        for rma in rmas.order_by('-created_at')[:10]:
+            latest_rmas.append({
+                'id': rma.id,
+                'rma_number': rma.rma_number,
+                'status': rma.get_status_display(),
+                'created_at': rma.created_at.strftime('%d.%m.%Y'),
+                'total_value': float(rma.total_value),
+                'items_count': rma.items.count()
+            })
+
+        # Performance-Score basierend auf RMA-Daten
+        # Niedrigere Anzahl von RMAs = höherer Score
+        from order.models import PurchaseOrder
+
+        # Anzahl der Bestellungen im gleichen Zeitraum
+        orders_count = PurchaseOrder.objects.filter(
+            supplier=supplier,
+            order_date__gte=start_date,
+            order_date__lte=end_date
+        ).count()
+
+        # Qualitätsscore berechnen
+        quality_score = None
+        from suppliers.models import SupplierPerformanceCalculator
+        score_result, _ = SupplierPerformanceCalculator.calculate_rma_quality(
+            supplier, start_date, end_date
+        )
+
+        if score_result is not None:
+            quality_score = score_result
+
+        # Ergebnisse zurückgeben
+        return JsonResponse({
+            'success': True,
+            'period': {
+                'start_date': start_date.strftime('%Y-%m-%d'),
+                'end_date': end_date.strftime('%Y-%m-%d')
+            },
+            'summary': {
+                'total_rmas': total_rmas,
+                'active_rmas': active_rmas,
+                'resolved_rmas': resolved_rmas,
+                'cancelled_rmas': cancelled_rmas,
+                'total_value': float(total_rma_value),
+                'avg_value': round(avg_rma_value, 2),
+                'avg_processing_time': round(avg_processing_time, 1) if avg_processing_time else None,
+                'orders_count': orders_count,
+                'quality_score': quality_score
+            },
+            'issue_types': issue_types_count,
+            'monthly_data': monthly_data,
+            'latest_rmas': latest_rmas,
+            'currency': {
+                'code': supplier.default_currency.code,
+                'symbol': supplier.default_currency.symbol,
+            }
+        })
+    except Exception as e:
+        # Log the error for debugging but return a clean JSON response
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in get_supplier_rma_performance: {str(e)}")
+
+        return JsonResponse({
+            'success': False,
+            'message': f"An error occurred: {str(e)}"
+        })
+
+
+@login_required
+@permission_required('supplier', 'view')
+def supplier_rma_overview(request, pk):
+    """Zeigt eine Übersicht aller RMAs für einen bestimmten Lieferanten."""
+    supplier = get_object_or_404(Supplier, pk=pk)
+
+    # Zeitraum aus der Anfrage oder Standard (letzte 90 Tage)
+    from datetime import timedelta, datetime
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=90)
+
+    date_str_format = '%Y-%m-%d'
+
+    start_date_str = request.GET.get('start_date')
+    if start_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, date_str_format).date()
+        except ValueError:
+            pass
+
+    end_date_str = request.GET.get('end_date')
+    if end_date_str:
+        try:
+            end_date = datetime.strptime(end_date_str, date_str_format).date()
+        except ValueError:
+            pass
+
+    # Formular für Datumsbereich
+    initial_dates = {'start_date': start_date, 'end_date': end_date}
+    date_range_form = DateRangeForm(initial=initial_dates)
+
+    # RMAs abrufen
+    from rma.models import RMA, RMAStatus
+
+    # Filter anwenden
+    status_filter = request.GET.get('status')
+
+    rmas = RMA.objects.filter(
+        supplier=supplier,
+        created_at__date__gte=start_date,
+        created_at__date__lte=end_date
+    ).select_related('created_by')
+
+    if status_filter:
+        rmas = rmas.filter(status=status_filter)
+
+    # RMAs nach Status gruppieren
+    from django.db.models import Count, Sum
+
+    status_summary = rmas.values('status').annotate(
+        count=Count('id'),
+        total_value=Sum('total_value')
+    ).order_by('status')
+
+    # Für jede Statusgruppe den angezeigten Namen hinzufügen
+    for group in status_summary:
+        group['display'] = dict(RMAStatus.choices)[group['status']]
+
+    # Gesamtzahl und Wert berechnen
+    total_count = sum(group['count'] for group in status_summary)
+    total_value = sum(group['total_value'] or 0 for group in status_summary)
+
+    # RMA-Qualitätsscore berechnen
+    from suppliers.models import SupplierPerformanceCalculator
+    quality_score, _ = SupplierPerformanceCalculator.calculate_rma_quality(
+        supplier, start_date, end_date
+    )
+
+    context = {
+        'supplier': supplier,
+        'rmas': rmas.order_by('-created_at'),
+        'status_summary': status_summary,
+        'total_count': total_count,
+        'total_value': total_value,
+        'date_range_form': date_range_form,
+        'start_date': start_date,
+        'end_date': end_date,
+        'quality_score': quality_score,
+        'selected_status': status_filter
+    }
+
+    return render(request, 'suppliers/supplier_rma_overview.html', context)

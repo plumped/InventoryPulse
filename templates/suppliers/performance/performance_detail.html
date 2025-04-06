@@ -273,6 +273,116 @@
             </div>
         </div>
     </div>
+    {# Diesen Code in die suppliers/performance/performance_detail.html Datei einfügen, am besten direkt vor dem schließenden </div> des Haupt-Inhaltsbereichs #}
+
+    <div class="card mt-4 mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">RMA-Qualitätsanalyse</h5>
+        <button class="btn btn-sm btn-outline-primary" id="refreshRMAData">
+          <i class="fas fa-sync-alt"></i> Aktualisieren
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="row" id="rma-loading">
+          <div class="col-12 text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Lädt...</span>
+            </div>
+            <p class="mt-2">RMA-Daten werden geladen...</p>
+          </div>
+        </div>
+
+        <div id="rma-data" class="d-none">
+          <div class="row mb-4">
+            <div class="col-md-3">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                  <h6 class="text-muted">Gesamtanzahl RMAs</h6>
+                  <h2 class="mb-0" id="total-rmas">0</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                  <h6 class="text-muted">Aktive RMAs</h6>
+                  <h2 class="mb-0" id="active-rmas">0</h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                  <h6 class="text-muted">Durchschn. Bearbeitungszeit</h6>
+                  <h2 class="mb-0"><span id="avg-processing-time">-</span> <small>Tage</small></h2>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                  <h6 class="text-muted">Qualitätsscore</h6>
+                  <h2 class="mb-0"><span id="quality-score">-</span><small>%</small></h2>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-7">
+              <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                  <h6 class="mb-0">RMA-Trend</h6>
+                </div>
+                <div class="card-body">
+                  <canvas id="rma-trend-chart" height="250"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                  <h6 class="mb-0">Problemtypen</h6>
+                </div>
+                <div class="card-body">
+                  <canvas id="issue-types-chart" height="250"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-12">
+              <div class="card shadow-sm">
+                <div class="card-header">
+                  <h6 class="mb-0">Neueste RMAs</h6>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                      <thead>
+                        <tr>
+                          <th>RMA-Nummer</th>
+                          <th>Datum</th>
+                          <th>Status</th>
+                          <th>Positionen</th>
+                          <th>Gesamtwert</th>
+                        </tr>
+                      </thead>
+                      <tbody id="latest-rmas-table">
+                        <tr>
+                          <td colspan="5" class="text-center">Keine Daten verfügbar</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 </div>
 {% endblock %}
 
@@ -369,6 +479,271 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     {% endif %}
     {% endfor %}
+
+    // RMA-Performance Charts
+    let trendChart = null;
+    let issueTypesChart = null;
+
+    // Initialisierung
+    loadRMAData();
+
+    // Event-Listener für Refresh-Button
+    document.getElementById('refreshRMAData').addEventListener('click', function() {
+        loadRMAData();
+    });
+
+    function loadRMAData() {
+        const startDate = document.getElementById('{{ date_range_form.start_date.id_for_label }}').value;
+        const endDate = document.getElementById('{{ date_range_form.end_date.id_for_label }}').value;
+
+        // Anzeigen des Lade-Spinners
+        document.getElementById('rma-loading').classList.remove('d-none');
+        document.getElementById('rma-data').classList.add('d-none');
+
+        // Daten via AJAX laden
+        fetch(`/suppliers/performance/{{ supplier.id }}/rma-data/?start_date=${startDate}&end_date=${endDate}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayRMAData(data);
+                } else {
+                    console.error('Fehler beim Laden der RMA-Daten:', data.message);
+                    alert('Die RMA-Daten konnten nicht geladen werden: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Fehler beim Laden der RMA-Daten:', error);
+                alert('Die RMA-Daten konnten nicht geladen werden.');
+            })
+            .finally(() => {
+                // Ausblenden des Lade-Spinners
+                document.getElementById('rma-loading').classList.add('d-none');
+                document.getElementById('rma-data').classList.remove('d-none');
+            });
+    }
+
+    function displayRMAData(data) {
+        const summary = data.summary;
+        let currencySymbol = (data.currency && data.currency.symbol) ? data.currency.symbol : '€';
+
+        // KPIs aktualisieren
+        document.getElementById('total-rmas').textContent = summary.total_rmas;
+        document.getElementById('active-rmas').textContent = summary.active_rmas;
+
+        if (summary.avg_processing_time !== null) {
+            document.getElementById('avg-processing-time').textContent = summary.avg_processing_time;
+        } else {
+            document.getElementById('avg-processing-time').textContent = '-';
+        }
+
+        if (summary.quality_score !== null) {
+            document.getElementById('quality-score').textContent = summary.quality_score;
+
+            // Farbliche Hervorhebung des Qualitätsscores
+            const qualityScoreElement = document.getElementById('quality-score').parentNode;
+            if (summary.quality_score >= 80) {
+                qualityScoreElement.classList.add('text-success');
+                qualityScoreElement.classList.remove('text-warning', 'text-danger');
+            } else if (summary.quality_score >= 50) {
+                qualityScoreElement.classList.add('text-warning');
+                qualityScoreElement.classList.remove('text-success', 'text-danger');
+            } else {
+                qualityScoreElement.classList.add('text-danger');
+                qualityScoreElement.classList.remove('text-success', 'text-warning');
+            }
+        } else {
+            document.getElementById('quality-score').textContent = '-';
+        }
+
+        // RMA-Trend-Chart aktualisieren
+        updateTrendChart(data.monthly_data);
+
+        // Issue-Types-Chart aktualisieren
+        updateIssueTypesChart(data.issue_types);
+
+        // Tabelle mit neuesten RMAs aktualisieren
+        updateLatestRMAsTable(data.latest_rmas, currencySymbol);
+    }
+
+    function updateTrendChart(monthlyData) {
+        const ctx = document.getElementById('rma-trend-chart').getContext('2d');
+
+        // Chart.js-Daten vorbereiten
+        const labels = monthlyData.map(item => item.display);
+        const rmaCountData = monthlyData.map(item => item.count);
+        const resolvedData = monthlyData.map(item => item.resolved);
+
+        // Altes Chart zerstören, falls vorhanden
+        if (trendChart) {
+            trendChart.destroy();
+        }
+
+        // Neues Chart erstellen
+        trendChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'RMAs gesamt',
+                        data: rmaCountData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Erledigt',
+                        data: resolvedData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Anzahl RMAs'
+                        },
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                return tooltipItems[0].label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateIssueTypesChart(issueTypes) {
+        const ctx = document.getElementById('issue-types-chart').getContext('2d');
+
+        // Chart.js-Daten vorbereiten
+        const labels = [];
+        const data = [];
+        const backgroundColors = [
+            'rgba(255, 99, 132, 0.7)',
+            'rgba(54, 162, 235, 0.7)',
+            'rgba(255, 206, 86, 0.7)',
+            'rgba(75, 192, 192, 0.7)',
+            'rgba(153, 102, 255, 0.7)',
+            'rgba(255, 159, 64, 0.7)'
+        ];
+
+        let index = 0;
+        for (const type in issueTypes) {
+            labels.push(issueTypes[type].display);
+            data.push(issueTypes[type].count);
+            index++;
+        }
+
+        // Altes Chart zerstören, falls vorhanden
+        if (issueTypesChart) {
+            issueTypesChart.destroy();
+        }
+
+        // Neues Chart erstellen
+        issueTypesChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColors.slice(0, data.length),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((acc, val) => acc + val, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateLatestRMAsTable(latestRMAs, currencySymbol) {
+        const tableBody = document.getElementById('latest-rmas-table');
+
+        // Tabelle leeren
+        tableBody.innerHTML = '';
+
+        if (latestRMAs.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = '<td colspan="5" class="text-center">Keine RMAs im ausgewählten Zeitraum</td>';
+            tableBody.appendChild(row);
+            return;
+        }
+
+        // Daten einfügen
+        latestRMAs.forEach(rma => {
+            const row = document.createElement('tr');
+
+            // Status-Badge-Farbe basierend auf Status
+            let statusBadgeClass = 'bg-secondary';
+            switch(rma.status.toLowerCase()) {
+                case 'entwurf':
+                    statusBadgeClass = 'bg-secondary';
+                    break;
+                case 'in bearbeitung':
+                    statusBadgeClass = 'bg-warning';
+                    break;
+                case 'genehmigt':
+                    statusBadgeClass = 'bg-info';
+                    break;
+                case 'an lieferant gesendet':
+                    statusBadgeClass = 'bg-primary';
+                    break;
+                case 'erledigt':
+                    statusBadgeClass = 'bg-success';
+                    break;
+                case 'abgelehnt':
+                case 'storniert':
+                    statusBadgeClass = 'bg-danger';
+                    break;
+            }
+
+            row.innerHTML = `
+                <td><a href="/rma/${rma.id}/">${rma.rma_number}</a></td>
+                <td>${rma.created_at}</td>
+                <td><span class="badge ${statusBadgeClass}">${rma.status}</span></td>
+                <td class="text-center">${rma.items_count}</td>
+                <td class="text-end">${rma.total_value.toFixed(2)} ${currencySymbol}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    }
 });
 </script>
 {% endblock %}

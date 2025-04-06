@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block title %}RMA-Übersicht - {{ supplier.name }} - InventoryPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_list' %}">Lieferanten</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'supplier_detail' supplier.id %}">{{ supplier.name }}</a></li>
+                    <li class="breadcrumb-item active">RMA-Übersicht</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0">RMA-Übersicht: {{ supplier.name }}</h1>
+            <p class="text-muted">Zeitraum: {{ start_date|date:"d.m.Y" }} bis {{ end_date|date:"d.m.Y" }}</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'rma_create' %}?supplier={{ supplier.id }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Neue RMA
+            </a>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="{{ date_range_form.start_date.id_for_label }}" class="form-label">Start-Datum</label>
+                    {{ date_range_form.start_date }}
+                </div>
+                <div class="col-md-4">
+                    <label for="{{ date_range_form.end_date.id_for_label }}" class="form-label">End-Datum</label>
+                    {{ date_range_form.end_date }}
+                </div>
+                <div class="col-md-2">
+                    <select name="status" class="form-select">
+                        <option value="">Alle Status</option>
+                        {% for status_choice in status_choices %}
+                            <option value="{{ status_choice.0 }}" {% if selected_status == status_choice.0 %}selected{% endif %}>
+                                {{ status_choice.1 }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Filtern
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Gesamtanzahl RMAs</h6>
+                    <h2 class="mb-0">{{ total_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Gesamtwert RMAs</h6>
+                    <h2 class="mb-0">{{ total_value|floatformat:2 }} €</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Aktive RMAs</h6>
+                    <h2 class="mb-0">
+                        {% with active=status_summary|dictsortreversed:"count"|dictsort:"status" %}
+                            {% for group in active %}
+                                {% if group.status == 'pending' or group.status == 'approved' or group.status == 'sent' %}
+                                    {{ group.count }}
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    </h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Qualitätsscore</h6>
+                    <h2 class="mb-0 {% if quality_score >= 80 %}text-success{% elif quality_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ quality_score|default:"-" }}%
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Summary -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">RMA-Status Zusammenfassung</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for group in status_summary %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border-0 bg-light">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge
+                                    {% if group.status == 'draft' %}bg-secondary
+                                    {% elif group.status == 'pending' %}bg-warning
+                                    {% elif group.status == 'approved' %}bg-info
+                                    {% elif group.status == 'sent' %}bg-primary
+                                    {% elif group.status == 'resolved' %}bg-success
+                                    {% elif group.status == 'rejected' %}bg-danger
+                                    {% elif group.status == 'cancelled' %}bg-danger
+                                    {% endif %}">
+                                    {{ group.display }}
+                                </span>
+                                <h3 class="mb-0">{{ group.count }}</h3>
+                            </div>
+                            <div class="text-muted mt-2">
+                                Gesamtwert: {{ group.total_value|floatformat:2 }} €
+                            </div>
+                            <a href="?status={{ group.status }}&start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="stretched-link"></a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Keine RMA-Daten im ausgewählten Zeitraum gefunden.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RMAs Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">RMA Liste</h5>
+            {% if selected_status %}
+            <a href="?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Filter zurücksetzen
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>RMA-Nummer</th>
+                            <th>Datum</th>
+                            <th>Status</th>
+                            <th>Artikel</th>
+                            <th>Gesamtwert</th>
+                            <th>Erstellt von</th>
+                            <th style="width: 150px;">Aktionen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rma in rmas %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'rma_detail' rma.id %}">{{ rma.rma_number }}</a>
+                            </td>
+                            <td>{{ rma.created_at|date:"d.m.Y" }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if rma.status == 'draft' %}bg-secondary
+                                    {% elif rma.status == 'pending' %}bg-warning
+                                    {% elif rma.status == 'approved' %}bg-info
+                                    {% elif rma.status == 'sent' %}bg-primary
+                                    {% elif rma.status == 'resolved' %}bg-success
+                                    {% elif rma.status == 'rejected' %}bg-danger
+                                    {% elif rma.status == 'cancelled' %}bg-danger
+                                    {% endif %}">
+                                    {{ rma.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ rma.items.count }}</td>
+                            <td>{{ rma.total_value|floatformat:2 }} €</td>
+                            <td>{{ rma.created_by.username }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'rma_detail' rma.id %}" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if rma.status == 'draft' %}
+                                    <a href="{% url 'rma_update' rma.id %}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'rma_delete' rma.id %}" class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                    <a href="{% url 'rma_print' rma.id %}" class="btn btn-outline-secondary" target="_blank">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    <p>Keine RMAs gefunden.</p>
+                                    <a href="{% url 'rma_create' %}?supplier={{ supplier.id }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-plus-circle me-1"></i>Neue RMA anlegen
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialisierung von Select2 für Dropdown-Felder, falls verfügbar
+    if($.fn.select2) {
+        $('.form-select').select2({
+            theme: 'bootstrap-5'
+        });
+    }
+});
+</script>
+{% endblock %}

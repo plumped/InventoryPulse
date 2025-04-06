@@ -12,17 +12,17 @@ from .models import PurchaseOrder, PurchaseOrderReceipt, OrderSplit
 
 
 class PurchaseOrderForm(forms.ModelForm):
-    """Formular für das Erstellen und Bearbeiten von Bestellungen."""
-
     class Meta:
         model = PurchaseOrder
-        fields = ['supplier', 'expected_delivery', 'shipping_address', 'notes']
+        fields = ['supplier', 'expected_delivery', 'shipping_address', 'billing_address', 'notes']
         widgets = {
             'supplier': forms.Select(attrs={'class': 'form-select', 'required': True}),
             'expected_delivery': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'shipping_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'billing_address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

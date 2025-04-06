@@ -955,7 +955,17 @@
                         <dt class="col-sm-5">Lieferadresse:</dt>
                         <dd class="col-sm-7">
                             {% if order.shipping_address %}
-                            {{ order.shipping_address|linebreaks }}
+                                <strong>{{ order.shipping_address }}</strong><br>
+                                {{ order.shipping_address.full_address|linebreaks }}
+                            {% else %}
+                            <span class="text-muted">Standardadresse</span>
+                            {% endif %}
+                        </dd>
+                        <dt class="col-sm-5">Rechnungsadresse:</dt>
+                        <dd class="col-sm-7">
+                            {% if order.billing_address %}
+                                <strong>{{ order.billing_address }}</strong><br>
+                                {{ order.billing_address.full_address|linebreaks }}
                             {% else %}
                             <span class="text-muted">Standardadresse</span>
                             {% endif %}
@@ -968,15 +978,24 @@
 
                         {% if related_rmas %}
                             <dt class="col-sm-5">RMA-Vorgänge:</dt>
-                            <dd class="col-sm-7">
+                            <dd class="col-sm-7 d-flex flex-wrap align-items-center gap-2">
                                 {% if resolved_rmas and open_rmas %}
-                                    <span class="badge bg-success">{{ resolved_rmas|length }} erledigt</span>
-                                    <span class="badge bg-warning">{{ open_rmas|length }} offen</span>
+                                    <span class="badge bg-success" data-bs-toggle="tooltip" title="Erledigte RMA-Vorgänge">
+                                        <i class="bi bi-check-circle me-1"></i>{{ resolved_rmas|length }} erledigt
+                                    </span>
+                                    <span class="badge bg-warning" data-bs-toggle="tooltip" title="Offene oder laufende RMA-Vorgänge">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>{{ open_rmas|length }} offen
+                                    </span>
                                 {% elif resolved_rmas %}
-                                    <span class="badge bg-success">{{ resolved_rmas|length }} erledigt</span>
+                                    <span class="badge bg-success" data-bs-toggle="tooltip" title="Alle RMAs abgeschlossen">
+                                        <i class="bi bi-check-circle me-1"></i>{{ resolved_rmas|length }} erledigt
+                                    </span>
                                 {% else %}
-                                    <span class="badge bg-warning">{{ open_rmas|length }} offen</span>
+                                    <span class="badge bg-warning" data-bs-toggle="tooltip" title="RMA-Vorgänge sind noch offen">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>{{ open_rmas|length }} offen
+                                    </span>
                                 {% endif %}
+
                                 <a href="{% url 'rma_list' %}?order={{ order.id }}" class="small ms-2">
                                     <i class="bi bi-arrow-right-circle"></i> Verwalten
                                 </a>

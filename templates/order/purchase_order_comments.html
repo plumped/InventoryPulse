@@ -164,7 +164,13 @@
                     <p class="mb-2"><strong>Lieferant:</strong> {{ order.supplier.name }}</p>
                     <p class="mb-2"><strong>Bestelldatum:</strong> {{ order.order_date|date:"d.m.Y" }}</p>
                     <p class="mb-2"><strong>Erstellt von:</strong> {{ order.created_by.username }}</p>
-                    <p class="mb-0"><strong>Bestellwert:</strong> {{ order.total|floatformat:2 }} €</p>
+                    <p class="mb-0"><strong>Bestellwert:</strong> {{ order.total|floatformat:2 }}
+                        {% if order.supplier.default_currency %}
+                            {{ order.supplier.default_currency.symbol }}
+                        {% else %}
+                            €
+                        {% endif %}
+                    </p>
                 </div>
             </div>
 

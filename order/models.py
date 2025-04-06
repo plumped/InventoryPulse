@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from model_utils import FieldTracker
 from django.utils import timezone
 
+from admin_dashboard.models import CompanyAddress
 from core.models import Product, Tax
 from suppliers.models import Supplier
 
@@ -32,7 +33,23 @@ class PurchaseOrder(models.Model):
     approved_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='purchase_orders_approved', null=True,
                                     blank=True)
 
-    shipping_address = models.TextField(blank=True)
+    billing_address = models.ForeignKey(
+        CompanyAddress,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='billing_orders',
+        verbose_name="Rechnungsadresse"
+    )
+
+    shipping_address = models.ForeignKey(
+        CompanyAddress,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='shipping_orders',
+        verbose_name="Versandadresse"
+    )
     notes = models.TextField(blank=True)
 
     # Finanzinformationen

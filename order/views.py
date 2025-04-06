@@ -28,6 +28,7 @@ from .models import (
 )
 from .forms import PurchaseOrderForm, ReceiveOrderForm, OrderSplitForm, OrderSplitItemFormSet
 from .services import generate_order_suggestions
+from .utils.address import get_address_context
 from .workflow import get_initial_order_status, check_auto_approval, can_approve_order
 
 
@@ -379,26 +380,11 @@ def purchase_order_create(request):
     # Produktliste für Dropdown
     products = Product.objects.all().order_by('name')
 
-    # Alle Adressen
-    all_company_addresses = CompanyAddress.objects.all()
-    shipping_addresses = all_company_addresses.filter(address_type='shipping')
-    billing_addresses = all_company_addresses.filter(address_type='billing')
-
-    # Vorausgewählte Adressen (nur bei Bearbeiten verfügbar)
-    selected_shipping_address = getattr(order, 'shipping_address', None)
-    selected_billing_address = getattr(order, 'billing_address', None)
-
     context = {
         'form': form,
         'products': products,
-        'all_company_addresses': all_company_addresses,
-        'shipping_addresses': shipping_addresses,
-        'billing_addresses': billing_addresses,
-        'selected_shipping_address': selected_shipping_address,
-        'selected_billing_address': selected_billing_address,
     }
-
-
+    context.update(get_address_context())
 
     return render(request, 'order/purchase_order_form.html', context)
 
@@ -448,12 +434,8 @@ def purchase_order_update(request, pk):
     context = {
         'form': form,
         'products': products,
-        'all_company_addresses': all_company_addresses,
-        'shipping_addresses': shipping_addresses,
-        'billing_addresses': billing_addresses,
-        'selected_shipping_address': selected_shipping_address,
-        'selected_billing_address': selected_billing_address,
     }
+    context.update(get_address_context(order))
 
     return render(request, 'order/purchase_order_form.html', context)
 
@@ -598,6 +580,7 @@ def purchase_order_delete(request, pk):
     context = {
         'order': order,
     }
+    context.update(get_address_context(order))
 
     return render(request, 'order/purchase_order_confirm_delete.html', context)
 

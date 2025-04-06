@@ -3191,12 +3191,11 @@ def receive_order_split(request, pk, split_id):
 
     return render(request, 'order/receive_order_split.html', context)
 
-def update_order_status_after_receipt(order):
-    print(f"[DEBUG] update_order_status_after_receipt aufgerufen für Bestellung {order.pk}")
 
+def update_order_status_after_receipt(order):
     """
     Updates the order status after a receipt is processed or deleted.
-    Takes into account cancelled items and quality issues.
+    Takes into account cancelled items, quality issues, and RMA status.
     """
     # Bestehende Prüfung für Vollständigkeit der Lieferung
     all_items_received = True
@@ -3218,30 +3217,39 @@ def update_order_status_after_receipt(order):
                 any_items_received = True
 
         # Prüfen, ob dieses Item Qualitätsprobleme hat
-        # (Dies sollte in den Daten gespeichert sein oder durch eine Eigenschaft abgefragt werden)
         if item.has_quality_issues:
             has_quality_issues = True
 
-    # Prüfen, ob es RMAs für diese Bestellung gibt
-    from rma.models import RMA
-    has_rmas = RMA.objects.filter(
+    # RMA-Status prüfen (offen vs. abgeschlossen)
+    from rma.models import RMA, RMAStatus
+    open_rmas = RMA.objects.filter(
         related_order=order,
-        status__in=['draft', 'pending', 'approved', 'sent']
+        status__in=[
+            RMAStatus.DRAFT,
+            RMAStatus.PENDING,
+            RMAStatus.APPROVED,
+            RMAStatus.SENT
+        ]
     ).exists()
 
-    # Kombinierte Bedingung: Es gibt entweder gemeldete Qualitätsprobleme oder RMAs
-    has_quality_issues = has_quality_issues or has_rmas
+    has_completed_rmas = RMA.objects.filter(
+        related_order=order,
+        status__in=[RMAStatus.RESOLVED, RMAStatus.CANCELLED]
+    ).exists()
 
-    # Status basierend auf Lieferstatus und Qualitätsproblemen setzen
+    # Status basierend auf Lieferstatus, Qualitätsproblemen und RMA-Status setzen
     if all_items_received:
-        if has_quality_issues:
+        if has_quality_issues or open_rmas:
+            # Es gibt Qualitätsprobleme oder offene RMAs
             order.status = 'received_with_issues'
         else:
+            # Alles empfangen und keine Qualitätsprobleme oder alle RMAs abgeschlossen
             order.status = 'received'
     elif any_items_received:
         order.status = 'partially_received'
     else:
         order.status = 'sent'
+
     order.save()
 
     # Also update the status of all associated splits

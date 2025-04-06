@@ -155,6 +155,8 @@
                                     <span class="badge bg-warning-subtle border border-warning-subtle text-warning-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                     {% elif order.status == 'received' %}
                                     <span class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill">{{ order.get_status_display }}</span>
+                                    {% elif order.status == 'received_with_issues' %}
+                                    <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                     {% elif order.status == 'cancelled' %}
                                     <span class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill">{{ order.get_status_display }}</span>
                                     {% endif %}

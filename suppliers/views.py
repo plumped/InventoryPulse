@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, time
 from django.utils import timezone
 from django.db.models.aggregates import Avg, Min, Max
 from django.http.response import JsonResponse
@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count
+from django.utils.timezone import make_aware
 
 from accessmanagement.decorators import permission_required
 from rma.models import RMA, RMAStatus
@@ -1434,15 +1435,15 @@ def get_supplier_rma_performance(request, supplier_id):
         monthly_data = []
 
         # Start mit dem ersten Tag des Monats von start_date
-        current_month = start_date.replace(day=1)
-        end_month = end_date.replace(day=1)
+        current_month = make_aware(datetime.combine(start_date.replace(day=1), time.min))
+        end_month = make_aware(datetime.combine(end_date.replace(day=1), time.min))
 
         while current_month <= end_month:
             # Nächster Monat berechnen
             if current_month.month == 12:
-                next_month = current_month.replace(year=current_month.year + 1, month=1)
+                next_month = make_aware(datetime(current_month.year + 1, 1, 1))
             else:
-                next_month = current_month.replace(month=current_month.month + 1)
+                next_month = make_aware(datetime(current_month.year, current_month.month + 1, 1))
 
             # RMAs in diesem Monat zählen
             month_rmas = rmas.filter(

@@ -567,3 +567,7 @@ class CurrencyForm(forms.ModelForm):
             self.add_error('is_active', 'Die Standardwährung muss aktiv sein.')
 
         return cleaned_data
+
+
+class SerialNumberImportForm(forms.Form):
+    file = forms.FileField(label='CSV-Datei', help_text='Bitte laden Sie eine CSV-Datei hoch.')

@@ -29,8 +29,9 @@ from suppliers.models import Supplier, SupplierProduct
 from .forms import ProductForm, CategoryForm, SupplierProductImportForm, CategoryImportForm, SupplierImportForm, \
     ProductImportForm, WarehouseImportForm, DepartmentImportForm, WarehouseProductImportForm, ProductPhotoForm, \
     ProductAttachmentForm, ProductVariantTypeForm, ProductVariantForm, SerialNumberForm, BulkSerialNumberForm, \
-    BatchNumberForm, CurrencyForm
-from .importers import SupplierProductImporter, CategoryImporter, SupplierImporter, ProductImporter
+    BatchNumberForm, CurrencyForm, SerialNumberImportForm
+from .importers import SupplierProductImporter, CategoryImporter, SupplierImporter, ProductImporter, \
+    SerialNumberImporter
 from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto, ProductAttachment, ProductVariantType, \
     ProductVariant, SerialNumber, BatchNumber, Currency
 from .utils.deletion import handle_delete_view
@@ -2248,44 +2249,34 @@ def product_batch_delete(request, pk, batch_id):
 # Verfallsdaten-Verwaltung
 # ------------------------------------------------------------------------------
 
+from core.utils.filters import filter_expiring_serials, filter_expiring_batches
+
 @login_required
 @permission_required('product', 'view')
 def expiry_management(request):
     """Zentrale Verwaltung aller Produkte mit Verfallsdaten."""
-    expiry_filter = request.GET.get('filter', 'all')
-    days_threshold = request.GET.get('days_threshold', '30')
-    search_query = request.GET.get('search', '')
-    category_filter = request.GET.get('category', '')
 
+    today = timezone.now().date()
+    days_threshold = request.GET.get('days_threshold', '30')
     try:
         days_threshold = int(days_threshold)
     except ValueError:
         days_threshold = 30
 
-    today = timezone.now().date()
-
-    # 🔁 Gemeinsame Filterdaten
     filters = {
-        'expiry': expiry_filter,
+        'expiry': request.GET.get('filter', 'all'),
+        'search': request.GET.get('search', ''),
+        'category': request.GET.get('category', ''),
         'days': days_threshold,
-        'search': search_query,
-        'category': category_filter,
     }
 
-    # ✨ Filter auslagern in utils
-    serials = filter_expiring_serials(
-        SerialNumber.objects.filter(expiry_date__isnull=False),
-        filters,
-        today
-    )
+    serials = SerialNumber.objects.filter(expiry_date__isnull=False)
+    batches = BatchNumber.objects.filter(expiry_date__isnull=False)
 
-    batches = filter_expiring_batches(
-        BatchNumber.objects.filter(expiry_date__isnull=False),
-        filters,
-        today
-    )
+    serials = filter_expiring_serials(serials, filters, today)
+    batches = filter_expiring_batches(batches, filters, today)
 
-    # 📊 Statistiken
+    # Statistiken
     serial_stats = {
         'total': SerialNumber.objects.filter(expiry_date__isnull=False).count(),
         'expired': SerialNumber.objects.filter(expiry_date__lt=today).count(),
@@ -2310,26 +2301,23 @@ def expiry_management(request):
         ).count(),
     }
 
-    # 📃 Paginieren
     serials = paginate_queryset(serials, request.GET.get('serials_page'), per_page=25)
     batches = paginate_queryset(batches, request.GET.get('batches_page'), per_page=25)
 
-    # 🔚 Kontext + Render
     context = {
         'serials': serials,
         'batches': batches,
         'serial_stats': serial_stats,
         'batch_stats': batch_stats,
         'categories': Category.objects.all(),
-        'expiry_filter': expiry_filter,
-        'days_threshold': days_threshold,
-        'search_query': search_query,
-        'category_filter': category_filter,
+        'expiry_filter': filters['expiry'],
+        'days_threshold': filters['days'],
+        'search_query': filters['search'],
+        'category_filter': filters['category'],
         'today': today,
     }
 
     return render(request, 'core/product/expiry_management.html', context)
-
 
 
 # ------------------------------------------------------------------------------
@@ -2627,25 +2615,21 @@ def serialnumber_transfer(request):
 @login_required
 @permission_required('serialnumber', 'import')
 def serialnumber_import(request):
-    """Importiert Seriennummern aus einer CSV-Datei."""
-    if request.method == 'POST':
-        # Hier würde der eigentliche Import-Code stehen
-        # Ähnlich wie bei anderen Import-Funktionen des Systems
-
-        # Beispiel für den Rückgabewert nach erfolgreichem Import
-        messages.success(request, 'Seriennummern wurden erfolgreich importiert.')
-        return redirect('serialnumber_list')
-
-    context = {
-        'title': 'Seriennummern importieren',
-        'description': 'Importieren Sie Seriennummern aus einer CSV-Datei.',
-        'expected_format': 'product_sku,serial_number,status,warehouse_name,purchase_date,expiry_date',
-        'example': 'P1001,SN12345,in_stock,Hauptlager,2023-01-01,2025-01-01',
-        'required_columns': ['product_sku', 'serial_number'],
-        'optional_columns': ['status', 'warehouse_name', 'purchase_date', 'expiry_date', 'notes'],
-    }
-
-    return render(request, 'core/serialnumber/serialnumber_import.html', context)
+    return handle_csv_import(
+        form_class=SerialNumberImportForm,
+        importer_class=SerialNumberImporter,
+        request=request,
+        template_name='core/serialnumber/serialnumber_import.html',
+        success_redirect='serialnumber_import_log_detail',  # oder z. B. 'serialnumber_list' falls kein DetailView
+        extra_context={
+            'title': 'Seriennummern importieren',
+            'description': 'Importieren Sie Seriennummern aus einer CSV-Datei.',
+            'expected_format': 'product_sku,serial_number,status,warehouse_name,purchase_date,expiry_date',
+            'example': 'P1001,SN12345,in_stock,Hauptlager,2023-01-01,2025-01-01',
+            'required_columns': ['product_sku', 'serial_number'],
+            'optional_columns': ['status', 'warehouse_name', 'purchase_date', 'expiry_date', 'notes'],
+        }
+    )
 
 
 @login_required

@@ -1,24 +1,88 @@
-from django.db import connections
-from django.shortcuts import render, redirect, get_object_or_404
+import sys
+
+import django
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Group, Permission
-from django.contrib import messages
-from django.db.models import Q, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import connections
+from django.db.models import Q, Count
 from django.http import JsonResponse
-from django.utils import timezone
-import sys
-import django
+from django.shortcuts import render, redirect, get_object_or_404
 
 from accessmanagement.decorators import is_admin
 from accessmanagement.models import WarehouseAccess
 from accessmanagement.permissions import PERMISSION_AREAS
 from core.models import Tax
+from interfaces.models import InterfaceType
 from inventory.models import Department, Warehouse
-
 from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
-    WarehouseAccessForm, TaxForm, CompanyAddressForm
+    TaxForm, CompanyAddressForm, InterfaceTypeForm
 from .models import CompanyAddress, CompanyAddressType
+
+
+# --- Helper-Funktion ---
+
+def handle_form(request, form_class, instance=None, success_message='', redirect_url='', extra_context=None, template='', post_save_hook=None):
+    if request.method == 'POST':
+        form = form_class(request.POST, request.FILES if request.FILES else None, instance=instance)
+        if form.is_valid():
+            obj = form.save()
+            if post_save_hook:
+                post_save_hook(obj, form.cleaned_data)
+            messages.success(request, success_message)
+            return redirect(redirect_url)
+    else:
+        form = form_class(instance=instance)
+
+    context = {'form': form}
+    if extra_context:
+        context.update(extra_context)
+    return render(request, template, context)
+
+# --- Hook-Funktionen ---
+def post_save_user_create(user, cleaned_data):
+    password = cleaned_data.get('password')
+    if password:
+        user.set_password(password)
+        user.save()
+    user.groups.set(cleaned_data.get('groups', []))
+    try:
+        for dept in cleaned_data.get('departments', []):
+            user.profile.departments.add(dept)
+        user.profile.save()
+    except AttributeError:
+        pass
+
+def post_save_user_edit(user, cleaned_data):
+    if cleaned_data.get('password'):
+        user.set_password(cleaned_data['password'])
+        user.save()
+    user.groups.set(cleaned_data.get('groups', []))
+    try:
+        user.profile.departments.clear()
+        for dept in cleaned_data.get('departments', []):
+            user.profile.departments.add(dept)
+        user.profile.save()
+    except AttributeError:
+        pass
+
+def post_save_group(group, cleaned_data):
+    permission_ids = cleaned_data.get('permissions', [])
+    group.permissions.set(Permission.objects.filter(id__in=permission_ids))
+
+def post_save_department(dept, cleaned_data):
+    manager = cleaned_data.get('manager')
+    if manager:
+        dept.manager = manager
+        dept.save()
+    members = cleaned_data.get('members', [])
+    dept.user_profiles.clear()
+    for user in members:
+        try:
+            dept.user_profiles.add(user.profile)
+        except:
+            pass
 
 
 @login_required
@@ -139,98 +203,48 @@ def user_management(request):
 @login_required
 @user_passes_test(is_admin)
 def user_create(request):
-    """Create a new user."""
-    if request.method == 'POST':
-        form = UserCreateForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-
-            # Passwort setzen
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-
-            # Gruppen zuweisen
-            for group in form.cleaned_data['groups']:
-                user.groups.add(group)
-
-            # Abteilungen zuweisen
-            try:
-                for dept in form.cleaned_data['departments']:
-                    user.profile.departments.add(dept)
-                user.profile.save()
-            except:
-                pass
-
-            messages.success(request, f'Benutzer "{user.username}" wurde erfolgreich erstellt.')
-            return redirect('admin_user_management')
-    else:
-        form = UserCreateForm()
-
-    context = {
-        'form': form,
-        'groups': Group.objects.all(),
-        'departments': Department.objects.all(),
-        'section': 'users'
-    }
-
-    return render(request, 'admin_dashboard/user_create.html', context)
-
+    return handle_form(
+        request,
+        form_class=UserCreateForm,
+        success_message='Benutzer wurde erfolgreich erstellt.',
+        redirect_url='admin_user_management',
+        template='admin_dashboard/user_create.html',
+        extra_context={
+            'groups': Group.objects.all(),
+            'departments': Department.objects.all(),
+            'section': 'users'
+        },
+        post_save_hook=post_save_user_create
+    )
 
 @login_required
 @user_passes_test(is_admin)
 def user_edit(request, user_id):
-    """Edit a user."""
     user = get_object_or_404(User, pk=user_id)
-
-    if request.method == 'POST':
-        form = UserEditForm(request.POST, instance=user)
-        if form.is_valid():
-            user = form.save()
-
-            # Passwort aktualisieren wenn angegeben
-            if form.cleaned_data['password']:
-                user.set_password(form.cleaned_data['password'])
-                user.save()
-
-            # Gruppen aktualisieren
-            user.groups.clear()
-            for group in form.cleaned_data['groups']:
-                user.groups.add(group)
-
-            # Abteilungen aktualisieren
-            try:
-                user.profile.departments.clear()
-                for dept in form.cleaned_data['departments']:
-                    user.profile.departments.add(dept)
-                user.profile.save()
-            except:
-                pass
-
-            messages.success(request, f'Benutzer "{user.username}" wurde erfolgreich aktualisiert.')
-            return redirect('admin_user_management')
-    else:
-        form = UserEditForm(instance=user)
-
-    # Gruppen und Abteilungen für die Auswahl
     try:
-        # Abteilungen abrufen, falls verfügbar
         departments = Department.objects.all()
         user_departments = user.profile.departments.all()
     except:
         departments = []
         user_departments = []
 
-    context = {
-        'form': form,
-        'user_obj': user,
-        'groups': Group.objects.all(),
-        'user_groups': user.groups.all(),
-        'departments': departments,
-        'user_departments': user_departments,
-        'section': 'users'
-    }
-
-    return render(request, 'admin_dashboard/user_edit.html', context)
+    return handle_form(
+        request,
+        form_class=UserEditForm,
+        instance=user,
+        success_message=f'Benutzer "{user.username}" wurde erfolgreich aktualisiert.',
+        redirect_url='admin_user_management',
+        template='admin_dashboard/user_edit.html',
+        extra_context={
+            'user_obj': user,
+            'groups': Group.objects.all(),
+            'user_groups': user.groups.all(),
+            'departments': departments,
+            'user_departments': user_departments,
+            'section': 'users'
+        },
+        post_save_hook=post_save_user_edit
+    )
 
 
 @login_required
@@ -270,89 +284,50 @@ def group_management(request):
 @login_required
 @user_passes_test(is_admin)
 def group_create(request):
-    """Create a new group."""
-    if request.method == 'POST':
-        form = GroupForm(request.POST)
-        if form.is_valid():
-            group = form.save()
-
-            # Berechtigungen zuweisen
-            selected_permissions = request.POST.getlist('permissions')
-            for perm_id in selected_permissions:
-                try:
-                    perm = Permission.objects.get(pk=perm_id)
-                    group.permissions.add(perm)
-                except Permission.DoesNotExist:
-                    pass
-
-            messages.success(request, f'Gruppe "{group.name}" wurde erfolgreich erstellt.')
-            return redirect('admin_group_management')
-    else:
-        form = GroupForm()
-
-    # Berechtigungen für die Auswahl
-    permissions_by_area = {}
-    for area in PERMISSION_AREAS.keys():
-        area_perms = Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
-        permissions_by_area[area] = area_perms
-
-    levels = ['view', 'create', 'edit', 'delete', 'approve']
-
-    context = {
-        'form': form,
-        'permissions_by_area': permissions_by_area,
-        'permission_areas': PERMISSION_AREAS,
-        'levels': levels,
-        'section': 'groups'
+    permissions_by_area = {
+        area: Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
+        for area in PERMISSION_AREAS.keys()
     }
-
-    return render(request, 'admin_dashboard/group_create.html', context)
+    return handle_form(
+        request,
+        form_class=GroupForm,
+        success_message='Gruppe wurde erfolgreich erstellt.',
+        redirect_url='admin_group_management',
+        template='admin_dashboard/group_create.html',
+        extra_context={
+            'permissions_by_area': permissions_by_area,
+            'permission_areas': PERMISSION_AREAS,
+            'levels': ['view', 'create', 'edit', 'delete', 'approve'],
+            'section': 'groups'
+        },
+        post_save_hook=post_save_group
+    )
 
 
 @login_required
 @user_passes_test(is_admin)
 def group_edit(request, group_id):
-    """Edit a group."""
     group = get_object_or_404(Group, pk=group_id)
-
-    if request.method == 'POST':
-        form = GroupForm(request.POST, instance=group)
-        if form.is_valid():
-            group = form.save()
-
-            # Berechtigungen aktualisieren
-            selected_permissions = request.POST.getlist('permissions')
-            group.permissions.clear()
-            for perm_id in selected_permissions:
-                try:
-                    perm = Permission.objects.get(pk=perm_id)
-                    group.permissions.add(perm)
-                except Permission.DoesNotExist:
-                    pass
-
-            messages.success(request, f'Gruppe "{group.name}" wurde erfolgreich aktualisiert.')
-            return redirect('admin_group_management')
-    else:
-        form = GroupForm(instance=group)
-
-    # Berechtigungen für die Auswahl
-    permissions_by_area = {}
-    for area in PERMISSION_AREAS.keys():
-        area_perms = Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
-        permissions_by_area[area] = area_perms
-
-    group_permissions = group.permissions.all()
-
-    context = {
-        'form': form,
-        'group': group,
-        'permissions_by_area': permissions_by_area,
-        'permission_areas': PERMISSION_AREAS,
-        'group_permissions': group_permissions,
-        'section': 'groups'
+    permissions_by_area = {
+        area: Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
+        for area in PERMISSION_AREAS.keys()
     }
-
-    return render(request, 'admin_dashboard/group_edit.html', context)
+    return handle_form(
+        request,
+        form_class=GroupForm,
+        instance=group,
+        success_message=f'Gruppe "{group.name}" wurde erfolgreich aktualisiert.',
+        redirect_url='admin_group_management',
+        template='admin_dashboard/group_edit.html',
+        extra_context={
+            'group': group,
+            'permissions_by_area': permissions_by_area,
+            'permission_areas': PERMISSION_AREAS,
+            'group_permissions': group.permissions.all(),
+            'section': 'groups'
+        },
+        post_save_hook=post_save_group
+    )
 
 
 @login_required
@@ -405,90 +380,40 @@ def department_management(request):
 @login_required
 @user_passes_test(is_admin)
 def department_create(request):
-    """Create a new department."""
-    if request.method == 'POST':
-        form = DepartmentForm(request.POST)
-        if form.is_valid():
-            department = form.save()
-
-            # Manager setzen
-            manager = form.cleaned_data.get('manager')
-            if manager:
-                department.manager = manager
-                department.save()
-
-            # Mitglieder hinzufügen
-            if form.cleaned_data.get('members'):
-                for user in form.cleaned_data['members']:
-                    try:
-                        department.user_profiles.add(user.profile)
-                    except:
-                        pass
-
-            messages.success(request, f'Abteilung "{department.name}" wurde erfolgreich erstellt.')
-            return redirect('admin_department_management')
-    else:
-        form = DepartmentForm()
-
-    context = {
-        'form': form,
-        'users': User.objects.all(),
-        'section': 'departments'
-    }
-
-    return render(request, 'admin_dashboard/department_create.html', context)
+    return handle_form(
+        request,
+        form_class=DepartmentForm,
+        success_message='Abteilung wurde erfolgreich erstellt.',
+        redirect_url='admin_department_management',
+        template='admin_dashboard/department_create.html',
+        extra_context={
+            'users': User.objects.all(),
+            'section': 'departments'
+        },
+        post_save_hook=post_save_department
+    )
 
 
 @login_required
 @user_passes_test(is_admin)
 def department_edit(request, department_id):
-    """Edit a department."""
     department = get_object_or_404(Department, pk=department_id)
-
-    if request.method == 'POST':
-        form = DepartmentForm(request.POST, instance=department)
-        if form.is_valid():
-            department = form.save()
-
-            # Manager aktualisieren
-            manager = form.cleaned_data.get('manager')
-            department.manager = manager
-            department.save()
-
-            # Mitglieder aktualisieren
-            if 'members' in form.cleaned_data:
-                # Alle Mitglieder entfernen
-                department.user_profiles.clear()
-
-                # Neue Mitglieder hinzufügen
-                for user in form.cleaned_data['members']:
-                    try:
-                        department.user_profiles.add(user.profile)
-                    except:
-                        pass
-
-            messages.success(request, f'Abteilung "{department.name}" wurde erfolgreich aktualisiert.')
-            return redirect('admin_department_management')
-    else:
-        # Bestehende Mitglieder für die Initialisierung
-        initial_members = [profile.user.id for profile in department.user_profiles.all()]
-        form = DepartmentForm(instance=department, initial={
-            'members': initial_members,
-            'manager': department.manager
-        })
-
-    # Aktuell zugewiesene Mitglieder
-    department_members = [profile.user for profile in department.user_profiles.all()]
-
-    context = {
-        'form': form,
-        'department': department,
-        'users': User.objects.all(),
-        'department_members': department_members,
-        'section': 'departments'
-    }
-
-    return render(request, 'admin_dashboard/department_edit.html', context)
+    initial_members = [profile.user.id for profile in department.user_profiles.all()]
+    return handle_form(
+        request,
+        form_class=DepartmentForm,
+        instance=department,
+        success_message=f'Abteilung "{department.name}" wurde erfolgreich aktualisiert.',
+        redirect_url='admin_department_management',
+        template='admin_dashboard/department_edit.html',
+        extra_context={
+            'department': department,
+            'users': User.objects.all(),
+            'department_members': [profile.user for profile in department.user_profiles.all()],
+            'section': 'departments'
+        },
+        post_save_hook=post_save_department
+    )
 
 
 @login_required
@@ -541,51 +466,34 @@ def warehouse_access_delete(request, access_id):
 @login_required
 @user_passes_test(is_admin)
 def system_settings(request):
-    """System settings view."""
-    # Settings Model abrufen oder erstellen
     from .models import SystemSettings
-    settings, created = SystemSettings.objects.get_or_create(pk=1)
-
-    if request.method == 'POST':
-        form = SystemSettingsForm(request.POST, request.FILES, instance=settings)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Systemeinstellungen wurden erfolgreich aktualisiert.')
-            return redirect('admin_system_settings')
-    else:
-        form = SystemSettingsForm(instance=settings)
-
-    context = {
-        'form': form,
-        'section': 'system_settings'
-    }
-
-    return render(request, 'admin_dashboard/system_settings.html', context)
+    settings, _ = SystemSettings.objects.get_or_create(pk=1)
+    return handle_form(
+        request,
+        form_class=SystemSettingsForm,
+        instance=settings,
+        success_message='Systemeinstellungen wurden erfolgreich aktualisiert.',
+        redirect_url='admin_system_settings',
+        template='admin_dashboard/system_settings.html',
+        extra_context={'section': 'system_settings'}
+    )
 
 
 @login_required
 @user_passes_test(is_admin)
 def workflow_settings(request):
-    """Workflow settings view."""
-    # WorkflowSettings Model abrufen oder erstellen
     from .models import WorkflowSettings
-    settings, created = WorkflowSettings.objects.get_or_create(pk=1)
+    settings, _ = WorkflowSettings.objects.get_or_create(pk=1)
+    return handle_form(
+        request,
+        form_class=WorkflowSettingsForm,
+        instance=settings,
+        success_message='Workflow-Einstellungen wurden erfolgreich aktualisiert.',
+        redirect_url='admin_workflow_settings',
+        template='admin_dashboard/workflow_settings.html',
+        extra_context={'section': 'workflow_settings'}
+    )
 
-    if request.method == 'POST':
-        form = WorkflowSettingsForm(request.POST, instance=settings)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Workflow-Einstellungen wurden erfolgreich aktualisiert.')
-            return redirect('admin_workflow_settings')
-    else:
-        form = WorkflowSettingsForm(instance=settings)
-
-    context = {
-        'form': form,
-        'section': 'workflow_settings'
-    }
-
-    return render(request, 'admin_dashboard/workflow_settings.html', context)
 
 
 # AJAX-Endpunkte
@@ -668,46 +576,29 @@ def tax_management(request):
 @login_required
 @user_passes_test(is_admin)
 def tax_create(request):
-    """Neuen Mehrwertsteuersatz erstellen."""
-    if request.method == 'POST':
-        form = TaxForm(request.POST)
-        if form.is_valid():
-            tax = form.save()
-            messages.success(request, f'Mehrwertsteuersatz "{tax.name}" wurde erfolgreich erstellt.')
-            return redirect('admin_tax_management')
-    else:
-        form = TaxForm()
-
-    context = {
-        'form': form,
-        'section': 'taxes'
-    }
-
-    return render(request, 'admin_dashboard/tax_form.html', context)
+    return handle_form(
+        request,
+        form_class=TaxForm,
+        success_message='Mehrwertsteuersatz wurde erfolgreich erstellt.',
+        redirect_url='admin_tax_management',
+        template='admin_dashboard/tax_form.html',
+        extra_context={'section': 'taxes'}
+    )
 
 
 @login_required
 @user_passes_test(is_admin)
 def tax_edit(request, tax_id):
-    """Einen Mehrwertsteuersatz bearbeiten."""
     tax = get_object_or_404(Tax, pk=tax_id)
-
-    if request.method == 'POST':
-        form = TaxForm(request.POST, instance=tax)
-        if form.is_valid():
-            tax = form.save()
-            messages.success(request, f'Mehrwertsteuersatz "{tax.name}" wurde erfolgreich aktualisiert.')
-            return redirect('admin_tax_management')
-    else:
-        form = TaxForm(instance=tax)
-
-    context = {
-        'form': form,
-        'tax': tax,
-        'section': 'taxes'
-    }
-
-    return render(request, 'admin_dashboard/tax_form.html', context)
+    return handle_form(
+        request,
+        form_class=TaxForm,
+        instance=tax,
+        success_message=f'Mehrwertsteuersatz "{tax.name}" wurde erfolgreich aktualisiert.',
+        redirect_url='admin_tax_management',
+        template='admin_dashboard/tax_form.html',
+        extra_context={'section': 'taxes', 'tax': tax}
+    )
 
 
 @login_required
@@ -756,8 +647,7 @@ def interface_management(request):
     # Erfolgsmessung der letzten 30 Tage
     from interfaces.models import InterfaceLog
     from django.utils import timezone
-    from django.db.models import Count
-    
+
     thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
     
     # Erfolgreiche vs. fehlgeschlagene Übertragungen
@@ -811,76 +701,36 @@ def interface_type_management(request):
 @login_required
 @user_passes_test(is_admin)
 def interface_type_create(request):
-    """Neuen Schnittstellentyp erstellen."""
-    from interfaces.models import InterfaceType
-    from django import forms
-    
-    class InterfaceTypeForm(forms.ModelForm):
-        class Meta:
-            model = InterfaceType
-            fields = ['name', 'code', 'description', 'is_active']
-            widgets = {
-                'name': forms.TextInput(attrs={'class': 'form-control'}),
-                'code': forms.TextInput(attrs={'class': 'form-control'}),
-                'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-                'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            }
-    
-    if request.method == 'POST':
-        form = InterfaceTypeForm(request.POST)
-        if form.is_valid():
-            interface_type = form.save()
-            messages.success(request, f'Schnittstellentyp "{interface_type.name}" wurde erfolgreich erstellt.')
-            return redirect('admin_interface_type_management')
-    else:
-        form = InterfaceTypeForm()
-    
-    context = {
-        'form': form,
-        'title': 'Neuen Schnittstellentyp erstellen',
-        'section': 'interfaces'
-    }
-    
-    return render(request, 'admin_dashboard/interface_type_form.html', context)
+    return handle_form(
+        request,
+        form_class=InterfaceTypeForm,
+        success_message='Schnittstellentyp wurde erfolgreich erstellt.',
+        redirect_url='admin_interface_type_management',
+        template='admin_dashboard/interface_type_form.html',
+        extra_context={
+            'section': 'interfaces',
+            'title': 'Neuen Schnittstellentyp erstellen'
+        }
+    )
 
 
 @login_required
 @user_passes_test(is_admin)
 def interface_type_edit(request, type_id):
-    """Schnittstellentyp bearbeiten."""
-    from interfaces.models import InterfaceType
-    from django import forms
-    
     interface_type = get_object_or_404(InterfaceType, pk=type_id)
-    
-    class InterfaceTypeForm(forms.ModelForm):
-        class Meta:
-            model = InterfaceType
-            fields = ['name', 'code', 'description', 'is_active']
-            widgets = {
-                'name': forms.TextInput(attrs={'class': 'form-control'}),
-                'code': forms.TextInput(attrs={'class': 'form-control'}),
-                'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-                'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            }
-    
-    if request.method == 'POST':
-        form = InterfaceTypeForm(request.POST, instance=interface_type)
-        if form.is_valid():
-            interface_type = form.save()
-            messages.success(request, f'Schnittstellentyp "{interface_type.name}" wurde erfolgreich aktualisiert.')
-            return redirect('admin_interface_type_management')
-    else:
-        form = InterfaceTypeForm(instance=interface_type)
-    
-    context = {
-        'form': form,
-        'interface_type': interface_type,
-        'title': f'Schnittstellentyp "{interface_type.name}" bearbeiten',
-        'section': 'interfaces'
-    }
-    
-    return render(request, 'admin_dashboard/interface_type_form.html', context)
+    return handle_form(
+        request,
+        form_class=InterfaceTypeForm,
+        instance=interface_type,
+        success_message=f'Schnittstellentyp "{interface_type.name}" wurde erfolgreich aktualisiert.',
+        redirect_url='admin_interface_type_management',
+        template='admin_dashboard/interface_type_form.html',
+        extra_context={
+            'section': 'interfaces',
+            'interface_type': interface_type,
+            'title': f'Schnittstellentyp "{interface_type.name}" bearbeiten'
+        }
+    )
 
 
 @login_required
@@ -944,52 +794,35 @@ def company_address_management(request):
 @login_required
 @user_passes_test(is_admin)
 def company_address_create(request):
-    """Neue Unternehmensadresse erstellen."""
-    if request.method == 'POST':
-        form = CompanyAddressForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Unternehmensadresse wurde erfolgreich erstellt.')
-            return redirect('admin_company_address_management')
-    else:
-        # Optional: Vorausgewählter Adresstyp aus URL-Parameter
-        initial = {}
-        address_type = request.GET.get('type')
-        if address_type and address_type in dict(CompanyAddressType.choices):
-            initial['address_type'] = address_type
+    initial = {}
+    address_type = request.GET.get('type')
+    if address_type and address_type in dict(CompanyAddressType.choices):
+        initial['address_type'] = address_type
 
-        form = CompanyAddressForm(initial=initial)
-
-    context = {
-        'form': form,
-        'section': 'company_addresses'
-    }
-
-    return render(request, 'admin_dashboard/company_address_form.html', context)
+    return handle_form(
+        request,
+        form_class=CompanyAddressForm,
+        success_message='Unternehmensadresse wurde erfolgreich erstellt.',
+        redirect_url='admin_company_address_management',
+        template='admin_dashboard/company_address_form.html',
+        extra_context={'section': 'company_addresses'},
+        instance=None
+    )
 
 
 @login_required
 @user_passes_test(is_admin)
 def company_address_edit(request, address_id):
-    """Unternehmensadresse bearbeiten."""
     address = get_object_or_404(CompanyAddress, pk=address_id)
-
-    if request.method == 'POST':
-        form = CompanyAddressForm(request.POST, instance=address)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f'Adresse "{address.name}" wurde erfolgreich aktualisiert.')
-            return redirect('admin_company_address_management')
-    else:
-        form = CompanyAddressForm(instance=address)
-
-    context = {
-        'form': form,
-        'address': address,
-        'section': 'company_addresses'
-    }
-
-    return render(request, 'admin_dashboard/company_address_form.html', context)
+    return handle_form(
+        request,
+        form_class=CompanyAddressForm,
+        instance=address,
+        success_message=f'Adresse "{address.name}" wurde erfolgreich aktualisiert.',
+        redirect_url='admin_company_address_management',
+        template='admin_dashboard/company_address_form.html',
+        extra_context={'section': 'company_addresses', 'address': address}
+    )
 
 
 @login_required
@@ -1011,3 +844,5 @@ def company_address_delete(request, address_id):
     }
 
     return render(request, 'admin_dashboard/company_address_confirm_delete.html', context)
+
+

@@ -3,6 +3,7 @@ from django import forms
 from django.contrib.auth.models import User, Group, Permission
 from accessmanagement.models import WarehouseAccess
 from core.models import Tax
+from interfaces.models import InterfaceType
 from inventory.models import Department
 
 from .models import SystemSettings, WorkflowSettings, CompanyAddress
@@ -232,4 +233,15 @@ class CompanyAddressForm(forms.ModelForm):
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+class InterfaceTypeForm(forms.ModelForm):
+    class Meta:
+        model = InterfaceType
+        fields = ['name', 'code', 'description', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

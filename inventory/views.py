@@ -18,6 +18,7 @@ from accessmanagement.decorators import permission_required
 from accessmanagement.models import WarehouseAccess
 from core import models
 from core.models import Product, Category, ProductWarehouse, BatchNumber
+from core.utils.pagination import paginate_queryset
 from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department
 from .forms import StockMovementForm, StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
     WarehouseForm, StockAdjustmentForm
@@ -76,14 +77,7 @@ def stock_movement_list(request):
         movements_list = movements_list.filter(created_at__lte=date_to)
 
     # Paginierung
-    paginator = Paginator(movements_list, 25)  # 25 Bewegungen pro Seite
-    page = request.GET.get('page')
-    try:
-        movements = paginator.page(page)
-    except PageNotAnInteger:
-        movements = paginator.page(1)
-    except EmptyPage:
-        movements = paginator.page(paginator.num_pages)
+    movements = paginate_queryset(movements_list, request.GET.get('page'), per_page=25)
 
     # Alle Produkte für den Filter
     products = Product.objects.all().order_by('name')
@@ -149,14 +143,7 @@ def stock_take_list(request):
             )
 
     # Paginierung
-    paginator = Paginator(stock_takes, 10)
-    page = request.GET.get('page')
-    try:
-        stock_takes = paginator.page(page)
-    except PageNotAnInteger:
-        stock_takes = paginator.page(1)
-    except EmptyPage:
-        stock_takes = paginator.page(paginator.num_pages)
+    stock_takes = paginate_queryset(stock_takes, request.GET.get('page'), per_page=10)
 
     context = {
         'stock_takes': stock_takes,
@@ -317,14 +304,8 @@ def stock_take_detail(request, pk):
         items = items.filter(is_counted=True).exclude(counted_quantity=F('expected_quantity'))
 
     # Paginierung
-    paginator = Paginator(items, 50)  # 50 Produkte pro Seite
-    page = request.GET.get('page')
-    try:
-        items = paginator.page(page)
-    except PageNotAnInteger:
-        items = paginator.page(1)
-    except EmptyPage:
-        items = paginator.page(paginator.num_pages)
+    items = paginate_queryset(items, request.GET.get('page'), per_page=50)
+
 
     # Kategorien für Filter
     categories = Category.objects.all()
@@ -1406,14 +1387,8 @@ def warehouse_detail(request, pk):
     active_stock_takes = StockTake.objects.filter(warehouse=warehouse, status='in_progress')
 
     # Paginierung für Produkte
-    paginator = Paginator(products, 25)  # 25 Produkte pro Seite
-    page = request.GET.get('page')
-    try:
-        products = paginator.page(page)
-    except PageNotAnInteger:
-        products = paginator.page(1)
-    except EmptyPage:
-        products = paginator.page(paginator.num_pages)
+    products = paginate_queryset(products, request.GET.get('page'), per_page=25)
+
 
     # Kategorien für Filter
     categories = Category.objects.all()

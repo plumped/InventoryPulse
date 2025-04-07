@@ -16,6 +16,7 @@ from accessmanagement.models import WarehouseAccess
 from accessmanagement.permissions import PERMISSION_AREAS
 from core.models import Tax
 from core.utils.logging_utils import log_list_view_usage
+from core.utils.pagination import paginate_queryset
 from interfaces.models import InterfaceType
 from inventory.models import Department, Warehouse
 from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
@@ -193,13 +194,7 @@ def user_management(request):
 
     users = users.order_by(sort_by)
 
-    paginator = Paginator(users, 20)
-    try:
-        users_page = paginator.page(page)
-    except PageNotAnInteger:
-        users_page = paginator.page(1)
-    except EmptyPage:
-        users_page = paginator.page(paginator.num_pages)
+    users_page = paginate_queryset(users, request.GET.get('page'), per_page=20)
 
     groups = Group.objects.all()
 

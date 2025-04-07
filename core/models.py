@@ -11,6 +11,7 @@ from django.db import models
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, render
 
+from core.utils.pagination import paginate_queryset
 from inventory.models import Warehouse
 from organization.models import Department
 
@@ -252,9 +253,8 @@ def import_log_list(request):
         queryset = queryset.order_by(sort_param)
 
     # Pagination
-    paginator = Paginator(queryset, 25)  # Show 25 logs per page
-    page_number = request.GET.get('page')
-    import_logs = paginator.get_page(page_number)
+    import_logs = paginate_queryset(queryset, request.GET.get('page'), per_page=25)
+
 
     context = {
         'import_logs': import_logs,

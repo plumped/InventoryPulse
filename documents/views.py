@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 
+from core.utils.pagination import paginate_queryset
 from suppliers.models import Supplier
 from .models import Document, DocumentTemplate, TemplateField, DocumentType, DocumentMatch, StandardField
 from .forms import DocumentUploadForm, DocumentTemplateForm, TemplateFieldForm, DocumentMatchForm
@@ -54,9 +55,7 @@ def document_list(request):
     queryset = queryset.order_by('-upload_date')
 
     # Pagination
-    paginator = Paginator(queryset, 25)  # Show 25 documents per page
-    page_number = request.GET.get('page')
-    documents = paginator.get_page(page_number)
+    documents = paginate_queryset(queryset, request.GET.get('page'), per_page=25)
 
     # Get document types and suppliers for filtering
     document_types = DocumentType.objects.filter(is_active=True)
@@ -244,9 +243,7 @@ def template_list(request):
     queryset = queryset.order_by('supplier__name', 'name')
 
     # Pagination
-    paginator = Paginator(queryset, 25)  # Show 25 templates per page
-    page_number = request.GET.get('page')
-    templates = paginator.get_page(page_number)
+    templates = paginate_queryset(queryset, request.GET.get('page'), per_page=25)
 
     # Get document types and suppliers for filtering
     from suppliers.models import Supplier

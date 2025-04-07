@@ -33,7 +33,83 @@ from .forms import ProductForm, CategoryForm, SupplierProductImportForm, Categor
 from .importers import SupplierProductImporter, CategoryImporter, SupplierImporter, ProductImporter
 from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto, ProductAttachment, ProductVariantType, \
     ProductVariant, SerialNumber, BatchNumber, Currency
+from .utils.deletion import handle_delete_view
+from .utils.files import delete_file_if_exists
+from .utils.forms import handle_form_view
+from .utils.pagination import paginate_queryset
 
+
+# Helper Methoden
+def get_accessible_warehouses(request):
+    if request.user.is_superuser:
+        return Warehouse.objects.filter(is_active=True)
+    return Warehouse.objects.filter(
+        is_active=True,
+        id__in=WarehouseAccess.objects.filter(user=request.user).values_list('warehouse_id', flat=True)
+    )
+
+def get_accessible_stock(product, warehouses):
+    return ProductWarehouse.objects.filter(
+        product=product,
+        warehouse__in=warehouses
+    ).aggregate(total=Sum('quantity'))['total'] or 0
+
+def handle_csv_import(form_class, importer_class, request, template_name, success_redirect, extra_context=None):
+    if request.method == 'POST':
+        form = form_class(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                importer = importer_class(user=request.user, **form.cleaned_data)
+                import_log = importer.run_import()
+
+                messages.success(request, f"{import_log.successful_rows} von {import_log.total_rows} Zeilen erfolgreich importiert.")
+                if import_log.failed_rows:
+                    messages.warning(request, f"{import_log.failed_rows} Zeilen konnten nicht importiert werden.")
+                return redirect(success_redirect, pk=import_log.pk)
+
+            except Exception as e:
+                messages.error(request, f"Fehler beim Import: {str(e)}")
+    else:
+        form = form_class()
+
+    context = {'form': form}
+    if extra_context:
+        context.update(extra_context)
+    return render(request, template_name, context)
+
+def get_filtered_products(request, filter_low_stock=False):
+    warehouses = get_accessible_warehouses(request)
+    products = Product.objects.select_related('category').all()
+    search = request.GET.get('search', '')
+    category = request.GET.get('category', '')
+    stock_status = request.GET.get('stock_status', '')
+
+    if search:
+        products = products.filter(Q(name__icontains=search) | Q(sku__icontains=search) | Q(barcode__icontains=search))
+    if category:
+        products = products.filter(category_id=category)
+
+    filtered = []
+    for product in products:
+        stock = get_accessible_stock(product, warehouses)
+        product.accessible_stock = stock
+
+        if filter_low_stock and stock < product.minimum_stock:
+            filtered.append(product)
+        elif not filter_low_stock:
+            if stock_status == 'low' and (stock <= product.minimum_stock and stock > 0):
+                filtered.append(product)
+            elif stock_status == 'ok' and stock > product.minimum_stock:
+                filtered.append(product)
+            elif stock_status == 'out' and stock == 0:
+                filtered.append(product)
+            elif not stock_status:
+                filtered.append(product)
+
+    return sorted(filtered, key=lambda p: p.name)
+
+
+#---------------------------------#
 
 @login_required
 def dashboard(request):
@@ -168,123 +244,27 @@ def dashboard(request):
 @login_required
 @permission_required('product', 'view')
 def product_list(request):
-    """List all products with filtering and search, showing stock totals for accessible warehouses."""
-    # Abrufen aller Produkte mit zugehörigen Kategorien
-    products_list = Product.objects.select_related('category').all()
+    filtered_products = get_filtered_products(request)
+    products = paginate_queryset(filtered_products, request.GET.get('page'), per_page=25)
 
-    if request.user.is_superuser:
-        accessible_warehouses = Warehouse.objects.filter(is_active=True)
-    else:
-        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                                 if WarehouseAccess.has_access(request.user, w, 'view')]
-
-    # Suche
-    search_query = request.GET.get('search', '')
-    if search_query:
-        products_list = products_list.filter(
-            Q(name__icontains=search_query) |
-            Q(sku__icontains=search_query) |
-            Q(barcode__icontains=search_query)
-        )
-
-    # Kategorie-Filter
-    category_id = request.GET.get('category', '')
-    if category_id:
-        products_list = products_list.filter(category_id=category_id)
-
-    # Bestandsstatus-Filter - jetzt basierend auf den Beständen in zugänglichen Lagern
-    stock_status = request.GET.get('stock_status', '')
-    
-    # Sortierung
-    products_list = products_list.order_by('name')
-
-    # Paginierung
-    paginator = Paginator(products_list, 25)  # 25 Produkte pro Seite
-    page = request.GET.get('page')
-    try:
-        products = paginator.page(page)
-    except PageNotAnInteger:
-        products = paginator.page(1)
-    except EmptyPage:
-        products = paginator.page(paginator.num_pages)
-
-    # Für jedes Produkt die Summe der Bestände in zugänglichen Lagern berechnen
-    for product in products:
-        warehouse_total = ProductWarehouse.objects.filter(
-            product=product, 
-            warehouse__in=accessible_warehouses
-        ).aggregate(total=Sum('quantity'))['total'] or 0
-        
-        product.accessible_stock = warehouse_total
-        
-        # Bestandsstatus-Filter anwenden
-        if stock_status == 'low':
-            if warehouse_total <= product.minimum_stock and warehouse_total > 0:
-                pass  # Produkt behalten
-            else:
-                products.object_list = [p for p in products.object_list if p.id != product.id]
-        elif stock_status == 'ok':
-            if warehouse_total > product.minimum_stock:
-                pass  # Produkt behalten
-            else:
-                products.object_list = [p for p in products.object_list if p.id != product.id]
-        elif stock_status == 'out':
-            if warehouse_total == 0:
-                pass  # Produkt behalten
-            else:
-                products.object_list = [p for p in products.object_list if p.id != product.id]
-
-    # Alle Kategorien für den Filter
     categories = Category.objects.all().order_by('name')
-
     context = {
         'products': products,
         'categories': categories,
-        'search_query': search_query,
-        'category_id': category_id,
-        'stock_status': stock_status,
+        'search_query': request.GET.get('search', ''),
+        'category_id': request.GET.get('category', ''),
+        'stock_status': request.GET.get('stock_status', ''),
     }
-
     return render(request, 'core/product_list.html', context)
+
 
 
 @login_required
 @permission_required('product', 'view')
 def low_stock_list(request):
-    """Show products with low stock (accessible_stock <= minimum_stock)."""
-    # Lager, auf die der Benutzer Zugriff hat
-    if request.user.is_superuser:
-        accessible_warehouses = Warehouse.objects.filter(is_active=True)
-    else:
-        accessible_warehouses = [w for w in Warehouse.objects.filter(is_active=True)
-                                 if WarehouseAccess.has_access(request.user, w, 'view')]
+    products = get_filtered_products(request, filter_low_stock=True)
+    return render(request, 'core/low_stock_list.html', {'products': products, 'title': 'Kritische Bestände'})
 
-    # Produkte mit Kategorie abrufen
-    products_list = Product.objects.select_related('category').all()
-
-    # Für jedes Produkt die Summe der Bestände in zugänglichen Lagern berechnen
-    low_stock_products = []
-
-    for product in products_list:
-        warehouse_total = ProductWarehouse.objects.filter(
-            product=product,
-            warehouse__in=accessible_warehouses
-        ).aggregate(total=Sum('quantity'))['total'] or 0
-
-        product.accessible_stock = warehouse_total
-
-        if warehouse_total < product.minimum_stock:
-            low_stock_products.append(product)
-
-    # Nach Namen sortieren
-    low_stock_products.sort(key=lambda p: p.name)
-
-    context = {
-        'products': low_stock_products,
-        'title': 'Kritische Bestände',
-    }
-
-    return render(request, 'core/low_stock_list.html', context)
 
 
 @login_required
@@ -500,57 +480,18 @@ def import_dashboard(request):
 @login_required
 @permission_required('import', 'create')
 def import_products(request):
-    """Import products from CSV."""
-    if request.method == 'POST':
-        form = ProductImportForm(request.POST, request.FILES)
-        if form.is_valid():
-            try:
-                file_obj = request.FILES['file']
-                delimiter = form.cleaned_data['delimiter']
-                encoding = form.cleaned_data['encoding']
-                skip_header = form.cleaned_data['skip_header']
-                update_existing = form.cleaned_data['update_existing']
-                default_category = form.cleaned_data['default_category']
+    return handle_csv_import(
+        form_class=ProductImportForm,
+        importer_class=ProductImporter,
+        request=request,
+        template_name='core/import/import_form.html',
+        success_redirect='import_log_detail',
+        extra_context={
+            'title': 'Produkte importieren',
+            'template_file_url': static('files/product_import_template.csv'),
+        }
+    )
 
-                importer = ProductImporter(
-                    file_obj=file_obj,
-                    delimiter=delimiter,
-                    encoding=encoding,
-                    skip_header=skip_header,
-                    update_existing=update_existing,
-                    default_category=default_category,
-                    user=request.user
-                )
-
-                import_log = importer.run_import()
-
-                messages.success(
-                    request,
-                    f"Import abgeschlossen. {import_log.successful_rows} von {import_log.total_rows} "
-                    f"Produkten erfolgreich importiert ({import_log.success_rate()}%)."
-                )
-
-                if import_log.failed_rows > 0:
-                    messages.warning(
-                        request,
-                        f"{import_log.failed_rows} Zeilen konnten nicht importiert werden. "
-                        f"Siehe Details für weitere Informationen."
-                    )
-
-                return redirect('import_log_detail', pk=import_log.pk)
-
-            except Exception as e:
-                messages.error(request, f"Fehler beim Import: {str(e)}")
-    else:
-        form = ProductImportForm()
-
-    context = {
-        'form': form,
-        'title': 'Produkte importieren',
-        'template_file_url': static('files/product_import_template.csv'),
-    }
-
-    return render(request, 'core/import/import_form.html', context)
 
 
 @login_required
@@ -1137,8 +1078,7 @@ def import_warehouse_products(request):
                                 updated_count += 1
 
                             # Gesamtbestand des Produkts aktualisieren
-                            total_stock = ProductWarehouse.objects.filter(product=product).aggregate(
-                                total=models.Sum('quantity'))['total'] or 0
+                            total_stock = get_accessible_stock(product, accessible_warehouses)
                             product.current_stock = total_stock
                             product.save()
                         else:
@@ -1231,14 +1171,8 @@ def import_log_list(request):
         queryset = queryset.order_by(sort_param)
 
     # Pagination
-    paginator = Paginator(queryset, 20)
-    page = request.GET.get('page')
-    try:
-        import_logs = paginator.page(page)
-    except PageNotAnInteger:
-        import_logs = paginator.page(1)
-    except EmptyPage:
-        import_logs = paginator.page(paginator.num_pages)
+    queryset = ImportLog.objects.all()
+    import_logs = paginate_queryset(queryset, request.GET.get('page'), per_page=20)
 
     context = {
         'import_logs': import_logs,
@@ -1598,7 +1532,7 @@ def permission_management(request):
 
     return render(request, 'core/permission_management.html', context)
 
-
+#111
 # ------------------------------------------------------------------------------
 # Produktfotos
 # ------------------------------------------------------------------------------
@@ -1621,52 +1555,41 @@ def product_photos(request, pk):
 @login_required
 @permission_required('product', 'edit')
 def product_photo_add(request, pk):
-    """Fügt ein Foto zu einem Produkt hinzu."""
     product = get_object_or_404(Product, pk=pk)
 
-    if request.method == 'POST':
-        form = ProductPhotoForm(request.POST, request.FILES)
-        if form.is_valid():
-            photo = form.save(commit=False)
-            photo.product = product
-            photo.save()
+    def form_instance_save(form):
+        photo = form.save(commit=False)
+        photo.product = product
+        photo.save()
+        messages.success(request, 'Foto wurde erfolgreich hinzugefügt.')
+        return redirect('product_photos', pk=product.pk)
 
-            messages.success(request, 'Foto wurde erfolgreich hinzugefügt.')
-            return redirect('product_photos', pk=product.pk)
-    else:
-        form = ProductPhotoForm()
+    return handle_form_view(
+        request,
+        form_class=ProductPhotoForm,
+        template='core/product/product_photo_form.html',
+        redirect_url=f'/produkte/{pk}/fotos',  # oder benutze reverse()
+        context_extra={'product': product}
+    )
 
-    context = {
-        'product': product,
-        'form': form,
-    }
-
-    return render(request, 'core/product/product_photo_form.html', context)
 
 
 @login_required
 @permission_required('product', 'delete')
 def product_photo_delete(request, pk, photo_id):
-    """Löscht ein Produktfoto."""
     product = get_object_or_404(Product, pk=pk)
     photo = get_object_or_404(ProductPhoto, pk=photo_id, product=product)
 
-    if request.method == 'POST':
-        # Datei vom Dateisystem löschen
-        if photo.image:
-            if os.path.isfile(photo.image.path):
-                os.remove(photo.image.path)
+    return handle_delete_view(
+        request,
+        obj=photo,
+        redirect_url='product_photos',  # oder f'/produkte/{pk}/fotos'
+        confirm_template='core/product/product_photo_confirm_delete.html',
+        context={'product': product, 'photo': photo},
+        filefield=photo.image,
+        delete_file_func=delete_file_if_exists
+    )
 
-        photo.delete()
-        messages.success(request, 'Foto wurde erfolgreich gelöscht.')
-        return redirect('product_photos', pk=product.pk)
-
-    context = {
-        'product': product,
-        'photo': photo,
-    }
-
-    return render(request, 'core/product/product_photo_confirm_delete.html', context)
 
 
 @login_required
@@ -2117,15 +2040,7 @@ def product_serials(request, pk):
     if search_query:
         serials = serials.filter(serial_number__icontains=search_query)
 
-    # Paginierung
-    paginator = Paginator(serials, 50)  # 50 Seriennummern pro Seite
-    page = request.GET.get('page')
-    try:
-        serials = paginator.page(page)
-    except PageNotAnInteger:
-        serials = paginator.page(1)
-    except EmptyPage:
-        serials = paginator.page(paginator.num_pages)
+    serials = paginate_queryset(serials, request.GET.get('page'), per_page=50)
 
     # Status-Statistiken
     status_counts = SerialNumber.objects.filter(product=product).values('status').annotate(
@@ -2337,14 +2252,8 @@ def product_batches(request, pk):
         batches = batches.filter(expiry_date__gt=today + timedelta(days=30))
 
     # Paginierung
-    paginator = Paginator(batches, 25)  # 25 Chargen pro Seite
-    page = request.GET.get('page')
-    try:
-        batches = paginator.page(page)
-    except PageNotAnInteger:
-        batches = paginator.page(1)
-    except EmptyPage:
-        batches = paginator.page(paginator.num_pages)
+    batches = paginate_queryset(batches, request.GET.get('page'), per_page=25)
+
 
     # Verfallsstatistiken
     expired_count = BatchNumber.objects.filter(product=product, expiry_date__lt=today).count()
@@ -2540,24 +2449,10 @@ def expiry_management(request):
     }
 
     # Paginierung für Seriennummern
-    serials_paginator = Paginator(serials, 25)
-    serials_page = request.GET.get('serials_page')
-    try:
-        serials = serials_paginator.page(serials_page)
-    except PageNotAnInteger:
-        serials = serials_paginator.page(1)
-    except EmptyPage:
-        serials = serials_paginator.page(serials_paginator.num_pages)
+    serials = paginate_queryset(serials, request.GET.get('serials_page'), per_page=25)
 
     # Paginierung für Chargen
-    batches_paginator = Paginator(batches, 25)
-    batches_page = request.GET.get('batches_page')
-    try:
-        batches = batches_paginator.page(batches_page)
-    except PageNotAnInteger:
-        batches = batches_paginator.page(1)
-    except EmptyPage:
-        batches = batches_paginator.page(batches_paginator.num_pages)
+    batches = paginate_queryset(batches, request.GET.get('batches_page'), per_page=25)
 
     context = {
         'serials': serials,
@@ -2730,14 +2625,7 @@ def serialnumber_list(request):
     serials = serials.order_by(sort_by)
 
     # Paginierung
-    paginator = Paginator(serials, 50)  # 50 Seriennummern pro Seite
-    page = request.GET.get('page')
-    try:
-        serials = paginator.page(page)
-    except PageNotAnInteger:
-        serials = paginator.page(1)
-    except EmptyPage:
-        serials = paginator.page(paginator.num_pages)
+    serials = paginate_queryset(serials, request.GET.get('page'), per_page=50)
 
     # Status-Statistiken
     status_counts = SerialNumber.objects.values('status').annotate(

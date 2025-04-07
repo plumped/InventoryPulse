@@ -14,6 +14,7 @@ from django.template import Template, Context
 from django.views.decorators.http import require_POST
 
 from accessmanagement.decorators import permission_required
+from core.utils.pagination import paginate_queryset
 from order.models import PurchaseOrder
 from suppliers.models import Supplier
 
@@ -61,15 +62,8 @@ def interface_list(request):
     interfaces = interfaces.order_by(order_by)
     
     # Paginierung
-    paginator = Paginator(interfaces, 20)
-    page = request.GET.get('page')
-    try:
-        interfaces_page = paginator.page(page)
-    except PageNotAnInteger:
-        interfaces_page = paginator.page(1)
-    except EmptyPage:
-        interfaces_page = paginator.page(paginator.num_pages)
-    
+    interfaces_page = paginate_queryset(interfaces, request.GET.get('page'), per_page=20)
+
     # Lieferanten und Schnittstellentypen für Filter
     suppliers = Supplier.objects.filter(is_active=True).order_by('name')
     interface_types = InterfaceType.objects.filter(is_active=True).order_by('name')
@@ -468,15 +462,8 @@ def interface_logs(request, interface_id=None):
     logs = logs.order_by('-timestamp')
     
     # Paginierung
-    paginator = Paginator(logs, 20)
-    page = request.GET.get('page')
-    try:
-        logs_page = paginator.page(page)
-    except PageNotAnInteger:
-        logs_page = paginator.page(1)
-    except EmptyPage:
-        logs_page = paginator.page(paginator.num_pages)
-    
+    logs_page = paginate_queryset(logs, request.GET.get('page'), per_page=20)
+
     # Filter-Optionen
     suppliers = Supplier.objects.filter(is_active=True).order_by('name')
     interfaces = SupplierInterface.objects.filter(is_active=True).order_by('name')

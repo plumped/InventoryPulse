@@ -36,80 +36,12 @@ from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto
 from .utils.deletion import handle_delete_view
 from .utils.files import delete_file_if_exists
 from .utils.forms import handle_form_view
+from .utils.imports import handle_csv_import
 from .utils.pagination import paginate_queryset
+from .utils.products import get_filtered_products
+from .utils.stock import get_accessible_stock
+from .utils.views import handle_model_delete, handle_model_update
 
-
-# Helper Methoden
-def get_accessible_warehouses(request):
-    if request.user.is_superuser:
-        return Warehouse.objects.filter(is_active=True)
-    return Warehouse.objects.filter(
-        is_active=True,
-        id__in=WarehouseAccess.objects.filter(user=request.user).values_list('warehouse_id', flat=True)
-    )
-
-def get_accessible_stock(product, warehouses):
-    return ProductWarehouse.objects.filter(
-        product=product,
-        warehouse__in=warehouses
-    ).aggregate(total=Sum('quantity'))['total'] or 0
-
-def handle_csv_import(form_class, importer_class, request, template_name, success_redirect, extra_context=None):
-    if request.method == 'POST':
-        form = form_class(request.POST, request.FILES)
-        if form.is_valid():
-            try:
-                importer = importer_class(user=request.user, **form.cleaned_data)
-                import_log = importer.run_import()
-
-                messages.success(request, f"{import_log.successful_rows} von {import_log.total_rows} Zeilen erfolgreich importiert.")
-                if import_log.failed_rows:
-                    messages.warning(request, f"{import_log.failed_rows} Zeilen konnten nicht importiert werden.")
-                return redirect(success_redirect, pk=import_log.pk)
-
-            except Exception as e:
-                messages.error(request, f"Fehler beim Import: {str(e)}")
-    else:
-        form = form_class()
-
-    context = {'form': form}
-    if extra_context:
-        context.update(extra_context)
-    return render(request, template_name, context)
-
-def get_filtered_products(request, filter_low_stock=False):
-    warehouses = get_accessible_warehouses(request)
-    products = Product.objects.select_related('category').all()
-    search = request.GET.get('search', '')
-    category = request.GET.get('category', '')
-    stock_status = request.GET.get('stock_status', '')
-
-    if search:
-        products = products.filter(Q(name__icontains=search) | Q(sku__icontains=search) | Q(barcode__icontains=search))
-    if category:
-        products = products.filter(category_id=category)
-
-    filtered = []
-    for product in products:
-        stock = get_accessible_stock(product, warehouses)
-        product.accessible_stock = stock
-
-        if filter_low_stock and stock < product.minimum_stock:
-            filtered.append(product)
-        elif not filter_low_stock:
-            if stock_status == 'low' and (stock <= product.minimum_stock and stock > 0):
-                filtered.append(product)
-            elif stock_status == 'ok' and stock > product.minimum_stock:
-                filtered.append(product)
-            elif stock_status == 'out' and stock == 0:
-                filtered.append(product)
-            elif not stock_status:
-                filtered.append(product)
-
-    return sorted(filtered, key=lambda p: p.name)
-
-
-#---------------------------------#
 
 @login_required
 def dashboard(request):
@@ -1663,26 +1595,23 @@ def product_attachment_add(request, pk):
 @login_required
 @permission_required('product', 'delete')
 def product_attachment_delete(request, pk, attachment_id):
-    """Löscht einen Produktanhang."""
     product = get_object_or_404(Product, pk=pk)
     attachment = get_object_or_404(ProductAttachment, pk=attachment_id, product=product)
 
-    if request.method == 'POST':
-        # Datei vom Dateisystem löschen
-        if attachment.file:
-            if os.path.isfile(attachment.file.path):
-                os.remove(attachment.file.path)
+    # Datei löschen
+    if request.method == 'POST' and attachment.file and os.path.isfile(attachment.file.path):
+        os.remove(attachment.file.path)
 
-        attachment.delete()
-        messages.success(request, 'Anhang wurde erfolgreich gelöscht.')
-        return redirect('product_attachments', pk=product.pk)
-
-    context = {
-        'product': product,
-        'attachment': attachment,
-    }
+    context = handle_model_delete(
+        request,
+        instance=attachment,
+        model_name_singular='Anhang',
+        success_redirect='product_attachments',
+        context_extra={'product': product}
+    )
 
     return render(request, 'core/product/product_attachment_confirm_delete.html', context)
+
 
 
 @login_required
@@ -1937,51 +1866,20 @@ def product_variant_add(request, pk):
 @login_required
 @permission_required('product', 'edit')
 def product_variant_update(request, pk, variant_id):
-    """Aktualisiert eine Produktvariante."""
     product = get_object_or_404(Product, pk=pk)
     variant = get_object_or_404(ProductVariant, pk=variant_id, parent_product=product)
-    
-    # Lager abrufen, auf die der Benutzer Zugriff hat
-    if request.user.is_superuser:
-        accessible_warehouses = Warehouse.objects.filter(is_active=True)
-    else:
-        user_departments = request.user.profile.departments.all()
-        warehouse_access = WarehouseAccess.objects.filter(
-            department__in=user_departments
-        ).values_list('warehouse', flat=True)
-        accessible_warehouses = Warehouse.objects.filter(id__in=warehouse_access, is_active=True)
-    
-    # Aktuellen Bestand berechnen
-    try:
-        from inventory.models import VariantWarehouse
-        
-        total_accessible_stock = VariantWarehouse.objects.filter(
-            variant=variant,
-            warehouse__in=accessible_warehouses
-        ).aggregate(total=Sum('quantity'))['total'] or 0
-    except (ImportError, AttributeError):
-        # Wenn kein VariantWarehouse-Modell existiert
-        total_accessible_stock = 0
 
-    if request.method == 'POST':
-        form = ProductVariantForm(request.POST, instance=variant)
-        if form.is_valid():
-            # Variante ohne Bestandsänderung speichern
-            variant = form.save()
-            
-            messages.success(request, 'Produktvariante wurde erfolgreich aktualisiert.')
-            return redirect('product_variants', pk=product.pk)
-    else:
-        form = ProductVariantForm(instance=variant)
-
-    context = {
-        'product': product,
-        'variant': variant,
-        'form': form,
-        'total_accessible_stock': total_accessible_stock
-    }
+    context = handle_model_update(
+        request,
+        instance=variant,
+        form_class=ProductVariantForm,
+        model_name_singular='Produktvariante',
+        success_redirect='product_variants',
+        context_extra={'product': product, 'variant': variant}
+    )
 
     return render(request, 'core/product/product_variant_form.html', context)
+
 
 
 @login_required
@@ -2361,7 +2259,7 @@ def product_batch_delete(request, pk, batch_id):
 
     return render(request, 'core/product/product_batch_confirm_delete.html', context)
 
-
+#7777
 # ------------------------------------------------------------------------------
 # Verfallsdaten-Verwaltung
 # ------------------------------------------------------------------------------

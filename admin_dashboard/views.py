@@ -1,4 +1,5 @@
 import sys
+import logging
 
 import django
 from django.contrib import messages
@@ -14,15 +15,17 @@ from accessmanagement.decorators import is_admin
 from accessmanagement.models import WarehouseAccess
 from accessmanagement.permissions import PERMISSION_AREAS
 from core.models import Tax
+from core.utils.logging_utils import log_list_view_usage
 from interfaces.models import InterfaceType
 from inventory.models import Department, Warehouse
 from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
     TaxForm, CompanyAddressForm, InterfaceTypeForm
 from .models import CompanyAddress, CompanyAddressType
 
+logger = logging.getLogger(__name__)
+
 
 # --- Helper-Funktion ---
-
 def handle_form(request, form_class, instance=None, success_message='', redirect_url='', extra_context=None, template='', post_save_hook=None):
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES if request.FILES else None, instance=instance)
@@ -31,9 +34,13 @@ def handle_form(request, form_class, instance=None, success_message='', redirect
             if post_save_hook:
                 post_save_hook(obj, form.cleaned_data)
             messages.success(request, success_message)
+            logger.info(f"Form {form_class.__name__} saved successfully by user {request.user}.")
             return redirect(redirect_url)
+        else:
+            logger.warning(f"Form {form_class.__name__} has errors: {form.errors} by user {request.user}.")
     else:
         form = form_class(instance=instance)
+        logger.debug(f"Form {form_class.__name__} loaded by user {request.user}.")
 
     context = {'form': form}
     if extra_context:
@@ -52,7 +59,9 @@ def post_save_user_create(user, cleaned_data):
             user.profile.departments.add(dept)
         user.profile.save()
     except AttributeError:
-        pass
+        logger.warning(f"Profile missing for user {user.username} during creation.")
+
+    logger.info(f"User {user.username} created and assigned groups/departments.")
 
 def post_save_user_edit(user, cleaned_data):
     if cleaned_data.get('password'):
@@ -65,11 +74,14 @@ def post_save_user_edit(user, cleaned_data):
             user.profile.departments.add(dept)
         user.profile.save()
     except AttributeError:
-        pass
+        logger.warning(f"Profile missing for user {user.username} during edit.")
+
+    logger.info(f"User {user.username} updated.")
 
 def post_save_group(group, cleaned_data):
     permission_ids = cleaned_data.get('permissions', [])
     group.permissions.set(Permission.objects.filter(id__in=permission_ids))
+    logger.info(f"Group {group.name} permissions updated.")
 
 def post_save_department(dept, cleaned_data):
     manager = cleaned_data.get('manager')
@@ -81,15 +93,18 @@ def post_save_department(dept, cleaned_data):
     for user in members:
         try:
             dept.user_profiles.add(user.profile)
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not add profile for user {user} to department {dept.name}: {e}")
+
+    logger.info(f"Department {dept.name} updated with new manager and members.")
 
 
 @login_required
 @user_passes_test(is_admin)
 def admin_dashboard(request):
     """Main admin dashboard view."""
-    # Statistiken sammeln
+    logger.info(f"Dashboard accessed by {request.user}.")
+
     stats = {
         'users_count': User.objects.count(),
         'groups_count': Group.objects.count(),
@@ -106,21 +121,20 @@ def admin_dashboard(request):
             'total': SupplierInterface.objects.count(),
             'active': SupplierInterface.objects.filter(is_active=True).count(),
         }
-    except (ImportError, Exception):
+    except Exception as e:
         interface_stats = None
+        logger.warning(f"Interface stats loading failed: {e}")
 
-    # Letzte Benutzeraktivitäten (falls vorhanden)
     try:
         from django.contrib.admin.models import LogEntry
         recent_activities = LogEntry.objects.all().order_by('-action_time')[:10]
-    except:
+    except Exception as e:
         recent_activities = []
+        logger.warning(f"Loading recent admin log entries failed: {e}")
 
-    # Workflow-Einstellungen für die Visualisierung
     from .models import WorkflowSettings
     workflow_settings, _ = WorkflowSettings.objects.get_or_create(pk=1)
 
-    # System-Informationen
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     django_version = django.get_version()
     database_type = request.META.get('DATABASE_ENGINE', connections.databases['default']['ENGINE'].split('.')[-1])
@@ -139,15 +153,27 @@ def admin_dashboard(request):
     return render(request, 'admin_dashboard/dashboard.html', context)
 
 
+
 @login_required
 @user_passes_test(is_admin)
 def user_management(request):
-    """User management view."""
-    # Filter und Suche
     search_query = request.GET.get('search', '')
     status_filter = request.GET.get('status', '')
     group_filter = request.GET.get('group', '')
+    sort_by = request.GET.get('sort', 'username')
+    page = request.GET.get('page')
 
+    log_list_view_usage(
+        request,
+        view_name="user_management",
+        filters={
+            'search': search_query,
+            'status': status_filter,
+            'group': group_filter
+        },
+        sort_by=sort_by,
+        page=page
+    )
     users = User.objects.all()
 
     if search_query:
@@ -165,18 +191,9 @@ def user_management(request):
     if group_filter:
         users = users.filter(groups__id=group_filter)
 
-    # Sortierung
-    sort_by = request.GET.get('sort', 'username')
-    if sort_by.startswith('-'):
-        order_by = sort_by
-    else:
-        order_by = sort_by
+    users = users.order_by(sort_by)
 
-    users = users.order_by(order_by)
-
-    # Pagination
     paginator = Paginator(users, 20)
-    page = request.GET.get('page')
     try:
         users_page = paginator.page(page)
     except PageNotAnInteger:
@@ -184,7 +201,6 @@ def user_management(request):
     except EmptyPage:
         users_page = paginator.page(paginator.num_pages)
 
-    # Gruppen für Filter
     groups = Group.objects.all()
 
     context = {
@@ -198,6 +214,7 @@ def user_management(request):
     }
 
     return render(request, 'admin_dashboard/user_management.html', context)
+
 
 
 @login_required
@@ -250,27 +267,22 @@ def user_edit(request, user_id):
 @login_required
 @user_passes_test(is_admin)
 def user_delete(request, user_id):
-    """Delete a user."""
     user = get_object_or_404(User, pk=user_id)
-
     if request.method == 'POST':
         username = user.username
         user.delete()
+        logger.info(f"User {username} deleted by {request.user}.")
         messages.success(request, f'Benutzer "{username}" wurde erfolgreich gelöscht.')
         return redirect('admin_user_management')
 
-    context = {
-        'user_obj': user,
-        'section': 'users'
-    }
-
+    context = {'user_obj': user, 'section': 'users'}
     return render(request, 'admin_dashboard/user_confirm_delete.html', context)
 
 
 @login_required
 @user_passes_test(is_admin)
 def group_management(request):
-    """Group management view."""
+    log_list_view_usage(request, view_name="group_management")
     groups = Group.objects.annotate(user_count=Count('user'))
 
     context = {
@@ -333,34 +345,25 @@ def group_edit(request, group_id):
 @login_required
 @user_passes_test(is_admin)
 def group_delete(request, group_id):
-    """Delete a group."""
     group = get_object_or_404(Group, pk=group_id)
-
     if request.method == 'POST':
         group_name = group.name
         group.delete()
+        logger.info(f"Group {group_name} deleted by {request.user}.")
         messages.success(request, f'Gruppe "{group_name}" wurde erfolgreich gelöscht.')
         return redirect('admin_group_management')
 
-    # Benutzer in dieser Gruppe zählen
     user_count = User.objects.filter(groups=group).count()
-
-    context = {
-        'group': group,
-        'user_count': user_count,
-        'section': 'groups'
-    }
-
+    context = {'group': group, 'user_count': user_count, 'section': 'groups'}
     return render(request, 'admin_dashboard/group_confirm_delete.html', context)
 
 
 @login_required
 @user_passes_test(is_admin)
 def department_management(request):
-    """Department management view."""
+    log_list_view_usage(request, view_name="department_management")
     departments = Department.objects.all()
 
-    # Mitgliederanzahl für jede Abteilung
     departments_with_counts = []
     for dept in departments:
         user_count = dept.user_profiles.count()
@@ -419,47 +422,36 @@ def department_edit(request, department_id):
 @login_required
 @user_passes_test(is_admin)
 def department_delete(request, department_id):
-    """Delete a department."""
     department = get_object_or_404(Department, pk=department_id)
-
     if request.method == 'POST':
         department_name = department.name
         department.delete()
+        logger.info(f"Department {department_name} deleted by {request.user}.")
         messages.success(request, f'Abteilung "{department_name}" wurde erfolgreich gelöscht.')
         return redirect('admin_department_management')
 
-    # Mitglieder in dieser Abteilung zählen
     member_count = department.user_profiles.count()
-
-    # Prüfen, ob Warehouse-Zugriffe existieren
     warehouse_access_count = WarehouseAccess.objects.filter(department=department).count()
-
     context = {
         'department': department,
         'member_count': member_count,
         'warehouse_access_count': warehouse_access_count,
         'section': 'departments'
     }
-
     return render(request, 'admin_dashboard/department_confirm_delete.html', context)
 
 
 @login_required
 @user_passes_test(is_admin)
 def warehouse_access_delete(request, access_id):
-    """Delete a warehouse access."""
     access = get_object_or_404(WarehouseAccess, pk=access_id)
-
     if request.method == 'POST':
         access.delete()
+        logger.info(f"WarehouseAccess ID {access_id} deleted by {request.user}.")
         messages.success(request, f'Lagerzugriff wurde erfolgreich gelöscht.')
         return redirect('warehouse_access_management')
 
-    context = {
-        'access': access,
-        'section': 'warehouse_access'
-    }
-
+    context = {'access': access, 'section': 'warehouse_access'}
     return render(request, 'admin_dashboard/warehouse_access_confirm_delete.html', context)
 
 
@@ -503,6 +495,7 @@ def workflow_settings(request):
 def get_user_details(request, user_id):
     """AJAX endpoint to get user details."""
     user = get_object_or_404(User, pk=user_id)
+    logger.debug(f"AJAX: get_user_details called by {request.user} for user ID {user_id}")
 
     data = {
         'id': user.id,
@@ -518,13 +511,14 @@ def get_user_details(request, user_id):
         'last_login': user.last_login.strftime('%Y-%m-%d %H:%M:%S') if user.last_login else None,
     }
 
-    # Abteilungen hinzufügen, falls verfügbar
     try:
         data['departments'] = list(user.profile.departments.values('id', 'name'))
-    except:
+    except Exception as e:
         data['departments'] = []
+        logger.warning(f"Could not fetch departments for user {user.username}: {e}")
 
     return JsonResponse(data)
+
 
 
 @login_required
@@ -532,6 +526,7 @@ def get_user_details(request, user_id):
 def get_department_details(request, department_id):
     """AJAX endpoint to get department details."""
     department = get_object_or_404(Department, pk=department_id)
+    logger.debug(f"AJAX: get_department_details called by {request.user} for department ID {department_id}")
 
     data = {
         'id': department.id,
@@ -545,7 +540,6 @@ def get_department_details(request, department_id):
         'members': []
     }
 
-    # Mitglieder hinzufügen
     try:
         for profile in department.user_profiles.all():
             data['members'].append({
@@ -553,16 +547,17 @@ def get_department_details(request, department_id):
                 'username': profile.user.username,
                 'name': f"{profile.user.first_name} {profile.user.last_name}".strip() or profile.user.username
             })
-    except:
-        pass
+    except Exception as e:
+        logger.warning(f"Could not fetch members for department {department.name}: {e}")
 
     return JsonResponse(data)
+
 
 
 @login_required
 @user_passes_test(is_admin)
 def tax_management(request):
-    """Verwaltung der Mehrwertsteuersätze."""
+    log_list_view_usage(request, view_name="tax_management")
     taxes = Tax.objects.all().order_by('rate')
 
     context = {
@@ -630,40 +625,26 @@ def tax_delete(request, tax_id):
 @login_required
 @user_passes_test(is_admin)
 def interface_management(request):
-    """Verwaltung der Lieferantenschnittstellen im Admin-Dashboard."""
-    # Schnittstellentypen abrufen
+    log_list_view_usage(request, view_name="interface_management")
     from interfaces.models import InterfaceType, SupplierInterface
-    
+
     interface_types = InterfaceType.objects.all().order_by('name')
-    
-    # Anzahl der Schnittstellen pro Typ ermitteln
     for interface_type in interface_types:
         interface_type.count = SupplierInterface.objects.filter(interface_type=interface_type).count()
-    
-    # Gesamtanzahl der Schnittstellen
+
     total_interfaces = SupplierInterface.objects.count()
     active_interfaces = SupplierInterface.objects.filter(is_active=True).count()
-    
-    # Erfolgsmessung der letzten 30 Tage
+
     from interfaces.models import InterfaceLog
     from django.utils import timezone
 
     thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
-    
-    # Erfolgreiche vs. fehlgeschlagene Übertragungen
-    success_count = InterfaceLog.objects.filter(
-        status='success',
-        timestamp__gte=thirty_days_ago
-    ).count()
-    
-    failed_count = InterfaceLog.objects.filter(
-        status='failed',
-        timestamp__gte=thirty_days_ago
-    ).count()
-    
+
+    success_count = InterfaceLog.objects.filter(status='success', timestamp__gte=thirty_days_ago).count()
+    failed_count = InterfaceLog.objects.filter(status='failed', timestamp__gte=thirty_days_ago).count()
     total_transmissions = success_count + failed_count
     success_rate = (success_count / total_transmissions * 100) if total_transmissions > 0 else 0
-    
+
     context = {
         'interface_types': interface_types,
         'total_interfaces': total_interfaces,
@@ -674,27 +655,25 @@ def interface_management(request):
         'success_rate': success_rate,
         'section': 'interfaces'
     }
-    
+
     return render(request, 'admin_dashboard/interface_management.html', context)
 
 
 @login_required
 @user_passes_test(is_admin)
 def interface_type_management(request):
-    """Verwaltung der Schnittstellentypen im Admin-Dashboard."""
+    log_list_view_usage(request, view_name="interface_type_management")
     from interfaces.models import InterfaceType, SupplierInterface
-    
+
     interface_types = InterfaceType.objects.all().order_by('name')
-    
-    # Anzahl der Schnittstellen pro Typ ermitteln
     for interface_type in interface_types:
         interface_type.count = SupplierInterface.objects.filter(interface_type=interface_type).count()
-    
+
     context = {
         'interface_types': interface_types,
         'section': 'interfaces'
     }
-    
+
     return render(request, 'admin_dashboard/interface_type_management.html', context)
 
 
@@ -769,13 +748,12 @@ def interface_type_delete(request, type_id):
 @login_required
 @user_passes_test(is_admin)
 def company_address_management(request):
-    """Verwaltung der Unternehmensadressen."""
-    # Adressen nach Typ gruppieren
+    log_list_view_usage(request, view_name="company_address_management")
     addresses_by_type = []
 
     for address_type, address_type_display in CompanyAddressType.choices:
         addresses = CompanyAddress.objects.filter(address_type=address_type)
-        if addresses.exists() or address_type in ['headquarters', 'billing']:  # Wichtige Typen immer anzeigen
+        if addresses.exists() or address_type in ['headquarters', 'billing']:
             addresses_by_type.append({
                 'type': address_type,
                 'display': address_type_display,

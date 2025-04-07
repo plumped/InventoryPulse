@@ -35,6 +35,7 @@ from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto
     ProductVariant, SerialNumber, BatchNumber, Currency
 from .utils.deletion import handle_delete_view
 from .utils.files import delete_file_if_exists
+from .utils.filters import filter_product_serials, filter_expiring_serials, filter_expiring_batches
 from .utils.forms import handle_form_view
 from .utils.imports import handle_csv_import
 from .utils.pagination import paginate_queryset
@@ -1918,33 +1919,19 @@ def product_serials(request, pk):
     """Zeigt alle Seriennummern eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
 
-    # Filteroptionen
-    status_filter = request.GET.get('status', '')
-    warehouse_filter = request.GET.get('warehouse', '')
-    variant_filter = request.GET.get('variant', '')
-    search_query = request.GET.get('search', '')
+    filters = {
+        'status': request.GET.get('status', ''),
+        'warehouse': request.GET.get('warehouse', ''),
+        'variant': request.GET.get('variant', ''),
+        'search': request.GET.get('search', ''),
+    }
 
     serials = SerialNumber.objects.filter(product=product)
-
-    if status_filter:
-        serials = serials.filter(status=status_filter)
-
-    if warehouse_filter:
-        serials = serials.filter(warehouse_id=warehouse_filter)
-
-    if variant_filter:
-        serials = serials.filter(variant_id=variant_filter)
-
-    if search_query:
-        serials = serials.filter(serial_number__icontains=search_query)
-
+    serials = filter_product_serials(serials, filters)
     serials = paginate_queryset(serials, request.GET.get('page'), per_page=50)
 
-    # Status-Statistiken
     status_counts = SerialNumber.objects.filter(product=product).values('status').annotate(
         count=Count('status')).order_by('status')
-
-    # In Dictionary umwandeln für leichteren Zugriff
     status_stats = {item['status']: item['count'] for item in status_counts}
 
     context = {
@@ -1954,10 +1941,7 @@ def product_serials(request, pk):
         'warehouses': Warehouse.objects.filter(is_active=True),
         'variants': product.variants.all(),
         'status_choices': SerialNumber.status_choices,
-        'status_filter': status_filter,
-        'warehouse_filter': warehouse_filter,
-        'variant_filter': variant_filter,
-        'search_query': search_query,
+        **filters,
     }
 
     return render(request, 'core/product/product_serials.html', context)
@@ -2268,7 +2252,6 @@ def product_batch_delete(request, pk, batch_id):
 @permission_required('product', 'view')
 def expiry_management(request):
     """Zentrale Verwaltung aller Produkte mit Verfallsdaten."""
-    # Filteroptionen
     expiry_filter = request.GET.get('filter', 'all')
     days_threshold = request.GET.get('days_threshold', '30')
     search_query = request.GET.get('search', '')
@@ -2281,46 +2264,28 @@ def expiry_management(request):
 
     today = timezone.now().date()
 
-    # Basis-Queryset für Seriennummern mit Verfallsdaten
-    serials = SerialNumber.objects.filter(expiry_date__isnull=False)
+    # 🔁 Gemeinsame Filterdaten
+    filters = {
+        'expiry': expiry_filter,
+        'days': days_threshold,
+        'search': search_query,
+        'category': category_filter,
+    }
 
-    # Basis-Queryset für Chargen mit Verfallsdaten
-    batches = BatchNumber.objects.filter(expiry_date__isnull=False)
+    # ✨ Filter auslagern in utils
+    serials = filter_expiring_serials(
+        SerialNumber.objects.filter(expiry_date__isnull=False),
+        filters,
+        today
+    )
 
-    # Filterung nach Ablaufstatus
-    if expiry_filter == 'expired':
-        serials = serials.filter(expiry_date__lt=today)
-        batches = batches.filter(expiry_date__lt=today)
-    elif expiry_filter == 'expiring_soon':
-        serials = serials.filter(
-            expiry_date__gte=today,
-            expiry_date__lte=today + timedelta(days=days_threshold)
-        )
-        batches = batches.filter(
-            expiry_date__gte=today,
-            expiry_date__lte=today + timedelta(days=days_threshold)
-        )
-    elif expiry_filter == 'valid':
-        serials = serials.filter(expiry_date__gt=today + timedelta(days=days_threshold))
-        batches = batches.filter(expiry_date__gt=today + timedelta(days=days_threshold))
+    batches = filter_expiring_batches(
+        BatchNumber.objects.filter(expiry_date__isnull=False),
+        filters,
+        today
+    )
 
-    # Filterung nach Suchbegriff
-    if search_query:
-        serials = serials.filter(
-            Q(product__name__icontains=search_query) |
-            Q(serial_number__icontains=search_query)
-        )
-        batches = batches.filter(
-            Q(product__name__icontains=search_query) |
-            Q(batch_number__icontains=search_query)
-        )
-
-    # Filterung nach Kategorie
-    if category_filter:
-        serials = serials.filter(product__category_id=category_filter)
-        batches = batches.filter(product__category_id=category_filter)
-
-    # Statistiken für Seriennummern
+    # 📊 Statistiken
     serial_stats = {
         'total': SerialNumber.objects.filter(expiry_date__isnull=False).count(),
         'expired': SerialNumber.objects.filter(expiry_date__lt=today).count(),
@@ -2333,7 +2298,6 @@ def expiry_management(request):
         ).count(),
     }
 
-    # Statistiken für Chargen
     batch_stats = {
         'total': BatchNumber.objects.filter(expiry_date__isnull=False).count(),
         'expired': BatchNumber.objects.filter(expiry_date__lt=today).count(),
@@ -2346,12 +2310,11 @@ def expiry_management(request):
         ).count(),
     }
 
-    # Paginierung für Seriennummern
+    # 📃 Paginieren
     serials = paginate_queryset(serials, request.GET.get('serials_page'), per_page=25)
-
-    # Paginierung für Chargen
     batches = paginate_queryset(batches, request.GET.get('batches_page'), per_page=25)
 
+    # 🔚 Kontext + Render
     context = {
         'serials': serials,
         'batches': batches,
@@ -2366,6 +2329,7 @@ def expiry_management(request):
     }
 
     return render(request, 'core/product/expiry_management.html', context)
+
 
 
 # ------------------------------------------------------------------------------
@@ -2500,23 +2464,15 @@ def serialnumber_list(request):
     product_filter = request.GET.get('product', '')
     search_query = request.GET.get('search', '')
 
+    filters = {
+        'status': request.GET.get('status', ''),
+        'warehouse': request.GET.get('warehouse', ''),
+        'product': request.GET.get('product', ''),
+        'search': request.GET.get('search', ''),
+    }
+
     serials = SerialNumber.objects.select_related('product', 'warehouse', 'variant')
-
-    if status_filter:
-        serials = serials.filter(status=status_filter)
-
-    if warehouse_filter:
-        serials = serials.filter(warehouse_id=warehouse_filter)
-
-    if product_filter:
-        serials = serials.filter(product_id=product_filter)
-
-    if search_query:
-        serials = serials.filter(
-            Q(serial_number__icontains=search_query) |
-            Q(product__name__icontains=search_query) |
-            Q(variant__name__icontains=search_query)
-        )
+    serials = filter_product_serials(serials, filters)
 
     # Sortierung
     sort_by = request.GET.get('sort', '-created_at')
@@ -2701,16 +2657,14 @@ def serialnumber_export(request):
     warehouse_filter = request.GET.get('warehouse', '')
     product_filter = request.GET.get('product', '')
 
+    filters = {
+        'status': request.GET.get('status'),
+        'warehouse': request.GET.get('warehouse'),
+        'product': request.GET.get('product'),
+    }
+
     serials = SerialNumber.objects.select_related('product', 'warehouse', 'variant')
-
-    if status_filter:
-        serials = serials.filter(status=status_filter)
-
-    if warehouse_filter:
-        serials = serials.filter(warehouse_id=warehouse_filter)
-
-    if product_filter:
-        serials = serials.filter(product_id=product_filter)
+    serials = filter_product_serials(serials, filters)
 
     # Export-Format bestimmen
     export_format = request.GET.get('format', '')

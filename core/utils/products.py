@@ -4,7 +4,7 @@ from core.utils.stock import get_accessible_stock
 
 
 def get_filtered_products(request, filter_low_stock=False):
-    warehouses = get_accessible_warehouses(request)
+    warehouses = get_accessible_warehouses(request.user)
     products = Product.objects.select_related('category').all()
     search = request.GET.get('search', '')
     category = request.GET.get('category', '')

@@ -11,6 +11,7 @@ from core.models import (
     Product, Category, ProductWarehouse, ProductPhoto, ProductAttachment,
     ProductVariantType, ProductVariant, SerialNumber, BatchNumber, Tax
 )
+from core.utils.api_helpers import generate_related_action
 from suppliers.models import Supplier, SupplierProduct
 from inventory.models import Warehouse, StockMovement, StockTake
 from order.models import PurchaseOrder, PurchaseOrderItem, OrderSuggestion
@@ -37,15 +38,13 @@ class ReadOnlyPermission(BasePermission):
     """
     Erlaubt nur Lesezugriff (GET, HEAD, OPTIONS)
     """
+
+class ReadOnlyPermission(BasePermission):
     def has_permission(self, request, view):
-        # Nur sichere Methoden erlauben (GET, HEAD, OPTIONS)
         return request.method in permissions.SAFE_METHODS
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for products.
-    """
     queryset = Product.objects.all()
     permission_classes = [IsAuthenticated, ProductPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -55,79 +54,42 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering = ['name']
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return ProductListSerializer
-        return ProductDetailSerializer
+        return ProductListSerializer if self.action == 'list' else ProductDetailSerializer
 
     @action(detail=True, methods=['get'])
     def variants(self, request, pk=None):
-        """Get variants for a specific product"""
-        product = self.get_object()
-        variants = ProductVariant.objects.filter(parent_product=product)
-        serializer = ProductVariantSerializer(variants, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, ProductVariant, ProductVariantSerializer, 'parent_product')
 
     @action(detail=True, methods=['get'])
     def photos(self, request, pk=None):
-        """Get photos for a specific product"""
-        product = self.get_object()
-        photos = ProductPhoto.objects.filter(product=product)
-        serializer = ProductPhotoSerializer(photos, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, ProductPhoto, ProductPhotoSerializer)
 
     @action(detail=True, methods=['get'])
     def attachments(self, request, pk=None):
-        """Get attachments for a specific product"""
-        product = self.get_object()
-        attachments = ProductAttachment.objects.filter(product=product)
-        serializer = ProductAttachmentSerializer(attachments, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, ProductAttachment, ProductAttachmentSerializer)
 
     @action(detail=True, methods=['get'])
     def serials(self, request, pk=None):
-        """Get serial numbers for a specific product"""
-        product = self.get_object()
-        serials = SerialNumber.objects.filter(product=product)
-        serializer = SerialNumberSerializer(serials, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, SerialNumber, SerialNumberSerializer)
 
     @action(detail=True, methods=['get'])
     def batches(self, request, pk=None):
-        """Get batch numbers for a specific product"""
-        product = self.get_object()
-        batches = BatchNumber.objects.filter(product=product)
-        serializer = BatchNumberSerializer(batches, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, BatchNumber, BatchNumberSerializer)
 
     @action(detail=True, methods=['get'])
     def stock(self, request, pk=None):
-        """Get stock information for a specific product"""
-        product = self.get_object()
-        stocks = ProductWarehouse.objects.filter(product=product)
-        serializer = ProductWarehouseSerializer(stocks, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, ProductWarehouse, ProductWarehouseSerializer)
 
     @action(detail=True, methods=['get'])
     def movements(self, request, pk=None):
-        """Get stock movements for a specific product"""
-        product = self.get_object()
-        movements = StockMovement.objects.filter(product=product).order_by('-created_at')
-        serializer = StockMovementSerializer(movements, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, StockMovement, StockMovementSerializer, order_by='-created_at')
 
     @action(detail=True, methods=['get'])
     def suppliers(self, request, pk=None):
-        """Get suppliers for a specific product"""
-        product = self.get_object()
-        supplier_products = SupplierProduct.objects.filter(product=product)
-        serializer = SupplierProductSerializer(supplier_products, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, SupplierProduct, SupplierProductSerializer)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for categories.
-    """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated, ProductPermission]
@@ -137,17 +99,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def products(self, request, pk=None):
-        """Get products in a specific category"""
-        category = self.get_object()
-        products = Product.objects.filter(category=category)
-        serializer = ProductListSerializer(products, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, Product, ProductListSerializer, 'category')
 
 
 class TaxViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for tax rates.
-    """
     queryset = Tax.objects.all()
     serializer_class = TaxSerializer
     permission_classes = [IsAuthenticated, ProductPermission]
@@ -158,9 +113,6 @@ class TaxViewSet(viewsets.ModelViewSet):
 
 
 class ProductVariantTypeViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for product variant types.
-    """
     queryset = ProductVariantType.objects.all()
     serializer_class = ProductVariantTypeSerializer
     permission_classes = [IsAuthenticated, ProductPermission]
@@ -170,9 +122,6 @@ class ProductVariantTypeViewSet(viewsets.ModelViewSet):
 
 
 class ProductVariantViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for product variants.
-    """
     queryset = ProductVariant.objects.all()
     serializer_class = ProductVariantSerializer
     permission_classes = [IsAuthenticated, ProductPermission]
@@ -183,9 +132,6 @@ class ProductVariantViewSet(viewsets.ModelViewSet):
 
 
 class SerialNumberViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for serial numbers.
-    """
     queryset = SerialNumber.objects.all()
     serializer_class = SerialNumberSerializer
     permission_classes = [IsAuthenticated, ProductPermission]
@@ -196,7 +142,6 @@ class SerialNumberViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def scan(self, request):
-        """Scan a serial number"""
         serial_number = request.query_params.get('serial_number', None)
         if not serial_number:
             return Response({'error': 'Serial number is required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -210,9 +155,6 @@ class SerialNumberViewSet(viewsets.ModelViewSet):
 
 
 class BatchNumberViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for batch numbers.
-    """
     queryset = BatchNumber.objects.all()
     serializer_class = BatchNumberSerializer
     permission_classes = [IsAuthenticated, ProductPermission]
@@ -223,9 +165,6 @@ class BatchNumberViewSet(viewsets.ModelViewSet):
 
 
 class WarehouseViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for warehouses.
-    """
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
     permission_classes = [IsAuthenticated, InventoryPermission]
@@ -236,25 +175,15 @@ class WarehouseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def products(self, request, pk=None):
-        """Get products in a specific warehouse"""
-        warehouse = self.get_object()
-        products = ProductWarehouse.objects.filter(warehouse=warehouse)
-        serializer = ProductWarehouseSerializer(products, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, ProductWarehouse, ProductWarehouseSerializer, 'warehouse')
 
     @action(detail=True, methods=['get'])
     def movements(self, request, pk=None):
-        """Get stock movements for a specific warehouse"""
-        warehouse = self.get_object()
-        movements = StockMovement.objects.filter(warehouse=warehouse).order_by('-created_at')
-        serializer = StockMovementSerializer(movements, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, StockMovement, StockMovementSerializer, 'warehouse', order_by='-created_at')
+
 
 
 class StockMovementViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for stock movements.
-    """
     queryset = StockMovement.objects.all()
     serializer_class = StockMovementSerializer
     permission_classes = [IsAuthenticated, InventoryPermission]
@@ -265,9 +194,6 @@ class StockMovementViewSet(viewsets.ModelViewSet):
 
 
 class StockTakeViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for stock takes.
-    """
     queryset = StockTake.objects.all()
     serializer_class = StockTakeListSerializer
     permission_classes = [IsAuthenticated, InventoryPermission]
@@ -278,9 +204,6 @@ class StockTakeViewSet(viewsets.ModelViewSet):
 
 
 class SupplierViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for suppliers.
-    """
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
     permission_classes = [IsAuthenticated, SupplierPermission]
@@ -291,25 +214,14 @@ class SupplierViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def products(self, request, pk=None):
-        """Get products for a specific supplier"""
-        supplier = self.get_object()
-        supplier_products = SupplierProduct.objects.filter(supplier=supplier)
-        serializer = SupplierProductSerializer(supplier_products, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, SupplierProduct, SupplierProductSerializer, 'supplier')
 
     @action(detail=True, methods=['get'])
     def orders(self, request, pk=None):
-        """Get orders for a specific supplier"""
-        supplier = self.get_object()
-        orders = PurchaseOrder.objects.filter(supplier=supplier)
-        serializer = PurchaseOrderListSerializer(orders, many=True)
-        return Response(serializer.data)
+        return generate_related_action(self, PurchaseOrder, PurchaseOrderListSerializer, 'supplier')
 
 
 class SupplierProductViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for supplier-product relationships.
-    """
     queryset = SupplierProduct.objects.all()
     serializer_class = SupplierProductSerializer
     permission_classes = [IsAuthenticated, SupplierPermission]
@@ -320,9 +232,6 @@ class SupplierProductViewSet(viewsets.ModelViewSet):
 
 
 class PurchaseOrderViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for purchase orders.
-    """
     queryset = PurchaseOrder.objects.all()
     permission_classes = [IsAuthenticated, OrderPermission]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -331,119 +240,61 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
     ordering = ['-order_date']
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return PurchaseOrderListSerializer
-        return PurchaseOrderDetailSerializer
+        return PurchaseOrderListSerializer if self.action == 'list' else PurchaseOrderDetailSerializer
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, OrderApprovePermission])
     def approve(self, request, pk=None):
-        """Approve a purchase order"""
         order = self.get_object()
-
-        # Check if the order is pending
         if order.status != 'pending':
-            return Response(
-                {'error': 'Only pending orders can be approved'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Check if the user can approve this order
+            return Response({'error': 'Only pending orders can be approved'}, status=status.HTTP_400_BAD_REQUEST)
         if not can_approve_order(request.user, order):
-            return Response(
-                {'error': 'You cannot approve this order because you created it'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
-        # Approve the order
+            return Response({'error': 'You cannot approve this order because you created it'}, status=status.HTTP_403_FORBIDDEN)
         order.status = 'approved'
         order.approved_by = request.user
         order.save()
-
-        serializer = self.get_serializer(order)
-        return Response(serializer.data)
+        return Response(self.get_serializer(order).data)
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
-        """Reject a purchase order"""
         order = self.get_object()
-
-        # Check if the order is pending
         if order.status != 'pending':
-            return Response(
-                {'error': 'Only pending orders can be rejected'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        rejection_reason = request.data.get('rejection_reason', '')
-
-        # Set order back to draft with rejection reason
+            return Response({'error': 'Only pending orders can be rejected'}, status=status.HTTP_400_BAD_REQUEST)
+        reason = request.data.get('rejection_reason', '')
         order.status = 'draft'
-        order.notes += f"\n\nRejected by {request.user.username}.\nReason: {rejection_reason}"
+        order.notes += f"\n\nRejected by {request.user.username}.\nReason: {reason}"
         order.save()
-
-        serializer = self.get_serializer(order)
-        return Response(serializer.data)
+        return Response(self.get_serializer(order).data)
 
     @action(detail=True, methods=['post'])
     def submit(self, request, pk=None):
-        """Submit a purchase order for approval"""
         order = self.get_object()
-
-        # Check if the order is a draft
         if order.status != 'draft':
-            return Response(
-                {'error': 'Only draft orders can be submitted'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Check if the order has items
+            return Response({'error': 'Only draft orders can be submitted'}, status=status.HTTP_400_BAD_REQUEST)
         if not order.items.exists():
-            return Response(
-                {'error': 'Cannot submit order without any items'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Submit the order
+            return Response({'error': 'Cannot submit order without any items'}, status=status.HTTP_400_BAD_REQUEST)
         order.status = 'pending'
         order.save()
-
-        # Check for auto-approval
         from order.workflow import check_auto_approval
         if check_auto_approval(order):
             order.status = 'approved'
             order.approved_by = request.user
             order.save()
-
-        serializer = self.get_serializer(order)
-        return Response(serializer.data)
+        return Response(self.get_serializer(order).data)
 
     @action(detail=True, methods=['post'])
     def mark_sent(self, request, pk=None):
-        """Mark a purchase order as sent"""
         order = self.get_object()
-
-        # Check if the order is approved
         if order.status != 'approved':
-            return Response(
-                {'error': 'Only approved orders can be marked as sent'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Mark as sent
+            return Response({'error': 'Only approved orders can be marked as sent'}, status=status.HTTP_400_BAD_REQUEST)
         order.status = 'sent'
         order.save()
-
-        serializer = self.get_serializer(order)
-        return Response(serializer.data)
+        return Response(self.get_serializer(order).data)
 
 
 class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for purchase order items.
-    """
     queryset = PurchaseOrderItem.objects.all()
     serializer_class = PurchaseOrderItemSerializer
     permission_classes = [IsAuthenticated, OrderPermission]
@@ -454,9 +305,6 @@ class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
 
 
 class OrderSuggestionViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint for order suggestions.
-    """
     queryset = OrderSuggestion.objects.all()
     serializer_class = OrderSuggestionSerializer
     permission_classes = [IsAuthenticated, OrderPermission]
@@ -467,9 +315,7 @@ class OrderSuggestionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def refresh(self, request):
-        """Refresh order suggestions"""
         from order.services import generate_order_suggestions
-
         try:
             count = generate_order_suggestions()
             return Response({'message': f'{count} order suggestions generated', 'count': count})
@@ -477,13 +323,7 @@ class OrderSuggestionViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-# Aktualisierte UserViewSet-Klasse für api/views.py:
-
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    API endpoint für Benutzer.
-    Unterstützt nur Lesezugriff (GET).
-    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, UserPermission]
@@ -493,31 +333,19 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ['username']
 
     def get_queryset(self):
-        """Nur aktive Benutzer anzeigen, außer für Admins"""
-        queryset = User.objects.all()
-
-        # Wenn der Benutzer kein Admin ist, nur aktive Benutzer anzeigen
-        if not self.request.user.is_superuser:
-            queryset = queryset.filter(is_active=True)
-
-        return queryset
+        qs = User.objects.all()
+        return qs.filter(is_active=True) if not self.request.user.is_superuser else qs
 
     @action(detail=True, methods=['get'])
     def departments(self, request, pk=None):
-        """Abteilungen eines Benutzers abrufen"""
         user = self.get_object()
         try:
             departments = user.profile.departments.all()
-            # Einfache Serialisierung, wenn nötig durch eigenen DepartmentSerializer ersetzen
-            data = [{'id': d.id, 'name': d.name, 'code': d.code} for d in departments]
-            return Response(data)
+            return Response([{'id': d.id, 'name': d.name, 'code': d.code} for d in departments])
         except AttributeError:
             return Response([])
 
     @action(detail=True, methods=['get'])
     def groups(self, request, pk=None):
-        """Gruppen eines Benutzers abrufen"""
         user = self.get_object()
-        # Einfache Serialisierung, wenn nötig durch eigenen GroupSerializer ersetzen
-        data = [{'id': g.id, 'name': g.name} for g in user.groups.all()]
-        return Response(data)
+        return Response([{'id': g.id, 'name': g.name} for g in user.groups.all()])

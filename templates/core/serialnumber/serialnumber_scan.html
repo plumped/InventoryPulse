@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Seriennummer scannen{% endblock %}
+
+{% block extra_css %}
+<style>
+    .scanner-area {
+        position: relative;
+        min-height: 300px;
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        background-color: #f8f9fa;
+    }
+
+    .scanner-area i {
+        font-size: 4rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
+    .scanner-guide {
+        position: relative;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 8px;
+        background-color: #e9ecef;
+    }
+
+    .scanner-guide ol {
+        margin-bottom: 0;
+    }
+
+    .recent-scans {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .recent-scans li {
+        padding: 10px 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .recent-scans li:last-child {
+        border-bottom: none;
+    }
+
+    .scanner-feedback {
+        margin-top: 1rem;
+        min-height: 50px;
+    }
+
+    .scan-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+
+    .scan-details {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2px;
+    }
+
+    .scan-details span {
+        font-size: 0.85rem;
+    }
+
+    .warehouse-badge {
+        background-color: #e7f5ff;
+        color: #0066cc;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="bi bi-qr-code-scan text-primary me-2"></i>
+        Seriennummer scannen
+    </h1>
+
+    <div class="row">
+        <!-- Scanbereich -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Scanner</h5>
+                </div>
+                <div class="card-body">
+                    <div class="scanner-area">
+                        <i class="bi bi-upc-scan"></i>
+                        <h4>Scannen Sie eine Seriennummer</h4>
+                        <p class="text-muted">Positionieren Sie den Barcode im Scanbereich oder geben Sie die Seriennummer manuell ein.</p>
+
+                        <form method="get" action="{% url 'serialnumber_scan' %}" class="w-100 mt-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control form-control-lg"
+                                       name="scan" id="scan-input"
+                                       placeholder="Seriennummer scannen oder eingeben"
+                                       value="{{ scanned_number }}" autofocus>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i> Suchen
+                                </button>
+                            </div>
+                        </form>
+
+                        <div class="scanner-feedback">
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} mt-3">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="scanner-guide">
+                        <h6><i class="bi bi-info-circle me-2"></i>Anleitung zum Scannen:</h6>
+                        <ol>
+                            <li>Platzieren Sie den Cursor im Eingabefeld</li>
+                            <li>Scannen Sie den Barcode mit einem Barcodescanner</li>
+                            <li>Alternativ können Sie die Seriennummer manuell eingeben</li>
+                            <li>Drücken Sie "Suchen" oder die Enter-Taste</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seitenleiste -->
+        <div class="col-md-4">
+            <!-- Schnellaktionen -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Schnellaktionen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'serialnumber_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-list"></i> Seriennummern-Liste
+                        </a>
+                        {% if perms.serialnumber.add %}
+                        <a href="{% url 'serialnumber_add' %}" class="btn btn-outline-success">
+                            <i class="bi bi-plus-circle"></i> Neue Seriennummer
+                        </a>
+                        {% endif %}
+                        {% if perms.serialnumber.transfer %}
+                        <a href="{% url 'serialnumber_transfer' %}" class="btn btn-outline-info">
+                            <i class="bi bi-arrow-left-right"></i> Seriennummer transferieren
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Zuletzt gescannte Seriennummern -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Letzte Suchanfragen</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_scans %}
+                    <ul class="recent-scans">
+                        {% for scan in recent_scans %}
+                        <li>
+                            <a href="{% url 'serialnumber_detail' serial_id=scan.id %}">{{ scan.serial_number }}</a>
+                            <div class="scan-details">
+                                <small class="text-muted">{{ scan.product.name }}</small>
+                                <span class="warehouse-badge">
+                                    <i class="bi bi-building me-1"></i>{{ scan.warehouse.name }}
+                                </span>
+                            </div>
+                            {% if scan.timestamp %}
+                            <div class="scan-meta">
+                                <span><i class="bi bi-clock me-1"></i>{{ scan.timestamp }}</span>
+                            </div>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-clock-history" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Keine kürzlichen Suchanfragen</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Automatischer Fokus auf das Eingabefeld
+        $('#scan-input').focus();
+
+        // Automatisches Absenden bei Barcode-Scanner (diese enden typischerweise mit einem Return/Enter)
+        $('#scan-input').on('keydown', function(e) {
+            if (e.keyCode === 13) { // Enter-Taste
+                $(this).closest('form').submit();
+            }
+        });
+    });
+</script>
+{% endblock %}

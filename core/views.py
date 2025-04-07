@@ -2701,17 +2701,75 @@ def serialnumber_export(request):
 def serialnumber_scan(request):
     """Scannt eine Seriennummer (z.B. mit Barcode-Scanner) und zeigt Details an."""
     scanned_number = request.GET.get('scan', '')
+    found_serial = None
+
+    # Start with an empty list of recent scans
+    recent_scans = []
 
     if scanned_number:
         try:
-            serial = SerialNumber.objects.get(serial_number=scanned_number)
-            # Weiterleitung zur Detailseite
-            return redirect('serialnumber_detail', serial_id=serial.pk)
+            # Versuche, die Seriennummer zu finden mit explizitem select_related für warehouse
+            found_serial = SerialNumber.objects.select_related('product', 'warehouse').get(serial_number=scanned_number)
+
+            # Hole die alten Suchanfragen
+            recent_searches = request.session.get('recent_serial_searches', [])
+
+            # Aktuelles Datum formatiert (deutsches Format)
+            current_time = timezone.now()
+            formatted_time = current_time.strftime('%d.%m.%Y %H:%M')
+
+            # Warehouse bestimmen
+            warehouse_name = 'Nicht zugewiesen'
+            if hasattr(found_serial, 'warehouse') and found_serial.warehouse:
+                warehouse_name = found_serial.warehouse.name
+
+            # Create a new search entry
+            search_info = {
+                'id': found_serial.id,
+                'serial_number': found_serial.serial_number,
+                'product_name': found_serial.product.name,
+                'timestamp': formatted_time,
+                'warehouse_name': warehouse_name
+            }
+
+            # Remove duplicates
+            filtered_searches = []
+            for old_search in recent_searches:
+                if old_search.get('id') != found_serial.id:
+                    filtered_searches.append(old_search)
+
+            # Add the new search at the beginning
+            filtered_searches.insert(0, search_info)
+
+            # Limit to 5 entries
+            filtered_searches = filtered_searches[:5]
+
+            # Save to session
+            request.session['recent_serial_searches'] = filtered_searches
+
+            # Redirect to detail page
+            return redirect('serialnumber_detail', serial_id=found_serial.pk)
         except SerialNumber.DoesNotExist:
             messages.error(request, f'Seriennummer {scanned_number} wurde nicht gefunden.')
+        except Exception as e:
+            messages.error(request, f'Fehler bei der Suche: {str(e)}')
+
+    # Get recent searches from session
+    session_searches = request.session.get('recent_serial_searches', [])
+
+    # Format for template
+    for item in session_searches:
+        recent_scans.append({
+            'id': item.get('id', 0),
+            'serial_number': item.get('serial_number', ''),
+            'product': {'name': item.get('product_name', '')},
+            'timestamp': item.get('timestamp', ''),
+            'warehouse': {'name': item.get('warehouse_name', 'Nicht zugewiesen')}
+        })
 
     context = {
         'scanned_number': scanned_number,
+        'recent_scans': recent_scans,
     }
 
     return render(request, 'core/serialnumber/serialnumber_scan.html', context)

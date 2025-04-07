@@ -159,6 +159,13 @@
                                     <i class="bi bi-upc-scan me-2"></i>Seriennummern-Übersicht
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_scan' %}active{% endif %}"
+                                   href="{% url 'serialnumber_scan' %}">
+                                    <i class="bi bi-qr-code-scan me-2"></i>Seriennummern Scannen
+                                </a>
+                            </li>
+                            {% endif %}
                             {% if user|has_perm:'serialnumber:add' %}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_add' %}active{% endif %}"
@@ -194,7 +201,6 @@
                             {% endif %}
                         </ul>
                     </li>
-                    {% endif %}
 
                     <!-- Lagerverwaltung Dropdown -->
                     {% if user|has_perm:'inventory:view' %}

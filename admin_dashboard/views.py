@@ -15,6 +15,9 @@ from accessmanagement.decorators import is_admin
 from accessmanagement.models import WarehouseAccess
 from accessmanagement.permissions import PERMISSION_AREAS
 from core.models import Tax
+from core.utils.filters import filter_users, filter_departments, filter_taxes, filter_interface_types, \
+    filter_supplier_interfaces, filter_company_addresses
+from core.utils.forms import handle_form_view
 from core.utils.logging_utils import log_list_view_usage
 from core.utils.pagination import paginate_queryset
 from interfaces.models import InterfaceType
@@ -24,29 +27,6 @@ from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, Use
 from .models import CompanyAddress, CompanyAddressType
 
 logger = logging.getLogger(__name__)
-
-
-# --- Helper-Funktion ---
-def handle_form(request, form_class, instance=None, success_message='', redirect_url='', extra_context=None, template='', post_save_hook=None):
-    if request.method == 'POST':
-        form = form_class(request.POST, request.FILES if request.FILES else None, instance=instance)
-        if form.is_valid():
-            obj = form.save()
-            if post_save_hook:
-                post_save_hook(obj, form.cleaned_data)
-            messages.success(request, success_message)
-            logger.info(f"Form {form_class.__name__} saved successfully by user {request.user}.")
-            return redirect(redirect_url)
-        else:
-            logger.warning(f"Form {form_class.__name__} has errors: {form.errors} by user {request.user}.")
-    else:
-        form = form_class(instance=instance)
-        logger.debug(f"Form {form_class.__name__} loaded by user {request.user}.")
-
-    context = {'form': form}
-    if extra_context:
-        context.update(extra_context)
-    return render(request, template, context)
 
 # --- Hook-Funktionen ---
 def post_save_user_create(user, cleaned_data):
@@ -158,52 +138,32 @@ def admin_dashboard(request):
 @login_required
 @user_passes_test(is_admin)
 def user_management(request):
-    search_query = request.GET.get('search', '')
-    status_filter = request.GET.get('status', '')
-    group_filter = request.GET.get('group', '')
+    filters = {
+        'search': request.GET.get('search', ''),
+        'status': request.GET.get('status', ''),
+        'group': request.GET.get('group', ''),
+    }
     sort_by = request.GET.get('sort', 'username')
     page = request.GET.get('page')
 
     log_list_view_usage(
         request,
         view_name="user_management",
-        filters={
-            'search': search_query,
-            'status': status_filter,
-            'group': group_filter
-        },
+        filters=filters,
         sort_by=sort_by,
         page=page
     )
+
     users = User.objects.all()
-
-    if search_query:
-        users = users.filter(
-            Q(username__icontains=search_query) |
-            Q(email__icontains=search_query) |
-            Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query)
-        )
-
-    if status_filter:
-        is_active = status_filter == 'active'
-        users = users.filter(is_active=is_active)
-
-    if group_filter:
-        users = users.filter(groups__id=group_filter)
-
-    users = users.order_by(sort_by)
-
-    users_page = paginate_queryset(users, request.GET.get('page'), per_page=20)
-
-    groups = Group.objects.all()
+    users = filter_users(users, filters).order_by(sort_by)
+    users_page = paginate_queryset(users, page, per_page=20)
 
     context = {
         'users': users_page,
-        'search_query': search_query,
-        'status_filter': status_filter,
-        'group_filter': group_filter,
-        'groups': groups,
+        'search_query': filters['search'],
+        'status_filter': filters['status'],
+        'group_filter': filters['group'],
+        'groups': Group.objects.all(),
         'sort_by': sort_by,
         'section': 'users'
     }
@@ -215,7 +175,7 @@ def user_management(request):
 @login_required
 @user_passes_test(is_admin)
 def user_create(request):
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=UserCreateForm,
         success_message='Benutzer wurde erfolgreich erstellt.',
@@ -240,7 +200,7 @@ def user_edit(request, user_id):
         departments = []
         user_departments = []
 
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=UserEditForm,
         instance=user,
@@ -295,7 +255,7 @@ def group_create(request):
         area: Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
         for area in PERMISSION_AREAS.keys()
     }
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=GroupForm,
         success_message='Gruppe wurde erfolgreich erstellt.',
@@ -319,7 +279,7 @@ def group_edit(request, group_id):
         area: Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
         for area in PERMISSION_AREAS.keys()
     }
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=GroupForm,
         instance=group,
@@ -356,8 +316,14 @@ def group_delete(request, group_id):
 @login_required
 @user_passes_test(is_admin)
 def department_management(request):
-    log_list_view_usage(request, view_name="department_management")
+    filters = {
+        'search': request.GET.get('search', '')
+    }
+
+    log_list_view_usage(request, view_name="department_management", filters=filters)
+
     departments = Department.objects.all()
+    departments = filter_departments(departments, filters)
 
     departments_with_counts = []
     for dept in departments:
@@ -369,7 +335,8 @@ def department_management(request):
 
     context = {
         'departments': departments_with_counts,
-        'section': 'departments'
+        'section': 'departments',
+        'search_query': filters['search']
     }
 
     return render(request, 'admin_dashboard/department_management.html', context)
@@ -378,7 +345,7 @@ def department_management(request):
 @login_required
 @user_passes_test(is_admin)
 def department_create(request):
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=DepartmentForm,
         success_message='Abteilung wurde erfolgreich erstellt.',
@@ -397,7 +364,7 @@ def department_create(request):
 def department_edit(request, department_id):
     department = get_object_or_404(Department, pk=department_id)
     initial_members = [profile.user.id for profile in department.user_profiles.all()]
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=DepartmentForm,
         instance=department,
@@ -455,7 +422,7 @@ def warehouse_access_delete(request, access_id):
 def system_settings(request):
     from .models import SystemSettings
     settings, _ = SystemSettings.objects.get_or_create(pk=1)
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=SystemSettingsForm,
         instance=settings,
@@ -471,7 +438,7 @@ def system_settings(request):
 def workflow_settings(request):
     from .models import WorkflowSettings
     settings, _ = WorkflowSettings.objects.get_or_create(pk=1)
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=WorkflowSettingsForm,
         instance=settings,
@@ -552,12 +519,19 @@ def get_department_details(request, department_id):
 @login_required
 @user_passes_test(is_admin)
 def tax_management(request):
-    log_list_view_usage(request, view_name="tax_management")
-    taxes = Tax.objects.all().order_by('rate')
+    filters = {
+        'search': request.GET.get('search', '')
+    }
+
+    log_list_view_usage(request, view_name="tax_management", filters=filters)
+
+    taxes = Tax.objects.all()
+    taxes = filter_taxes(taxes, filters).order_by('rate')
 
     context = {
         'taxes': taxes,
-        'section': 'taxes'
+        'section': 'taxes',
+        'search_query': filters['search']
     }
 
     return render(request, 'admin_dashboard/tax_management.html', context)
@@ -566,7 +540,7 @@ def tax_management(request):
 @login_required
 @user_passes_test(is_admin)
 def tax_create(request):
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=TaxForm,
         success_message='Mehrwertsteuersatz wurde erfolgreich erstellt.',
@@ -580,7 +554,7 @@ def tax_create(request):
 @user_passes_test(is_admin)
 def tax_edit(request, tax_id):
     tax = get_object_or_404(Tax, pk=tax_id)
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=TaxForm,
         instance=tax,
@@ -614,27 +588,31 @@ def tax_delete(request, tax_id):
 
     return render(request, 'admin_dashboard/tax_confirm_delete.html', context)
 
-# In admin_dashboard/views.py
-# Fügen Sie Views für die Schnittstellen-Verwaltung hinzu
-
 @login_required
 @user_passes_test(is_admin)
 def interface_management(request):
-    log_list_view_usage(request, view_name="interface_management")
-    from interfaces.models import InterfaceType, SupplierInterface
-
-    interface_types = InterfaceType.objects.all().order_by('name')
-    for interface_type in interface_types:
-        interface_type.count = SupplierInterface.objects.filter(interface_type=interface_type).count()
-
-    total_interfaces = SupplierInterface.objects.count()
-    active_interfaces = SupplierInterface.objects.filter(is_active=True).count()
-
-    from interfaces.models import InterfaceLog
+    from interfaces.models import InterfaceType, SupplierInterface, InterfaceLog
     from django.utils import timezone
 
-    thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+    filters = {
+        'search': request.GET.get('search', ''),
+        'type': request.GET.get('type', ''),
+        'status': request.GET.get('status', '')
+    }
 
+    log_list_view_usage(request, view_name="interface_management", filters=filters)
+
+    interface_types = InterfaceType.objects.all().order_by('name')
+    interfaces = SupplierInterface.objects.all()
+    interfaces = filter_supplier_interfaces(interfaces, filters)
+
+    for interface_type in interface_types:
+        interface_type.count = interfaces.filter(interface_type=interface_type).count()
+
+    total_interfaces = interfaces.count()
+    active_interfaces = interfaces.filter(is_active=True).count()
+
+    thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
     success_count = InterfaceLog.objects.filter(status='success', timestamp__gte=thirty_days_ago).count()
     failed_count = InterfaceLog.objects.filter(status='failed', timestamp__gte=thirty_days_ago).count()
     total_transmissions = success_count + failed_count
@@ -648,6 +626,7 @@ def interface_management(request):
         'failed_count': failed_count,
         'total_transmissions': total_transmissions,
         'success_rate': success_rate,
+        'filters': filters,
         'section': 'interfaces'
     }
 
@@ -657,15 +636,23 @@ def interface_management(request):
 @login_required
 @user_passes_test(is_admin)
 def interface_type_management(request):
-    log_list_view_usage(request, view_name="interface_type_management")
     from interfaces.models import InterfaceType, SupplierInterface
 
-    interface_types = InterfaceType.objects.all().order_by('name')
+    filters = {
+        'search': request.GET.get('search', '')
+    }
+
+    log_list_view_usage(request, view_name="interface_type_management", filters=filters)
+
+    interface_types = InterfaceType.objects.all()
+    interface_types = filter_interface_types(interface_types, filters).order_by('name')
+
     for interface_type in interface_types:
         interface_type.count = SupplierInterface.objects.filter(interface_type=interface_type).count()
 
     context = {
         'interface_types': interface_types,
+        'search_query': filters['search'],
         'section': 'interfaces'
     }
 
@@ -675,7 +662,7 @@ def interface_type_management(request):
 @login_required
 @user_passes_test(is_admin)
 def interface_type_create(request):
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=InterfaceTypeForm,
         success_message='Schnittstellentyp wurde erfolgreich erstellt.',
@@ -692,7 +679,7 @@ def interface_type_create(request):
 @user_passes_test(is_admin)
 def interface_type_edit(request, type_id):
     interface_type = get_object_or_404(InterfaceType, pk=type_id)
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=InterfaceTypeForm,
         instance=interface_type,
@@ -743,21 +730,29 @@ def interface_type_delete(request, type_id):
 @login_required
 @user_passes_test(is_admin)
 def company_address_management(request):
-    log_list_view_usage(request, view_name="company_address_management")
-    addresses_by_type = []
+    filters = {
+        'search': request.GET.get('search', ''),
+        'type': request.GET.get('type', ''),
+        'is_default': request.GET.get('is_default', '')
+    }
 
+    log_list_view_usage(request, view_name="company_address_management", filters=filters)
+
+    addresses_by_type = []
     for address_type, address_type_display in CompanyAddressType.choices:
-        addresses = CompanyAddress.objects.filter(address_type=address_type)
-        if addresses.exists() or address_type in ['headquarters', 'billing']:
+        qs = CompanyAddress.objects.filter(address_type=address_type)
+        filtered_addresses = filter_company_addresses(qs, filters)
+        if filtered_addresses.exists() or address_type in ['headquarters', 'billing']:
             addresses_by_type.append({
                 'type': address_type,
                 'display': address_type_display,
-                'addresses': addresses,
-                'has_default': addresses.filter(is_default=True).exists()
+                'addresses': filtered_addresses,
+                'has_default': filtered_addresses.filter(is_default=True).exists()
             })
 
     context = {
         'addresses_by_type': addresses_by_type,
+        'filters': filters,
         'section': 'company_addresses'
     }
 
@@ -772,7 +767,7 @@ def company_address_create(request):
     if address_type and address_type in dict(CompanyAddressType.choices):
         initial['address_type'] = address_type
 
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=CompanyAddressForm,
         success_message='Unternehmensadresse wurde erfolgreich erstellt.',
@@ -787,7 +782,7 @@ def company_address_create(request):
 @user_passes_test(is_admin)
 def company_address_edit(request, address_id):
     address = get_object_or_404(CompanyAddress, pk=address_id)
-    return handle_form(
+    return handle_form_view(
         request,
         form_class=CompanyAddressForm,
         instance=address,

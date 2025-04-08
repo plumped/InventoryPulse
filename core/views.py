@@ -30,8 +30,10 @@ from .forms import ProductForm, CategoryForm, SupplierProductImportForm, Categor
     ProductImportForm, WarehouseImportForm, DepartmentImportForm, WarehouseProductImportForm, ProductPhotoForm, \
     ProductAttachmentForm, ProductVariantTypeForm, ProductVariantForm, SerialNumberForm, BulkSerialNumberForm, \
     BatchNumberForm, CurrencyForm, SerialNumberImportForm
-from .importers import SupplierProductImporter, CategoryImporter, SupplierImporter, ProductImporter, \
-    SerialNumberImporter
+from .importers.categories import CategoryImporter
+from .importers.products import ProductImporter, SupplierProductImporter
+from .importers.serialnumbers import SerialNumberImporter
+from .importers.suppliers import SupplierImporter
 from .models import Product, Category, ImportLog, ProductWarehouse, ProductPhoto, ProductAttachment, ProductVariantType, \
     ProductVariant, SerialNumber, BatchNumber, Currency
 from .utils.deletion import handle_delete_view
@@ -42,7 +44,7 @@ from .utils.imports import handle_csv_import
 from .utils.pagination import paginate_queryset
 from .utils.products import get_filtered_products
 from .utils.stock import get_accessible_stock
-from .utils.views import handle_model_delete, handle_model_update
+from .utils.view_helpers import handle_model_delete, handle_model_update
 
 
 @login_required

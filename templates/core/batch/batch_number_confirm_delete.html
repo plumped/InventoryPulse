@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Charge löschen{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 col-md-6 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Charge löschen</h5>
+                </div>
+                <div class="card-body">
+                    <p>Sind Sie sicher, dass Sie die folgende Charge löschen möchten?</p>
+
+                    <div class="alert alert-warning">
+                        <p><strong>Chargennummer:</strong> {{ batch.batch_number }}</p>
+                        <p><strong>Produkt:</strong> {{ batch.product.name }}</p>
+                        <p><strong>Menge:</strong> {{ batch.quantity }} {{ batch.product.unit }}</p>
+                        {% if batch.warehouse %}
+                        <p><strong>Lager:</strong> {{ batch.warehouse.name }}</p>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-danger">Diese Aktion kann nicht rückgängig gemacht werden!</p>
+
+                    <form method="post" action="">
+                        {% csrf_token %}
+                        <div class="text-end">
+                            <a href="{% url 'batch_number_detail' batch_id=batch.id %}" class="btn btn-secondary">Abbrechen</a>
+                            <button type="submit" class="btn btn-danger">Löschen bestätigen</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

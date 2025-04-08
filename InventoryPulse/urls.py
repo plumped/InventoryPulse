@@ -82,6 +82,19 @@ urlpatterns = [
         path('<int:serial_id>/history/', core_views.serialnumber_history, name='serialnumber_history'),
     ])),
 
+    # === Batch Numbers ===
+    path('batch-numbers/', include([
+    path('', core_views.batch_number_list, name='batch_number_list'),
+    path('<int:batch_id>/', core_views.batch_number_detail, name='batch_number_detail'),
+    path('add/', core_views.batch_number_add, name='batch_number_add'),
+    path('<int:batch_id>/edit/', core_views.batch_number_edit, name='batch_number_edit'),
+    path('<int:batch_id>/delete/', core_views.batch_number_delete, name='batch_number_delete'),
+    path('scan/', core_views.batch_number_scan, name='batch_number_scan'),
+    path('transfer/', core_views.batch_number_transfer, name='batch_number_transfer'),
+    path('import/', core_views.batch_number_import, name='batch_number_import'),
+    path('export/', core_views.batch_number_export, name='batch_number_export'),
+    ])),
+
     # === Variant Types ===
     path('variant-types/', include([
         path('', core_views.variant_type_list, name='variant_type_list'),

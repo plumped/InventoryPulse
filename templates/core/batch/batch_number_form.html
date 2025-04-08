@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="" class="row g-3">
+                        {% csrf_token %}
+
+                        {% if form.non_field_errors %}
+                        <div class="col-12">
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-md-6">
+                            <label for="{{ form.batch_number.id_for_label }}" class="form-label">Chargennummer *</label>
+                            {{ form.batch_number }}
+                            {% if form.batch_number.errors %}
+                            <div class="text-danger">
+                                {% for error in form.batch_number.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.product.id_for_label }}" class="form-label">Produkt *</label>
+                            {{ form.product }}
+                            {% if form.product.errors %}
+                            <div class="text-danger">
+                                {% for error in form.product.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.variant.id_for_label }}" class="form-label">Variante</label>
+                            {{ form.variant }}
+                            {% if form.variant.errors %}
+                            <div class="text-danger">
+                                {% for error in form.variant.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Optional, wenn das Produkt Varianten hat</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.quantity.id_for_label }}" class="form-label">Menge *</label>
+                            {{ form.quantity }}
+                            {% if form.quantity.errors %}
+                            <div class="text-danger">
+                                {% for error in form.quantity.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.production_date.id_for_label }}" class="form-label">Produktionsdatum</label>
+                            {{ form.production_date }}
+                            {% if form.production_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.production_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.expiry_date.id_for_label }}" class="form-label">Verfallsdatum</label>
+                            {{ form.expiry_date }}
+                            {% if form.expiry_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.expiry_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.supplier.id_for_label }}" class="form-label">Lieferant</label>
+                            {{ form.supplier }}
+                            {% if form.supplier.errors %}
+                            <div class="text-danger">
+                                {% for error in form.supplier.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.warehouse.id_for_label }}" class="form-label">Lager</label>
+                            {{ form.warehouse }}
+                            {% if form.warehouse.errors %}
+                            <div class="text-danger">
+                                {% for error in form.warehouse.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notizen</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                            <div class="text-danger">
+                                {% for error in form.notes.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12 text-end">
+                            <a href="{% url 'batch_number_list' %}" class="btn btn-outline-secondary">Abbrechen</a>
+                            <button type="submit" class="btn btn-primary">Speichern</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Select2 für die Dropdown-Felder
+        $('#id_product, #id_variant, #id_supplier, #id_warehouse').select2({
+            theme: 'bootstrap-5',
+            width: '100%'
+        });
+
+        // Produkt-abhängige Varianten
+        $('#id_product').on('change', function() {
+            var productId = $(this).val();
+            var variantSelect = $('#id_variant');
+
+            // Varianten zurücksetzen
+            variantSelect.empty().append('<option value="">---------</option>');
+
+            if (productId) {
+                // AJAX-Anfrage, um Varianten für das ausgewählte Produkt zu laden
+                $.ajax({
+                    url: '{% url "api_product_variants" %}',
+                    data: {
+                        'product_id': productId
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        $.each(data, function(key, value) {
+                            variantSelect.append($('<option></option>')
+                                .attr('value', value.id)
+                                .text(value.name));
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -571,3 +571,41 @@ class CurrencyForm(forms.ModelForm):
 
 class SerialNumberImportForm(forms.Form):
     file = forms.FileField(label='CSV-Datei', help_text='Bitte laden Sie eine CSV-Datei hoch.')
+
+class BatchNumberImportForm(forms.Form):
+    """Form für den Import von Chargen."""
+    file = forms.FileField(label='CSV-Datei', help_text='Bitte laden Sie eine CSV-Datei hoch.')
+    delimiter = forms.ChoiceField(
+        label="Trennzeichen",
+        choices=[
+            (',', 'Komma (,)'),
+            (';', 'Semikolon (;)'),
+            ('\t', 'Tab'),
+            ('|', 'Pipe (|)'),
+        ],
+        initial=';',
+        help_text="Wählen Sie das Trennzeichen der CSV-Datei."
+    )
+    encoding = forms.ChoiceField(
+        label="Zeichenkodierung",
+        choices=[
+            ('utf-8', 'UTF-8'),
+            ('latin1', 'ISO-8859-1 (Latin-1)'),
+            ('cp1252', 'Windows-1252'),
+        ],
+        initial='utf-8',
+        help_text="Wählen Sie die Zeichenkodierung der CSV-Datei."
+    )
+    skip_header = forms.BooleanField(
+        label="Kopfzeile überspringen",
+        required=False,
+        initial=True,
+        help_text="Aktivieren Sie diese Option, wenn die erste Zeile Spaltenüberschriften enthält."
+    )
+    update_existing = forms.BooleanField(
+        label="Bestehende Chargen aktualisieren",
+        required=False,
+        initial=True,
+        help_text="Wenn aktiviert, werden bereits existierende Chargen (gleiche Kombination aus Produkt und Chargennummer) "
+                  "mit den Daten aus der CSV-Datei aktualisiert. Wenn deaktiviert, werden diese Zeilen übersprungen."
+    )

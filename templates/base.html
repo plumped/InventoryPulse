@@ -189,6 +189,53 @@
                             </li>
                             {% endif %}
                             {% endif %}
+                            {% if user|has_perm:'product:view' %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_list' %}active{% endif %}"
+                                   href="{% url 'batch_number_list' %}">
+                                    <i class="bi bi-card-checklist me-2"></i>Chargenverwaltung
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_scan' %}active{% endif %}"
+                                   href="{% url 'batch_number_scan' %}">
+                                    <i class="bi bi-upc me-2"></i>Chargen scannen
+                                </a>
+                            </li>
+                            {% if user|has_perm:'product:create' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_add' %}active{% endif %}"
+                                   href="{% url 'batch_number_add' %}">
+                                    <i class="bi bi-plus-circle me-2"></i>Charge hinzufügen
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user|has_perm:'product:edit' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_transfer' %}active{% endif %}"
+                                   href="{% url 'batch_number_transfer' %}">
+                                    <i class="bi bi-arrow-left-right me-2"></i>Charge transferieren
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user|has_perm:'import:create' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_import' %}active{% endif %}"
+                                   href="{% url 'batch_number_import' %}">
+                                    <i class="bi bi-file-earmark-arrow-down me-2"></i>Chargen importieren
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% if user|has_perm:'report:view' %}
+                            <li>
+                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_export' %}active{% endif %}"
+                                   href="{% url 'batch_number_export' %}">
+                                    <i class="bi bi-file-earmark-arrow-up me-2"></i>Chargen exportieren
+                                </a>
+                            </li>
+                            {% endif %}
+                            {% endif %}
                         </ul>
                     </li>
 

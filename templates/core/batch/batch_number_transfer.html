@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Charge transferieren{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3">Charge transferieren</h1>
+            <p class="text-muted">Transferieren Sie eine Charge von einem Lager zu einem anderen</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Transfer-Formular</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'batch_number_transfer' %}">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="batch_number" class="form-label">Chargennummer *</label>
+                            <input type="text" class="form-control" id="batch_number" name="batch_number"
+                                   value="{{ initial_batch }}" required
+                                   placeholder="Chargennummer eingeben oder scannen">
+                            <div class="form-text">Geben Sie die zu transferierende Chargennummer ein</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="target_warehouse" class="form-label">Ziellager *</label>
+                            <select class="form-select" id="target_warehouse" name="target_warehouse" required>
+                                <option value="">Bitte wählen...</option>
+                                {% for warehouse in warehouses %}
+                                <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Wählen Sie das Lager, in das die Charge transferiert werden soll</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label">Menge zu transferieren</label>
+                            <input type="number" class="form-control" id="quantity" name="quantity"
+                                   step="0.01" min="0.01" placeholder="Optional - leer lassen für gesamte Charge">
+                            <div class="form-text">
+                                Lassen Sie dieses Feld leer, um die gesamte Charge zu transferieren.
+                                Geben Sie eine Menge ein, um nur einen Teil zu transferieren.
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-arrows-move me-2"></i> Transferieren
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Select2 für das Dropdown
+        $('#target_warehouse').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Ziellager auswählen',
+            width: '100%'
+        });
+    });
+</script>
+{% endblock %}

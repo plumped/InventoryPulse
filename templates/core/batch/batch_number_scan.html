@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Seriennummer scannen{% endblock %}
+{% block title %}Charge scannen{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -82,6 +82,14 @@
         font-size: 0.8rem;
     }
 
+    .quantity-badge {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+
     .scan-input {
         font-size: 1.1rem;
         padding: 0.75rem 1rem;
@@ -103,8 +111,8 @@
 {% block content %}
 <div class="container-fluid">
     <h1 class="mb-4">
-        <i class="bi bi-qr-code-scan text-primary me-2"></i>
-        Seriennummer scannen
+        <i class="bi bi-upc text-primary me-2"></i>
+        Charge scannen
     </h1>
 
     <div class="row">
@@ -117,13 +125,13 @@
                 <div class="card-body">
                     <div class="scanner-area">
                         <i class="bi bi-upc-scan"></i>
-                        <h4>Scannen Sie eine Seriennummer</h4>
-                        <p class="text-muted">Positionieren Sie den Barcode im Scanbereich oder geben Sie die Seriennummer manuell ein.</p>
+                        <h4>Scannen Sie eine Chargennummer</h4>
+                        <p class="text-muted">Positionieren Sie den Barcode im Scanbereich oder geben Sie die Chargennummer manuell ein.</p>
 
-                        <form method="get" action="{% url 'serialnumber_scan' %}" class="w-100 mt-3">
+                        <form method="get" action="{% url 'batch_number_scan' %}" class="w-100 mt-3">
                             <input type="text" class="scan-input"
                                    name="scan" id="scan-input"
-                                   placeholder="Seriennummer scannen oder eingeben"
+                                   placeholder="Chargennummer scannen oder eingeben"
                                    value="{{ scanned_number }}" autofocus>
                             <!-- Kein Button mehr - Scanner löst automatisch aus -->
                             <div class="text-center mt-2">
@@ -147,7 +155,7 @@
                         <ol>
                             <li>Platzieren Sie den Cursor im Eingabefeld</li>
                             <li>Scannen Sie den Barcode mit einem Barcodescanner</li>
-                            <li>Alternativ können Sie die Seriennummer manuell eingeben und Enter drücken</li>
+                            <li>Alternativ können Sie die Chargennummer manuell eingeben und Enter drücken</li>
                         </ol>
                     </div>
                 </div>
@@ -163,24 +171,24 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{% url 'serialnumber_list' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-list"></i> Seriennummern-Liste
+                        <a href="{% url 'batch_number_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-list"></i> Chargen-Liste
                         </a>
-                        {% if perms.serialnumber.add %}
-                        <a href="{% url 'serialnumber_add' %}" class="btn btn-outline-success">
-                            <i class="bi bi-plus-circle"></i> Neue Seriennummer
+                        {% if perms.product.create %}
+                        <a href="{% url 'batch_number_add' %}" class="btn btn-outline-success">
+                            <i class="bi bi-plus-circle"></i> Neue Charge
                         </a>
                         {% endif %}
-                        {% if perms.serialnumber.transfer %}
-                        <a href="{% url 'serialnumber_transfer' %}" class="btn btn-outline-info">
-                            <i class="bi bi-arrow-left-right"></i> Seriennummer transferieren
+                        {% if perms.product.edit %}
+                        <a href="{% url 'batch_number_transfer' %}" class="btn btn-outline-info">
+                            <i class="bi bi-arrow-left-right"></i> Charge transferieren
                         </a>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <!-- Zuletzt gescannte Seriennummern -->
+            <!-- Zuletzt gescannte Chargen -->
             <div class="card shadow-sm">
                 <div class="card-header">
                     <h5 class="mb-0">Letzte Suchanfragen</h5>
@@ -190,14 +198,19 @@
                     <ul class="recent-scans">
                         {% for scan in recent_scans %}
                         <li>
-                            <a href="{% url 'serialnumber_detail' serial_id=scan.id %}" class="text-decoration-none">
-                                <strong>{{ scan.serial_number }}</strong>
+                            <a href="{% url 'batch_number_detail' batch_id=scan.id %}" class="text-decoration-none">
+                                <strong>{{ scan.batch_number }}</strong>
                             </a>
                             <div class="scan-details">
                                 <small class="text-muted">{{ scan.product.name }}</small>
-                                <span class="warehouse-badge">
-                                    <i class="bi bi-building me-1"></i>{{ scan.warehouse.name }}
-                                </span>
+                                <div>
+                                    <span class="warehouse-badge">
+                                        <i class="bi bi-building me-1"></i>{{ scan.warehouse.name }}
+                                    </span>
+                                    <span class="quantity-badge">
+                                        <i class="bi bi-box me-1"></i>{{ scan.quantity }}
+                                    </span>
+                                </div>
                             </div>
                             {% if scan.timestamp %}
                             <div class="scan-meta">

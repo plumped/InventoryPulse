@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Charge {{ batch.batch_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'batch_number_list' %}">Chargenverwaltung</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ batch.batch_number }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">Charge: {{ batch.batch_number }}</h1>
+        </div>
+        <div>
+            {% if user.has_perm.product.edit %}
+            <a href="{% url 'batch_number_edit' batch_id=batch.id %}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Bearbeiten
+            </a>
+            {% endif %}
+            {% if user.has_perm.product.delete %}
+            <a href="{% url 'batch_number_delete' batch_id=batch.id %}" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Löschen
+            </a>
+            {% endif %}
+            <a href="{% url 'batch_number_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur Liste
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main information -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Chargeninformationen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Chargennummer:</strong></p>
+                            <p>{{ batch.batch_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Produkt:</strong></p>
+                            <p>
+                                <a href="{% url 'product_detail' pk=batch.product.id %}">
+                                    {{ batch.product.name }} ({{ batch.product.sku }})
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Variante:</strong></p>
+                            <p>{{ batch.variant.name|default:"Keine Variante" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><p class="mb-1"><strong>Menge:</strong></p>
+                            <p>{{ batch.quantity }} {{ batch.product.unit }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Lager:</strong></p>
+                            <p>{{ batch.warehouse.name|default:"Nicht zugewiesen" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Lieferant:</strong></p>
+                            <p>
+                                {% if batch.supplier %}
+                                <a href="{% url 'supplier_detail' pk=batch.supplier.id %}">
+                                    {{ batch.supplier.name }}
+                                </a>
+                                {% else %}
+                                Nicht angegeben
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Produktionsdatum:</strong></p>
+                            <p>{{ batch.production_date|date:"d.m.Y"|default:"Nicht angegeben" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Verfallsdatum:</strong></p>
+                            <p>
+                                {% if batch.expiry_date %}
+                                    {{ batch.expiry_date|date:"d.m.Y" }}
+                                    {% if batch.is_expired %}
+                                        <span class="badge bg-danger">Abgelaufen</span>
+                                    {% elif batch.days_until_expiry <= 30 %}
+                                        <span class="badge bg-warning">{{ batch.days_until_expiry }} Tage</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Gültig</span>
+                                    {% endif %}
+                                {% else %}
+                                    Nicht angegeben
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <p class="mb-1"><strong>Notizen:</strong></p>
+                            <p class="mb-0">{{ batch.notes|default:"Keine Notizen vorhanden"|linebreaks }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <small class="text-muted">Erstellt am {{ batch.created_at|date:"d.m.Y H:i" }}</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar actions -->
+        <div class="col-md-4">
+            <!-- Status card -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if batch.is_expired %}
+                        <div class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Abgelaufen seit {{ batch.expiry_date|date:"d.m.Y" }}</strong>
+                        </div>
+                    {% elif batch.days_until_expiry <= 30 and batch.days_until_expiry >= 0 %}
+                        <div class="alert alert-warning" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Läuft in {{ batch.days_until_expiry }} Tagen ab</strong>
+                        </div>
+                    {% elif batch.expiry_date %}
+                        <div class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <strong>Gültig bis {{ batch.expiry_date|date:"d.m.Y" }}</strong>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-secondary" role="alert">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Kein Verfallsdatum angegeben</strong>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions card -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Aktionen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'batch_number_transfer' %}?batch={{ batch.batch_number }}" class="btn btn-outline-primary">
+                            <i class="bi bi-arrows-move me-2"></i> Diese Charge transferieren
+                        </a>
+                        <a href="{% url 'product_batches' pk=batch.product.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-box-seam me-2"></i> Produktchargen anzeigen
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related info card -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Verwandte Informationen</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Produkt</span>
+                            <a href="{% url 'product_detail' pk=batch.product.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-box-seam me-1"></i> Anzeigen
+                            </a>
+                        </li>
+                        {% if batch.warehouse %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Lager</span>
+                            <a href="{% url 'warehouse_detail' pk=batch.warehouse.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-building me-1"></i> Anzeigen
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if batch.supplier %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span>Lieferant</span>
+                            <a href="{% url 'supplier_detail' pk=batch.supplier.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-truck me-1"></i> Anzeigen
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

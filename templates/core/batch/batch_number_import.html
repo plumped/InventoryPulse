@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .csv-format-guide {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .csv-format-guide pre {
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 5px;
+        overflow-x: auto;
+    }
+
+    .file-upload {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 10px;
+    }
+
+    .file-upload input[type="file"] {
+        position: absolute;
+        font-size: 100px;
+        right: 0;
+        top: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .file-upload-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .file-upload-label:hover {
+        background-color: #e9ecef;
+        border-color: #6c757d;
+    }
+
+    .file-upload-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{{ title }}</h1>
+        <a href="{% url 'batch_number_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left-circle me-2"></i>Zurück zur Chargenverwaltung
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">{{ description }}</p>
+
+                    <form method="post" enctype="multipart/form-data" class="mt-4">
+                        {% csrf_token %}
+
+                        <div class="file-upload mb-4">
+                            <div class="file-upload-label">
+                                <div class="text-center">
+                                    <i class="bi bi-file-earmark-arrow-up file-upload-icon"></i>
+                                    <h5>CSV-Datei hochladen</h5>
+                                    <p class="text-muted mb-0">Ziehen Sie die Datei hierher oder klicken Sie zum Auswählen</p>
+                                    <div id="file-name" class="mt-2 text-primary"></div>
+                                </div>
+                            </div>
+                            {{ form.file }}
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.delimiter.id_for_label }}" class="form-label">{{ form.delimiter.label }}</label>
+                                {{ form.delimiter }}
+                                {% if form.delimiter.help_text %}
+                                <div class="form-text">{{ form.delimiter.help_text }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label for="{{ form.encoding.id_for_label }}" class="form-label">{{ form.encoding.label }}</label>
+                                {{ form.encoding }}
+                                {% if form.encoding.help_text %}
+                                <div class="form-text">{{ form.encoding.help_text }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check mb-3">
+                                    {{ form.skip_header }}
+                                    <label for="{{ form.skip_header.id_for_label }}" class="form-check-label">{{ form.skip_header.label }}</label>
+                                    {% if form.skip_header.help_text %}
+                                    <div class="form-text">{{ form.skip_header.help_text }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            {{ form.update_existing }}
+                            <label for="{{ form.update_existing.id_for_label }}" class="form-check-label">{{ form.update_existing.label }}</label>
+                            {% if form.update_existing.help_text %}
+                            <div class="form-text">{{ form.update_existing.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-file-earmark-arrow-up me-2"></i>CSV-Datei importieren
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">CSV-Format Anleitung</h5>
+                </div>
+                <div class="card-body">
+                    <div class="csv-format-guide">
+                        <h6>Erwartetes Format:</h6>
+                        <pre>{{ expected_format }}</pre>
+
+                        <h6 class="mt-3">Beispiel:</h6>
+                        <pre>{{ example }}</pre>
+
+                        <h6 class="mt-3">Erforderliche Spalten:</h6>
+                        <ul>
+                            {% for column in required_columns %}
+                            <li>{{ column }}</li>
+                            {% endfor %}
+                        </ul>
+
+                        <h6 class="mt-3">Optionale Spalten:</h6>
+                        <ul>
+                            {% for column in optional_columns %}
+                            <li>{{ column }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <span>Tipp: Für korrekte Datumswerte bitte das Format YYYY-MM-DD verwenden (z.B. 2023-01-31).</span>
+                    </div>
+
+                    {% if template_file_url %}
+                    <div class="d-grid">
+                        <a href="{{ template_file_url }}" class="btn btn-outline-primary">
+                            <i class="bi bi-download me-2"></i>Vorlage herunterladen
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Styling für Formular-Elemente
+        $('#id_delimiter, #id_encoding').addClass('form-select');
+        $('#id_skip_header, #id_update_existing').addClass('form-check-input');
+
+        // Dateiname anzeigen, wenn eine Datei ausgewählt wurde
+        $('#id_file').on('change', function() {
+            var fileName = $(this).val().split('\\').pop();
+            if (fileName) {
+                $('#file-name').text('Ausgewählte Datei: ' + fileName);
+                $('.file-upload-label').css('border-color', '#28a745');
+            } else {
+                $('#file-name').text('');
+                $('.file-upload-label').css('border-color', '#ccc');
+            }
+        });
+    });
+</script>
+{% endblock %}

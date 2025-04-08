@@ -450,6 +450,12 @@ class SerialNumberForm(forms.ModelForm):
 
 class BatchNumberForm(forms.ModelForm):
     """Form for adding and updating batch numbers."""
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.all(),
+        label="Produkt",
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 
     class Meta:
         model = BatchNumber

@@ -3,138 +3,173 @@
 
 {% block title %}Chargen exportieren{% endblock %}
 
-{% block extra_css %}
-<style>
-    .export-options {
-        display: flex;
-        gap: 15px;
-        margin-top: 15px;
-    }
-
-    .export-option {
-        flex: 1;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 15px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .export-option:hover {
-        background-color: #f8f9fa;
-        border-color: #6c757d;
-    }
-
-    .export-option.selected {
-        border-color: #007bff;
-        background-color: rgba(0, 123, 255, 0.1);
-    }
-
-    .export-option i {
-        font-size: 2rem;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    .export-format-icon {
-        font-size: 3rem;
-        margin-bottom: 10px;
-        display: block;
-    }
-
-    .csv-icon {
-        color: #28a745;
-    }
-
-    .xlsx-icon {
-        color: #007bff;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Chargen exportieren</h1>
-        <a href="{% url 'batch_number_list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left-circle me-2"></i>Zurück zur Chargenverwaltung
-        </a>
-    </div>
+    <h1 class="mb-4">
+        <i class="bi bi-boxes text-primary me-2"></i>
+        Chargen exportieren
+    </h1>
 
     <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">Filteroptionen</h5>
+        <!-- Exportfilter -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Exportfilter</h5>
                 </div>
                 <div class="card-body">
-                    <form id="export-form" method="get" action="{% url 'batch_number_export' %}">
-                        <input type="hidden" name="format" id="export-format" value="">
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label for="product" class="form-label">Produkt</label>
-                                <select id="product" name="product" class="form-select">
-                                    <option value="">Alle Produkte</option>
-                                    {% for product in products %}
-                                    <option value="{{ product.id }}">{{ product.name }} ({{ product.sku }})</option>
-                                    {% endfor %}
+                    <form method="get" action="" id="export-form">
+                        <div class="row mb-3">
+                            <!-- Status-Filter -->
+                            <div class="col-md-4">
+                                <label for="expiry" class="form-label">Verfallsdatum</label>
+                                <select class="form-select" id="expiry" name="expiry">
+                                    <option value="">Alle</option>
+                                    <option value="expired" {% if expiry_filter == 'expired' %}selected{% endif %}>Abgelaufen</option>
+                                    <option value="expiring_soon" {% if expiry_filter == 'expiring_soon' %}selected{% endif %}>Läuft bald ab</option>
+                                    <option value="valid" {% if expiry_filter == 'valid' %}selected{% endif %}>Gültig</option>
                                 </select>
                             </div>
 
-                            <div class="col-md-6">
+                            <!-- Lager-Filter -->
+                            <div class="col-md-4">
                                 <label for="warehouse" class="form-label">Lager</label>
-                                <select id="warehouse" name="warehouse" class="form-select">
+                                <select class="form-select" id="warehouse" name="warehouse">
                                     <option value="">Alle Lager</option>
                                     {% for warehouse in warehouses %}
-                                    <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                    <option value="{{ warehouse.id }}" {% if warehouse_filter == warehouse.id|stringformat:"i" %}selected{% endif %}>{{ warehouse.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Produkt-Filter -->
+                            <div class="col-md-4">
+                                <label for="product" class="form-label">Produkt</label>
+                                <select class="form-select" id="product" name="product">
+                                    <option value="">Alle Produkte</option>
+                                    {% for product in products %}
+                                    <option value="{{ product.id }}" {% if product_filter == product.id|stringformat:"i" %}selected{% endif %}>{{ product.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                         </div>
 
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label for="expiry" class="form-label">Verfallsdatum</label>
-                                <select id="expiry" name="expiry" class="form-select">
-                                    <option value="">Alle</option>
-                                    <option value="expired">Abgelaufen</option>
-                                    <option value="expiring_soon">Läuft bald ab (< 30 Tage)</option>
-                                    <option value="valid">Gültig (> 30 Tage)</option>
-                                </select>
+                        <div class="row mb-3">
+                            <!-- Produktionsdatum von -->
+                            <div class="col-md-3">
+                                <label for="production_date_from" class="form-label">Produktionsdatum von</label>
+                                <input type="date" class="form-control" id="production_date_from" name="production_date_from">
                             </div>
 
-                            <div class="col-md-6">
-                                <label for="search" class="form-label">Suchbegriff</label>
-                                <input type="text" id="search" name="search" class="form-control" placeholder="Chargennummer, Produkt...">
+                            <!-- Produktionsdatum bis -->
+                            <div class="col-md-3">
+                                <label for="production_date_to" class="form-label">Produktionsdatum bis</label>
+                                <input type="date" class="form-control" id="production_date_to" name="production_date_to">
+                            </div>
+
+                            <!-- Ablaufdatum von -->
+                            <div class="col-md-3">
+                                <label for="expiry_date_from" class="form-label">Ablaufdatum von</label>
+                                <input type="date" class="form-control" id="expiry_date_from" name="expiry_date_from">
+                            </div>
+
+                            <!-- Ablaufdatum bis -->
+                            <div class="col-md-3">
+                                <label for="expiry_date_to" class="form-label">Ablaufdatum bis</label>
+                                <input type="date" class="form-control" id="expiry_date_to" name="expiry_date_to">
                             </div>
                         </div>
 
-                        <div class="card mb-4">
-                            <div class="card-header bg-light">
-                                <h6 class="card-title mb-0">Exportformat</h6>
+                        <div class="row mb-3">
+                            <!-- Suchbegriff -->
+                            <div class="col-md-6">
+                                <label for="search" class="form-label">Suchbegriff</label>
+                                <input type="text" class="form-control" id="search" name="search"
+                                       placeholder="Chargennummer, Notizen, etc." value="{{ search_query }}">
                             </div>
-                            <div class="card-body">
-                                <div class="export-options">
-                                    <div class="export-options">
-                                    <div class="export-option" data-format="csv">
-                                        <i class="bi bi-filetype-csv export-format-icon csv-icon"></i>
-                                        <h5>CSV-Datei</h5>
-                                        <p class="text-muted mb-0">Exportieren als CSV-Datei (kommagetrennt)</p>
+
+                            <!-- Exportformat -->
+                            <div class="col-md-6">
+                                <label for="format" class="form-label">Exportformat</label>
+                                <div class="d-flex">
+                                    <select class="form-select" id="format" name="format">
+                                        <option value="csv">CSV (.csv)</option>
+                                        <option value="excel">Excel (.xlsx)</option>
+                                        <option value="pdf">PDF (.pdf)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feldauswahl -->
+                        <div class="mb-4">
+                            <label class="form-label">Exportfelder</label>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_batch_number" name="fields" value="batch_number" checked>
+                                        <label class="form-check-label" for="field_batch_number">Chargennummer</label>
                                     </div>
-                                    <div class="export-option" data-format="excel">
-                                        <i class="bi bi-filetype-xlsx export-format-icon xlsx-icon"></i>
-                                        <h5>Excel-Datei</h5>
-                                        <p class="text-muted mb-0">Exportieren als Excel-Datei (XLSX)</p>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_product" name="fields" value="product" checked>
+                                        <label class="form-check-label" for="field_product">Produkt</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_sku" name="fields" value="sku" checked>
+                                        <label class="form-check-label" for="field_sku">Produkt-SKU</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_quantity" name="fields" value="quantity" checked>
+                                        <label class="form-check-label" for="field_quantity">Menge</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_warehouse" name="fields" value="warehouse" checked>
+                                        <label class="form-check-label" for="field_warehouse">Lager</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_variant" name="fields" value="variant">
+                                        <label class="form-check-label" for="field_variant">Variante</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_production_date" name="fields" value="production_date" checked>
+                                        <label class="form-check-label" for="field_production_date">Produktionsdatum</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_expiry_date" name="fields" value="expiry_date" checked>
+                                        <label class="form-check-label" for="field_expiry_date">Ablaufdatum</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_supplier" name="fields" value="supplier">
+                                        <label class="form-check-label" for="field_supplier">Lieferant</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_notes" name="fields" value="notes">
+                                        <label class="form-check-label" for="field_notes">Notizen</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_category" name="fields" value="category">
+                                        <label class="form-check-label" for="field_category">Kategorie</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="field_created_at" name="fields" value="created_at">
+                                        <label class="form-check-label" for="field_created_at">Erstelldatum</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="d-grid">
-                            <button type="button" id="export-button" class="btn btn-primary btn-lg" disabled>
-                                <i class="bi bi-file-earmark-arrow-down me-2"></i>Export starten
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-download"></i> Export starten
                             </button>
                         </div>
                     </form>
@@ -142,47 +177,51 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">Exportinformationen</h5>
+        <!-- Export-Optionen und Vorschau -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Export-Informationen</h5>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <span>Wählen Sie die gewünschten Filteroptionen und das Exportformat aus, um den Export zu starten.</span>
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <span id="export-info">Wählen Sie die Filteroptionen und klicken Sie auf "Export starten" um Chargen zu exportieren.</span>
                     </div>
 
-                    <h6 class="mt-4">Exportierte Daten:</h6>
-                    <ul>
-                        <li>Chargennummer</li>
-                        <li>Produkt</li>
-                        <li>SKU</li>
-                        <li>Variante</li>
-                        <li>Menge</li>
-                        <li>Einheit</li>
-                        <li>Lager</li>
-                        <li>Lieferant</li>
-                        <li>Produktionsdatum</li>
-                        <li>Ablaufdatum</li>
-                        <li>Notizen</li>
-                        <li>Erstellungsdatum</li>
-                    </ul>
+                    <div class="mb-3">
+                        <label class="form-label">Dateiname</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="filename" name="filename" value="chargen_export_{{ date_today }}">
+                            <span class="input-group-text" id="filename-extension">.csv</span>
+                        </div>
+                    </div>
 
-                    <div class="alert alert-warning mt-4">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        <span>Bei großen Datenmengen kann der Export einige Minuten dauern. Bitte schließen Sie das Browserfenster nicht während des Exports.</span>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="include_header" name="include_header" checked>
+                        <label class="form-check-label" for="include_header">
+                            Spaltenüberschriften einschließen
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="select_all_fields" name="select_all_fields" checked>
+                        <label class="form-check-label" for="select_all_fields">
+                            Alle Felder auswählen
+                        </label>
+                    </div>
+
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="export-progress"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="card-title mb-0">Exportstatistik</h5>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Exportstatistik</h5>
                 </div>
                 <div class="card-body">
-                    <p>Insgesamt <strong>{{ batches.count|default:'0' }}</strong> Chargen in der Datenbank.</p>
-
                     <div class="d-flex justify-content-between mb-1">
                         <span>Gültige Chargen:</span>
                         <strong>{{ valid_count|default:'0' }}</strong>
@@ -191,9 +230,13 @@
                         <span>Bald ablaufende Chargen:</span>
                         <strong>{{ expiring_soon_count|default:'0' }}</strong>
                     </div>
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between mb-1">
                         <span>Abgelaufene Chargen:</span>
                         <strong>{{ expired_count|default:'0' }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Gesamtanzahl Chargen:</span>
+                        <strong>{{ batches.count|default:'0' }}</strong>
                     </div>
 
                     <hr>
@@ -209,35 +252,59 @@
 {% block extra_js %}
 <script>
     $(document).ready(function() {
-        // Select2 für Dropdowns aktivieren
-        $('#product, #warehouse, #expiry').select2({
-            theme: 'bootstrap-5',
-            width: '100%'
-        });
+        // Format-Änderung aktualisiert Dateiendung
+        $('#format').change(function() {
+            var format = $(this).val();
+            var extension = '.csv';
 
-        // Exportformat auswählen
-        $('.export-option').on('click', function() {
-            $('.export-option').removeClass('selected');
-            $(this).addClass('selected');
-
-            // Format in das versteckte Feld setzen
-            const format = $(this).data('format');
-            $('#export-format').val(format);
-
-            // Export-Button aktivieren
-            $('#export-button').prop('disabled', false);
-        });
-
-        // Export starten
-        $('#export-button').on('click', function() {
-            const format = $('#export-format').val();
-            if (!format) {
-                alert('Bitte wählen Sie ein Exportformat aus.');
-                return;
+            if (format === 'excel') {
+                extension = '.xlsx';
+            } else if (format === 'pdf') {
+                extension = '.pdf';
             }
 
-            // Formular absenden
-            $('#export-form').submit();
+            $('#filename-extension').text(extension);
+        });
+
+        // Alle Felder auswählen/abwählen
+        $('#select_all_fields').change(function() {
+            $('input[name="fields"]').prop('checked', $(this).prop('checked'));
+        });
+
+        // Einzelne Feld-Änderung aktualisiert "Alle auswählen" Checkbox
+        $('input[name="fields"]').change(function() {
+            var allChecked = $('input[name="fields"]:checked').length === $('input[name="fields"]').length;
+            $('#select_all_fields').prop('checked', allChecked);
+        });
+
+        // Formular-Absenden
+        $('#export-form').submit(function(e) {
+            var fieldsChecked = $('input[name="fields"]:checked').length;
+
+            if (fieldsChecked === 0) {
+                e.preventDefault();
+                alert('Bitte wählen Sie mindestens ein Feld für den Export aus.');
+                return false;
+            }
+
+            // Fortschrittsbalken für großen Export (simuliert)
+            $('#export-progress').css('width', '0%').attr('aria-valuenow', 0);
+            $('#export-info').text('Export wird vorbereitet...');
+
+            var progress = 0;
+            var interval = setInterval(function() {
+                progress += 10;
+                if (progress > 100) {
+                    clearInterval(interval);
+                } else {
+                    $('#export-progress').css('width', progress + '%').attr('aria-valuenow', progress);
+                    if (progress === 100) {
+                        $('#export-info').text('Export abgeschlossen!');
+                    }
+                }
+            }, 300);
+
+            // Keine Verhinderung des Formular-Absenden für den tatsächlichen Download
         });
     });
 </script>

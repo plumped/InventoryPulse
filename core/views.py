@@ -5,7 +5,11 @@ import os
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
-
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
@@ -3670,6 +3674,12 @@ def batch_number_export(request):
             import openpyxl
             from openpyxl.styles import Font, PatternFill, Alignment
 
+            # Funktion zum Entfernen der Zeitzone
+            def remove_timezone(dt):
+                if dt and hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+                    return dt.replace(tzinfo=None)
+                return dt
+
             # Neue Arbeitsmappe erstellen
             wb = openpyxl.Workbook()
             ws = wb.active
@@ -3718,7 +3728,9 @@ def batch_number_export(request):
                                                                            fill_type="solid")
 
                 ws.cell(row=row_idx, column=11, value=batch.notes)
-                ws.cell(row=row_idx, column=12, value=batch.created_at)
+                # Zeitzone aus dem created_at entfernen, um Excel-Fehler zu vermeiden
+                created_at_value = remove_timezone(batch.created_at) if batch.created_at else None
+                ws.cell(row=row_idx, column=12, value=created_at_value)
 
             # Spaltenbreiten anpassen
             for col_idx, header in enumerate(headers, 1):
@@ -3754,6 +3766,138 @@ def batch_number_export(request):
             messages.error(request, f'Fehler beim Excel-Export: {str(e)}')
             return redirect('batch_number_list')
 
+
+    elif export_format == 'pdf':
+        try:
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=landscape(A4),
+                                    leftMargin=1 * cm, rightMargin=1 * cm,
+                                    topMargin=1 * cm, bottomMargin=1 * cm)
+            elements = []
+
+            styles = getSampleStyleSheet()
+            title_style = styles['Heading1']
+            title_style.alignment = 1
+
+            cell_style = ParagraphStyle(
+                'CellStyle',
+                parent=styles['Normal'],
+                fontSize=8.5,
+                leading=10,
+                wordWrap='CJK',
+                alignment=0,
+            )
+
+            header_style = ParagraphStyle(
+                'HeaderStyle',
+                parent=styles['Normal'],
+                fontSize=9,
+                fontName='Helvetica-Bold',
+                alignment=1,
+                textColor=colors.white,
+            )
+
+            elements.append(Paragraph("Chargenexport", title_style))
+            elements.append(Spacer(1, 10))
+
+            # Dynamische Seitenbreite
+            PAGE_WIDTH = landscape(A4)[0] - 2 * cm
+
+            col_widths = [
+                0.12 * PAGE_WIDTH,  # Chargennummer
+                0.15 * PAGE_WIDTH,  # Produkt
+                0.08 * PAGE_WIDTH,  # SKU
+                0.08 * PAGE_WIDTH,  # Variante
+                0.06 * PAGE_WIDTH,  # Menge
+                0.07 * PAGE_WIDTH,  # Lager
+                0.10 * PAGE_WIDTH,  # Lieferant
+                0.08 * PAGE_WIDTH,  # Produktionsdatum
+                0.08 * PAGE_WIDTH,  # Ablaufdatum
+                0.14 * PAGE_WIDTH,  # Notizen
+                0.04 * PAGE_WIDTH,  # Erstellt am
+            ]
+
+            headers = [
+                Paragraph('<font color="white">Chargennummer</font>', header_style),
+                Paragraph('<font color="white">Produkt</font>', header_style),
+                Paragraph('<font color="white">SKU</font>', header_style),
+                Paragraph('<font color="white">Variante</font>', header_style),
+                Paragraph('<font color="white">Menge</font>', header_style),
+                Paragraph('<font color="white">Lager</font>', header_style),
+                Paragraph('<font color="white">Lieferant</font>', header_style),
+                Paragraph('<font color="white">Produktionsdatum</font>', header_style),
+                Paragraph('<font color="white">Ablaufdatum</font>', header_style),
+                Paragraph('<font color="white">Notizen</font>', header_style),
+                Paragraph('<font color="white">Erstellt am</font>', header_style),
+            ]
+
+            data = [headers]
+
+            for batch in batches:
+                row = [
+                    Paragraph(batch.batch_number, cell_style),
+                    Paragraph(batch.product.name, cell_style),
+                    Paragraph(batch.product.sku, cell_style),
+                    Paragraph(batch.variant.name if batch.variant else '', cell_style),
+                    Paragraph(f"{batch.quantity} {batch.product.unit}", cell_style),
+                    Paragraph(batch.warehouse.name if batch.warehouse else '', cell_style),
+                    Paragraph(batch.supplier.name if batch.supplier else '', cell_style),
+                    Paragraph(batch.production_date.strftime('%d.%m.%Y') if batch.production_date else '', cell_style),
+                    Paragraph(batch.expiry_date.strftime('%d.%m.%Y') if batch.expiry_date else '', cell_style),
+                    Paragraph(batch.notes if batch.notes else '', cell_style),
+                    Paragraph(batch.created_at.strftime('%d.%m.%Y %H:%M') if batch.created_at else '', cell_style)
+                ]
+                data.append(row)
+
+            table = Table(data, colWidths=col_widths, repeatRows=1)
+
+            table_style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#366092')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 7),
+                ('TOPPADDING', (0, 0), (-1, 0), 7),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+                ('TOPPADDING', (0, 1), (-1, -1), 5),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+                ('ALIGN', (4, 1), (4, -1), 'RIGHT'),
+            ])
+
+            for i, batch in enumerate(batches, 1):
+                if batch.expiry_date:
+                    if batch.expiry_date < today:
+                        table_style.add('BACKGROUND', (8, i), (8, i), colors.HexColor('#FFCCCB'))
+                    elif batch.expiry_date <= today + timedelta(days=30):
+                        table_style.add('BACKGROUND', (8, i), (8, i), colors.HexColor('#FFFFCC'))
+
+                if i % 2 == 0:
+                    table_style.add('BACKGROUND', (0, i), (-1, i), colors.HexColor('#F5F5F5'))
+
+            table.setStyle(table_style)
+            elements.append(table)
+
+            doc.build(elements)
+            buffer.seek(0)
+
+            response = HttpResponse(buffer, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="chargen_{timezone.now().strftime("%Y%m%d")}.pdf"'
+            return response
+
+        except ImportError:
+            messages.error(request, 'PDF-Export ist nicht verfügbar. Bitte installieren Sie reportlab.')
+            return redirect('batch_number_list')
+
+        except Exception as e:
+            messages.error(request, f'Fehler beim PDF-Export: {str(e)}')
+            return redirect('batch_number_list')
+
     # Statistiken für die Verfallsdaten
     expired_count = BatchNumber.objects.filter(expiry_date__lt=today).count()
     expiring_soon_count = BatchNumber.objects.filter(
@@ -3764,15 +3908,20 @@ def batch_number_export(request):
         expiry_date__gt=today + timedelta(days=30)
     ).count()
 
-    # Wenn kein Export angefordert wurde, zeige Exportformular
+    # Filter-Werte für das Template bereitstellen
     context = {
         'warehouses': Warehouse.objects.filter(is_active=True),
         'products': Product.objects.filter(has_batch_tracking=True),
         'batches': batches,
         'today': today,
+        'date_today': timezone.now().strftime("%Y%m%d"),
         'expired_count': expired_count,
         'expiring_soon_count': expiring_soon_count,
-        'valid_count': valid_count
+        'valid_count': valid_count,
+        'warehouse_filter': filters['warehouse'],
+        'product_filter': filters['product'],
+        'expiry_filter': filters['expiry'],
+        'search_query': filters['search'],
     }
 
     return render(request, 'core/batch/batch_number_export.html', context)

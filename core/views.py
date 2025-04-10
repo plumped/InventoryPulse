@@ -2645,16 +2645,14 @@ def serialnumber_import(request):
 def serialnumber_export(request):
     """Exportiert Seriennummern in eine CSV- oder Excel-Datei."""
     # Filteroptionen für den Export
-    status_filter = request.GET.get('status', '')
-    warehouse_filter = request.GET.get('warehouse', '')
-    product_filter = request.GET.get('product', '')
-
     filters = {
-        'status': request.GET.get('status'),
-        'warehouse': request.GET.get('warehouse'),
-        'product': request.GET.get('product'),
+        'status': request.GET.get('status', ''),
+        'warehouse': request.GET.get('warehouse', ''),
+        'product': request.GET.get('product', ''),
+        'search': request.GET.get('search', ''),
     }
 
+    # Basisdaten
     serials = SerialNumber.objects.select_related('product', 'warehouse', 'variant')
     serials = filter_product_serials(serials, filters)
 
@@ -2669,7 +2667,7 @@ def serialnumber_export(request):
 
         writer = csv.writer(response)
         writer.writerow([
-            'Seriennummer', 'Produkt', 'Variante', 'Status', 'Lager',
+            'Seriennummer', 'Produkt', 'SKU', 'Variante', 'Status', 'Lager',
             'Kaufdatum', 'Ablaufdatum', 'Notizen', 'Erstellt am'
         ])
 
@@ -2677,6 +2675,7 @@ def serialnumber_export(request):
             writer.writerow([
                 serial.serial_number,
                 serial.product.name,
+                serial.product.sku,
                 serial.variant.name if serial.variant else '',
                 serial.get_status_display(),
                 serial.warehouse.name if serial.warehouse else '',
@@ -2689,16 +2688,275 @@ def serialnumber_export(request):
         return response
 
     elif export_format == 'excel':
-        # Excel-Export würde hier implementiert werden
-        # Ähnlich wie bei der export_import_logs-Funktion
-        messages.error(request, 'Excel-Export ist derzeit nicht verfügbar.')
-        return redirect('serialnumber_list')
+        try:
+            import openpyxl
+            from openpyxl.styles import Font, PatternFill, Alignment
 
-    # Wenn kein Export angefordert wurde, zeige Exportformular
+            # Funktion zum Entfernen der Zeitzone
+            def remove_timezone(dt):
+                if dt and hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+                    return dt.replace(tzinfo=None)
+                return dt
+
+            # Neue Arbeitsmappe erstellen
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Seriennummern"
+
+            # Überschriften formatieren
+            headers = [
+                'Seriennummer', 'Produkt', 'SKU', 'Variante', 'Status', 'Lager',
+                'Kaufdatum', 'Ablaufdatum', 'Notizen', 'Erstellt am'
+            ]
+
+            # Überschriften-Stil festlegen
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+
+            # Überschriften schreiben und formatieren
+            for col_idx, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col_idx, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = Alignment(horizontal='center')
+
+            # Heute-Datum für Ablaufprüfung
+            today = timezone.now().date()
+
+            # Daten einfügen
+            for row_idx, serial in enumerate(serials, 2):
+                ws.cell(row=row_idx, column=1, value=serial.serial_number)
+                ws.cell(row=row_idx, column=2, value=serial.product.name)
+                ws.cell(row=row_idx, column=3, value=serial.product.sku)
+                ws.cell(row=row_idx, column=4, value=serial.variant.name if serial.variant else '')
+                ws.cell(row=row_idx, column=5, value=serial.get_status_display())
+                ws.cell(row=row_idx, column=6, value=serial.warehouse.name if serial.warehouse else '')
+
+                if serial.purchase_date:
+                    ws.cell(row=row_idx, column=7, value=serial.purchase_date)
+
+                if serial.expiry_date:
+                    ws.cell(row=row_idx, column=8, value=serial.expiry_date)
+                    # Abgelaufene Seriennummern rot markieren
+                    if serial.expiry_date < today:
+                        ws.cell(row=row_idx, column=8).fill = PatternFill(start_color="FFCCCB", end_color="FFCCCB",
+                                                                          fill_type="solid")
+                    # Bald ablaufende Seriennummern gelb markieren
+                    elif serial.expiry_date <= today + timedelta(days=30):
+                        ws.cell(row=row_idx, column=8).fill = PatternFill(start_color="FFFFCC", end_color="FFFFCC",
+                                                                          fill_type="solid")
+
+                ws.cell(row=row_idx, column=9, value=serial.notes)
+                # Zeitzone aus dem created_at entfernen, um Excel-Fehler zu vermeiden
+                created_at_value = remove_timezone(serial.created_at) if serial.created_at else None
+                ws.cell(row=row_idx, column=10, value=created_at_value)
+
+            # Spaltenbreiten anpassen
+            for col_idx, header in enumerate(headers, 1):
+                column_letter = openpyxl.utils.get_column_letter(col_idx)
+                max_length = len(header) + 2
+
+                # Überprüfe Zellinhalte, um die optimale Spaltenbreite zu bestimmen
+                for row_idx in range(2, len(serials) + 2):
+                    cell = ws.cell(row=row_idx, column=col_idx)
+                    if cell.value:
+                        max_length = max(max_length, len(str(cell.value)) + 2)
+
+                # Spaltenbreite setzen (maximale Breite: 50)
+                ws.column_dimensions[column_letter].width = min(max_length, 50)
+
+            # Excel-Datei als Response zurückgeben
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
+
+            response = HttpResponse(
+                output.read(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response[
+                'Content-Disposition'] = f'attachment; filename="seriennummern_{timezone.now().strftime("%Y%m%d")}.xlsx"'
+
+            return response
+
+        except ImportError:
+            messages.error(request, 'Excel-Export ist nicht verfügbar. Bitte installieren Sie openpyxl.')
+            return redirect('serialnumber_list')
+        except Exception as e:
+            messages.error(request, f'Fehler beim Excel-Export: {str(e)}')
+            return redirect('serialnumber_list')
+
+    elif export_format == 'pdf':
+        try:
+            from reportlab.lib import colors
+            from reportlab.lib.pagesizes import A4, landscape
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib.units import mm, cm
+            from io import BytesIO
+
+            buffer = io.BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=landscape(A4),
+                                    leftMargin=1 * cm, rightMargin=1 * cm,
+                                    topMargin=1 * cm, bottomMargin=1 * cm)
+            elements = []
+
+            styles = getSampleStyleSheet()
+            title_style = styles['Heading1']
+            title_style.alignment = 1
+
+            cell_style = ParagraphStyle(
+                'CellStyle',
+                parent=styles['Normal'],
+                fontSize=8.5,
+                leading=10,
+                wordWrap='CJK',
+                alignment=0,
+            )
+
+            header_style = ParagraphStyle(
+                'HeaderStyle',
+                parent=styles['Normal'],
+                fontSize=9,
+                fontName='Helvetica-Bold',
+                alignment=1,
+                textColor=colors.white,
+            )
+
+            elements.append(Paragraph("Seriennummernexport", title_style))
+            elements.append(Spacer(1, 10))
+
+            # Dynamische Seitenbreite
+            PAGE_WIDTH = landscape(A4)[0] - 2 * cm
+
+            col_widths = [
+                0.14 * PAGE_WIDTH,  # Seriennummer
+                0.14 * PAGE_WIDTH,  # Produkt
+                0.09 * PAGE_WIDTH,  # SKU
+                0.09 * PAGE_WIDTH,  # Variante
+                0.08 * PAGE_WIDTH,  # Status
+                0.08 * PAGE_WIDTH,  # Lager
+                0.08 * PAGE_WIDTH,  # Kaufdatum
+                0.08 * PAGE_WIDTH,  # Ablaufdatum
+                0.16 * PAGE_WIDTH,  # Notizen
+                0.06 * PAGE_WIDTH,  # Erstellt am
+            ]
+
+            headers = [
+                Paragraph('<font color="white">Seriennummer</font>', header_style),
+                Paragraph('<font color="white">Produkt</font>', header_style),
+                Paragraph('<font color="white">SKU</font>', header_style),
+                Paragraph('<font color="white">Variante</font>', header_style),
+                Paragraph('<font color="white">Status</font>', header_style),
+                Paragraph('<font color="white">Lager</font>', header_style),
+                Paragraph('<font color="white">Kaufdatum</font>', header_style),
+                Paragraph('<font color="white">Ablaufdatum</font>', header_style),
+                Paragraph('<font color="white">Notizen</font>', header_style),
+                Paragraph('<font color="white">Erstellt am</font>', header_style),
+            ]
+
+            data = [headers]
+
+            # Heute-Datum für Ablaufprüfung
+            today = timezone.now().date()
+
+            for serial in serials:
+                row = [
+                    Paragraph(serial.serial_number, cell_style),
+                    Paragraph(serial.product.name, cell_style),
+                    Paragraph(serial.product.sku, cell_style),
+                    Paragraph(serial.variant.name if serial.variant else '', cell_style),
+                    Paragraph(serial.get_status_display(), cell_style),
+                    Paragraph(serial.warehouse.name if serial.warehouse else '', cell_style),
+                    Paragraph(serial.purchase_date.strftime('%d.%m.%Y') if serial.purchase_date else '', cell_style),
+                    Paragraph(serial.expiry_date.strftime('%d.%m.%Y') if serial.expiry_date else '', cell_style),
+                    Paragraph(serial.notes if serial.notes else '', cell_style),
+                    Paragraph(serial.created_at.strftime('%d.%m.%Y %H:%M') if serial.created_at else '', cell_style)
+                ]
+                data.append(row)
+
+            table = Table(data, colWidths=col_widths, repeatRows=1)
+
+            table_style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#366092')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 9),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 7),
+                ('TOPPADDING', (0, 0), (-1, 0), 7),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+                ('TOPPADDING', (0, 1), (-1, -1), 5),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+                ('ALIGN', (4, 1), (4, -1), 'RIGHT'),
+            ])
+
+            for i, serial in enumerate(serials, 1):
+                if serial.expiry_date:
+                    if serial.expiry_date < today:
+                        table_style.add('BACKGROUND', (7, i), (7, i), colors.HexColor('#FFCCCB'))
+                    elif serial.expiry_date <= today + timedelta(days=30):
+                        table_style.add('BACKGROUND', (7, i), (7, i), colors.HexColor('#FFFFCC'))
+
+                if i % 2 == 0:
+                    table_style.add('BACKGROUND', (0, i), (-1, i), colors.HexColor('#F5F5F5'))
+
+            table.setStyle(table_style)
+            elements.append(table)
+
+            doc.build(elements)
+            buffer.seek(0)
+
+            response = HttpResponse(buffer, content_type='application/pdf')
+            response[
+                'Content-Disposition'] = f'attachment; filename="seriennummern_{timezone.now().strftime("%Y%m%d")}.pdf"'
+            return response
+
+        except ImportError:
+            messages.error(request, 'PDF-Export ist nicht verfügbar. Bitte installieren Sie reportlab.')
+            return redirect('serialnumber_list')
+
+        except Exception as e:
+            messages.error(request, f'Fehler beim PDF-Export: {str(e)}')
+            return redirect('serialnumber_list')
+
+    # Für GET-Anfragen oder bei Fehlern im POST
+    # Statistiken nach Status
+    status_counts = {}
+    for status_code, status_name in SerialNumber.status_choices:
+        status_counts[status_code] = SerialNumber.objects.filter(status=status_code).count()
+
+    # Statistiken für Verfallsdaten
+    today = timezone.now().date()
+    expired_count = SerialNumber.objects.filter(expiry_date__lt=today).count()
+    expiring_soon_count = SerialNumber.objects.filter(
+        expiry_date__gte=today,
+        expiry_date__lte=today + timedelta(days=30)
+    ).count()
+    valid_count = SerialNumber.objects.filter(
+        expiry_date__gt=today + timedelta(days=30)
+    ).count()
+
     context = {
         'warehouses': Warehouse.objects.filter(is_active=True),
         'products': Product.objects.filter(has_serial_numbers=True),
         'status_choices': SerialNumber.status_choices,
+        'status_counts': status_counts,
+        'serials': serials,
+        'today': today,
+        'date_today': timezone.now().strftime("%Y%m%d"),
+        'expired_count': expired_count,
+        'expiring_soon_count': expiring_soon_count,
+        'valid_count': valid_count,
+        'warehouse_filter': filters['warehouse'],
+        'product_filter': filters['product'],
+        'status_filter': filters['status'],
+        'search_query': filters['search'],
     }
 
     return render(request, 'core/serialnumber/serialnumber_export.html', context)

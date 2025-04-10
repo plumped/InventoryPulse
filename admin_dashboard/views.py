@@ -181,7 +181,7 @@ def user_create(request):
         success_message='Benutzer wurde erfolgreich erstellt.',
         redirect_url='admin_user_management',
         template='admin_dashboard/user_create.html',
-        extra_context={
+        context_extra={
             'groups': Group.objects.all(),
             'departments': Department.objects.all(),
             'section': 'users'
@@ -207,7 +207,7 @@ def user_edit(request, user_id):
         success_message=f'Benutzer "{user.username}" wurde erfolgreich aktualisiert.',
         redirect_url='admin_user_management',
         template='admin_dashboard/user_edit.html',
-        extra_context={
+        context_extra={
             'user_obj': user,
             'groups': Group.objects.all(),
             'user_groups': user.groups.all(),
@@ -261,7 +261,7 @@ def group_create(request):
         success_message='Gruppe wurde erfolgreich erstellt.',
         redirect_url='admin_group_management',
         template='admin_dashboard/group_create.html',
-        extra_context={
+        context_extra={
             'permissions_by_area': permissions_by_area,
             'permission_areas': PERMISSION_AREAS,
             'levels': ['view', 'create', 'edit', 'delete', 'approve'],
@@ -286,7 +286,7 @@ def group_edit(request, group_id):
         success_message=f'Gruppe "{group.name}" wurde erfolgreich aktualisiert.',
         redirect_url='admin_group_management',
         template='admin_dashboard/group_edit.html',
-        extra_context={
+        context_extra={
             'group': group,
             'permissions_by_area': permissions_by_area,
             'permission_areas': PERMISSION_AREAS,
@@ -351,7 +351,7 @@ def department_create(request):
         success_message='Abteilung wurde erfolgreich erstellt.',
         redirect_url='admin_department_management',
         template='admin_dashboard/department_create.html',
-        extra_context={
+        context_extra={
             'users': User.objects.all(),
             'section': 'departments'
         },
@@ -371,7 +371,7 @@ def department_edit(request, department_id):
         success_message=f'Abteilung "{department.name}" wurde erfolgreich aktualisiert.',
         redirect_url='admin_department_management',
         template='admin_dashboard/department_edit.html',
-        extra_context={
+        context_extra={
             'department': department,
             'users': User.objects.all(),
             'department_members': [profile.user for profile in department.user_profiles.all()],
@@ -429,7 +429,7 @@ def system_settings(request):
         success_message='Systemeinstellungen wurden erfolgreich aktualisiert.',
         redirect_url='admin_system_settings',
         template='admin_dashboard/system_settings.html',
-        extra_context={'section': 'system_settings'}
+        context_extra={'section': 'system_settings'}
     )
 
 
@@ -445,7 +445,7 @@ def workflow_settings(request):
         success_message='Workflow-Einstellungen wurden erfolgreich aktualisiert.',
         redirect_url='admin_workflow_settings',
         template='admin_dashboard/workflow_settings.html',
-        extra_context={'section': 'workflow_settings'}
+        context_extra={'section': 'workflow_settings'}
     )
 
 
@@ -546,7 +546,7 @@ def tax_create(request):
         success_message='Mehrwertsteuersatz wurde erfolgreich erstellt.',
         redirect_url='admin_tax_management',
         template='admin_dashboard/tax_form.html',
-        extra_context={'section': 'taxes'}
+        context_extra={'section': 'taxes'}
     )
 
 
@@ -561,7 +561,7 @@ def tax_edit(request, tax_id):
         success_message=f'Mehrwertsteuersatz "{tax.name}" wurde erfolgreich aktualisiert.',
         redirect_url='admin_tax_management',
         template='admin_dashboard/tax_form.html',
-        extra_context={'section': 'taxes', 'tax': tax}
+        context_extra={'section': 'taxes', 'tax': tax}
     )
 
 
@@ -668,7 +668,7 @@ def interface_type_create(request):
         success_message='Schnittstellentyp wurde erfolgreich erstellt.',
         redirect_url='admin_interface_type_management',
         template='admin_dashboard/interface_type_form.html',
-        extra_context={
+        context_extra={
             'section': 'interfaces',
             'title': 'Neuen Schnittstellentyp erstellen'
         }
@@ -686,7 +686,7 @@ def interface_type_edit(request, type_id):
         success_message=f'Schnittstellentyp "{interface_type.name}" wurde erfolgreich aktualisiert.',
         redirect_url='admin_interface_type_management',
         template='admin_dashboard/interface_type_form.html',
-        extra_context={
+        context_extra={
             'section': 'interfaces',
             'interface_type': interface_type,
             'title': f'Schnittstellentyp "{interface_type.name}" bearbeiten'
@@ -773,7 +773,7 @@ def company_address_create(request):
         success_message='Unternehmensadresse wurde erfolgreich erstellt.',
         redirect_url='admin_company_address_management',
         template='admin_dashboard/company_address_form.html',
-        extra_context={'section': 'company_addresses'},
+        context_extra={'section': 'company_addresses'},
         instance=None
     )
 
@@ -789,7 +789,7 @@ def company_address_edit(request, address_id):
         success_message=f'Adresse "{address.name}" wurde erfolgreich aktualisiert.',
         redirect_url='admin_company_address_management',
         template='admin_dashboard/company_address_form.html',
-        extra_context={'section': 'company_addresses', 'address': address}
+        context_extra={'section': 'company_addresses', 'address': address}
     )
 
 

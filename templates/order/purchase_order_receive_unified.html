@@ -162,11 +162,13 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th style="width: 25%;">Artikel</th>
-                                        <th style="width: 15%;">Bestellt</th>
+                                        <th style="width: 20%;">Artikel</th>
+                                        <th style="width: 10%;">SKU</th>
+                                        <th style="width: 10%;">Lieferant SKU</th>
+                                        <th style="width: 10%;">Bestellt</th>
                                         <th style="width: 15%;">Bereits erhalten</th>
-                                        <th style="width: 15%;">Jetzt erhalten</th>
-                                        <th style="width: 15%;">Ziel-Lager</th>
+                                        <th style="width: 10%;">Jetzt erhalten</th>
+                                        <th style="width: 10%;">Ziel-Lager</th>
                                         {% if has_batch_products %}
                                         <th style="width: 15%;">Chargennummer</th>
                                         {% endif %}
@@ -182,7 +184,16 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <a href="{% url 'product_detail' item.product.id %}" target="_blank">{{ item.product.name }}</a>
-                                                <span class="badge bg-secondary ms-2">{{ item.product.sku }}</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {{ item.product.sku }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {{ item.supplier_sku }}
                                             </div>
                                         </td>
                                         <td>
@@ -213,10 +224,10 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <select name="warehouse_{{ item.id }}" class="form-select" required>
+                                            <select name="warehouse_{{ item.id }}" class="form-select warehouse-select" required>
                                                 <option value="">-- Lager wählen --</option>
                                                 {% for warehouse in warehouses %}
-                                                <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                                <option value="{{ warehouse.id }}" {% if default_warehouse == warehouse.id %}selected{% endif %}>{{ warehouse.name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </td>
@@ -403,6 +414,19 @@ $(document).ready(function() {
     // Get the order ID from the URL or a data attribute
     const orderId = {{ order.id }};
 
+    // Default-Lager aus den Context-Daten
+    const defaultWarehouse = {% if default_warehouse %}{{ default_warehouse }}{% else %}null{% endif %};
+
+    // Bei Seitenaufruf alle leeren Lager-Dropdowns mit Default-Lager vorbelegen
+    if (defaultWarehouse) {
+        $('.warehouse-select').each(function() {
+            // Nur setzen, wenn noch kein Wert ausgewählt ist
+            if (!$(this).val()) {
+                $(this).val(defaultWarehouse);
+            }
+        });
+    }
+
     // Qualitätsmängel-Checkboxen Funktionalität
     $('.quality-issue-toggle').change(function() {
         const itemId = $(this).data('item-id');
@@ -553,6 +577,7 @@ $(document).ready(function() {
     // Alle Mengen-Eingabefelder überwachen, um Teillieferungsstatus zu erkennen
     let isPartialDelivery = false;
 
+    // Fortsetzung von der vorherigen Funktion checkForPartialDelivery
     function checkForPartialDelivery() {
         isPartialDelivery = false;
 
@@ -568,230 +593,230 @@ $(document).ready(function() {
                 isPartialDelivery = true;
                 return false; // exit the loop early if we found a partial delivery
             }
+        });
+
+        // Teillieferungsoptionen anzeigen/ausblenden
+        if (isPartialDelivery && $('#detectPartialDelivery').is(':checked') && !$('#useExistingSplit').is(':checked')) {
+            $('#splitOptionsContainer').slideDown();
+        } else {
+            $('#splitOptionsContainer').slideUp();
+        }
+    }
+
+    // Events registrieren
+    $('.receive-quantity').on('input', function() {
+        checkForPartialDelivery();
+        updateFieldRequirements(); // Zusätzlich die Feld-Requirements aktualisieren
     });
 
-    // Teillieferungsoptionen anzeigen/ausblenden
-    if (isPartialDelivery && $('#detectPartialDelivery').is(':checked') && !$('#useExistingSplit').is(':checked')) {
-        $('#splitOptionsContainer').slideDown();
-    } else {
-        $('#splitOptionsContainer').slideUp();
-    }
-}
+    $('#detectPartialDelivery').change(function() {
+        checkForPartialDelivery();
+    });
 
-// Events registrieren
-$('.receive-quantity').on('input', function() {
-    checkForPartialDelivery();
-    updateFieldRequirements(); // Zusätzlich die Feld-Requirements aktualisieren
-});
+    // Teillieferungsoptionen umschalten
+    $('#createSplit').change(function() {
+        const createSplit = $(this).is(':checked');
+        $('#splitDetailsContainer').toggle(createSplit);
 
-$('#detectPartialDelivery').change(function() {
-    checkForPartialDelivery();
-});
-
-// Teillieferungsoptionen umschalten
-$('#createSplit').change(function() {
-    const createSplit = $(this).is(':checked');
-    $('#splitDetailsContainer').toggle(createSplit);
-
-    // Wenn neue Teillieferung ausgewählt wird, die Option für existierende Teillieferung deaktivieren
-    if (createSplit) {
-        $('#useExistingSplit').prop('checked', false);
-        $('#selectExistingSplitContainer').hide();
-    }
-});
-
-// Restlieferungsoptionen umschalten
-$('#createFutureSplit').change(function() {
-    $('#futureSplitOptions').toggle(this.checked);
-});
-
-// Initial check for partial delivery and field requirements
-checkForPartialDelivery();
-updateFieldRequirements();
-
-// Standardwerte für Teillieferungsbezeichnungen setzen
-const today = new Date();
-const formattedDate = today.toLocaleDateString('de-DE');
-$('#splitName').val(`Wareneingang vom ${formattedDate}`);
-$('#futureSplitName').val('Restlieferung');
-
-// Zukünftiges Lieferdatum standardmäßig auf 2 Wochen setzen
-const futureDate = new Date();
-futureDate.setDate(today.getDate() + 14);
-$('#futureDeliveryDate').val(futureDate.toISOString().slice(0, 10));
-
-// Form-Validierung
-$('#receiveForm').submit(function(e) {
-    // Prüfen, ob mindestens eine Position einen Wert größer als 0 hat
-    let hasReceivedItems = false;
-
-    $('.receive-quantity').each(function() {
-        if (parseFloat($(this).val()) > 0) {
-            hasReceivedItems = true;
-            return false; // break loop
+        // Wenn neue Teillieferung ausgewählt wird, die Option für existierende Teillieferung deaktivieren
+        if (createSplit) {
+            $('#useExistingSplit').prop('checked', false);
+            $('#selectExistingSplitContainer').hide();
         }
     });
 
-    if (!hasReceivedItems) {
-        e.preventDefault();
-        alert('Bitte geben Sie mindestens eine Wareneingangsposition ein.');
-        return false;
-    }
+    // Restlieferungsoptionen umschalten
+    $('#createFutureSplit').change(function() {
+        $('#futureSplitOptions').toggle(this.checked);
+    });
 
-    // Prüfen, ob sowohl neue als auch existierende Teillieferung ausgewählt wurden (sollte nicht möglich sein)
-    if ($('#useExistingSplit').is(':checked') && $('#createSplit').is(':checked')) {
-        e.preventDefault();
-        alert('Sie können nicht gleichzeitig eine bestehende Teillieferung verwenden und eine neue erstellen. Bitte wählen Sie eine Option.');
-        return false;
-    }
+    // Initial check for partial delivery and field requirements
+    checkForPartialDelivery();
+    updateFieldRequirements();
 
-    // Wenn bestehende Teillieferung ausgewählt ist, aber keine ausgewählt wurde
-    if ($('#useExistingSplit').is(':checked') && (!$('#existingSplitSelect').val() || $('#existingSplitSelect').val() === '')) {
-        e.preventDefault();
-        alert('Bitte wählen Sie eine existierende Teillieferung aus dem Dropdown-Menü.');
-        $('#existingSplitSelect').focus();
-        return false;
-    }
+    // Standardwerte für Teillieferungsbezeichnungen setzen
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('de-DE');
+    $('#splitName').val(`Wareneingang vom ${formattedDate}`);
+    $('#futureSplitName').val('Restlieferung');
 
-    // Wenn "Teillieferung erfassen" aktiviert ist, aber kein Name angegeben wurde
-    if (isPartialDelivery && $('#createSplit').is(':checked') && $('#splitName').val().trim() === '') {
-        e.preventDefault();
-        alert('Bitte geben Sie einen Namen für die Teillieferung ein.');
-        $('#splitName').focus();
-        return false;
-    }
+    // Zukünftiges Lieferdatum standardmäßig auf 2 Wochen setzen
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + 14);
+    $('#futureDeliveryDate').val(futureDate.toISOString().slice(0, 10));
 
-    // Wenn "Restlieferung planen" aktiviert ist, aber kein Name angegeben wurde
-    if ($('#createFutureSplit').is(':checked') && $('#futureSplitName').val().trim() === '') {
-        e.preventDefault();
-        alert('Bitte geben Sie einen Namen für die geplante Restlieferung ein.');
-        $('#futureSplitName').focus();
-        return false;
-    }
+    // Form-Validierung
+    $('#receiveForm').submit(function(e) {
+        // Prüfen, ob mindestens eine Position einen Wert größer als 0 hat
+        let hasReceivedItems = false;
 
-    // Validierung für Qualitätsmängel
-    let hasQualityIssues = false;
-    $('.quality-issue-toggle:checked').each(function() {
-        const itemId = $(this).data('item-id');
-        const defectiveQuantity = parseFloat($(`input[name="defective_quantity_${itemId}"]`).val()) || 0;
-        const issueDescription = $(`textarea[name="issue_description_${itemId}"]`).val().trim();
+        $('.receive-quantity').each(function() {
+            if (parseFloat($(this).val()) > 0) {
+                hasReceivedItems = true;
+                return false; // break loop
+            }
+        });
 
-        // Prüfen ob Qualitätsmängel vollständig ausgefüllt sind
-        if (defectiveQuantity <= 0) {
+        if (!hasReceivedItems) {
             e.preventDefault();
-            alert('Bitte geben Sie die mangelhafte Menge für alle markierten Artikel an.');
-            $(`input[name="defective_quantity_${itemId}"]`).focus();
+            alert('Bitte geben Sie mindestens eine Wareneingangsposition ein.');
             return false;
         }
 
-        if (!issueDescription) {
+        // Prüfen, ob sowohl neue als auch existierende Teillieferung ausgewählt wurden (sollte nicht möglich sein)
+        if ($('#useExistingSplit').is(':checked') && $('#createSplit').is(':checked')) {
             e.preventDefault();
-            alert('Bitte beschreiben Sie den Qualitätsmangel für alle markierten Artikel.');
-            $(`textarea[name="issue_description_${itemId}"]`).focus();
+            alert('Sie können nicht gleichzeitig eine bestehende Teillieferung verwenden und eine neue erstellen. Bitte wählen Sie eine Option.');
             return false;
         }
 
-        hasQualityIssues = true;
-    });
+        // Wenn bestehende Teillieferung ausgewählt ist, aber keine ausgewählt wurde
+        if ($('#useExistingSplit').is(':checked') && (!$('#existingSplitSelect').val() || $('#existingSplitSelect').val() === '')) {
+            e.preventDefault();
+            alert('Bitte wählen Sie eine existierende Teillieferung aus dem Dropdown-Menü.');
+            $('#existingSplitSelect').focus();
+            return false;
+        }
 
-    // Sammeln von Informationen über defekte Artikel für die Session
-    if (hasQualityIssues) {
-        const defectiveItems = [];
+        // Wenn "Teillieferung erfassen" aktiviert ist, aber kein Name angegeben wurde
+        if (isPartialDelivery && $('#createSplit').is(':checked') && $('#splitName').val().trim() === '') {
+            e.preventDefault();
+            alert('Bitte geben Sie einen Namen für die Teillieferung ein.');
+            $('#splitName').focus();
+            return false;
+        }
 
+        // Wenn "Restlieferung planen" aktiviert ist, aber kein Name angegeben wurde
+        if ($('#createFutureSplit').is(':checked') && $('#futureSplitName').val().trim() === '') {
+            e.preventDefault();
+            alert('Bitte geben Sie einen Namen für die geplante Restlieferung ein.');
+            $('#futureSplitName').focus();
+            return false;
+        }
+
+        // Validierung für Qualitätsmängel
+        let hasQualityIssues = false;
         $('.quality-issue-toggle:checked').each(function() {
             const itemId = $(this).data('item-id');
             const defectiveQuantity = parseFloat($(`input[name="defective_quantity_${itemId}"]`).val()) || 0;
-            const issueType = $(`select[name="issue_type_${itemId}"]`).val();
             const issueDescription = $(`textarea[name="issue_description_${itemId}"]`).val().trim();
-            const createRma = $(`input[name="create_rma_${itemId}"]`).is(':checked');
 
-            defectiveItems.push({
-                receipt_item_id: itemId,
-                quantity: defectiveQuantity,
-                issue_type: issueType,
-                issue_description: issueDescription,
-                create_rma: createRma
-            });
+            // Prüfen ob Qualitätsmängel vollständig ausgefüllt sind
+            if (defectiveQuantity <= 0) {
+                e.preventDefault();
+                alert('Bitte geben Sie die mangelhafte Menge für alle markierten Artikel an.');
+                $(`input[name="defective_quantity_${itemId}"]`).focus();
+                return false;
+            }
+
+            if (!issueDescription) {
+                e.preventDefault();
+                alert('Bitte beschreiben Sie den Qualitätsmangel für alle markierten Artikel.');
+                $(`textarea[name="issue_description_${itemId}"]`).focus();
+                return false;
+            }
+
+            hasQualityIssues = true;
         });
 
-        // Füge die defekten Artikel als Hidden Input zum Formular hinzu
-        $('<input>').attr({
-            type: 'hidden',
-            name: 'defective_items',
-            value: JSON.stringify(defectiveItems)
-        }).appendTo('#receiveForm');
-    }
+        // Sammeln von Informationen über defekte Artikel für die Session
+        if (hasQualityIssues) {
+            const defectiveItems = [];
 
-    // Zusätzliche Validierung für Felder mit Menge > 0
-    let formValid = true;
-    $('.receive-quantity').each(function() {
-        const $this = $(this);
-        const $row = $this.closest('tr');
-        const quantity = parseFloat($this.val()) || 0;
-        const itemId = $row.data('item-id');
+            $('.quality-issue-toggle:checked').each(function() {
+                const itemId = $(this).data('item-id');
+                const defectiveQuantity = parseFloat($(`input[name="defective_quantity_${itemId}"]`).val()) || 0;
+                const issueType = $(`select[name="issue_type_${itemId}"]`).val();
+                const issueDescription = $(`textarea[name="issue_description_${itemId}"]`).val().trim();
+                const createRma = $(`input[name="create_rma_${itemId}"]`).is(':checked');
 
-        if (quantity > 0) {
-            // Lager muss ausgewählt sein
-            const $warehouse = $row.find(`select[name="warehouse_${itemId}"]`);
-            if (!$warehouse.val()) {
-                formValid = false;
-                alert('Bitte wählen Sie ein Ziellager für alle Positionen mit Wareneingangsmenge > 0.');
-                $warehouse.focus();
-                return false;  // break loop
-            }
+                defectiveItems.push({
+                    receipt_item_id: itemId,
+                    quantity: defectiveQuantity,
+                    issue_type: issueType,
+                    issue_description: issueDescription,
+                    create_rma: createRma
+                });
+            });
 
-            // Batch-Nummer prüfen, falls erforderlich
-            if ($row.hasClass('has-batch')) {
-                const $batch = $row.find(`input[name="batch_${itemId}"]`);
-                if (!$batch.val().trim()) {
+            // Füge die defekten Artikel als Hidden Input zum Formular hinzu
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'defective_items',
+                value: JSON.stringify(defectiveItems)
+            }).appendTo('#receiveForm');
+        }
+
+        // Zusätzliche Validierung für Felder mit Menge > 0
+        let formValid = true;
+        $('.receive-quantity').each(function() {
+            const $this = $(this);
+            const $row = $this.closest('tr');
+            const quantity = parseFloat($this.val()) || 0;
+            const itemId = $row.data('item-id');
+
+            if (quantity > 0) {
+                // Lager muss ausgewählt sein
+                const $warehouse = $row.find(`select[name="warehouse_${itemId}"]`);
+                if (!$warehouse.val()) {
                     formValid = false;
-                    alert('Bitte geben Sie eine Chargennummer für alle Produkte mit Chargen-Tracking ein.');
-                    $batch.focus();
+                    alert('Bitte wählen Sie ein Ziellager für alle Positionen mit Wareneingangsmenge > 0.');
+                    $warehouse.focus();
                     return false;  // break loop
                 }
-            }
 
-            // Verfallsdatum prüfen, falls erforderlich
-            if ($row.hasClass('has-expiry')) {
-                const $expiry = $row.find(`input[name="expiry_${itemId}"]`);
-                if (!$expiry.val()) {
-                    formValid = false;
-                    alert('Bitte geben Sie ein Verfallsdatum für alle Produkte mit Verfallsdatum-Tracking ein.');
-                    $expiry.focus();
-                    return false;  // break loop
+                // Batch-Nummer prüfen, falls erforderlich
+                if ($row.hasClass('has-batch')) {
+                    const $batch = $row.find(`input[name="batch_${itemId}"]`);
+                    if (!$batch.val().trim()) {
+                        formValid = false;
+                        alert('Bitte geben Sie eine Chargennummer für alle Produkte mit Chargen-Tracking ein.');
+                        $batch.focus();
+                        return false;  // break loop
+                    }
+                }
+
+                // Verfallsdatum prüfen, falls erforderlich
+                if ($row.hasClass('has-expiry')) {
+                    const $expiry = $row.find(`input[name="expiry_${itemId}"]`);
+                    if (!$expiry.val()) {
+                        formValid = false;
+                        alert('Bitte geben Sie ein Verfallsdatum für alle Produkte mit Verfallsdatum-Tracking ein.');
+                        $expiry.focus();
+                        return false;  // break loop
+                    }
                 }
             }
+        });
+
+        if (!formValid) {
+            e.preventDefault();
+            return false;
+        }
+
+        return true;
+    });
+
+    // Batch- und Verfallsdatenfelder initialisieren
+    $('.batch-field, .expiry-field').each(function() {
+        // Nur Felder anzeigen, die für das jeweilige Produkt benötigt werden
+        const $row = $(this).closest('tr');
+        if ($row.hasClass('has-batch')) {
+            $row.find('.batch-field').show();
+        }
+        if ($row.hasClass('has-expiry')) {
+            $row.find('.expiry-field').show();
         }
     });
 
-    if (!formValid) {
-        e.preventDefault();
-        return false;
+    // Hilfsfunktion zum Formatieren von Datumswerten
+    function formatDate(date) {
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${year}-${month}-${day}`;
     }
-
-    return true;
-});
-
-// Batch- und Verfallsdatenfelder initialisieren
-$('.batch-field, .expiry-field').each(function() {
-    // Nur Felder anzeigen, die für das jeweilige Produkt benötigt werden
-    const $row = $(this).closest('tr');
-    if ($row.hasClass('has-batch')) {
-        $row.find('.batch-field').show();
-    }
-    if ($row.hasClass('has-expiry')) {
-        $row.find('.expiry-field').show();
-    }
-});
-
-// Hilfsfunktion zum Formatieren von Datumswerten
-function formatDate(date) {
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${year}-${month}-${day}`;
-}
 });
 </script>
 {% endblock %}

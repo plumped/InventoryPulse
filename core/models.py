@@ -111,11 +111,6 @@ class ProductWarehouse(models.Model):
     class Meta:
         unique_together = ('product', 'warehouse')
 
-
-# Updated ImportLog model in core/models.py
-
-# Updated ImportLog model in core/models.py
-
 class ImportLog(models.Model):
     STATUS_CHOICES = (
         ('completed', 'Completed'),

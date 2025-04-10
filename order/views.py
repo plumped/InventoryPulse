@@ -742,6 +742,17 @@ def purchase_order_receive(request, pk):
     # Verfügbare Lager abrufen
     warehouses = Warehouse.objects.filter(is_active=True)
 
+    # Default Warehouse aus SystemSettings abrufen
+    default_warehouse = None
+    try:
+        from admin_dashboard.models import SystemSettings
+        system_settings = SystemSettings.objects.first()
+        if system_settings and system_settings.default_warehouse:
+            default_warehouse = system_settings.default_warehouse.id
+    except Exception as e:
+        # Bei Fehler, z.B. wenn das Modell nicht existiert, kein Default-Lager verwenden
+        pass
+
     # Nur nicht vollständig erhaltene und nicht stornierte Positionen anzeigen
     items = order.items.filter(
         quantity_received__lt=F('quantity_ordered'),
@@ -1032,6 +1043,7 @@ def purchase_order_receive(request, pk):
         'warehouses': warehouses,
         'has_batch_products': has_batch_products,
         'has_expiry_products': has_expiry_products,
+        'default_warehouse': default_warehouse,
     }
 
     return render(request, 'order/purchase_order_receive_unified.html', context)

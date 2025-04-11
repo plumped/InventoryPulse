@@ -1,23 +1,19 @@
 from django.contrib.auth.models import User
-from django.db.models import Q
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status, filters
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, BasePermission
-from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, status, filters, permissions
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
+from rest_framework.response import Response
 
 from core.models import (
     Product, Category, ProductWarehouse, ProductPhoto, ProductAttachment,
     ProductVariantType, ProductVariant, SerialNumber, BatchNumber, Tax
 )
 from core.utils.api_helpers import generate_related_action
-from suppliers.models import Supplier, SupplierProduct
 from inventory.models import Warehouse, StockMovement, StockTake
 from order.models import PurchaseOrder, PurchaseOrderItem, OrderSuggestion
 from order.workflow import can_approve_order
-from . import permissions
-
+from suppliers.models import Supplier, SupplierProduct
 from .serializers import (
     ProductListSerializer, ProductDetailSerializer, CategorySerializer,
     TaxSerializer, ProductPhotoSerializer, ProductAttachmentSerializer,
@@ -28,25 +24,20 @@ from .serializers import (
     PurchaseOrderListSerializer, PurchaseOrderDetailSerializer,
     PurchaseOrderItemSerializer, OrderSuggestionSerializer, UserSerializer
 )
-from .permissions import (
-    ProductPermission, InventoryPermission, SupplierPermission,
-    OrderPermission, OrderApprovePermission, UserPermission
-)
 
 
-class ReadOnlyPermission(BasePermission):
+class ReadOnlyPermission(permissions.BasePermission):
     """
     Erlaubt nur Lesezugriff (GET, HEAD, OPTIONS)
     """
 
-class ReadOnlyPermission(BasePermission):
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS
 
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
-    permission_classes = [IsAuthenticated, ProductPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'has_variants', 'has_serial_numbers', 'has_batch_tracking']
     search_fields = ['name', 'sku', 'barcode', 'description']
@@ -92,7 +83,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticated, ProductPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
     ordering = ['name']
@@ -105,7 +96,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class TaxViewSet(viewsets.ModelViewSet):
     queryset = Tax.objects.all()
     serializer_class = TaxSerializer
-    permission_classes = [IsAuthenticated, ProductPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_active', 'is_default']
     search_fields = ['name', 'code', 'description']
@@ -115,7 +106,7 @@ class TaxViewSet(viewsets.ModelViewSet):
 class ProductVariantTypeViewSet(viewsets.ModelViewSet):
     queryset = ProductVariantType.objects.all()
     serializer_class = ProductVariantTypeSerializer
-    permission_classes = [IsAuthenticated, ProductPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description']
     ordering = ['name']
@@ -124,7 +115,7 @@ class ProductVariantTypeViewSet(viewsets.ModelViewSet):
 class ProductVariantViewSet(viewsets.ModelViewSet):
     queryset = ProductVariant.objects.all()
     serializer_class = ProductVariantSerializer
-    permission_classes = [IsAuthenticated, ProductPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['parent_product', 'variant_type', 'is_active']
     search_fields = ['name', 'sku', 'value', 'barcode']
@@ -134,7 +125,7 @@ class ProductVariantViewSet(viewsets.ModelViewSet):
 class SerialNumberViewSet(viewsets.ModelViewSet):
     queryset = SerialNumber.objects.all()
     serializer_class = SerialNumberSerializer
-    permission_classes = [IsAuthenticated, ProductPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['product', 'variant', 'status', 'warehouse']
     search_fields = ['serial_number', 'notes', 'product__name']
@@ -157,7 +148,7 @@ class SerialNumberViewSet(viewsets.ModelViewSet):
 class BatchNumberViewSet(viewsets.ModelViewSet):
     queryset = BatchNumber.objects.all()
     serializer_class = BatchNumberSerializer
-    permission_classes = [IsAuthenticated, ProductPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['product', 'variant', 'warehouse', 'supplier']
     search_fields = ['batch_number', 'notes', 'product__name']
@@ -167,7 +158,7 @@ class BatchNumberViewSet(viewsets.ModelViewSet):
 class WarehouseViewSet(viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
-    permission_classes = [IsAuthenticated, InventoryPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_active']
     search_fields = ['name', 'location', 'description']
@@ -179,14 +170,14 @@ class WarehouseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def movements(self, request, pk=None):
-        return generate_related_action(self, StockMovement, StockMovementSerializer, 'warehouse', order_by='-created_at')
-
+        return generate_related_action(self, StockMovement, StockMovementSerializer, 'warehouse',
+                                       order_by='-created_at')
 
 
 class StockMovementViewSet(viewsets.ModelViewSet):
     queryset = StockMovement.objects.all()
     serializer_class = StockMovementSerializer
-    permission_classes = [IsAuthenticated, InventoryPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['product', 'warehouse', 'movement_type', 'created_by']
     search_fields = ['reference', 'notes', 'product__name', 'warehouse__name']
@@ -196,7 +187,7 @@ class StockMovementViewSet(viewsets.ModelViewSet):
 class StockTakeViewSet(viewsets.ModelViewSet):
     queryset = StockTake.objects.all()
     serializer_class = StockTakeListSerializer
-    permission_classes = [IsAuthenticated, InventoryPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['warehouse', 'status', 'inventory_type', 'created_by']
     search_fields = ['name', 'description', 'notes']
@@ -206,7 +197,7 @@ class StockTakeViewSet(viewsets.ModelViewSet):
 class SupplierViewSet(viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
-    permission_classes = [IsAuthenticated, SupplierPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_active']
     search_fields = ['name', 'contact_person', 'email', 'phone', 'address']
@@ -224,7 +215,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
 class SupplierProductViewSet(viewsets.ModelViewSet):
     queryset = SupplierProduct.objects.all()
     serializer_class = SupplierProductSerializer
-    permission_classes = [IsAuthenticated, SupplierPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['supplier', 'product', 'is_preferred']
     search_fields = ['supplier_sku', 'notes', 'supplier__name', 'product__name']
@@ -233,7 +224,7 @@ class SupplierProductViewSet(viewsets.ModelViewSet):
 
 class PurchaseOrderViewSet(viewsets.ModelViewSet):
     queryset = PurchaseOrder.objects.all()
-    permission_classes = [IsAuthenticated, OrderPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['supplier', 'status', 'created_by']
     search_fields = ['order_number', 'notes', 'supplier__name']
@@ -245,13 +236,14 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, OrderApprovePermission])
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, DjangoModelPermissions])
     def approve(self, request, pk=None):
         order = self.get_object()
         if order.status != 'pending':
             return Response({'error': 'Only pending orders can be approved'}, status=status.HTTP_400_BAD_REQUEST)
         if not can_approve_order(request.user, order):
-            return Response({'error': 'You cannot approve this order because you created it'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'You cannot approve this order because you created it'},
+                            status=status.HTTP_403_FORBIDDEN)
         order.status = 'approved'
         order.approved_by = request.user
         order.save()
@@ -297,7 +289,7 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
 class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
     queryset = PurchaseOrderItem.objects.all()
     serializer_class = PurchaseOrderItemSerializer
-    permission_classes = [IsAuthenticated, OrderPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['purchase_order', 'product']
     search_fields = ['supplier_sku', 'item_notes', 'product__name']
@@ -307,7 +299,7 @@ class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
 class OrderSuggestionViewSet(viewsets.ModelViewSet):
     queryset = OrderSuggestion.objects.all()
     serializer_class = OrderSuggestionSerializer
-    permission_classes = [IsAuthenticated, OrderPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['product', 'preferred_supplier']
     search_fields = ['product__name', 'product__sku', 'preferred_supplier__name']
@@ -326,7 +318,7 @@ class OrderSuggestionViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated, UserPermission]
+    permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['username', 'email', 'first_name', 'last_name']
     ordering_fields = ['username', 'date_joined', 'last_login', 'first_name', 'last_name']

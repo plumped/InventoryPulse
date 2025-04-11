@@ -1,19 +1,17 @@
-import sys
 import logging
+import sys
 
 import django
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group, Permission
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import connections
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from accessmanagement.decorators import is_admin
 from accessmanagement.models import WarehouseAccess
-from accessmanagement.permissions import PERMISSION_AREAS
 from core.models import Tax
 from core.utils.filters import filter_users, filter_departments, filter_taxes, filter_interface_types, \
     filter_supplier_interfaces, filter_company_addresses
@@ -60,9 +58,24 @@ def post_save_user_edit(user, cleaned_data):
     logger.info(f"User {user.username} updated.")
 
 def post_save_group(group, cleaned_data):
-    permission_ids = cleaned_data.get('permissions', [])
-    group.permissions.set(Permission.objects.filter(id__in=permission_ids))
-    logger.info(f"Group {group.name} permissions updated.")
+    try:
+        permission_ids = cleaned_data.get('permissions', [])
+
+        # Filtern nach existierenden Berechtigungen
+        existing_permissions = Permission.objects.filter(id__in=permission_ids)
+
+        # Nur die existierenden Berechtigungen setzen
+        group.permissions.set(existing_permissions)
+
+        logger.info(f"Group {group.name} permissions updated with {existing_permissions.count()} permissions.")
+        return True
+    except Exception as e:
+        logger.error(f"Error updating permissions for group {group.name}: {str(e)}")
+        # Fehler ausgeben, um bei der Fehlersuche zu helfen
+        logger.error(f"Permission IDs: {permission_ids}")
+        return False
+
+
 
 def post_save_department(dept, cleaned_data):
     manager = cleaned_data.get('manager')
@@ -81,7 +94,7 @@ def post_save_department(dept, cleaned_data):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def admin_dashboard(request):
     """Main admin dashboard view."""
     logger.info(f"Dashboard accessed by {request.user}.")
@@ -136,7 +149,7 @@ def admin_dashboard(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def user_management(request):
     filters = {
         'search': request.GET.get('search', ''),
@@ -173,7 +186,7 @@ def user_management(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def user_create(request):
     return handle_form_view(
         request,
@@ -190,7 +203,7 @@ def user_create(request):
     )
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def user_edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     try:
@@ -220,7 +233,7 @@ def user_edit(request, user_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def user_delete(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     if request.method == 'POST':
@@ -235,7 +248,7 @@ def user_delete(request, user_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def group_management(request):
     log_list_view_usage(request, view_name="group_management")
     groups = Group.objects.annotate(user_count=Count('user'))
@@ -249,12 +262,31 @@ def group_management(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def group_create(request):
-    permissions_by_area = {
-        area: Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
-        for area in PERMISSION_AREAS.keys()
-    }
+    # Standard Django permission actions
+    standard_actions = ['view', 'add', 'change', 'delete']
+
+    # Get all permissions and organize them by app/model
+    permissions_by_app = {}
+    all_permissions = Permission.objects.all().order_by('content_type__app_label', 'codename')
+
+    for permission in all_permissions:
+        app_label = permission.content_type.app_label
+        model_name = permission.content_type.model
+
+        # Skip contenttype and auth app permissions if you don't want to expose them
+        if app_label in ['contenttypes', 'sessions']:
+            continue
+
+        if app_label not in permissions_by_app:
+            permissions_by_app[app_label] = {}
+
+        if model_name not in permissions_by_app[app_label]:
+            permissions_by_app[app_label][model_name] = []
+
+        permissions_by_app[app_label][model_name].append(permission)
+
     return handle_form_view(
         request,
         form_class=GroupForm,
@@ -262,9 +294,8 @@ def group_create(request):
         redirect_url='admin_group_management',
         template='admin_dashboard/group_create.html',
         context_extra={
-            'permissions_by_area': permissions_by_area,
-            'permission_areas': PERMISSION_AREAS,
-            'levels': ['view', 'create', 'edit', 'delete', 'approve'],
+            'permissions_by_app': permissions_by_app,
+            'standard_actions': standard_actions,
             'section': 'groups'
         },
         post_save_hook=post_save_group
@@ -272,13 +303,33 @@ def group_create(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def group_edit(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
-    permissions_by_area = {
-        area: Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
-        for area in PERMISSION_AREAS.keys()
-    }
+
+    # Standard Django permission actions
+    standard_actions = ['view', 'add', 'change', 'delete']
+
+    # Get all permissions and organize them by app/model
+    permissions_by_app = {}
+    all_permissions = Permission.objects.all().order_by('content_type__app_label', 'codename')
+
+    for permission in all_permissions:
+        app_label = permission.content_type.app_label
+        model_name = permission.content_type.model
+
+        # Skip contenttype and auth app permissions if you don't want to expose them
+        if app_label in ['contenttypes', 'sessions']:
+            continue
+
+        if app_label not in permissions_by_app:
+            permissions_by_app[app_label] = {}
+
+        if model_name not in permissions_by_app[app_label]:
+            permissions_by_app[app_label][model_name] = []
+
+        permissions_by_app[app_label][model_name].append(permission)
+
     return handle_form_view(
         request,
         form_class=GroupForm,
@@ -288,8 +339,8 @@ def group_edit(request, group_id):
         template='admin_dashboard/group_edit.html',
         context_extra={
             'group': group,
-            'permissions_by_area': permissions_by_area,
-            'permission_areas': PERMISSION_AREAS,
+            'permissions_by_app': permissions_by_app,
+            'standard_actions': standard_actions,
             'group_permissions': group.permissions.all(),
             'section': 'groups'
         },
@@ -297,8 +348,9 @@ def group_edit(request, group_id):
     )
 
 
+
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def group_delete(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
     if request.method == 'POST':
@@ -314,7 +366,7 @@ def group_delete(request, group_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def department_management(request):
     filters = {
         'search': request.GET.get('search', '')
@@ -343,7 +395,7 @@ def department_management(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def department_create(request):
     return handle_form_view(
         request,
@@ -360,7 +412,7 @@ def department_create(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def department_edit(request, department_id):
     department = get_object_or_404(Department, pk=department_id)
     initial_members = [profile.user.id for profile in department.user_profiles.all()]
@@ -382,7 +434,7 @@ def department_edit(request, department_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def department_delete(request, department_id):
     department = get_object_or_404(Department, pk=department_id)
     if request.method == 'POST':
@@ -404,7 +456,7 @@ def department_delete(request, department_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def warehouse_access_delete(request, access_id):
     access = get_object_or_404(WarehouseAccess, pk=access_id)
     if request.method == 'POST':
@@ -418,7 +470,7 @@ def warehouse_access_delete(request, access_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def system_settings(request):
     from .models import SystemSettings
     settings, _ = SystemSettings.objects.get_or_create(pk=1)
@@ -434,7 +486,7 @@ def system_settings(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def workflow_settings(request):
     from .models import WorkflowSettings
     settings, _ = WorkflowSettings.objects.get_or_create(pk=1)
@@ -453,7 +505,7 @@ def workflow_settings(request):
 # AJAX-Endpunkte
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def get_user_details(request, user_id):
     """AJAX endpoint to get user details."""
     user = get_object_or_404(User, pk=user_id)
@@ -484,7 +536,7 @@ def get_user_details(request, user_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def get_department_details(request, department_id):
     """AJAX endpoint to get department details."""
     department = get_object_or_404(Department, pk=department_id)
@@ -517,7 +569,7 @@ def get_department_details(request, department_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def tax_management(request):
     filters = {
         'search': request.GET.get('search', '')
@@ -538,7 +590,7 @@ def tax_management(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def tax_create(request):
     return handle_form_view(
         request,
@@ -551,7 +603,7 @@ def tax_create(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def tax_edit(request, tax_id):
     tax = get_object_or_404(Tax, pk=tax_id)
     return handle_form_view(
@@ -566,7 +618,7 @@ def tax_edit(request, tax_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def tax_delete(request, tax_id):
     """Einen Mehrwertsteuersatz löschen."""
     tax = get_object_or_404(Tax, pk=tax_id)
@@ -589,7 +641,7 @@ def tax_delete(request, tax_id):
     return render(request, 'admin_dashboard/tax_confirm_delete.html', context)
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def interface_management(request):
     from interfaces.models import InterfaceType, SupplierInterface, InterfaceLog
     from django.utils import timezone
@@ -634,7 +686,7 @@ def interface_management(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def interface_type_management(request):
     from interfaces.models import InterfaceType, SupplierInterface
 
@@ -660,7 +712,7 @@ def interface_type_management(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def interface_type_create(request):
     return handle_form_view(
         request,
@@ -676,7 +728,7 @@ def interface_type_create(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def interface_type_edit(request, type_id):
     interface_type = get_object_or_404(InterfaceType, pk=type_id)
     return handle_form_view(
@@ -695,7 +747,7 @@ def interface_type_edit(request, type_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def interface_type_delete(request, type_id):
     """Schnittstellentyp löschen."""
     from interfaces.models import InterfaceType, SupplierInterface
@@ -728,7 +780,7 @@ def interface_type_delete(request, type_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def company_address_management(request):
     filters = {
         'search': request.GET.get('search', ''),
@@ -760,7 +812,7 @@ def company_address_management(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def company_address_create(request):
     initial = {}
     address_type = request.GET.get('type')
@@ -779,7 +831,7 @@ def company_address_create(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def company_address_edit(request, address_id):
     address = get_object_or_404(CompanyAddress, pk=address_id)
     return handle_form_view(
@@ -794,7 +846,7 @@ def company_address_edit(request, address_id):
 
 
 @login_required
-@user_passes_test(is_admin)
+@staff_member_required
 def company_address_delete(request, address_id):
     """Unternehmensadresse löschen."""
     address = get_object_or_404(CompanyAddress, pk=address_id)

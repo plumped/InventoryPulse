@@ -1,5 +1,4 @@
 {% load static %}
-{% load permission_tags %}
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -92,7 +91,7 @@
                     </li>
 
                     <!-- Produkt-Dropdown -->
-                    {% if user|has_perm:'product:view' %}
+                    {% if perms.product.view %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'product' in request.path or 'serialnumber' in request.path or 'category' in request.path %}active{% endif %}"
                            href="#" id="productDropdown" role="button"
@@ -106,7 +105,8 @@
                                     <i class="bi bi-box-seam me-2"></i>Produktübersicht
                                 </a>
                             </li>
-                            {% if user|has_perm:'product:create' %}
+                            {% if perms.product.add %}
+
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}"
                                    href="{% url 'product_create' %}">
@@ -126,7 +126,8 @@
                                     <i class="bi bi-tags me-2"></i>Kategorien
                                 </a>
                             </li>
-                            {% if user|has_perm:'product:view' %}
+                            {% if perms.product.view%}
+
                             <li>
                                 <a class="dropdown-item {% if 'expiry' in request.path %}active{% endif %}"
                                    href="{% url 'expiry_management' %}">
@@ -141,7 +142,8 @@
                             </li>
                             {% endif %}
 
-                            {% if user|has_perm:'serialnumber:view' %}
+                            {% if perms.serialnumber.view%}
+
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_list' %}active{% endif %}"
@@ -156,7 +158,8 @@
                                 </a>
                             </li>
                             {% endif %}
-                            {% if user|has_perm:'serialnumber:add' %}
+                            {% if perms.serialnumber.add%}
+
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_add' %}active{% endif %}"
                                    href="{% url 'serialnumber_add' %}">
@@ -164,7 +167,7 @@
                                 </a>
                             </li>
                             {% endif %}
-                            {% if user|has_perm:'serialnumber:transfer' %}
+                            {% if perms.serialnumber.change%}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_transfer' %}active{% endif %}"
                                    href="{% url 'serialnumber_transfer' %}">
@@ -172,7 +175,7 @@
                                 </a>
                             </li>
                             {% endif %}
-                            {% if user|has_perm:'serialnumber:import' %}
+                            {% if perms.serialnumber.add%}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_import' %}active{% endif %}"
                                    href="{% url 'serialnumber_import' %}">
@@ -180,7 +183,7 @@
                                 </a>
                             </li>
                             {% endif %}
-                            {% if user|has_perm:'serialnumber:export' %}
+                            {% if perms.serialnumber.view%}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_export' %}active{% endif %}"
                                    href="{% url 'serialnumber_export' %}">
@@ -189,7 +192,7 @@
                             </li>
                             {% endif %}
                             {% endif %}
-                            {% if user|has_perm:'product:view' %}
+                            {% if perms.product.view%}
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_list' %}active{% endif %}"
@@ -203,7 +206,7 @@
                                     <i class="bi bi-upc me-2"></i>Chargen scannen
                                 </a>
                             </li>
-                            {% if user|has_perm:'product:create' %}
+                            {% if perms.product.add %}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_add' %}active{% endif %}"
                                    href="{% url 'batch_number_add' %}">
@@ -211,7 +214,7 @@
                                 </a>
                             </li>
                             {% endif %}
-                            {% if user|has_perm:'product:edit' %}
+                            {% if perms.product.change%}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_transfer' %}active{% endif %}"
                                    href="{% url 'batch_number_transfer' %}">
@@ -219,7 +222,7 @@
                                 </a>
                             </li>
                             {% endif %}
-                            {% if user|has_perm:'import:create' %}
+                            {% if perms.product.add%}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_import' %}active{% endif %}"
                                    href="{% url 'batch_number_import' %}">
@@ -227,7 +230,8 @@
                                 </a>
                             </li>
                             {% endif %}
-                            {% if user|has_perm:'report:view' %}
+                            {% if perms.product.view%}
+
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_export' %}active{% endif %}"
                                    href="{% url 'batch_number_export' %}">
@@ -240,7 +244,7 @@
                     </li>
 
                     <!-- Lagerverwaltung Dropdown -->
-                    {% if user|has_perm:'inventory:view' %}
+                    {% if perms.inventory.view%}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'warehouse' in request.path or 'movement' in request.path or 'stock-take' in request.path %}active{% endif %}"
                            href="#" id="warehouseDropdown" role="button"
@@ -281,7 +285,7 @@
                     {% endif %}
 
                     <!-- Bestellwesen Dropdown -->
-                    {% if user|has_perm:'order:view' %}
+                    {% if perms.order.view%}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'order' in request.path %}active{% endif %}"
                            href="#" id="orderDropdown" role="button"
@@ -295,7 +299,7 @@
                                     <i class="bi bi-list-ul me-2"></i>Bestellungsübersicht
                                 </a>
                             </li>
-                            {% if user|has_perm:'order:create' %}
+                            {% if perms.order.add%}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_create' %}active{% endif %}"
                                    href="{% url 'purchase_order_create' %}">
@@ -325,7 +329,7 @@
                     </li>
                     {% endif %}
                     <!-- RMA Dropdown -->
-                    {% if user|has_perm:'rma:view' %}
+                    {% if perms.rma.view%}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'rma' in request.path %}active{% endif %}"
                            href="#" id="rmaDropdown" role="button"
@@ -339,7 +343,7 @@
                                     <i class="bi bi-list-ul me-2"></i>RMA-Übersicht
                                 </a>
                             </li>
-                            {% if user|has_perm:'rma:create' %}
+                            {% if perms.rma.add%}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'rma_create' %}active{% endif %}"
                                    href="{% url 'rma_create' %}">
@@ -352,7 +356,7 @@
                     {% endif %}
 
                     <!-- Lieferanten -->
-                    {% if user|has_perm:'supplier:view' %}
+                    {% if perms.supplier.view %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'supplier' in request.path %}active{% endif %}"
                            href="#" id="supplierDropdown" role="button"
@@ -366,7 +370,7 @@
                                     <i class="bi bi-list-ul me-2"></i>Lieferantenübersicht
                                 </a>
                             </li>
-                            {% if user|has_perm:'supplier:create' %}
+                            {% if perms.supplier.add %}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_create' %}active{% endif %}"
                                    href="{% url 'supplier_create' %}">
@@ -385,7 +389,7 @@
                     {% endif %}
 
                     <!-- Document Management Dropdown -->
-                    {% if user|has_perm:'documents:view' %}
+                    {% if perms.documents.view %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'document' in request.path or 'template' in request.path %}active{% endif %}"
                            href="#" id="documentDropdown" role="button"
@@ -399,7 +403,7 @@
                                     <i class="bi bi-file-earmark me-2"></i>Dokumentenübersicht
                                 </a>
                             </li>
-                            {% if user|has_perm:'documents:create' %}
+                            {% if perms.documents.add %}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'document_upload' %}active{% endif %}"
                                    href="{% url 'document_upload' %}">
@@ -414,7 +418,7 @@
                                     <i class="bi bi-grid-3x3 me-2"></i>Dokumentvorlagen
                                 </a>
                             </li>
-                            {% if user|has_perm:'documents:create_template' %}
+                            {% if perms.documents.add %}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'template_create' %}active{% endif %}"
                                    href="{% url 'template_create' %}">
@@ -427,7 +431,7 @@
                     {% endif %}
 
                     <!-- Import Dropdown -->
-                    {% if user|has_perm:'import:view' %}
+                    {% if perms.import.view %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'import' in request.path %}active{% endif %}"
                            href="#" id="importDropdown" role="button"
@@ -442,7 +446,7 @@
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                            {% if user|has_perm:'import:create' %}
+                            {% if perms.import.add %}
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'import_products' %}active{% endif %}"
                                    href="{% url 'import_products' %}">
@@ -492,7 +496,7 @@
                     {% endif %}
 
                     <!-- Export Dropdown -->
-                    {% if user|has_perm:'report:view' %}
+                    {% if perms.product.view%}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'export' in request.path %}active{% endif %}"
                            href="#" id="exportDropdown" role="button"
@@ -528,7 +532,7 @@
                 </ul>
                 <ul class="navbar-nav">
                     <!-- Admin Dashboard für Benutzer mit Admin-Rechten -->
-                    {% if user.is_superuser or user|has_perm:'admin_dashboard:admin' %}
+                    {% if user.is_superuser or perms.admin_dashboard.admin %}
                     <li class="nav-item">
                         <a class="nav-link {% if 'admin-dashboard' in request.path %}active{% endif %}"
                            href="{% url 'admin_dashboard' %}">

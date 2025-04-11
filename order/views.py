@@ -1,39 +1,36 @@
-import uuid
 from datetime import date, timedelta, datetime
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import models
 from django.db import transaction
-from django.db.models import Q, Sum, F, Count, Case, When, Value, IntegerField
+from django.db.models import Q, Sum, F
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.utils import timezone
 from django.urls import reverse
-from django.db import models
+from django.utils import timezone
 
-
-from accessmanagement.decorators import permission_required
 from admin_dashboard.models import CompanyAddress
 from core.models import Product, ProductWarehouse, Currency
+from inventory.models import Warehouse, StockMovement
 from rma.models import RMA
 from suppliers.models import Supplier, SupplierProduct
-from inventory.models import Warehouse, StockMovement
-
+from .forms import PurchaseOrderForm, OrderSplitForm, OrderSplitItemFormSet
 from .models import (
     PurchaseOrder, PurchaseOrderItem, PurchaseOrderReceipt,
     PurchaseOrderReceiptItem, OrderSuggestion, OrderTemplate, OrderTemplateItem, OrderSplit, OrderSplitItem,
     PurchaseOrderComment
 )
-from .forms import PurchaseOrderForm, ReceiveOrderForm, OrderSplitForm, OrderSplitItemFormSet
 from .services import generate_order_suggestions
 from .utils.address import get_address_context
 from .workflow import get_initial_order_status, check_auto_approval, can_approve_order
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def purchase_order_list(request):
     """Liste aller Bestellungen mit Filteroptionen."""
     # Basis-Queryset
@@ -122,7 +119,8 @@ def purchase_order_list(request):
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def purchase_order_detail(request, pk):
     """
     Angepasste Funktion für die Bestelldetailseite mit verbesserter Darstellung von Teillieferungen.
@@ -1049,7 +1047,8 @@ def purchase_order_receive(request, pk):
     return render(request, 'order/purchase_order_receive_unified.html', context)
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def purchase_order_print(request, pk):
     """Druckansicht einer Bestellung."""
     order = get_object_or_404(
@@ -1067,7 +1066,8 @@ def purchase_order_print(request, pk):
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def purchase_order_export(request, pk):
     """Export einer Bestellung als CSV oder PDF mit Berücksichtigung stornierter Mengen."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -1116,7 +1116,8 @@ def purchase_order_export(request, pk):
 # In order/views.py - order_suggestions View aktualisieren
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def order_suggestions(request):
     """Zeigt Bestellvorschläge basierend auf kritischen Beständen."""
 
@@ -2040,7 +2041,8 @@ def get_supplier_products(request):
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def order_template_list(request):
     """List all order templates with filtering options."""
     # Base queryset
@@ -2098,7 +2100,8 @@ def order_template_list(request):
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def order_template_detail(request, pk):
     """Show details for a specific order template."""
     template = get_object_or_404(
@@ -2924,7 +2927,8 @@ def order_split_create(request, pk):
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def order_split_list(request, pk):
     """List all splits for a purchase order."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -2939,7 +2943,8 @@ def order_split_list(request, pk):
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def order_split_detail(request, pk, split_id):
     """Show details for a specific order split."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -3369,7 +3374,8 @@ def check_order_splits(request, pk):
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('order.view_order', raise_exception=True)
+
 def purchase_order_comments(request, pk):
     """View for displaying all comments for an order."""
     order = get_object_or_404(

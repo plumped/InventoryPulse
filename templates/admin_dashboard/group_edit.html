@@ -31,27 +31,67 @@
                     <h5 class="card-title mb-0">Berechtigungen</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        {% for area, area_name in permission_areas.items %}
-                            <div class="col-md-6 mb-4">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="mb-0">{{ area_name }}</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        {% for perm in permissions_by_area|get_item:area %}
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="permissions" id="perm_{{ perm.id }}" value="{{ perm.id }}" {% if perm in group_permissions %}checked{% endif %}>
-                                                <label class="form-check-label" for="perm_{{ perm.id }}">
-                                                    {{ perm.name }}
-                                                </label>
+                    <div class="accordion" id="permissionsAccordion">
+                        {% for app_label, models in permissions_by_app.items %}
+                        <div class="accordion-item mb-3">
+                            <h2 class="accordion-header" id="heading{{ app_label|slugify }}">
+                                <button aria-controls="collapse{{ app_label|slugify }}" aria-expanded="true" class="accordion-button"
+                                        data-bs-target="#collapse{{ app_label|slugify }}"
+                                        data-bs-toggle="collapse" type="button">
+                                    {{ app_label|title }} Modul
+                                </button>
+                            </h2>
+                            <div aria-labelledby="heading{{ app_label|slugify }}" class="accordion-collapse collapse show"
+                                 data-bs-parent="#permissionsAccordion"
+                                 id="collapse{{ app_label|slugify }}">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        {% for model_name, permissions in models.items %}
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h6 class="mb-0">{{ model_name|title }}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="row">
+                                                        {% for perm in permissions %}
+                                                        <div class="col-md-6 mb-2">
+                                                            <div class="form-check">
+                                                                <input %} %}checked{%
+                                                                       class="form-check-input" endif
+                                                                       group_permissions
+                                                                       id="perm_{{ perm.id }}" if in name="permissions" perm type="checkbox" value="{{ perm.id }}"
+                                                                       {%>
+                                                                <label class="form-check-label"
+                                                                       for="perm_{{ perm.id }}">
+                                                                    {% if 'view' in perm.codename %}
+                                                                    <i class="bi bi-eye"></i> Ansehen
+                                                                    {% elif 'add' in perm.codename %}
+                                                                    <i class="bi bi-plus-circle"></i> Erstellen
+                                                                    {% elif 'change' in perm.codename %}
+                                                                    <i class="bi bi-pencil"></i> Bearbeiten
+                                                                    {% elif 'delete' in perm.codename %}
+                                                                    <i class="bi bi-trash"></i> Löschen
+                                                                    {% else %}
+                                                                    {{ perm.name }}
+                                                                    {% endif %}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
                                             </div>
+                                        </div>
                                         {% empty %}
-                                            <p class="text-muted">Keine Berechtigungen verfügbar</p>
+                                        <p class="text-muted">Keine Modelle verfügbar</p>
                                         {% endfor %}
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">Keine Berechtigungen verfügbar</p>
                         {% endfor %}
                     </div>
                 </div>

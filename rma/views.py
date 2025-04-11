@@ -1,30 +1,26 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.db import transaction
-from django.utils import timezone
-from django.db.models import Q, Sum
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import JsonResponse, HttpResponse
-from django.urls import reverse
-from django.forms import modelformset_factory
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal, InvalidOperation
 
-from accessmanagement.decorators import permission_required
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import transaction
+from django.db.models import Q
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+
 from admin_dashboard.models import CompanyAddress, CompanyAddressType
+from inventory.models import StockMovement
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem, PurchaseOrderReceipt
-from inventory.models import StockMovement, Warehouse
 from order.views import update_order_status_after_receipt
 from suppliers.models import Supplier
-
-from .models import (
-    RMA, RMAItem, RMAStatus, RMAPhoto, RMAComment, RMAHistory,
-    RMAResolutionType, RMAIssueType, RMADocument
-)
 from .forms import (
     RMAForm, RMAItemForm, RMAStatusUpdateForm, RMAResolutionForm,
     RMACommentForm, RMAFilterForm
+)
+from .models import (
+    RMA, RMAItem, RMAStatus, RMAPhoto, RMAComment, RMAHistory,
+    RMAResolutionType, RMAIssueType, RMADocument
 )
 
 
@@ -52,7 +48,8 @@ def generate_rma_number(prefix="RMA"):
 
 
 @login_required
-@permission_required('rma', 'view')
+@permission_required('rma.view_rma', raise_exception=True)
+
 def rma_list(request):
     """List all RMAs with filtering and search."""
     # Base queryset
@@ -121,7 +118,8 @@ def rma_list(request):
 
 
 @login_required
-@permission_required('rma', 'view')
+@permission_required('rma.view_rma', raise_exception=True)
+
 def rma_detail(request, pk):
     """Show details for a specific RMA."""
     rma = get_object_or_404(
@@ -1018,7 +1016,8 @@ def rma_delete_comment(request, pk, comment_id):
 
 
 @login_required
-@permission_required('rma', 'view')
+@permission_required('rma.view_rma', raise_exception=True)
+
 def rma_history(request, pk):
     """View the complete history of an RMA."""
     rma = get_object_or_404(RMA, pk=pk)
@@ -1035,7 +1034,8 @@ def rma_history(request, pk):
 
 
 @login_required
-@permission_required('rma', 'view')
+@permission_required('rma.view_rma', raise_exception=True)
+
 def rma_comments(request, pk):
     """View all comments for an RMA."""
     rma = get_object_or_404(RMA, pk=pk)
@@ -1052,7 +1052,7 @@ def rma_comments(request, pk):
 
 
 @login_required
-@permission_required('rma', 'view')
+@permission_required('rma.view_rma', raise_exception=True)
 def rma_print(request, pk):
     """Generate a printable view of an RMA."""
     rma = get_object_or_404(

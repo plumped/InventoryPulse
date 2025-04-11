@@ -5,13 +5,9 @@ import os
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, landscape
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import cm
+
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User, Group, Permission
 from django.db import models
@@ -23,11 +19,13 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.templatetags.static import static
 from django.utils import timezone
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import cm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
-from InventoryPulse import settings
-from accessmanagement.decorators import permission_required
 from accessmanagement.models import WarehouseAccess
-from accessmanagement.permissions import PERMISSION_AREAS
 from inventory.models import StockMovement, Warehouse, Department, StockTake
 from order.models import PurchaseOrder, OrderSuggestion
 from suppliers.models import Supplier, SupplierProduct
@@ -185,7 +183,8 @@ def dashboard(request):
 
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_list(request):
     filtered_products = get_filtered_products(request)
     products = paginate_queryset(filtered_products, request.GET.get('page'), per_page=25)
@@ -203,7 +202,8 @@ def product_list(request):
 
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def low_stock_list(request):
     products = get_filtered_products(request, filter_low_stock=True)
     return render(request, 'core/low_stock_list.html', {'products': products, 'title': 'Kritische Bestände'})
@@ -327,7 +327,8 @@ def product_update(request, pk):
 
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def category_list(request):
     """List all categories."""
     categories = Category.objects.all().order_by('name')
@@ -1481,7 +1482,8 @@ def permission_management(request):
 # ------------------------------------------------------------------------------
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_photos(request, pk):
     """Zeigt alle Fotos eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
@@ -1563,7 +1565,8 @@ def product_photo_set_primary(request, pk, photo_id):
 # ------------------------------------------------------------------------------
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_attachments(request, pk):
     """Zeigt alle Anhänge eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
@@ -1626,7 +1629,8 @@ def product_attachment_delete(request, pk, attachment_id):
 
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_attachment_download(request, pk, attachment_id):
     """Lädt einen Produktanhang herunter."""
     product = get_object_or_404(Product, pk=pk)
@@ -1660,7 +1664,8 @@ def product_attachment_download(request, pk, attachment_id):
 # ------------------------------------------------------------------------------
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def variant_type_list(request):
     """Zeigt alle Variantentypen an."""
     variant_types = ProductVariantType.objects.all()
@@ -1756,7 +1761,8 @@ def variant_type_delete(request, pk):
 # ------------------------------------------------------------------------------
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_variants(request, pk):
     """Zeigt alle Varianten eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
@@ -1771,7 +1777,8 @@ def product_variants(request, pk):
 
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_variant_detail(request, pk, variant_id):
     """Zeigt Details zu einer Produktvariante an."""
     product = get_object_or_404(Product, pk=pk)
@@ -1924,7 +1931,8 @@ def product_variant_delete(request, pk, variant_id):
 # ------------------------------------------------------------------------------
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_serials(request, pk):
     """Zeigt alle Seriennummern eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
@@ -2112,7 +2120,8 @@ def product_serial_delete(request, pk, serial_id):
 # ------------------------------------------------------------------------------
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_batches(request, pk):
     """Zeigt alle Chargen eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
@@ -2261,7 +2270,8 @@ def product_batch_delete(request, pk, batch_id):
 from core.utils.filters import filter_expiring_serials, filter_expiring_batches
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def expiry_management(request):
     """Zentrale Verwaltung aller Produkte mit Verfallsdaten."""
 
@@ -2335,7 +2345,8 @@ def expiry_management(request):
 
 # Aktualisieren der product_detail View, um die erweiterten Funktionen anzuzeigen
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def product_detail(request, pk):
     """Show details for a specific product."""
     product = get_object_or_404(Product, pk=pk)
@@ -3516,7 +3527,8 @@ def products_search(request):
 
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def batch_number_list(request):
     """Liste aller Chargen im System."""
     # Filteroptionen
@@ -3583,7 +3595,8 @@ def batch_number_list(request):
 
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
+
 def batch_number_detail(request, batch_id):
     """Detailansicht einer Charge."""
     batch = get_object_or_404(BatchNumber.objects.select_related(
@@ -3679,7 +3692,7 @@ def batch_number_delete(request, batch_id):
 
 
 @login_required
-@permission_required('product', 'view')
+@permission_required('products.view_product', raise_exception=True)
 def batch_number_scan(request):
     """Scannt eine Chargennummer und zeigt Details an."""
     scanned_number = request.GET.get('scan', '')

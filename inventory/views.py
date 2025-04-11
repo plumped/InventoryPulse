@@ -1,32 +1,28 @@
+import csv
 from decimal import Decimal
 from random import random
 
-from django.contrib.auth.models import User
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Sum, Count, F, Func
-from django.db import transaction
-from django.utils import timezone
-from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
-import csv
-
 from django import forms
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import User
+from django.db import transaction
+from django.db.models import Q, Sum, F, Func
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 
-from accessmanagement.decorators import permission_required
 from accessmanagement.models import WarehouseAccess
-from core import models
 from core.models import Product, Category, ProductWarehouse, BatchNumber
 from core.utils.pagination import paginate_queryset
-from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department
-from .forms import StockMovementForm, StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
+from .forms import StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
     WarehouseForm, StockAdjustmentForm
-from accessmanagement.models import WarehouseAccess
+from .models import StockMovement, StockTake, StockTakeItem, Warehouse, Department
 
 
 @login_required
-@permission_required('inventory', 'view')
+@permission_required('inventory.view_inventory', raise_exception=True)
+
 def stock_movement_list(request):
     """List all stock movements with filtering and search."""
     # Nur Bewegungen in Lagern, auf die der Benutzer Zugriff hat
@@ -99,7 +95,8 @@ def stock_movement_list(request):
 # Ergänzung zu bestehenden Views in inventory/views.py
 
 @login_required
-@permission_required('inventory', 'view')
+@permission_required('inventory.view_inventory', raise_exception=True)
+
 def stock_take_list(request):
     """List all stock takes with filtering."""
     # Nur Inventuren in Lagern anzeigen, auf die der Benutzer Zugriff hat
@@ -269,7 +266,8 @@ def stock_take_create(request):
 
 
 @login_required
-@permission_required('inventory', 'view')
+@permission_required('inventory.view_inventory', raise_exception=True)
+
 def stock_take_detail(request, pk):
     """Show details for a specific stock take."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -771,7 +769,8 @@ def stock_take_barcode_scan(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'view')
+@permission_required('inventory.view_inventory', raise_exception=True)
+
 def stock_take_report(request, pk):
     """Generate a report for a stock take."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -937,7 +936,8 @@ def stock_take_export_pdf(request, pk):
 
 # Beispiel für Lager-Verwaltungs-Views
 @login_required
-@permission_required('inventory', 'view')
+@permission_required('inventory.view_inventory', raise_exception=True)
+
 def warehouse_list(request):
     # Nur Lager anzeigen, auf die der Benutzer Zugriff hat
     warehouses = []
@@ -951,7 +951,8 @@ def warehouse_list(request):
 
 
 @login_required
-@permission_required('inventory', 'view')
+@permission_required('inventory.view_inventory', raise_exception=True)
+
 def department_management(request):
     # Nur für Administratoren
     if not request.user.is_superuser:
@@ -1290,7 +1291,8 @@ def warehouse_access_delete(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'view')
+@permission_required('inventory.view_inventory', raise_exception=True)
+
 def product_warehouses(request, product_id):
     """Bestandsansicht eines Produkts in allen Lagern."""
     product = get_object_or_404(Product, pk=product_id)
@@ -1348,7 +1350,7 @@ def warehouse_create(request):
 
 
 @login_required
-@permission_required('inventory', 'view')
+@permission_required('inventory.view_inventory', raise_exception=True)
 def warehouse_detail(request, pk):
     """Detailansicht eines Lagers."""
     warehouse = get_object_or_404(Warehouse, pk=pk)

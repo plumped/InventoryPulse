@@ -1,11 +1,11 @@
 # admin_dashboard/forms.py
 from django import forms
 from django.contrib.auth.models import User, Group, Permission
+
 from accessmanagement.models import WarehouseAccess
 from core.models import Tax
 from interfaces.models import InterfaceType
 from inventory.models import Department
-
 from .models import SystemSettings, WorkflowSettings, CompanyAddress
 
 
@@ -131,12 +131,25 @@ class UserEditForm(forms.ModelForm):
 class GroupForm(forms.ModelForm):
     """Form for creating or editing a group."""
 
+    permissions = forms.ModelMultipleChoiceField(
+        queryset=Permission.objects.all().order_by('content_type__app_label', 'content_type__model', 'name'),
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+
     class Meta:
         model = Group
-        fields = ['name']
+        fields = ['name', 'permissions']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance.pk:
+            # Vorauswahl der aktuellen Berechtigungen, falls eine existierende Gruppe bearbeitet wird
+            self.initial['permissions'] = self.instance.permissions.all()
+
 
 class DepartmentForm(forms.ModelForm):
     """Form for creating or editing a department."""

@@ -1,26 +1,25 @@
 from datetime import timedelta, time
-from django.utils import timezone
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.db.models import Q, Count
 from django.db.models.aggregates import Avg, Min, Max
 from django.http.response import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q, Count
+from django.utils import timezone
 from django.utils.timezone import make_aware
 
-from accessmanagement.decorators import permission_required
-from rma.models import RMA, RMAStatus
-
-from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric, \
-    SupplierPerformanceCalculator, SupplierContact, SupplierAddress, AddressType, ContactType
 from core.models import Product
+from rma.models import RMA, RMAStatus
 from .forms import SupplierForm, SupplierProductForm, SupplierPerformanceForm, DateRangeForm, \
     SupplierPerformanceMetricForm, SupplierContactForm, SupplierAddressForm
+from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric, \
+    SupplierPerformanceCalculator, SupplierContact, SupplierAddress, AddressType, ContactType
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def supplier_list(request):
     """List all suppliers with filtering and search."""
     suppliers_list = Supplier.objects.all()
@@ -53,7 +52,8 @@ def supplier_list(request):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def supplier_detail(request, pk):
     """Show details for a specific supplier."""
     supplier = get_object_or_404(Supplier, pk=pk)
@@ -490,7 +490,8 @@ def get_supplier_products(request):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def supplier_performance_overview(request):
     """Overview of all suppliers' performance metrics."""
     # Get all active metrics
@@ -573,7 +574,8 @@ def supplier_performance_overview(request):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def supplier_performance_detail(request, pk):
     """Detailed view of a specific supplier's performance."""
     supplier = get_object_or_404(Supplier, pk=pk)
@@ -804,7 +806,8 @@ def supplier_performance_calculate(request, supplier_id):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def supplier_performance_metrics_list(request):
     """List and manage performance metric definitions."""
     metrics = SupplierPerformanceMetric.objects.all().order_by('name')
@@ -1540,7 +1543,7 @@ def get_supplier_rma_performance(request, supplier_id):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
 def supplier_rma_overview(request, pk):
     """Zeigt eine Übersicht aller RMAs für einen bestimmten Lieferanten."""
     supplier = get_object_or_404(Supplier, pk=pk)

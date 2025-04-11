@@ -1,30 +1,25 @@
-import ftplib
 import json
-import os
 from datetime import datetime
 
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q
 from django.http import JsonResponse
-from django.urls import reverse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.template import Template, Context
-from django.views.decorators.http import require_POST
+from django.urls import reverse
 
-from accessmanagement.decorators import permission_required
 from core.utils.pagination import paginate_queryset
 from order.models import PurchaseOrder
 from suppliers.models import Supplier
-
+from .forms import SupplierInterfaceForm, InterfaceTestForm
 from .models import InterfaceType, SupplierInterface, InterfaceLog, XMLStandardTemplate
 from .services import send_order_via_interface, InterfaceError
-from .forms import SupplierInterfaceForm, InterfaceTestForm
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def interface_list(request):
     """Liste aller Schnittstellen."""
     interfaces = SupplierInterface.objects.select_related('supplier', 'interface_type')
@@ -84,7 +79,7 @@ def interface_list(request):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
 def interface_detail(request, pk):
     """Detailansicht einer Schnittstelle."""
     interface = get_object_or_404(SupplierInterface.objects.select_related('supplier', 'interface_type'), pk=pk)
@@ -733,7 +728,8 @@ def retry_failed_transmission(request, log_id):
 # AJAX-Endpunkte
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def get_supplier_interfaces(request):
     """AJAX-Endpunkt, um die Schnittstellen eines Lieferanten abzurufen."""
     supplier_id = request.GET.get('supplier_id')
@@ -759,7 +755,8 @@ def get_supplier_interfaces(request):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def get_interface_fields(request):
     """AJAX-Endpunkt, um die relevanten Felder für einen Schnittstellentyp abzurufen."""
     interface_type_id = request.GET.get('interface_type_id')
@@ -866,7 +863,8 @@ def test_send_order(request):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def get_xml_template(request, template_id):
     """AJAX-Endpunkt zum Abrufen einer XML-Standardvorlage"""
     try:
@@ -890,7 +888,8 @@ def get_xml_template(request, template_id):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def preview_xml_template(request):
     """AJAX-Endpunkt zur Vorschau einer XML-Vorlage mit Beispieldaten"""
     if request.method != 'POST':
@@ -930,7 +929,8 @@ def preview_xml_template(request):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def list_xml_templates(request):
     """Listet alle verfügbaren XML-Standardvorlagen auf"""
     templates = XMLStandardTemplate.objects.filter(is_active=True).order_by('industry', 'name')
@@ -964,7 +964,8 @@ def list_xml_templates(request):
 
 
 @login_required
-@permission_required('supplier', 'view')
+@permission_required('supplier.view_supplier', raise_exception=True)
+
 def xml_template_detail(request, template_id):
     """Zeigt die Details einer XML-Standardvorlage an"""
     template = get_object_or_404(XMLStandardTemplate, pk=template_id, is_active=True)

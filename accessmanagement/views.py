@@ -1,19 +1,17 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import JsonResponse
-from django.contrib.auth.models import User, Group, Permission
-
-from inventory.models import Warehouse
-from organization.models import Department
-from .models import WarehouseAccess
-from .decorators import permission_required, is_admin
-from .forms import WarehouseAccessForm
-from .permissions import PERMISSION_AREAS
-from core.utils.logging_utils import log_list_view_usage
 import logging
 
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.models import User, Group, Permission
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+
+from core.utils.logging_utils import log_list_view_usage
+from .forms import WarehouseAccessForm
+from .models import WarehouseAccess
+
 logger = logging.getLogger(__name__)
+
 
 def _handle_warehouse_access_form(request, instance=None, title='', success_message=''):
     if request.method == 'POST':
@@ -37,7 +35,7 @@ def _handle_warehouse_access_form(request, instance=None, title='', success_mess
 
 
 @login_required
-@user_passes_test(is_admin)
+@permission_required('accessmanagement.view_warehouseaccess', raise_exception=True)
 def warehouse_access_management(request):
     log_list_view_usage(request, view_name="warehouse_access_management")
 
@@ -45,7 +43,8 @@ def warehouse_access_management(request):
     if request.method == 'POST' and form.is_valid():
         access = form.save()
         action = 'created' if form.was_created() else 'updated'
-        messages.success(request, f'Access rights for {access.department.name} to {access.warehouse.name} have been {action}.')
+        messages.success(request,
+                         f'Access rights for {access.department.name} to {access.warehouse.name} have been {action}.')
         return redirect('warehouse_access_management')
 
     access_rights = WarehouseAccess.objects.select_related('warehouse', 'department').all()
@@ -59,7 +58,7 @@ def warehouse_access_management(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@permission_required('accessmanagement.add_warehouseaccess', raise_exception=True)
 def warehouse_access_add(request):
     return _handle_warehouse_access_form(
         request,
@@ -69,7 +68,7 @@ def warehouse_access_add(request):
 
 
 @login_required
-@user_passes_test(is_admin)
+@permission_required('accessmanagement.change_warehouseaccess', raise_exception=True)
 def warehouse_access_edit(request, pk):
     access = get_object_or_404(WarehouseAccess, pk=pk)
     return _handle_warehouse_access_form(
@@ -81,7 +80,7 @@ def warehouse_access_edit(request, pk):
 
 
 @login_required
-@user_passes_test(is_admin)
+@permission_required('accessmanagement.delete_warehouseaccess', raise_exception=True)
 def warehouse_access_delete(request, pk):
     access = get_object_or_404(WarehouseAccess, pk=pk)
 
@@ -96,7 +95,7 @@ def warehouse_access_delete(request, pk):
 
 
 @login_required
-@user_passes_test(is_admin)
+@permission_required('auth.view_user', raise_exception=True)
 def user_permissions_management(request):
     log_list_view_usage(request, view_name="user_permissions_management")
 
@@ -109,6 +108,9 @@ def user_permissions_management(request):
         user = get_object_or_404(User, pk=user_id)
 
         if action == 'assign_group':
+            if not request.user.has_perm('auth.change_user'):
+                return JsonResponse({'error': 'Permission denied'}, status=403)
+
             group_id = request.POST.get('group_id')
             group = get_object_or_404(Group, pk=group_id)
             if request.POST.get('assign') == 'true':
@@ -119,6 +121,9 @@ def user_permissions_management(request):
                 messages.success(request, f'User {user.username} has been removed from group {group.name}.')
 
         elif action == 'direct_permission':
+            if not request.user.has_perm('auth.change_user'):
+                return JsonResponse({'error': 'Permission denied'}, status=403)
+
             perm_id = request.POST.get('permission_id')
             perm = get_object_or_404(Permission, pk=perm_id)
             if request.POST.get('assign') == 'true':
@@ -128,23 +133,37 @@ def user_permissions_management(request):
                 user.user_permissions.remove(perm)
                 messages.success(request, f'Permission {perm.name} has been removed from {user.username}.')
 
-    permissions = {
-        area: Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
-        for area in PERMISSION_AREAS.keys()
-    }
+    # Gruppiere Berechtigungen nach Content-Type (App + Model)
+    from django.contrib.contenttypes.models import ContentType
+
+    # Berechtigungen nach Content-Type gruppieren
+    content_types = ContentType.objects.all().order_by('app_label', 'model')
+    permissions_by_content_type = {}
+
+    for ct in content_types:
+        perms = Permission.objects.filter(content_type=ct).order_by('codename')
+        if perms.exists():  # Nur Content-Types mit Berechtigungen hinzufügen
+            app_name = ct.app_label.replace('_', ' ').title()
+            model_name = ct.model.replace('_', ' ').title()
+            key = f"{ct.app_label}.{ct.model}"
+
+            permissions_by_content_type[key] = {
+                'name': f"{app_name} - {model_name}",
+                'permissions': perms
+            }
 
     context = {
         'users': users,
         'groups': groups,
-        'permissions': permissions,
-        'permission_areas': PERMISSION_AREAS,
+        'permissions_by_content_type': permissions_by_content_type,
     }
 
     return render(request, 'accessmanagement/user_permissions_management.html', context)
 
 
+
 @login_required
-@user_passes_test(is_admin)
+@permission_required('auth.view_user', raise_exception=True)
 def get_user_permissions(request):
     user_id = request.GET.get('user_id')
     try:
@@ -154,23 +173,23 @@ def get_user_permissions(request):
         direct_permissions = list(user.user_permissions.values_list('id', flat=True))
 
         effective_permissions = [
-            {
-                'id': perm.id,
-                'name': perm.name,
-                'codename': perm.codename,
-                'source': f'Group: {group.name}'
-            }
-            for group in user.groups.all()
-            for perm in group.permissions.all()
-        ] + [
-            {
-                'id': perm.id,
-                'name': perm.name,
-                'codename': perm.codename,
-                'source': 'Directly assigned'
-            }
-            for perm in user.user_permissions.all()
-        ]
+                                    {
+                                        'id': perm.id,
+                                        'name': perm.name,
+                                        'codename': perm.codename,
+                                        'source': f'Group: {group.name}'
+                                    }
+                                    for group in user.groups.all()
+                                    for perm in group.permissions.all()
+                                ] + [
+                                    {
+                                        'id': perm.id,
+                                        'name': perm.name,
+                                        'codename': perm.codename,
+                                        'source': 'Directly assigned'
+                                    }
+                                    for perm in user.user_permissions.all()
+                                ]
 
         return JsonResponse({
             'groups': groups,

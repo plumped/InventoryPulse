@@ -9,7 +9,7 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Count, Q, Sum, OuterRef, Subquery, F, Value, DecimalField
 from django.db.models.functions import Coalesce
@@ -327,8 +327,7 @@ def product_update(request, pk):
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
-
+@permission_required('categories.view_categories', raise_exception=True)
 def category_list(request):
     """List all categories."""
     categories = Category.objects.all().order_by('name')
@@ -1413,68 +1412,6 @@ def get_user_permissions(request):
 
     except User.DoesNotExist:
         return JsonResponse({'error': 'Benutzer nicht gefunden'}, status=404)
-
-
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
-def permission_management(request):
-    """Verwaltung der Benutzerberechtigungen."""
-    users = User.objects.all().order_by('username')
-    groups = Group.objects.all().order_by('name')
-
-    if request.method == 'POST':
-        action = request.POST.get('action')
-
-        if action == 'assign_group':
-            user_id = request.POST.get('user_id')
-            group_id = request.POST.get('group_id')
-
-            try:
-                user = User.objects.get(pk=user_id)
-                group = Group.objects.get(pk=group_id)
-
-                if request.POST.get('assign') == 'true':
-                    user.groups.add(group)
-                    messages.success(request, f'Benutzer {user.username} wurde zur Gruppe {group.name} hinzugefügt.')
-                else:
-                    user.groups.remove(group)
-                    messages.success(request, f'Benutzer {user.username} wurde aus der Gruppe {group.name} entfernt.')
-
-            except (User.DoesNotExist, Group.DoesNotExist):
-                messages.error(request, "Benutzer oder Gruppe nicht gefunden.")
-
-        elif action == 'direct_permission':
-            user_id = request.POST.get('user_id')
-            perm_id = request.POST.get('permission_id')
-
-            try:
-                user = User.objects.get(pk=user_id)
-                perm = Permission.objects.get(pk=perm_id)
-
-                if request.POST.get('assign') == 'true':
-                    user.user_permissions.add(perm)
-                    messages.success(request, f'Berechtigung {perm.name} wurde {user.username} direkt zugewiesen.')
-                else:
-                    user.user_permissions.remove(perm)
-                    messages.success(request, f'Berechtigung {perm.name} wurde von {user.username} entfernt.')
-
-            except (User.DoesNotExist, Permission.DoesNotExist):
-                messages.error(request, "Benutzer oder Berechtigung nicht gefunden.")
-
-    # Berechtigungen nach Bereichen gruppieren
-    permissions = {}
-    for area in PERMISSION_AREAS.keys():
-        area_perms = Permission.objects.filter(codename__contains=f'_{area}').order_by('codename')
-        permissions[area] = area_perms
-
-    context = {
-        'users': users,
-        'groups': groups,
-        'permissions': permissions,
-        'permission_areas': PERMISSION_AREAS,
-    }
-
-    return render(request, 'core/permission_management.html', context)
 
 #111
 # ------------------------------------------------------------------------------

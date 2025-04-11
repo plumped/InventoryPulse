@@ -24,6 +24,7 @@ from django.shortcuts import render, redirect
 from django.templatetags.static import static
 from django.utils import timezone
 
+from InventoryPulse import settings
 from accessmanagement.decorators import permission_required
 from accessmanagement.models import WarehouseAccess
 from accessmanagement.permissions import PERMISSION_AREAS
@@ -4198,3 +4199,21 @@ def api_product_variants(request):
     ).values('id', 'name', 'value')
 
     return JsonResponse(list(variants), safe=False)
+
+
+def documentation_view(request, path=''):
+    """Weiterleitung zur Dokumentation."""
+    if not path:
+        return redirect('/static/docs/index.html')
+    return redirect(f'/static/docs/{path}')
+
+    # MIME-Typ bestimmen
+    content_type, encoding = mimetypes.guess_type(file_path)
+    if content_type is None:
+        content_type = 'text/html'  # Standard-MIME-Typ
+
+    # Datei lesen und ausliefern
+    with open(file_path, 'rb') as f:
+        file_content = f.read()
+
+    return HttpResponse(file_content, content_type=content_type)

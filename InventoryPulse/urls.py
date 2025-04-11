@@ -146,6 +146,9 @@ urlpatterns = [
     path('api/products/search/', core_views.products_search, name='api_products_search'),
     path('api/product-variants/', core_views.api_product_variants, name='api_product_variants'),
 
+    path('docs/', core_views.documentation_view, name='docs'),
+    path('docs/<path:path>', core_views.documentation_view, name='docs_with_path'),
+
     # === Select2 ===
     path('select2/', include('django_select2.urls')),
 ]

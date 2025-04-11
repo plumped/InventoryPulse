@@ -248,9 +248,7 @@ LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Füge diese Zeile hinzu
-    BASE_DIR / "site",
 ]
-STATIC_ROOT = BASE_DIR / 'staticfiles'  # Optional für collectstatic
 
 
 # Default primary key field type

@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}
+{% if form.instance.pk %}Lager bearbeiten{% else %}Neues Lager{% endif %} - InventoryPulse
+{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -9,10 +11,12 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="{% url 'warehouse_list' %}">Lager</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                <li aria-current="page" class="breadcrumb-item active">
+                    {% if form.instance.pk %}{{ form.instance.name }} bearbeiten{% else %}Neues Lager{% endif %}
+                </li>
             </ol>
         </nav>
-        <h1>{{ title }}</h1>
+        <h1>{% if form.instance.pk %}Lager bearbeiten{% else %}Neues Lager{% endif %}</h1>
     </div>
 </div>
 
@@ -20,59 +24,74 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-body">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-
                 <form method="post" novalidate>
                     {% csrf_token %}
 
-                    {% for field in form.visible_fields %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">
-                                {{ field.label }}
-                                {% if field.field.required %}
-                                    <span class="text-danger">*</span>
-                                {% endif %}
-                            </label>
-
-                            {% if field.name == 'is_active' %}
-                                <div class="form-check">
-                                    {{ field }}
-                                    <label class="form-check-label" for="{{ field.id_for_label }}">
-                                        Lager ist aktiv
-                                    </label>
-                                </div>
-                            {% else %}
-                                {{ field }}
-                            {% endif %}
-
-                            {% if field.help_text %}
-                                <div class="form-text">{{ field.help_text }}</div>
-                            {% endif %}
-
-                            {% if field.errors %}
-                                {% for error in field.errors %}
-                                    <div class="invalid-feedback" style="display: block;">
-                                        {{ error }}
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.name.id_for_label }}">Name*</label>
+                        <input class="form-control {% if form.name.errors %}is-invalid{% endif %}" id="{{ form.name.id_for_label }}"
+                               name="{{ form.name.name }}"
+                               required
+                               type="text" value="{{ form.name.value|default:'' }}">
+                        {% if form.name.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.name.errors %}
+                            {{ error }}
+                            {% endfor %}
                         </div>
-                    {% endfor %}
+                        {% endif %}
+                    </div>
 
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{% url 'warehouse_list' %}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Zurück
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Speichern
-                        </button>
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.location.id_for_label }}">Standort*</label>
+                        <input class="form-control {% if form.location.errors %}is-invalid{% endif %}" id="{{ form.location.id_for_label }}"
+                               name="{{ form.location.name }}"
+                               required
+                               type="text" value="{{ form.location.value|default:'' }}">
+                        {% if form.location.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.location.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="{{ form.description.id_for_label }}">Beschreibung</label>
+                        <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                                  id="{{ form.description.id_for_label }}"
+                                  name="{{ form.description.name }}"
+                                  rows="3">{{ form.description.value|default:'' }}</textarea>
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.description.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input %} %}checked{%
+                               class="form-check-input {% if form.is_active.errors %}is-invalid{% endif %}"
+                               endif
+                               form.is_active.value id="{{ form.is_active.id_for_label }}" if name="{{ form.is_active.name }}" type="checkbox" {%>
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                            Lager ist aktiv
+                        </label>
+                        {% if form.is_active.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.is_active.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a class="btn btn-outline-secondary" href="{% url 'warehouse_list' %}">Abbrechen</a>
+                        <button class="btn btn-outline-primary" type="submit">Speichern</button>
                     </div>
                 </form>
             </div>

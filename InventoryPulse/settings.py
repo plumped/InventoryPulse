@@ -158,6 +158,11 @@ INSTALLED_APPS = [
     'admin_dashboard',
     'organization',
     'accessmanagement',
+    'product_management',
+    'tracking',
+    'data_operations',
+    'analytics',
+    'master_data',
     'rest_framework',
     'drf_yasg',  # Für API-Dokumentation
     'django_filters',  # Für Filterfunktionalität

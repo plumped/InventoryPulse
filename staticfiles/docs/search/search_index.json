@@ -1,0 +1,138 @@
+{
+  "config": {
+    "lang": [
+      "de"
+    ],
+    "separator": "[\\s\\-]+",
+    "pipeline": [
+      "stopWordFilter"
+    ]
+  },
+  "docs": [
+    {
+      "location": "index.html",
+      "title": "Willkommen zur InventoryPulse Dokumentation",
+      "text": "<p>{ align=center }</p>"
+    },
+    {
+      "location": "index.html#smartes-lagerbestandsmanagement",
+      "title": "Smartes Lagerbestandsmanagement",
+      "text": "<p>InventoryPulse ist ein modernes, benutzerfreundliches Lagerverwaltungssystem, das speziell f\u00fcr kleine und mittelst\u00e4ndische Unternehmen entwickelt wurde.</p>"
+    },
+    {
+      "location": "index.html#wichtigste-funktionen",
+      "title": "Wichtigste Funktionen",
+      "text": "<ul> <li>Einfache Produktverwaltung: Verwalten Sie Ihre Produkte mit detaillierten Informationen, Kategorien und Fotos</li> <li>Seriennummern und Chargenverwaltung: Verfolgen Sie einzelne Artikel oder Chargen durch ihr gesamtes Bestandsleben</li> <li>Lagerbestandsverwaltung: \u00dcberwachen Sie Ihre Best\u00e4nde \u00fcber mehrere Lagerorte hinweg</li> <li>Bestellwesen: Verwalten Sie Lieferanten und Bestellungen mit automatischen Bestellvorschl\u00e4gen</li> <li>Barcode-Scanning: Scannen Sie Seriennummern und Chargen f\u00fcr schnelle Bestandsoperationen</li> <li>Import &amp; Export: Umfangreiche Import- und Export-Funktionen f\u00fcr Massendatenverarbeitung</li> <li>Benutzer- und Zugriffsrechte: Detaillierte Berechtigungssteuerung f\u00fcr Ihr Team</li> </ul>"
+    },
+    {
+      "location": "index.html#schnellstart",
+      "title": "Schnellstart",
+      "text": "<p>Neu bei InventoryPulse? Hier sind die ersten Schritte:</p>    -   :material-rocket-launch: **Erste Schritte**      ---      Lernen Sie die Grundlagen von InventoryPulse kennen.      [:octicons-arrow-right-24: Grundlagen](getting-started/index.md)  -   :material-view-dashboard: **Dashboard verwenden**      ---      Erfahren Sie, wie Sie das Dashboard f\u00fcr schnelle \u00dcbersichten nutzen.      [:octicons-arrow-right-24: Dashboard](core/dashboard.md)  -   :material-barcode: **Barcode-Scanning**      ---      Lernen Sie, wie Sie Barcodes f\u00fcr schnelle Inventaroperationen scannen k\u00f6nnen.      [:octicons-arrow-right-24: Scanning-Einrichtung](scanning/setup.md)  -   :material-frequently-asked-questions: **H\u00e4ufige Fragen**      ---      Finden Sie Antworten auf die h\u00e4ufigsten Fragen.      [:octicons-arrow-right-24: FAQ](troubleshooting/faq.md)"
+    },
+    {
+      "location": "index.html#haufig-gesuchte-themen",
+      "title": "H\u00e4ufig gesuchte Themen",
+      "text": "<ul> <li>Produkte anlegen und verwalten</li> <li>Seriennummern verfolgen</li> <li>CSV-Daten importieren</li> <li>Benutzerrollen und Berechtigungen</li> <li>Lagerverschiebung durchf\u00fchren</li> <li>Bestellvorschl\u00e4ge einrichten</li> </ul>"
+    },
+    {
+      "location": "index.html#support-und-hilfe",
+      "title": "Support und Hilfe",
+      "text": "<p>Haben Sie Fragen oder ben\u00f6tigen Sie Unterst\u00fctzung? Unser Team steht Ihnen zur Verf\u00fcgung!</p> <ul> <li>Kontaktieren Sie unser Support-Team</li> <li>Melden Sie einen Fehler</li> <li>Feature-Anfrage stellen</li> </ul> <p>InventoryPulse ist ein Produkt von [Ihr Unternehmen] und wird unter der MIT-Lizenz ver\u00f6ffentlicht.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html",
+      "title": "Seriennummernverwaltung",
+      "text": "<p>Die Seriennummernverwaltung erlaubt Ihnen, einzelne Produkte \u00fcber ihre gesamte Lebensdauer zu verfolgen. Diese Funktion ist besonders n\u00fctzlich f\u00fcr hochwertige Ger\u00e4te, elektronische Komponenten oder medizinische Produkte.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#ubersicht",
+      "title": "\u00dcbersicht",
+      "text": "<p>Mit der Seriennummernverwaltung in InventoryPulse k\u00f6nnen Sie:</p> <ul> <li>Eindeutige Seriennummern f\u00fcr Produkte erfassen</li> <li>Den Lebenszyklus und Standort jedes einzelnen Artikels verfolgen</li> <li>Lagerverschiebungen f\u00fcr spezifische Artikel durchf\u00fchren</li> <li>Verfallsdaten f\u00fcr Artikel mit begrenzter Haltbarkeit \u00fcberwachen</li> <li>Historie und Bewegungen jeder Seriennummer einsehen</li> <li>Seriennummern \u00fcber Barcode-Scanner schnell erfassen</li> </ul>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummern-aktivieren",
+      "title": "Seriennummern aktivieren",
+      "text": "<p>Bevor Sie Seriennummern verwenden k\u00f6nnen, m\u00fcssen Sie diese Funktion f\u00fcr das entsprechende Produkt aktivieren:</p> <ol> <li>Navigieren Sie zur Produktdetailseite</li> <li>Klicken Sie auf \"Bearbeiten\"</li> <li>Aktivieren Sie die Option \"Hat Seriennummern\"</li> <li>Speichern Sie die \u00c4nderungen</li> </ol> <p>Hinweis</p> <p>Sobald ein Produkt Seriennummern hat, kann diese Funktion nicht mehr deaktiviert werden. Falls Sie die Funktion f\u00fcr ein vorhandenes Produkt aktivieren, m\u00fcssen Sie m\u00f6glicherweise den aktuellen Bestand anpassen.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummern-hinzufugen",
+      "title": "Seriennummern hinzuf\u00fcgen",
+      "text": "<p>Es gibt mehrere M\u00f6glichkeiten, Seriennummern hinzuzuf\u00fcgen:</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#einzelne-seriennummer-hinzufugen",
+      "title": "Einzelne Seriennummer hinzuf\u00fcgen",
+      "text": "<ol> <li>Gehen Sie zur Produktdetailseite</li> <li>Klicken Sie auf den Tab \"Seriennummern\"</li> <li>Klicken Sie auf \"Neue Seriennummer\"</li> <li>F\u00fcllen Sie das Formular aus:</li> <li>Seriennummer (eindeutige ID)</li> <li>Status (z.B. \"Auf Lager\", \"Verkauft\", \"Defekt\")</li> <li>Lager (aktueller Standort)</li> <li>Optional: Kaufdatum, Ablaufdatum, Notizen</li> <li>Klicken Sie auf \"Speichern\"</li> </ol>"
+    },
+    {
+      "location": "core/serialnumbers.html#mehrere-seriennummern-auf-einmal-hinzufugen",
+      "title": "Mehrere Seriennummern auf einmal hinzuf\u00fcgen",
+      "text": "<p>F\u00fcr gr\u00f6\u00dfere Mengen an Seriennummern bietet InventoryPulse eine Masseneingabe-Funktion:</p> <ol> <li>Gehen Sie zur Produktdetailseite</li> <li>Klicken Sie auf den Tab \"Seriennummern\"</li> <li>W\u00e4hlen Sie \"Massenerfassung\"</li> <li>Geben Sie die folgenden Informationen ein:</li> <li>Pr\u00e4fix (optional, z.B. \"SN-\")</li> <li>Startnummer (z.B. 1001)</li> <li>Anzahl (z.B. 50 f\u00fcr SN-1001 bis SN-1050)</li> <li>Anzahl der Stellen (z.B. 6 f\u00fcr SN-001001)</li> <li>Gemeinsame Eigenschaften: Status, Lager, Datum etc.</li> <li>Klicken Sie auf \"Seriennummern erstellen\"</li> </ol> <p>Achtung</p> <p>Das System pr\u00fcft automatisch, ob Seriennummern bereits existieren, und vermeidet Duplikate. Eine Fehlermeldung wird angezeigt, wenn Konflikte auftreten.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummern-importieren",
+      "title": "Seriennummern importieren",
+      "text": "<p>F\u00fcr die Integration mit externen Systemen oder Massenimport:</p> <ol> <li>Navigieren Sie zu \"Import\" \u2192 \"Seriennummern importieren\"</li> <li>Laden Sie eine CSV-Datei mit den erforderlichen Spalten hoch</li> <li>Konfigurieren Sie die Import-Optionen</li> <li>Starten Sie den Import</li> </ol> <p>Die CSV-Datei sollte mindestens folgende Spalten enthalten:</p> <pre><code>product_sku,serial_number,status,warehouse_name\nP1001,SN12345,in_stock,Hauptlager\nP1001,SN12346,in_stock,Hauptlager\n</code></pre> <p>Weitere Details finden Sie im Abschnitt CSV-Import.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummern-verwalten",
+      "title": "Seriennummern verwalten",
+      "text": ""
+    },
+    {
+      "location": "core/serialnumbers.html#ubersicht-aller-seriennummern",
+      "title": "\u00dcbersicht aller Seriennummern",
+      "text": "<p>Die zentrale Seriennummern-\u00dcbersicht erreichen Sie \u00fcber:</p> <ol> <li>Hauptmen\u00fc \u2192 \"Produkte\" \u2192 \"Seriennummern-\u00dcbersicht\"</li> </ol> <p>Hier k\u00f6nnen Sie:</p> <ul> <li>Alle Seriennummern im System sehen</li> <li>Nach Produkt, Status, Lager oder Seriennummer filtern</li> <li>Detailansichten aufrufen</li> <li>Massenaktionen durchf\u00fchren</li> </ul> <p></p>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummerndetails-ansehen",
+      "title": "Seriennummerndetails ansehen",
+      "text": "<p>Um die Details einer Seriennummer einzusehen:</p> <ol> <li>Klicken Sie in der Seriennummern-Liste auf die gew\u00fcnschte Seriennummer</li> <li>Oder nutzen Sie die Funktion \"Seriennummer scannen\" im Men\u00fc und scannen Sie den Barcode</li> </ol> <p>Die Detailansicht zeigt:</p> <ul> <li>Grundinformationen (Produkt, Status, Standort)</li> <li>Zeitstempel (Erstellung, letzte \u00c4nderung)</li> <li>QR-Code f\u00fcr schnelles Scannen</li> <li>Verlaufsdaten</li> <li>Verf\u00fcgbare Aktionen</li> </ul>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummern-status-andern",
+      "title": "Seriennummern-Status \u00e4ndern",
+      "text": "<p>Um den Status einer Seriennummer zu \u00e4ndern:</p> <ol> <li>\u00d6ffnen Sie die Seriennummer-Detailansicht</li> <li>Klicken Sie auf \"Bearbeiten\"</li> <li>\u00c4ndern Sie den Status im Dropdown-Men\u00fc</li> <li>Speichern Sie die \u00c4nderungen</li> </ol> <p>Verf\u00fcgbare Status sind:</p> <ul> <li>Auf Lager: Artikel ist verf\u00fcgbar</li> <li>Verkauft: Artikel wurde verkauft</li> <li>In Benutzung: Artikel wird aktiv verwendet</li> <li>Defekt: Artikel ist besch\u00e4digt</li> <li>Zur\u00fcckgegeben: Artikel wurde zur\u00fcckgegeben</li> <li>Entsorgt: Artikel wurde entsorgt</li> <li>Reserviert: Artikel ist reserviert</li> <li>In Reparatur: Artikel wird repariert</li> </ul>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummern-transferieren",
+      "title": "Seriennummern transferieren",
+      "text": "<p>Um eine Seriennummer von einem Lager zu einem anderen zu verschieben:</p> <ol> <li>Gehen Sie zu \"Produkte\" \u2192 \"Seriennummer transferieren\"</li> <li>Scannen oder geben Sie die Seriennummer ein</li> <li>W\u00e4hlen Sie das Ziellager</li> <li>Optional: F\u00fcgen Sie Notizen hinzu</li> <li>Klicken Sie auf \"Transferieren\"</li> </ol> <p></p>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummern-scannen",
+      "title": "Seriennummern scannen",
+      "text": "<p>Das Scannen von Seriennummern ist eine effiziente Methode, um:</p> <ol> <li>Schnell Informationen zu einer Seriennummer zu erhalten</li> <li>Best\u00e4nde zu \u00fcberpr\u00fcfen</li> <li>Lagerverschiebungen durchzuf\u00fchren</li> </ol>"
+    },
+    {
+      "location": "core/serialnumbers.html#scanvorgang",
+      "title": "Scanvorgang:",
+      "text": "<ol> <li>Gehen Sie zu \"Produkte\" \u2192 \"Seriennummer scannen\"</li> <li>Platzieren Sie den Cursor im Eingabefeld</li> <li>Scannen Sie den Barcode mit einem Barcode-Scanner</li> <li>Alternativ k\u00f6nnen Sie die Seriennummer manuell eingeben</li> <li>Das System zeigt automatisch die Detailseite der gescannten Seriennummer</li> </ol> <p>Tipp</p> <p>F\u00fcr optimale Ergebnisse empfehlen wir die Verwendung eines USB-Barcode-Scanners, der als HID-Ger\u00e4t (Human Interface Device) funktioniert und keine zus\u00e4tzliche Treiber-Installation erfordert.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#seriennummern-exportieren",
+      "title": "Seriennummern exportieren",
+      "text": "<p>Um Seriennummern zu exportieren:</p> <ol> <li>Gehen Sie zu \"Produkte\" \u2192 \"Seriennummern exportieren\"</li> <li>W\u00e4hlen Sie die gew\u00fcnschten Filter (Produkt, Status, Lager etc.)</li> <li>W\u00e4hlen Sie das Exportformat (CSV, Excel, PDF)</li> <li>W\u00e4hlen Sie die zu exportierenden Felder</li> <li>Klicken Sie auf \"Export starten\"</li> </ol> <p>Der Export enth\u00e4lt alle gefilterten Seriennummern mit den ausgew\u00e4hlten Feldern.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#verfallsdatenverwaltung",
+      "title": "Verfallsdatenverwaltung",
+      "text": "<p>F\u00fcr Produkte mit begrenzter Haltbarkeit bietet InventoryPulse eine Verfallsdatenverwaltung:</p> <ol> <li>Aktivieren Sie \"Hat Verfallsverfolgung\" bei den Produkteinstellungen</li> <li>Geben Sie bei der Seriennummernerstellung das Ablaufdatum ein</li> <li>Nutzen Sie die \"Verfallsdaten\"-\u00dcbersicht im Men\u00fc, um:</li> <li>Abgelaufene Artikel zu identifizieren</li> <li>Bald ablaufende Artikel zu \u00fcberwachen</li> <li>Aktionen zu planen</li> </ol> <p>Wichtig</p> <p>Die Verfallsdatenverfolgung erfordert, dass entweder die Seriennummern- oder die Chargenverfolgung aktiviert ist.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#fehlerbehebung",
+      "title": "Fehlerbehebung",
+      "text": ""
+    },
+    {
+      "location": "core/serialnumbers.html#haufige-probleme",
+      "title": "H\u00e4ufige Probleme",
+      "text": "<p>Duplikate bei der Seriennummern-Erstellung</p> <p>Das System verhindert die Erstellung von Duplikaten. Wenn Sie eine Fehlermeldung erhalten, \u00fcberpr\u00fcfen Sie, ob die Seriennummer bereits existiert.</p> <p>Seriennummer wird nicht gefunden beim Scannen</p> <p>Stellen Sie sicher, dass: - Die Seriennummer korrekt erfasst wurde - Die Seriennummer im System existiert - Sie ausreichende Berechtigungen haben</p> <p>Seriennummernverwaltung kann nicht deaktiviert werden</p> <p>Sobald ein Produkt Seriennummern hat, kann diese Funktion nicht mehr deaktiviert werden. Sie m\u00fcssten ein neues Produkt ohne Seriennummernverwaltung anlegen.</p>"
+    },
+    {
+      "location": "core/serialnumbers.html#best-practices",
+      "title": "Best Practices",
+      "text": "<ul> <li>Verwenden Sie ein konsistentes Benennungsschema f\u00fcr Seriennummern</li> <li>Nutzen Sie die Masseneingabe f\u00fcr gr\u00f6\u00dfere Mengen</li> <li>F\u00fchren Sie regelm\u00e4\u00dfige Audits mit Hilfe der Scan-Funktion durch</li> <li>Verwenden Sie aussagekr\u00e4ftige Notizen f\u00fcr besondere Umst\u00e4nde</li> <li>Schulen Sie alle Benutzer in der korrekten Seriennummernerfassung</li> </ul>"
+    }
+  ]
+}

@@ -112,7 +112,13 @@
                                       id="{{ form.shipping_cost.id_for_label }}"
                                       class="form-control {% if form.shipping_cost.errors %}is-invalid{% endif %}"
                                       value="{{ form.shipping_cost.value|default:'0.00' }}" min="0" step="0.01">
-                                <span class="input-group-text">€</span>
+                                <span class="input-group-text currency-symbol">
+                                    {% if form.instance.default_currency %}
+                                        {{ form.instance.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </span>
                             </div>
                             {% if form.shipping_cost.errors %}
                                 <div class="invalid-feedback">
@@ -130,7 +136,13 @@
                                       id="{{ form.minimum_order_value.id_for_label }}"
                                       class="form-control {% if form.minimum_order_value.errors %}is-invalid{% endif %}"
                                       value="{{ form.minimum_order_value.value|default:'0.00' }}" min="0" step="0.01">
-                                <span class="input-group-text">€</span>
+                                <span class="input-group-text currency-symbol">
+                                    {% if form.instance.default_currency %}
+                                        {{ form.instance.default_currency.symbol }}
+                                    {% else %}
+                                        €
+                                    {% endif %}
+                                </span>
                             </div>
                             {% if form.minimum_order_value.errors %}
                                 <div class="invalid-feedback">
@@ -151,6 +163,7 @@
                                 {% for choice in form.default_currency.field.choices %}
                                     {% if choice.0 %}
                                         <option value="{{ choice.0 }}"
+                                                data-symbol="{% if choice.1|slice:'-1:' == ')' %}{{ choice.1|slice:'-2:-1' }}{% else %}€{% endif %}"
                                                 {% if form.default_currency.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
                                             {{ choice.1 }}
                                         </option>
@@ -196,4 +209,31 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const currencySelect = document.getElementById('{{ form.default_currency.id_for_label }}');
+        const currencySymbols = document.querySelectorAll('.currency-symbol');
+
+        // Initial setzen
+        updateCurrencySymbols();
+
+        // Event-Listener für Änderungen
+        currencySelect.addEventListener('change', updateCurrencySymbols);
+
+        function updateCurrencySymbols() {
+            const selectedOption = currencySelect.options[currencySelect.selectedIndex];
+            let symbol = '€'; // Standardsymbol
+
+            if (selectedOption && selectedOption.getAttribute('data-symbol')) {
+                symbol = selectedOption.getAttribute('data-symbol');
+            }
+
+            // Aktualisiere alle Währungssymbole
+            currencySymbols.forEach(element => {
+                element.textContent = symbol;
+            });
+        }
+    });
+</script>
 {% endblock %}

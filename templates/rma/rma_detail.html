@@ -743,7 +743,7 @@
                                     {% endif %}
                                 </div>
                                 <div class="text-end mt-1">
-                                    {% if comment.user == request.user or user|has_perm:'rma:admin' %}
+                                    {% if perms.product.add %}
                                     <a href="{% url 'rma_delete_comment' rma.id comment.id %}" class="btn btn-sm btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </a>

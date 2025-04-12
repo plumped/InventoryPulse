@@ -4,8 +4,6 @@ It integrates with the admin_dashboard's workflow settings.
 """
 from decimal import Decimal
 
-from django.conf import settings
-
 
 def get_workflow_settings():
     """
@@ -87,14 +85,20 @@ def check_auto_approval(order):
 
 def can_approve_order(user, order):
     """
-    Check if a user can approve an order.
-    """
-    from accessmanagement.permissions import has_permission
+    Check if a user can approve an order using Django's built-in permission system.
 
+    Args:
+        user: The Django user object
+        order: The PurchaseOrder instance
+
+    Returns:
+        bool: True if the user can approve the order, False otherwise
+    """
     workflow_settings = get_workflow_settings()
 
-    # Erste Prüfung: Hat der Benutzer die Berechtigung, Bestellungen zu genehmigen
-    if not has_permission(user, 'order', 'approve'):
+    # Prüfung: Hat der Benutzer die Berechtigung, Bestellungen zu genehmigen
+    # Verwendung des Django-Standardsystems statt custom has_permission
+    if not user.has_perm('order.approve_purchaseorder'):
         return False
 
     # Wenn separate Genehmiger erforderlich sind

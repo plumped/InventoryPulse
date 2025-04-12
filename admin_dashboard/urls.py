@@ -1,10 +1,19 @@
 # admin_dashboard/urls.py
-from django.urls import path
+from django.urls import path, include
+
+from master_data.views.currency_views import currency_list, currency_create, currency_update, currency_delete
 from . import views
 
 urlpatterns = [
     # Dashboard
     path('', views.admin_dashboard, name='admin_dashboard'),
+
+    path('currencies/', include([
+        path('', currency_list, name='currency_list'),
+        path('create/', currency_create, name='currency_create'),
+        path('<int:pk>/update/', currency_update, name='currency_update'),
+        path('<int:pk>/delete/', currency_delete, name='currency_delete'),
+    ])),
 
     # Benutzer-Verwaltung
     path('users/', views.user_management, name='admin_user_management'),

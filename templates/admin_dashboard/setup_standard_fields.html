@@ -1,0 +1,230 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Standardfelder einrichten{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Standardfelder für Dokumenttypen einrichten</h1>
+        <a class="btn btn-outline-secondary" href="{% url 'admin_document_type_management' %}">
+            <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Standardfelder einrichten</h6>
+        </div>
+        <div class="card-body">
+            <p>Mit dieser Funktion können Sie automatisch Standardfelder für alle Dokumenttypen im System
+                einrichten.</p>
+
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Information:</strong> Derzeit sind insgesamt {{ existing_fields }} Standardfelder im System
+                vorhanden.
+            </div>
+
+            {% if types_without_fields %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Hinweis:</strong> Die folgenden Dokumenttypen haben noch keine Standardfelder:
+                <ul class="mb-0 mt-1">
+                    {% for doc_type in types_without_fields %}
+                    <li>{{ doc_type.name }} ({{ doc_type.code }})</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <h5 class="mt-4 mb-3">Bestehende Standardfelder nach Dokumenttyp</h5>
+
+            <div class="accordion" id="documentTypesAccordion">
+                {% for doc_type_id, data in fields_by_type.items %}
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header" id="heading{{ doc_type_id }}">
+                        <button aria-controls="collapse{{ doc_type_id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                class="accordion-button {% if not forloop.first %}collapsed{% endif %}" data-bs-target="#collapse{{ doc_type_id }}"
+                                data-bs-toggle="collapse"
+                                type="button">
+                            <strong>{{ data.doc_type.name }}</strong>
+                            <span class="ms-2 text-muted">(Code: {{ data.doc_type.code }})</span>
+                            <span class="badge {% if data.count > 0 %}bg-success{% else %}bg-warning{% endif %} ms-2">
+                                {{ data.count }} Felder
+                            </span>
+                        </button>
+                    </h2>
+                    <div aria-labelledby="heading{{ doc_type_id }}"
+                         class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                         data-bs-parent="#documentTypesAccordion" id="collapse{{ doc_type_id }}">
+                        <div class="accordion-body">
+                            {% if data.fields %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered table-hover">
+                                    <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Feld-Code</th>
+                                        <th>Typ</th>
+                                        <th>Extraktionsmethode</th>
+                                        <th>Suchmuster</th>
+                                        <th>Eigenschaften</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for field in data.fields %}
+                                    <tr>
+                                        <td>{{ field.name }}</td>
+                                        <td><code>{{ field.code }}</code></td>
+                                        <td>
+                                                <span class="badge" style="background-color:
+                                                {% if field.field_type == 'text' %}#28a745
+                                                {% elif field.field_type == 'number' %}#dc3545
+                                                {% elif field.field_type == 'date' %}#fd7e14
+                                                {% elif field.field_type == 'currency' %}#6f42c1
+                                                {% elif field.field_type == 'boolean' %}#20c997
+                                                {% elif field.field_type == 'list' %}#17a2b8
+                                                {% elif field.field_type == 'table' %}#6610f2
+                                                {% else %}#6c757d{% endif %}">
+                                                    {{ field_type_labels|get:field.field_type }}
+                                                </span>
+                                        </td>
+                                        <td>{{ extraction_method_labels|get:field.extraction_method }}</td>
+                                        <td>
+                                            {% if field.search_pattern %}
+                                            <code>{{ field.search_pattern|truncatechars:40 }}</code>
+                                            {% else %}
+                                            <em class="text-muted">-</em>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if field.is_key_field %}<span
+                                                class="badge bg-primary">Schlüsselfeld</span>{% endif %}
+                                            {% if field.is_required %}<span class="badge bg-danger">Erforderlich</span>{%
+                                            endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                Keine Standardfelder für diesen Dokumenttyp definiert.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Es sind keine Dokumenttypen im System definiert.
+                </div>
+                {% endfor %}
+            </div>
+
+            <p class="mt-4">Das Einrichten der Standardfelder bietet folgende Vorteile:</p>
+            <ul>
+                <li>Vordefinierte Felder für jeden Dokumenttyp (Rechnungsnummer, Datum, Betrag, etc.)</li>
+                <li>Optimierte Extraktionsregeln für die automatische Texterkennung</li>
+                <li>Einheitliche Feldbezeichnungen in allen Dokumentvorlagen</li>
+            </ul>
+
+            <p>Sie können entweder:</p>
+            <ol>
+                <li>Bestehende Standardfelder beibehalten und nur fehlende hinzufügen</li>
+                <li>Alle Standardfelder zurücksetzen und neu anlegen</li>
+            </ol>
+
+            <form class="mt-4" method="post">
+                {% csrf_token %}
+                <div class="form-check mb-3">
+                    <input class="form-check-input" id="reset" name="reset" type="checkbox">
+                    <label class="form-check-label" for="reset">
+                        Bestehende Standardfelder zurücksetzen und neu anlegen
+                    </label>
+                    <div class="form-text text-danger">
+                        Achtung: Diese Aktion kann nicht rückgängig gemacht werden!
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a class="btn btn-outline-secondary me-2" href="{% url 'admin_document_type_management' %}">Abbrechen</a>
+                    <button class="btn btn-outline-primary" type="submit">
+                        <i class="fas fa-sync-alt me-1"></i> Standardfelder einrichten
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Über Standardfelder</h6>
+        </div>
+        <div class="card-body">
+            <p>Standardfelder sind vordefinierte Extraktionsfelder für verschiedene Dokumenttypen, die bei der
+                automatischen Dokumentenverarbeitung verwendet werden:</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Verwendungszweck</h5>
+                    <ul>
+                        <li><strong>OCR-Unterstützung:</strong> Definiert, welche Informationen aus gescannten
+                            Dokumenten extrahiert werden sollen
+                        </li>
+                        <li><strong>Automatische Extraktion:</strong> Enthält Suchmuster, um Daten wie Rechnungsnummer,
+                            Datum, Beträge etc. zu finden
+                        </li>
+                        <li><strong>Validierung:</strong> Ermöglicht die Überprüfung und Validierung extrahierter Daten
+                        </li>
+                        <li><strong>Prozessautomatisierung:</strong> Unterstützt die automatische Verarbeitung von
+                            Dokumenten
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="col-md-6">
+                    <h5>Funktionsweise</h5>
+                    <ul>
+                        <li>Jedes Feld definiert ein zu extrahierendes Datenelement (z.B. Rechnungsnummer)</li>
+                        <li>Die Extraktionsmethode bestimmt, wie der Wert gefunden wird (exakte Position, Suchmuster,
+                            etc.)
+                        </li>
+                        <li>Schlüsselfelder werden für das Dokumenten-Matching verwendet</li>
+                        <li>Die Feldtypen (Text, Zahl, Datum, etc.) bestimmen die Datenvalidierung und -formatierung
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert alert-secondary mt-3">
+                <i class="fas fa-lightbulb me-2"></i>
+                <strong>Tipp:</strong> Die Standardfelder dienen als Ausgangspunkt und können in den Dokumentvorlagen
+                individuell angepasst und erweitert werden.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_extra_js %}
+<script>
+    // Bestätigung beim Zurücksetzen der Felder
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        const resetCheckbox = document.getElementById('reset');
+
+        form.addEventListener('submit', function (event) {
+            if (resetCheckbox.checked) {
+                if (!confirm('Sind Sie sicher, dass Sie alle bestehenden Standardfelder zurücksetzen möchten? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+                    event.preventDefault();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

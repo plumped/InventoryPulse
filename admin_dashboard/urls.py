@@ -56,4 +56,11 @@ urlpatterns = [
     path('interfaces/types/create/', views.interface_type_create, name='admin_interface_type_create'),
     path('interfaces/types/<int:type_id>/edit/', views.interface_type_edit, name='admin_interface_type_edit'),
     path('interfaces/types/<int:type_id>/delete/', views.interface_type_delete, name='admin_interface_type_delete'),
+
+    # Dokumenttypen-Verwaltung
+    path('document-types/', views.document_type_management, name='admin_document_type_management'),
+    path('document-types/create/', views.document_type_create, name='admin_document_type_create'),
+    path('document-types/<int:type_id>/edit/', views.document_type_edit, name='admin_document_type_edit'),
+    path('document-types/<int:type_id>/delete/', views.document_type_delete, name='admin_document_type_delete'),
+    path('document-types/setup-standard-fields/', views.setup_standard_fields, name='setup_standard_fields'),
 ]

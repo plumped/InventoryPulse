@@ -1,0 +1,87 @@
+{% extends 'admin_dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Dokumenttyp löschen{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Dokumenttyp löschen</h1>
+        <a class="btn btn-outline-secondary" href="{% url 'admin_document_type_management' %}">
+            <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-danger text-white">
+            <h6 class="m-0 font-weight-bold">Dokumenttyp "{{ document_type.name }}" wirklich löschen?</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Achtung: Diese Aktion kann nicht rückgängig gemacht
+                werden.
+            </div>
+
+            <p>Sie sind dabei, den folgenden Dokumenttyp zu löschen:</p>
+
+            <table class="table table-bordered mb-4">
+                <tr>
+                    <th style="width: 150px;">Name:</th>
+                    <td>{{ document_type.name }}</td>
+                </tr>
+                <tr>
+                    <th>Code:</th>
+                    <td>{{ document_type.code }}</td>
+                </tr>
+                <tr>
+                    <th>Beschreibung:</th>
+                    <td>{{ document_type.description|default:"Keine Beschreibung" }}</td>
+                </tr>
+                <tr>
+                    <th>Status:</th>
+                    <td>{% if document_type.is_active %}<span class="badge badge-success">Aktiv</span>{% else %}<span
+                            class="badge badge-danger">Inaktiv</span>{% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            {% if documents_count > 0 %}
+            <div class="alert alert-danger mb-4">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <strong>Warnung:</strong> Es gibt derzeit {{ documents_count }} Dokument{% if documents_count > 1 %}e{%
+                endif %},
+                die diesem Dokumenttyp zugeordnet sind.
+                Wenn Sie den Dokumenttyp löschen, werden diese Zuordnungen entfernt.
+            </div>
+            {% endif %}
+
+            {% if templates_count > 0 %}
+            <div class="alert alert-danger mb-4">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <strong>Warnung:</strong> Es gibt derzeit {{ templates_count }} Dokumentvorlagen,
+                die diesem Dokumenttyp zugeordnet sind.
+                Diese Dokumentvorlagen werden ebenfalls gelöscht.
+            </div>
+            {% endif %}
+
+            {% if standard_fields_count > 0 %}
+            <div class="alert alert-danger mb-4">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <strong>Warnung:</strong> Es gibt derzeit {{ standard_fields_count }} Standardfelder,
+                die diesem Dokumenttyp zugeordnet sind.
+                Diese Standardfelder werden ebenfalls gelöscht.
+            </div>
+            {% endif %}
+
+            <form class="d-flex justify-content-end" method="post">
+                {% csrf_token %}
+                <a class="btn btn-outline-secondary mr-2"
+                   href="{% url 'admin_document_type_management' %}">Abbrechen</a>
+                <button class="btn btn-outline-danger" type="submit">
+                    <i class="fas fa-trash mr-1"></i> Dokumenttyp löschen
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -17,6 +17,7 @@ from core.utils.filters import filter_users, filter_departments, filter_taxes, f
 from core.utils.forms import handle_form_view
 from core.utils.logging_utils import log_list_view_usage
 from core.utils.pagination import paginate_queryset
+from documents.models import StandardField, Document, DocumentType, DocumentTemplate
 from interfaces.models import InterfaceType
 from inventory.models import Warehouse
 from master_data.forms.addresses_forms import CompanyAddressForm
@@ -27,7 +28,7 @@ from master_data.models.addresses_models import CompanyAddress, CompanyAddressTy
 from master_data.models.organisations_models import Department
 from master_data.models.systemsettings_models import WorkflowSettings, SystemSettings
 from master_data.models.tax_models import Tax
-from .forms import UserCreateForm, UserEditForm, GroupForm, DepartmentForm, InterfaceTypeForm
+from .forms import UserCreateForm, UserEditForm, GroupForm, DepartmentForm, InterfaceTypeForm, DocumentTypeForm
 
 logger = logging.getLogger(__name__)
 
@@ -868,3 +869,197 @@ def company_address_delete(request, address_id):
     return render(request, 'admin_dashboard/company_address_confirm_delete.html', context)
 
 
+@login_required
+@staff_member_required
+def document_type_management(request):
+    """View for managing document types."""
+    filters = {
+        'search': request.GET.get('search', '')
+    }
+
+    log_list_view_usage(request, view_name="document_type_management", filters=filters)
+
+    # Get all document types with document count
+    document_types = DocumentType.objects.all().annotate(document_count=Count('documents'))
+
+    # Apply search filter if provided
+    if filters['search']:
+        document_types = document_types.filter(
+            name__icontains=filters['search']
+        ) | document_types.filter(
+            code__icontains=filters['search']
+        )
+
+    context = {
+        'document_types': document_types,
+        'search_query': filters['search'],
+        'section': 'document_types'
+    }
+
+    return render(request, 'admin_dashboard/document_type_management.html', context)
+
+
+@login_required
+@staff_member_required
+def document_type_create(request):
+    """View for creating a new document type."""
+    return handle_form_view(
+        request,
+        form_class=DocumentTypeForm,
+        success_message='Dokumenttyp wurde erfolgreich erstellt.',
+        redirect_url='admin_document_type_management',
+        template='admin_dashboard/document_type_form.html',
+        context_extra={'section': 'document_types'}
+    )
+
+
+@login_required
+@staff_member_required
+def document_type_edit(request, type_id):
+    """View for editing an existing document type."""
+    document_type = get_object_or_404(DocumentType, pk=type_id)
+    return handle_form_view(
+        request,
+        form_class=DocumentTypeForm,
+        instance=document_type,
+        success_message=f'Dokumenttyp "{document_type.name}" wurde erfolgreich aktualisiert.',
+        redirect_url='admin_document_type_management',
+        template='admin_dashboard/document_type_form.html',
+        context_extra={'section': 'document_types', 'document_type': document_type}
+    )
+
+
+@login_required
+@staff_member_required
+def document_type_delete(request, type_id):
+    """View for deleting a document type."""
+    document_type = get_object_or_404(DocumentType, pk=type_id)
+
+    # Check for associated documents and templates
+    documents_count = Document.objects.filter(document_type=document_type).count()
+    templates_count = DocumentTemplate.objects.filter(document_type=document_type).count()
+    standard_fields_count = StandardField.objects.filter(document_type=document_type).count()
+
+    if request.method == 'POST':
+        type_name = document_type.name
+        document_type.delete()
+        messages.success(request, f'Dokumenttyp "{type_name}" wurde erfolgreich gelöscht.')
+        return redirect('admin_document_type_management')
+
+    context = {
+        'document_type': document_type,
+        'documents_count': documents_count,
+        'templates_count': templates_count,
+        'standard_fields_count': standard_fields_count,
+        'section': 'document_types'
+    }
+
+    return render(request, 'admin_dashboard/document_type_confirm_delete.html', context)
+
+
+@login_required
+@staff_member_required
+def setup_standard_fields(request):
+    """View for setting up standard fields for document types."""
+    from django.core.management import call_command
+    from io import StringIO
+    import sys
+    from documents.models import StandardField, TemplateField
+
+    if request.method == 'POST':
+        # Execute management command
+        reset = 'reset' in request.POST
+
+        # Capture command output
+        output = StringIO()
+        old_stdout, sys.stdout = sys.stdout, output
+
+        try:
+            # Get count before execution
+            before_count = StandardField.objects.count()
+
+            # Execute command
+            call_command('setup_standard_fields', reset=reset)
+
+            # Get count after execution
+            after_count = StandardField.objects.count()
+
+            # Calculate difference
+            created_count = after_count - before_count
+
+            # Restore stdout
+            sys.stdout = old_stdout
+
+            # Get command output
+            command_output = output.getvalue()
+
+            if reset:
+                messages.success(
+                    request,
+                    f'Standardfelder wurden zurückgesetzt und neu angelegt. '
+                    f'{after_count} Felder sind jetzt vorhanden.'
+                )
+            else:
+                if created_count > 0:
+                    messages.success(
+                        request,
+                        f'{created_count} neue Standardfelder wurden erstellt. '
+                        f'Insgesamt sind jetzt {after_count} Felder vorhanden.'
+                    )
+                else:
+                    messages.info(
+                        request,
+                        'Es wurden keine neuen Standardfelder erstellt, da alle bereits existieren. '
+                        f'Insgesamt sind {after_count} Felder vorhanden.'
+                    )
+
+            # Log details for debugging
+            logger.info(f"Standard fields setup: before={before_count}, after={after_count}, created={created_count}")
+            logger.debug(f"Command output: {command_output}")
+
+        except Exception as e:
+            # Restore stdout
+            sys.stdout = old_stdout
+
+            logger.error(f"Error setting up standard fields: {e}")
+            messages.error(request, f'Fehler beim Einrichten der Standardfelder: {str(e)}')
+
+        return redirect('admin_document_type_management')
+
+    # Get all document types
+    document_types = DocumentType.objects.all()
+
+    # Count existing fields and organize them by document type
+    fields_by_type = {}
+    total_fields_count = 0
+
+    for doc_type in document_types:
+        fields = StandardField.objects.filter(document_type=doc_type).order_by('order', 'name')
+        fields_by_type[doc_type.id] = {
+            'doc_type': doc_type,
+            'fields': fields,
+            'count': fields.count(),
+        }
+        total_fields_count += fields.count()
+
+    # Get list of document types with no fields
+    types_without_fields = [
+        doc_type for doc_type in document_types
+        if fields_by_type[doc_type.id]['count'] == 0
+    ]
+
+    # Explicitly create dictionaries from TemplateField choices
+    field_type_labels = dict(TemplateField.FIELD_TYPES)
+    extraction_method_labels = dict(TemplateField.EXTRACTION_METHODS)
+
+    context = {
+        'existing_fields': total_fields_count,
+        'fields_by_type': fields_by_type,
+        'document_types': document_types,
+        'types_without_fields': types_without_fields,
+        'section': 'document_types',
+        'field_type_labels': field_type_labels,
+        'extraction_method_labels': extraction_method_labels,
+    }
+
+    return render(request, 'admin_dashboard/setup_standard_fields.html', context)

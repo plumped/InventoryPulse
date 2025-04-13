@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User, Group, Permission
 
 from accessmanagement.models import WarehouseAccess
+from documents.models import DocumentType
 from interfaces.models import InterfaceType
 from master_data.models.organisations_models import Department
 
@@ -153,6 +154,18 @@ class WarehouseAccessForm(forms.ModelForm):
 class InterfaceTypeForm(forms.ModelForm):
     class Meta:
         model = InterfaceType
+        fields = ['name', 'code', 'description', 'is_active']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class DocumentTypeForm(forms.ModelForm):
+    class Meta:
+        model = DocumentType
         fields = ['name', 'code', 'description', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),

@@ -80,6 +80,23 @@
                                 <i class="bi bi-bank me-2"></i> Währungen
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Dokumente-Verwaltung</h6>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {% if section == 'document_types' %}active bg-light{% endif %}"
+                               href="{% url 'admin_document_type_management' %}">
+                                <i class="bi bi-files me-2"></i> Dokumenttypen
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'template_list' %}">
+                                <i class="bi bi-file-earmark-text me-2"></i> Dokumentvorlagen
+                            </a>
+                        </li>
 
                         <li class="nav-item">
                             <div class="card-header py-3">

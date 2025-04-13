@@ -8,7 +8,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
 from accessmanagement.models import WarehouseAccess
-from core.models import SerialNumber
 from core.utils.pagination import paginate_queryset
 from core.utils.products import get_filtered_products
 from inventory.models import Warehouse, StockMovement
@@ -16,6 +15,7 @@ from product_management.forms.product_forms import ProductForm
 from product_management.models.categories import Category
 from product_management.models.products import ProductWarehouse, Product
 from suppliers.models import SupplierProduct
+from tracking.models import SerialNumber
 
 
 @login_required

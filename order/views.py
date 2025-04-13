@@ -13,13 +13,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from admin_dashboard.models import CompanyAddress
-from core.models import BatchNumber
 from inventory.models import Warehouse, StockMovement
 from master_data.models.currency import Currency
 from master_data.models.tax import Tax
 from product_management.models.products import ProductWarehouse, Product
 from rma.models import RMA
 from suppliers.models import Supplier, SupplierProduct
+from tracking.models import BatchNumber
 from .forms import PurchaseOrderForm, OrderSplitForm, OrderSplitItemFormSet
 from .models import (
     PurchaseOrder, PurchaseOrderItem, PurchaseOrderReceipt,
@@ -3092,7 +3092,6 @@ def receive_order_split(request, pk, split_id):
 
                             # Create or update batch if tracking is enabled
                             if batch_number and split_item.order_item.product.has_batch_tracking:
-                                from core.models import BatchNumber
                                 # Create or update the batch
                                 batch_obj, created = BatchNumber.objects.update_or_create(
                                     product=split_item.order_item.product,

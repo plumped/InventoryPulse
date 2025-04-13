@@ -5,7 +5,6 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.response import Response
 
-from core.models import SerialNumber, BatchNumber
 from core.utils.api_helpers import generate_related_action
 from inventory.models import Warehouse, StockMovement, StockTake
 from master_data.models.tax import Tax
@@ -15,6 +14,7 @@ from product_management.models.categories import Category
 from product_management.models.products import ProductPhoto, ProductAttachment, ProductWarehouse, ProductVariantType, \
     Product, ProductVariant
 from suppliers.models import Supplier, SupplierProduct
+from tracking.models import SerialNumber, BatchNumber
 from .serializers import (
     ProductListSerializer, ProductDetailSerializer, CategorySerializer,
     TaxSerializer, ProductPhotoSerializer, ProductAttachmentSerializer,

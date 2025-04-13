@@ -8,8 +8,8 @@ from django.db.models.query_utils import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
+from product_management.models.products import Product, ProductVariant
 from suppliers.models import SupplierProduct
-from .models import Product, ProductVariant
 
 
 @login_required

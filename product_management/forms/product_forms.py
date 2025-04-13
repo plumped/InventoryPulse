@@ -1,7 +1,8 @@
 from django import forms
 
 from master_data.models.tax import Tax
-from product_management.models.products import Product
+from product_management.models.products import Product, ProductVariantType, ProductAttachment, ProductVariant, \
+    ProductPhoto
 
 
 class ProductForm(forms.ModelForm):
@@ -163,3 +164,111 @@ class ProductForm(forms.ModelForm):
                                "Verfallsdatenverfolgung erfordert, dass entweder Chargenverfolgung oder Seriennummernverfolgung aktiviert ist.")
 
         return cleaned_data
+
+
+class ProductPhotoForm(forms.ModelForm):
+    """Form for adding photos to products."""
+
+    class Meta:
+        model = ProductPhoto
+        fields = ['image', 'is_primary', 'caption']
+        widgets = {
+            'is_primary': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'caption': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optionale Beschreibung'}),
+        }
+
+
+class ProductAttachmentForm(forms.ModelForm):
+    """Form for adding attachments to products."""
+
+    class Meta:
+        model = ProductAttachment
+        fields = ['file', 'title', 'description']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class ProductVariantTypeForm(forms.ModelForm):
+    """Form for creating and updating variant types."""
+
+    class Meta:
+        model = ProductVariantType
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+class ProductVariantForm(forms.ModelForm):
+    """Form for creating and updating product variants."""
+    initial_stock = forms.DecimalField(
+        label="Anfangsbestand",
+        required=False,
+        initial=0,
+        min_value=0,
+        help_text="Nur bei Neuanlage: Anfänglicher Lagerbestand"
+    )
+
+    class Meta:
+        model = ProductVariant
+        fields = ['sku', 'name', 'variant_type', 'value', 'price_adjustment',
+                  'barcode', 'is_active']
+        widgets = {
+            'sku': forms.TextInput(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'variant_type': forms.Select(attrs={'class': 'form-select'}),
+            'value': forms.TextInput(attrs={'class': 'form-control'}),
+            'price_adjustment': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'barcode': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def clean_sku(self):
+        """Ensure SKU is unique."""
+        sku = self.cleaned_data.get('sku')
+        instance = getattr(self, 'instance', None)
+
+        if instance and instance.pk:
+            # Bei Update: Prüfen, ob die SKU bereits verwendet wird (außer bei dieser Variante)
+            exists = ProductVariant.objects.filter(sku=sku).exclude(pk=instance.pk).exists()
+            # Auch prüfen, ob die SKU bereits bei einem Produkt verwendet wird
+            exists_in_product = Product.objects.filter(sku=sku).exists()
+        else:
+            # Bei Create: Prüfen, ob die SKU bereits verwendet wird
+            exists = ProductVariant.objects.filter(sku=sku).exists()
+            # Auch prüfen, ob die SKU bereits bei einem Produkt verwendet wird
+            exists_in_product = Product.objects.filter(sku=sku).exists()
+
+        if exists or exists_in_product:
+            raise forms.ValidationError('Diese Artikelnummer wird bereits verwendet.')
+
+        return sku
+
+    def clean_barcode(self):
+        """Ensure barcode is unique if provided."""
+        barcode = self.cleaned_data.get('barcode')
+
+        # Wenn kein Barcode angegeben wurde, ist das OK
+        if not barcode:
+            return barcode
+
+        instance = getattr(self, 'instance', None)
+
+        if instance and instance.pk:
+            # Bei Update: Prüfen, ob der Barcode bereits verwendet wird (außer bei dieser Variante)
+            exists = ProductVariant.objects.filter(barcode=barcode).exclude(pk=instance.pk).exists()
+            # Auch prüfen, ob der Barcode bereits bei einem Produkt verwendet wird
+            exists_in_product = Product.objects.filter(barcode=barcode).exists()
+        else:
+            # Bei Create: Prüfen, ob der Barcode bereits verwendet wird
+            exists = ProductVariant.objects.filter(barcode=barcode).exists()
+            # Auch prüfen, ob der Barcode bereits bei einem Produkt verwendet wird
+            exists_in_product = Product.objects.filter(barcode=barcode).exists()
+
+        if exists or exists_in_product:
+            raise forms.ValidationError('Dieser Barcode wird bereits verwendet.')
+
+        return barcode

@@ -4,9 +4,9 @@ from datetime import datetime
 
 from django.utils.timezone import make_aware
 
-from core.models import SerialNumber
 from inventory.models import Warehouse
 from product_management.models.products import Product
+from tracking.models import SerialNumber
 
 
 class SerialNumberImporter:

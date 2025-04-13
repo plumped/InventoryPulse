@@ -5,7 +5,6 @@ from django.db import transaction
 from accessmanagement.models import UserProfile
 from admin_dashboard.models import CompanyAddress
 from core.factories import create_sample_data
-from core.models import SerialNumber, BatchNumber
 from data_operations.models.importers import ImportError as ImportErrorModel, ImportLog
 from inventory.models import Warehouse
 from master_data.models.currency import Currency
@@ -16,6 +15,7 @@ from organization.models import Department
 from product_management.models.categories import Category
 from product_management.models.products import ProductVariant, ProductPhoto, ProductAttachment, ProductWarehouse, \
     Product, ProductVariantType
+from tracking.models import SerialNumber, BatchNumber
 
 
 class Command(BaseCommand):

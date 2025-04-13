@@ -12,7 +12,6 @@ from faker import Faker
 
 from accessmanagement.models import UserProfile
 from admin_dashboard.models import CompanyAddress
-from core.models import SerialNumber, BatchNumber
 from data_operations.models.importers import ImportError as ImportErrorModel, ImportLog
 from inventory.models import Warehouse, StockTakeItem, StockTake, StockMovement
 from master_data.models.currency import Currency
@@ -26,6 +25,7 @@ from product_management.models.products import Product, ProductWarehouse, Produc
 from rma.models import RMA, RMAStatus, RMAResolutionType, RMAItem, RMAComment, RMAHistory, RMAPhoto, RMADocument
 from rma.models import RMAIssueType
 from suppliers.models import Supplier
+from tracking.models import SerialNumber, BatchNumber
 
 # Faker mit Schweizer Lokalisierung
 fake = Faker(['de_CH'])

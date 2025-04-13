@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 
-from data_operations.models.supplier_performance import SupplierPerformanceCalculator, SupplierPerformanceMetric, \
+from data_operations.models.performance_models import SupplierPerformanceCalculator, SupplierPerformanceMetric, \
     SupplierPerformance
 from order.models import PurchaseOrderComment
 from .models import RMA, RMAStatus

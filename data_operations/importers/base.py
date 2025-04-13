@@ -2,7 +2,7 @@ import csv
 import io
 import logging
 
-from data_operations.models.importers import ImportLog
+from data_operations.models.importers_models import ImportLog
 
 logger = logging.getLogger(__name__)
 

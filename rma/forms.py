@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from inventory.models import Warehouse
 from order.models import PurchaseOrderReceiptItem, PurchaseOrder
-from product_management.models.products import Product
+from product_management.models.products_models import Product
 from suppliers.models import Supplier
 from .models import RMA, RMAItem, RMAComment, RMAStatus, RMAResolutionType
 

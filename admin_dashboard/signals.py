@@ -5,7 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from accessmanagement.models import UserProfile
-from .models import SystemSettings
+from master_data.models.systemsettings_models import SystemSettings
 
 logger = logging.getLogger(__name__)
 

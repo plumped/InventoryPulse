@@ -1,7 +1,7 @@
 from django import forms
 
-from organization.models import Department
-from product_management.models.products import Product
+from master_data.models.organisations_models import Department
+from product_management.models.products_models import Product
 from .models import StockMovement, StockTake, StockTakeItem, Warehouse
 
 

@@ -1,7 +1,7 @@
 from django.db import models
 
-from master_data.models.currency import Currency
-from product_management.models.products import Product
+from master_data.models.currency_models import Currency
+from product_management.models.products_models import Product
 
 
 class Supplier(models.Model):

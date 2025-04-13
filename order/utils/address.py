@@ -1,4 +1,4 @@
-from admin_dashboard.models import CompanyAddress, CompanyAddressType
+from master_data.models.addresses_models import CompanyAddress, CompanyAddressType
 
 
 def get_address_context(order=None):

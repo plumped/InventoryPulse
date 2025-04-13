@@ -1,6 +1,6 @@
 from django import forms
 
-from product_management.models.categories import Category
+from product_management.models.categories_models import Category
 
 
 class CategoryForm(forms.ModelForm):

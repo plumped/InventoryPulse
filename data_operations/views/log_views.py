@@ -8,8 +8,8 @@ from django.http.response import JsonResponse, HttpResponse
 from django.shortcuts import redirect, get_object_or_404, render
 
 from core.utils.pagination import paginate_queryset
-from data_operations.models.importers import ImportError as ImportErrorModel
-from data_operations.models.importers import ImportLog
+from data_operations.models.importers_models import ImportError as ImportErrorModel
+from data_operations.models.importers_models import ImportLog
 
 
 @login_required

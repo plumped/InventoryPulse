@@ -22,9 +22,9 @@ from core.utils.view_helpers import handle_model_update, handle_model_delete
 from data_operations.forms.import_forms import BatchNumberImportForm
 from data_operations.importers.batch_numbers import BatchNumberImporter
 from inventory.models import Warehouse
-from product_management.models.products import Product
+from product_management.models.products_models import Product
 from tracking.forms.tracking_forms import BatchNumberForm
-from tracking.models import BatchNumber
+from tracking.models.batch_numbers_models import BatchNumber
 
 
 @login_required

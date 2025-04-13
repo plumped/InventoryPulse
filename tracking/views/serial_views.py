@@ -17,9 +17,9 @@ from core.utils.pagination import paginate_queryset
 from data_operations.forms.import_forms import SerialNumberImportForm
 from data_operations.importers.serialnumbers import SerialNumberImporter
 from inventory.models import Warehouse
-from product_management.models.products import Product
+from product_management.models.products_models import Product
 from tracking.forms.tracking_forms import SerialNumberForm, BulkSerialNumberForm
-from tracking.models import SerialNumber
+from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required

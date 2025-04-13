@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.db.models import Sum, F, Q, Exists, OuterRef
 
-from product_management.models.products import Product
+from product_management.models.products_models import Product
 from suppliers.models import SupplierProduct
 from .models import OrderSuggestion, PurchaseOrderItem
 

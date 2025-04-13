@@ -19,12 +19,15 @@ from core.utils.logging_utils import log_list_view_usage
 from core.utils.pagination import paginate_queryset
 from interfaces.models import InterfaceType
 from inventory.models import Warehouse
+from master_data.forms.addresses_forms import CompanyAddressForm
+from master_data.forms.systemsettings_forms import SystemSettingsForm
 from master_data.forms.tax_forms import TaxForm
-from master_data.models.tax import Tax
-from organization.models import Department
-from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
-    CompanyAddressForm, InterfaceTypeForm
-from .models import CompanyAddress, CompanyAddressType
+from master_data.forms.workflows_forms import WorkflowSettingsForm
+from master_data.models.addresses_models import CompanyAddress, CompanyAddressType
+from master_data.models.organisations_models import Department
+from master_data.models.systemsettings_models import WorkflowSettings, SystemSettings
+from master_data.models.tax_models import Tax
+from .forms import UserCreateForm, UserEditForm, GroupForm, DepartmentForm, InterfaceTypeForm
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +131,6 @@ def admin_dashboard(request):
         recent_activities = []
         logger.warning(f"Loading recent admin log entries failed: {e}")
 
-    from .models import WorkflowSettings
     workflow_settings, _ = WorkflowSettings.objects.get_or_create(pk=1)
 
     python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
@@ -474,7 +476,6 @@ def warehouse_access_delete(request, access_id):
 @login_required
 @staff_member_required
 def system_settings(request):
-    from .models import SystemSettings
     settings, _ = SystemSettings.objects.get_or_create(pk=1)
     return handle_form_view(
         request,
@@ -490,7 +491,6 @@ def system_settings(request):
 @login_required
 @staff_member_required
 def workflow_settings(request):
-    from .models import WorkflowSettings
     settings, _ = WorkflowSettings.objects.get_or_create(pk=1)
     return handle_form_view(
         request,

@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render, get_object_or_404, redirect
 
 from product_management.forms.categories_forms import CategoryForm
-from product_management.models.categories import Category
-from product_management.models.products import Product
+from product_management.models.categories_models import Category
+from product_management.models.products_models import Product
 
 
 @login_required

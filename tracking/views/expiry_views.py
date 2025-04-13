@@ -6,8 +6,9 @@ from django.utils import timezone
 
 from core.utils.filters import filter_expiring_serials, filter_expiring_batches
 from core.utils.pagination import paginate_queryset
-from product_management.models.categories import Category
-from tracking.models import SerialNumber, BatchNumber
+from product_management.models.categories_models import Category
+from tracking.models.batch_numbers_models import BatchNumber
+from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required

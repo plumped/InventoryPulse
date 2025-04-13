@@ -14,10 +14,10 @@ from django.utils import timezone
 
 from accessmanagement.models import WarehouseAccess
 from core.utils.pagination import paginate_queryset
-from organization.models import Department
-from product_management.models.categories import Category
-from product_management.models.products import ProductWarehouse, Product
-from tracking.models import BatchNumber
+from master_data.models.organisations_models import Department
+from product_management.models.categories_models import Category
+from product_management.models.products_models import ProductWarehouse, Product
+from tracking.models.batch_numbers_models import BatchNumber
 from .forms import StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
     WarehouseForm, StockAdjustmentForm
 from .models import StockMovement, StockTake, StockTakeItem, Warehouse

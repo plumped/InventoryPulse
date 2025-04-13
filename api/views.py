@@ -7,14 +7,16 @@ from rest_framework.response import Response
 
 from core.utils.api_helpers import generate_related_action
 from inventory.models import Warehouse, StockMovement, StockTake
-from master_data.models.tax import Tax
+from master_data.models.tax_models import Tax
 from order.models import PurchaseOrder, PurchaseOrderItem, OrderSuggestion
 from order.workflow import can_approve_order
-from product_management.models.categories import Category
-from product_management.models.products import ProductPhoto, ProductAttachment, ProductWarehouse, ProductVariantType, \
+from product_management.models.categories_models import Category
+from product_management.models.products_models import ProductPhoto, ProductAttachment, ProductWarehouse, \
+    ProductVariantType, \
     Product, ProductVariant
 from suppliers.models import Supplier, SupplierProduct
-from tracking.models import SerialNumber, BatchNumber
+from tracking.models.batch_numbers_models import BatchNumber
+from tracking.models.serial_numbers_models import SerialNumber
 from .serializers import (
     ProductListSerializer, ProductDetailSerializer, CategorySerializer,
     TaxSerializer, ProductPhotoSerializer, ProductAttachmentSerializer,

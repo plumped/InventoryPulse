@@ -6,10 +6,10 @@ from django.db import models
 from django.utils import timezone
 from model_utils import FieldTracker
 
-from admin_dashboard.models import CompanyAddress
-from master_data.models.currency import Currency
-from master_data.models.tax import Tax
-from product_management.models.products import Product
+from master_data.models.addresses_models import CompanyAddress
+from master_data.models.currency_models import Currency
+from master_data.models.tax_models import Tax
+from product_management.models.products_models import Product
 from suppliers.models import Supplier
 
 

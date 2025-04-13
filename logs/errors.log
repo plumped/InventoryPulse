@@ -3639,3 +3639,29 @@ Traceback (most recent call last):
     return mark_safe(format_string.format(*args_safe, **kwargs_safe))
                      ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ValueError: Unknown format code 'f' for object of type 'SafeString'
+2025-04-13 20:44:22,889 [ERROR] django.request: Internal Server Error: /admin-dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py", line 131, in admin_dashboard
+    from .models import WorkflowSettings
+ImportError: cannot import name 'WorkflowSettings' from 'admin_dashboard.models' (C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\models.py)
+2025-04-13 20:47:03,101 [ERROR] django.request: Internal Server Error: /admin-dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py", line 131, in admin_dashboard
+    from .models import WorkflowSettings
+ImportError: cannot import name 'WorkflowSettings' from 'admin_dashboard.models' (C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\models.py)

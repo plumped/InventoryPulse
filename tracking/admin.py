@@ -2,7 +2,8 @@ from datetime import date, timedelta
 
 from django.contrib import admin
 
-from .models import SerialNumber, BatchNumber
+from tracking.models.batch_numbers_models import BatchNumber
+from tracking.models.serial_numbers_models import SerialNumber
 
 
 @admin.register(SerialNumber)

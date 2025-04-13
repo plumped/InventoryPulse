@@ -1,9 +1,10 @@
 from django import forms
 
 from inventory.models import Warehouse
-from product_management.models.products import ProductVariant, \
+from product_management.models.products_models import ProductVariant, \
     Product
-from tracking.models import SerialNumber, BatchNumber
+from tracking.models.batch_numbers_models import BatchNumber
+from tracking.models.serial_numbers_models import SerialNumber
 
 
 class SerialNumberForm(forms.ModelForm):

@@ -1,6 +1,6 @@
 from django import forms
 
-from master_data.models.tax import Tax
+from master_data.models.tax_models import Tax
 
 
 class TaxForm(forms.ModelForm):

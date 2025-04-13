@@ -1,6 +1,6 @@
 from django.db.models import F
 
-from product_management.models.products import Product
+from product_management.models.products_models import Product
 
 
 def check_low_stock_products():

@@ -9,8 +9,8 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
-from admin_dashboard.models import CompanyAddress, CompanyAddressType
 from inventory.models import StockMovement
+from master_data.models.addresses_models import CompanyAddress, CompanyAddressType
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem, PurchaseOrderReceipt
 from order.views import update_order_status_after_receipt
 from suppliers.models import Supplier

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from data_operations.models.supplier_performance import SupplierPerformance
+from data_operations.models.performance_models import SupplierPerformance
 from .models import (
     Supplier, SupplierProduct, SupplierAddress, SupplierContact,
 )

@@ -11,21 +11,22 @@ from factory.django import DjangoModelFactory
 from faker import Faker
 
 from accessmanagement.models import UserProfile
-from admin_dashboard.models import CompanyAddress
-from data_operations.models.importers import ImportError as ImportErrorModel, ImportLog
+from data_operations.models.importers_models import ImportError as ImportErrorModel, ImportLog
 from inventory.models import Warehouse, StockTakeItem, StockTake, StockMovement
-from master_data.models.currency import Currency
-from master_data.models.tax import Tax
+from master_data.models.addresses_models import CompanyAddress
+from master_data.models.currency_models import Currency
+from master_data.models.organisations_models import Department
+from master_data.models.tax_models import Tax
 from order.models import PurchaseOrderComment, OrderTemplateItem, OrderTemplate, OrderSuggestion, \
     PurchaseOrderReceiptItem, OrderSplit, PurchaseOrderReceipt, OrderSplitItem, PurchaseOrderItem, PurchaseOrder
-from organization.models import Department
-from product_management.models.categories import Category
-from product_management.models.products import Product, ProductWarehouse, ProductPhoto, ProductAttachment, \
+from product_management.models.categories_models import Category
+from product_management.models.products_models import Product, ProductWarehouse, ProductPhoto, ProductAttachment, \
     ProductVariantType, ProductVariant
 from rma.models import RMA, RMAStatus, RMAResolutionType, RMAItem, RMAComment, RMAHistory, RMAPhoto, RMADocument
 from rma.models import RMAIssueType
 from suppliers.models import Supplier
-from tracking.models import SerialNumber, BatchNumber
+from tracking.models.batch_numbers_models import BatchNumber
+from tracking.models.serial_numbers_models import SerialNumber
 
 # Faker mit Schweizer Lokalisierung
 fake = Faker(['de_CH'])

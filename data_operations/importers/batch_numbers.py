@@ -5,8 +5,8 @@ from django.db import transaction
 from data_operations.importers.base import BaseImporter
 from data_operations.importers.suppliers import Supplier
 from inventory.models import Warehouse
-from product_management.models.products import Product
-from tracking.models import BatchNumber
+from product_management.models.products_models import Product
+from tracking.models.batch_numbers_models import BatchNumber
 
 
 class BatchNumberImporter(BaseImporter):

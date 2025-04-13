@@ -1,7 +1,7 @@
 from django import forms
 
-from master_data.models.tax import Tax
-from product_management.models.products import Product, ProductVariantType, ProductAttachment, ProductVariant, \
+from master_data.models.tax_models import Tax
+from product_management.models.products_models import Product, ProductVariantType, ProductAttachment, ProductVariant, \
     ProductPhoto
 
 

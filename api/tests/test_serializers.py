@@ -1,8 +1,8 @@
 from django.test import TestCase
 
-from master_data.models.tax import Tax
-from product_management.models.categories import Category
-from product_management.models.products import Product
+from master_data.models.tax_models import Tax
+from product_management.models.categories_models import Category
+from product_management.models.products_models import Product
 from ..serializers import ProductListSerializer, ProductDetailSerializer, CategorySerializer
 
 

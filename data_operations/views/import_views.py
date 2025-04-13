@@ -15,11 +15,11 @@ from data_operations.forms.import_forms import ProductImportForm, SupplierImport
 from data_operations.importers.categories import CategoryImporter
 from data_operations.importers.products import ProductImporter, SupplierProductImporter
 from data_operations.importers.suppliers import SupplierImporter
-from data_operations.models.importers import ImportLog
+from data_operations.models.importers_models import ImportLog
 from inventory.models import Warehouse, StockMovement
-from organization.models import Department
-from product_management.models.products import ProductWarehouse, Product, ProductVariant
-from tracking.models import SerialNumber
+from master_data.models.organisations_models import Department
+from product_management.models.products_models import ProductWarehouse, Product, ProductVariant
+from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required

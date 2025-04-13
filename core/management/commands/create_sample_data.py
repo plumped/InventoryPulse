@@ -3,19 +3,20 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from accessmanagement.models import UserProfile
-from admin_dashboard.models import CompanyAddress
 from core.factories import create_sample_data
-from data_operations.models.importers import ImportError as ImportErrorModel, ImportLog
+from data_operations.models.importers_models import ImportError as ImportErrorModel, ImportLog
 from inventory.models import Warehouse
-from master_data.models.currency import Currency
-from master_data.models.tax import Tax
+from master_data.models.addresses_models import CompanyAddress
+from master_data.models.currency_models import Currency
+from master_data.models.organisations_models import Department
+from master_data.models.tax_models import Tax
 from order.models import PurchaseOrderComment, PurchaseOrderReceiptItem, PurchaseOrderReceipt, OrderSplitItem, \
     OrderSplit, OrderTemplateItem, OrderTemplate, OrderSuggestion, PurchaseOrderItem, PurchaseOrder
-from organization.models import Department
-from product_management.models.categories import Category
-from product_management.models.products import ProductVariant, ProductPhoto, ProductAttachment, ProductWarehouse, \
+from product_management.models.categories_models import Category
+from product_management.models.products_models import ProductVariant, ProductPhoto, ProductAttachment, ProductWarehouse, \
     Product, ProductVariantType
-from tracking.models import SerialNumber, BatchNumber
+from tracking.models.batch_numbers_models import BatchNumber
+from tracking.models.serial_numbers_models import SerialNumber
 
 
 class Command(BaseCommand):

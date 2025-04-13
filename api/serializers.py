@@ -2,13 +2,15 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from inventory.models import Warehouse, StockMovement, StockTake
-from master_data.models.tax import Tax
+from master_data.models.tax_models import Tax
 from order.models import PurchaseOrder, PurchaseOrderItem, OrderSuggestion
-from product_management.models.categories import Category
-from product_management.models.products import ProductPhoto, ProductAttachment, ProductVariantType, ProductWarehouse, \
+from product_management.models.categories_models import Category
+from product_management.models.products_models import ProductPhoto, ProductAttachment, ProductVariantType, \
+    ProductWarehouse, \
     Product, ProductVariant
 from suppliers.models import Supplier, SupplierProduct
-from tracking.models import SerialNumber, BatchNumber
+from tracking.models.batch_numbers_models import BatchNumber
+from tracking.models.serial_numbers_models import SerialNumber
 
 
 class CategorySerializer(serializers.ModelSerializer):

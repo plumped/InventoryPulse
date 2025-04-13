@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import redirect, get_object_or_404, render
 
 from master_data.forms.currency_forms import CurrencyForm
-from master_data.models.currency import Currency
+from master_data.models.currency_models import Currency
 
 
 @login_required

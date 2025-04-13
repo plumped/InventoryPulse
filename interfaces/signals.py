@@ -1,9 +1,9 @@
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db import transaction
-from django.core.exceptions import ObjectDoesNotExist
 
-from admin_dashboard.models import WorkflowSettings
+from master_data.models.systemsettings_models import WorkflowSettings
 from order.models import PurchaseOrder
 from .models import SupplierInterface
 

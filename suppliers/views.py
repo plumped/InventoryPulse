@@ -9,10 +9,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.utils.timezone import make_aware
 
-from data_operations.models.supplier_performance import SupplierPerformance, SupplierPerformanceMetric, \
+from data_operations.models.performance_models import SupplierPerformance, SupplierPerformanceMetric, \
     SupplierPerformanceCalculator
-from master_data.models.currency import Currency
-from product_management.models.products import Product
+from master_data.models.currency_models import Currency
+from product_management.models.products_models import Product
 from rma.models import RMA, RMAStatus
 from .forms import SupplierForm, SupplierProductForm, SupplierPerformanceForm, DateRangeForm, \
     SupplierPerformanceMetricForm, SupplierContactForm, SupplierAddressForm

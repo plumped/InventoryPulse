@@ -1,6 +1,6 @@
 from django.db.models import Sum
 
-from product_management.models.products import ProductWarehouse
+from product_management.models.products_models import ProductWarehouse
 
 
 def get_accessible_stock(product, warehouses):

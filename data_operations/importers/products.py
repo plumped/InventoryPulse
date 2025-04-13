@@ -2,8 +2,8 @@ from django.db import transaction
 
 from data_operations.importers.base import BaseImporter
 from data_operations.importers.suppliers import Supplier
-from product_management.models.categories import Category
-from product_management.models.products import Product
+from product_management.models.categories_models import Category
+from product_management.models.products_models import Product
 from suppliers.models import SupplierProduct
 
 

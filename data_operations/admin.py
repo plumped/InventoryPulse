@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from data_operations.models.importers import ImportLog, ImportError
-from data_operations.models.supplier_performance import SupplierPerformance, SupplierPerformanceMetric
+from data_operations.models.importers_models import ImportLog, ImportError
+from data_operations.models.performance_models import SupplierPerformance, SupplierPerformanceMetric
 
 
 # ===== Import Log Admin =====

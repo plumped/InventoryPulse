@@ -5,8 +5,9 @@ from django.shortcuts import get_object_or_404, redirect, render
 from core.utils.view_helpers import handle_model_update
 from inventory.models import Warehouse
 from product_management.forms.product_forms import ProductVariantTypeForm, ProductVariantForm
-from product_management.models.products import ProductVariantType, ProductVariant, Product
-from tracking.models import SerialNumber, BatchNumber
+from product_management.models.products_models import ProductVariantType, ProductVariant, Product
+from tracking.models.batch_numbers_models import BatchNumber
+from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required

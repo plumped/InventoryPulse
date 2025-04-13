@@ -4,13 +4,14 @@ It integrates with the admin_dashboard's workflow settings.
 """
 from decimal import Decimal
 
+from master_data.models.systemsettings_models import WorkflowSettings
+
 
 def get_workflow_settings():
     """
     Get the current workflow settings or return defaults if not available.
     """
     try:
-        from admin_dashboard.models import WorkflowSettings
         workflow_settings = WorkflowSettings.objects.first()
         if workflow_settings:
             return workflow_settings

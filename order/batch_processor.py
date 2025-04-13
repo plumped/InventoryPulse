@@ -13,7 +13,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
 
-from master_data.models.currency import Currency
+from master_data.models.currency_models import Currency
+from master_data.models.systemsettings_models import SystemSettings
 from order.models import PurchaseOrder, PurchaseOrderItem
 from order.workflow import get_initial_order_status
 from suppliers.models import Supplier, SupplierProduct
@@ -212,7 +213,6 @@ class BatchOrderProcessor:
         today = timezone.now().date()
 
         try:
-            from admin_dashboard.models import SystemSettings
             system_settings = SystemSettings.objects.first()
             prefix = system_settings.order_number_prefix if system_settings else "ORD-"
             next_seq = system_settings.next_order_number if system_settings else 1

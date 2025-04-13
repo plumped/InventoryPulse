@@ -154,7 +154,6 @@ INSTALLED_APPS = [
     'master_data',
     'order',
     'admin_dashboard',
-    'organization',
     'accessmanagement',
     'product_management',
     'tracking',

@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from inventory.models import Warehouse
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem
-from product_management.models.products import Product
+from product_management.models.products_models import Product
 from suppliers.models import SupplierProduct
 
 

@@ -1,7 +1,7 @@
 from django.db import transaction
 
 from data_operations.importers.base import BaseImporter
-from product_management.models.categories import Category
+from product_management.models.categories_models import Category
 
 
 class CategoryImporter(BaseImporter):

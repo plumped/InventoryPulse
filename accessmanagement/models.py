@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 from inventory.models import Warehouse
-from organization.models import Department
+from master_data.models.organisations_models import Department
 
 
 class UserProfile(models.Model):

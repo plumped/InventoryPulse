@@ -12,14 +12,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 
-from admin_dashboard.models import CompanyAddress
 from inventory.models import Warehouse, StockMovement
-from master_data.models.currency import Currency
-from master_data.models.tax import Tax
-from product_management.models.products import ProductWarehouse, Product
+from master_data.models.addresses_models import CompanyAddress
+from master_data.models.currency_models import Currency
+from master_data.models.systemsettings_models import SystemSettings, WorkflowSettings
+from master_data.models.tax_models import Tax
+from product_management.models.products_models import ProductWarehouse, Product
 from rma.models import RMA
 from suppliers.models import Supplier, SupplierProduct
-from tracking.models import BatchNumber
+from tracking.models.batch_numbers_models import BatchNumber
 from .forms import PurchaseOrderForm, OrderSplitForm, OrderSplitItemFormSet
 from .models import (
     PurchaseOrder, PurchaseOrderItem, PurchaseOrderReceipt,
@@ -307,7 +308,6 @@ def purchase_order_create(request):
     """Neue Bestellung erstellen."""
     # Systemeinstellungen abrufen
     try:
-        from admin_dashboard.models import SystemSettings
         system_settings = SystemSettings.objects.first()
     except:
         system_settings = None
@@ -649,7 +649,6 @@ def purchase_order_approve(request, pk):
 
         # E-Mail-Benachrichtigung senden, falls aktiviert
         try:
-            from admin_dashboard.models import WorkflowSettings
             workflow_settings = WorkflowSettings.objects.first()
             if workflow_settings and workflow_settings.send_order_emails:
                 # Hier Code zum Senden der E-Mail
@@ -742,7 +741,6 @@ def purchase_order_receive(request, pk):
     # Default Warehouse aus SystemSettings abrufen
     default_warehouse = None
     try:
-        from admin_dashboard.models import SystemSettings
         system_settings = SystemSettings.objects.first()
         if system_settings and system_settings.default_warehouse:
             default_warehouse = system_settings.default_warehouse.id
@@ -1282,7 +1280,6 @@ def create_orders_from_suggestions(request):
                 else:
                     # Systemeinstellungen abrufen für Bestellnummer-Präfix
                     try:
-                        from admin_dashboard.models import SystemSettings
                         system_settings = SystemSettings.objects.first()
                         prefix = system_settings.order_number_prefix if system_settings else "ORD-"
                         next_seq = system_settings.next_order_number if system_settings else 1
@@ -2465,7 +2462,6 @@ def create_order_from_template(request, pk):
 
             # Try to get system settings for order number prefix
             try:
-                from admin_dashboard.models import SystemSettings
                 system_settings = SystemSettings.objects.first()
                 prefix = system_settings.order_number_prefix if system_settings else "ORD-"
                 next_seq = system_settings.next_order_number if system_settings else 1
@@ -2602,7 +2598,6 @@ def handle_recurring_orders():
 
                 # Generate order number
                 try:
-                    from admin_dashboard.models import SystemSettings
                     system_settings = SystemSettings.objects.first()
                     prefix = system_settings.order_number_prefix if system_settings else "ORD-"
                     next_seq = system_settings.next_order_number if system_settings else 1

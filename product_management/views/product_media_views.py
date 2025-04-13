@@ -11,7 +11,7 @@ from core.utils.files import delete_file_if_exists
 from core.utils.forms import handle_form_view
 from core.utils.view_helpers import handle_model_delete
 from product_management.forms.product_forms import ProductPhotoForm, ProductAttachmentForm
-from product_management.models.products import ProductPhoto, ProductAttachment, Product
+from product_management.models.products_models import ProductPhoto, ProductAttachment, Product
 
 
 @login_required

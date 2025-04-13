@@ -3497,3 +3497,31 @@ Traceback (most recent call last):
   File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 611, in find_filter
     raise TemplateSyntaxError("Invalid filter: '%s'" % filter_name)
 django.template.exceptions.TemplateSyntaxError: Invalid filter: 'has_perm'
+2025-04-13 15:50:11,175 [ERROR] django.request: Internal Server Error: /products/2/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\product_views.py", line 158, in product_detail
+    product = get_object_or_404(Product, pk=pk)
+                                ^^^^^^^
+NameError: name 'Product' is not defined
+2025-04-13 15:50:15,514 [ERROR] django.request: Internal Server Error: /products/39/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\product_views.py", line 158, in product_detail
+    product = get_object_or_404(Product, pk=pk)
+                                ^^^^^^^
+NameError: name 'Product' is not defined

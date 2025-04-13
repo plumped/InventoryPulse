@@ -1,10 +1,8 @@
 from django import forms
-from django.contrib.auth.models import User
 
-from accessmanagement.models import WarehouseAccess
-
-from .models import StockMovement, StockTake, StockTakeItem, Department, Warehouse
-from core.models import Product
+from organization.models import Department
+from product_management.models.products import Product
+from .models import StockMovement, StockTake, StockTakeItem, Warehouse
 
 
 class StockMovementForm(forms.ModelForm):

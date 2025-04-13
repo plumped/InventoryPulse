@@ -1,6 +1,7 @@
-from core.importers.base import BaseImporter
-from suppliers.models import Supplier
 from django.db import transaction
+
+from data_operations.importers.base import BaseImporter
+from suppliers.models import Supplier
 
 
 class SupplierImporter(BaseImporter):

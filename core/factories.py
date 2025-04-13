@@ -11,16 +11,17 @@ from factory.django import DjangoModelFactory
 from faker import Faker
 
 from admin_dashboard.models import CompanyAddress
-from core.models import ImportError as ImportErrorModel
-from core.models import (
-    Tax, Category, Product, ProductWarehouse, ImportLog,
-    UserProfile, ProductPhoto, ProductAttachment, ProductVariantType,
-    ProductVariant, SerialNumber, BatchNumber, Currency
-)
+from core.models import UserProfile, SerialNumber, BatchNumber
+from data_operations.models.importers import ImportError as ImportErrorModel, ImportLog
 from inventory.models import Warehouse, StockTakeItem, StockTake, StockMovement
+from master_data.models.categories import Category
+from master_data.models.currency import Currency
+from master_data.models.tax import Tax
 from order.models import PurchaseOrderComment, OrderTemplateItem, OrderTemplate, OrderSuggestion, \
     PurchaseOrderReceiptItem, OrderSplit, PurchaseOrderReceipt, OrderSplitItem, PurchaseOrderItem, PurchaseOrder
 from organization.models import Department
+from product_management.models.products import Product, ProductWarehouse, ProductPhoto, ProductAttachment, \
+    ProductVariantType, ProductVariant
 from rma.models import RMA, RMAStatus, RMAResolutionType, RMAItem, RMAComment, RMAHistory, RMAPhoto, RMADocument
 from rma.models import RMAIssueType
 from suppliers.models import Supplier

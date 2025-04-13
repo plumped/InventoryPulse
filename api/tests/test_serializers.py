@@ -1,6 +1,10 @@
 from django.test import TestCase
-from core.models import Product, Category, Tax
+
+from master_data.models.categories import Category
+from master_data.models.tax import Tax
+from product_management.models.products import Product
 from ..serializers import ProductListSerializer, ProductDetailSerializer, CategorySerializer
+
 
 class CategorySerializerTest(TestCase):
     def setUp(self):

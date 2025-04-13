@@ -13,8 +13,11 @@ from django.urls import reverse
 from django.utils import timezone
 
 from admin_dashboard.models import CompanyAddress
-from core.models import Product, ProductWarehouse, Currency
+from core.models import BatchNumber
 from inventory.models import Warehouse, StockMovement
+from master_data.models.currency import Currency
+from master_data.models.tax import Tax
+from product_management.models.products import ProductWarehouse, Product
 from rma.models import RMA
 from suppliers.models import Supplier, SupplierProduct
 from .forms import PurchaseOrderForm, OrderSplitForm, OrderSplitItemFormSet
@@ -65,8 +68,6 @@ def purchase_order_list(request):
     # Sortierung
     queryset = queryset.order_by('-order_date')
 
-    # Systemwährung ermitteln
-    from core.models import Currency
     system_currency = Currency.get_default_currency()
 
     # Umgerechnete Beträge berechnen
@@ -181,7 +182,6 @@ def purchase_order_detail(request, pk):
         ).select_related('interface_type')
 
     # Systemwährung ermitteln
-    from core.models import Currency
     system_currency = Currency.get_default_currency()
 
     # Die Währung für diese Bestellung (vom Lieferanten)
@@ -480,7 +480,7 @@ def process_order_items(post_data, order):
                 product = get_object_or_404(Product, pk=product_id)
 
                 # Steuersatz bestimmen
-                from core.models import Tax
+
                 tax = None
                 if tax_id:
                     try:
@@ -493,7 +493,6 @@ def process_order_items(post_data, order):
                     tax = product.tax
 
                 # Währung bestimmen
-                from core.models import Currency
                 currency = None
                 if currency_id:
                     try:
@@ -877,7 +876,6 @@ def purchase_order_receive(request, pk):
 
                             # Batch verarbeiten, falls erforderlich
                             if batch and item.product.has_batch_tracking:
-                                from core.models import BatchNumber
                                 # Erstelle oder aktualisiere Batch-Eintrag
                                 batch_obj, created = BatchNumber.objects.update_or_create(
                                     product=item.product,
@@ -1377,7 +1375,6 @@ def create_orders_from_suggestions(request):
 
                         # Wenn keine Währung definiert ist, Standardwährung verwenden
                         if not currency:
-                            from core.models import Currency
                             currency = Currency.get_default_currency()
 
                     except SupplierProduct.DoesNotExist:
@@ -1385,7 +1382,6 @@ def create_orders_from_suggestions(request):
                         if supplier.default_currency:
                             currency = supplier.default_currency
                         else:
-                            from core.models import Currency
                             currency = Currency.get_default_currency()
 
                     if existing_item:
@@ -1453,7 +1449,6 @@ def get_supplier_product_price(request):
         product = Product.objects.get(pk=product_id)
 
         # Währungs-Informationen abrufen
-        from core.models import Currency
         default_currency = Currency.get_default_currency()
         currency_info = {
             'id': supplier_product.currency.id if supplier_product.currency else (
@@ -1482,7 +1477,6 @@ def get_supplier_product_price(request):
         try:
             product = Product.objects.get(pk=product_id)
             # Standardwährung abrufen
-            from core.models import Currency
             default_currency = Currency.get_default_currency()
             currency_info = {
                 'id': default_currency.id if default_currency else None,

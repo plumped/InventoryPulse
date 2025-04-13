@@ -1,13 +1,15 @@
 # order/models.py
 from decimal import Decimal
 
-from django.db import models
 from django.contrib.auth.models import User
-from model_utils import FieldTracker
+from django.db import models
 from django.utils import timezone
+from model_utils import FieldTracker
 
 from admin_dashboard.models import CompanyAddress
-from core.models import Product, Tax
+from master_data.models.currency import Currency
+from master_data.models.tax import Tax
+from product_management.models.products import Product
 from suppliers.models import Supplier
 
 
@@ -145,7 +147,7 @@ class PurchaseOrderItem(models.Model):
     defective_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     # Add currency field to capture the currency at time of order
-    currency = models.ForeignKey('core.Currency', on_delete=models.PROTECT, null=True,
+    currency = models.ForeignKey('master_data.Currency', on_delete=models.PROTECT, null=True,
                                  verbose_name="Währung",
                                  help_text="Die Währung, in der der Artikel bestellt wird")
 
@@ -368,7 +370,6 @@ class PurchaseOrderItem(models.Model):
 
         # Wenn keine Währung gesetzt ist, die Standardwährung verwenden
         if not self.currency:
-            from core.models import Currency
             self.currency = Currency.get_default_currency()
 
         if self.canceled_quantity > self.quantity_ordered:

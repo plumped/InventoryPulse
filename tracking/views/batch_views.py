@@ -15,14 +15,15 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
 from core.forms import BatchNumberForm, BatchNumberImportForm
-from core.importers.batch_numbers import BatchNumberImporter
-from core.models import BatchNumber, Product
+from core.models import BatchNumber
 from core.utils.filters import apply_exact_filter, apply_expiry_filter
 from core.utils.forms import handle_form_view
 from core.utils.imports import handle_csv_import
 from core.utils.pagination import paginate_queryset
 from core.utils.view_helpers import handle_model_update, handle_model_delete
+from data_operations.importers.batch_numbers import BatchNumberImporter
 from inventory.models import Warehouse
+from product_management.models.products import Product
 
 
 @login_required

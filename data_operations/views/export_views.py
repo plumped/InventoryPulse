@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import permission_required, login_required
 from django.http.response import HttpResponse
 from django.shortcuts import redirect
 
-from core.models import ImportLog
+from data_operations.models.importers import ImportLog
 
 
 @login_required

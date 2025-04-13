@@ -9,10 +9,12 @@ from django.utils import timezone
 
 from accessmanagement.models import WarehouseAccess
 from core.forms import ProductForm
-from core.models import Product, ProductWarehouse, SerialNumber, Category
+from core.models import SerialNumber
 from core.utils.pagination import paginate_queryset
 from core.utils.products import get_filtered_products
 from inventory.models import Warehouse, StockMovement
+from master_data.models.categories import Category
+from product_management.models.products import ProductWarehouse, Product
 from suppliers.models import SupplierProduct
 
 

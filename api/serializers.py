@@ -1,12 +1,14 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from core.models import (
-    Product, Category, ProductWarehouse, ProductPhoto, ProductAttachment,
-    ProductVariantType, ProductVariant, SerialNumber, BatchNumber, Tax
-)
-from suppliers.models import Supplier, SupplierProduct
+
+from core.models import SerialNumber, BatchNumber
 from inventory.models import Warehouse, StockMovement, StockTake
+from master_data.models.categories import Category
+from master_data.models.tax import Tax
 from order.models import PurchaseOrder, PurchaseOrderItem, OrderSuggestion
+from product_management.models.products import ProductPhoto, ProductAttachment, ProductVariantType, ProductWarehouse, \
+    Product, ProductVariant
+from suppliers.models import Supplier, SupplierProduct
 
 
 class CategorySerializer(serializers.ModelSerializer):

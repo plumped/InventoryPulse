@@ -456,7 +456,6 @@ def rma_add_item(request, pk, receipt_item_id=None):
                         )
 
                         # Update product warehouse quantity
-                        from core.models import ProductWarehouse
                         product_warehouse, created = ProductWarehouse.objects.get_or_create(
                             product=item.product,
                             warehouse=original_warehouse,
@@ -553,7 +552,6 @@ def rma_edit_item(request, pk, item_id):
                     )
 
                     # Update product warehouse quantity
-                    from core.models import ProductWarehouse
                     product_warehouse, created = ProductWarehouse.objects.get_or_create(
                         product=item.product,
                         warehouse=rma.rma_warehouse,
@@ -616,7 +614,6 @@ def rma_delete_item(request, pk, item_id):
             )
 
             # Update RMA warehouse quantity
-            from core.models import ProductWarehouse
             product_warehouse, created = ProductWarehouse.objects.get_or_create(
                 product=item.product,
                 warehouse=rma.rma_warehouse,
@@ -714,7 +711,6 @@ def rma_delete(request, pk):
                 )
 
                 # Update RMA warehouse quantity
-                from core.models import ProductWarehouse
                 product_warehouse, created = ProductWarehouse.objects.get_or_create(
                     product=item.product,
                     warehouse=rma.rma_warehouse,
@@ -1183,7 +1179,6 @@ def rma_create_from_receipt(request, order_id, receipt_id):
                             )
 
                             # Update product warehouse quantity
-                            from core.models import ProductWarehouse
                             product_warehouse, created = ProductWarehouse.objects.get_or_create(
                                 product=rma_item.product,
                                 warehouse=receipt_item.warehouse,

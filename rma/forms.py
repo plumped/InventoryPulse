@@ -1,14 +1,11 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from django.utils import timezone
-from decimal import Decimal
 
-from core.models import Product
 from inventory.models import Warehouse
 from order.models import PurchaseOrderReceiptItem, PurchaseOrder
+from product_management.models.products import Product
 from suppliers.models import Supplier
-
-from .models import RMA, RMAItem, RMAComment, RMAIssueType, RMAStatus, RMAResolutionType
+from .models import RMA, RMAItem, RMAComment, RMAStatus, RMAResolutionType
 
 
 class RMAForm(forms.ModelForm):

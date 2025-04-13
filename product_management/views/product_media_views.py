@@ -7,11 +7,11 @@ from django.http.response import JsonResponse, Http404, FileResponse
 from django.shortcuts import get_object_or_404, render, redirect
 
 from core.forms import ProductPhotoForm, ProductAttachmentForm
-from core.models import Product, ProductPhoto, ProductAttachment
 from core.utils.deletion import handle_delete_view
 from core.utils.files import delete_file_if_exists
 from core.utils.forms import handle_form_view
 from core.utils.view_helpers import handle_model_delete
+from product_management.models.products import ProductPhoto, ProductAttachment, Product
 
 
 @login_required

@@ -1,7 +1,6 @@
-from django.db import transaction
 from django.db.models import F
-from core.models import Product
-from .models import StockMovement
+
+from product_management.models.products import Product
 
 
 def check_low_stock_products():

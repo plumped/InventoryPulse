@@ -4,7 +4,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
-from core.models import Product
+from master_data.models.currency import Currency
+from product_management.models.products import Product
 
 
 class Supplier(models.Model):
@@ -27,7 +28,7 @@ class Supplier(models.Model):
                                         verbose_name="Versandkosten")
     minimum_order_value = models.DecimalField(max_digits=10, decimal_places=2, default=0,
                                               verbose_name="Mindestbestellwert")
-    default_currency = models.ForeignKey('core.Currency', on_delete=models.SET_NULL,
+    default_currency = models.ForeignKey('master_data.Currency', on_delete=models.SET_NULL,
                                          null=True, blank=True,
                                          verbose_name="Standardwährung",
                                          related_name='suppliers')
@@ -82,7 +83,6 @@ class Supplier(models.Model):
     def save(self, *args, **kwargs):
         # Wenn keine Standardwährung gesetzt ist, setze die Systemstandardwährung
         if not self.default_currency:
-            from core.models import Currency
             self.default_currency = Currency.get_default_currency()
         super().save(*args, **kwargs)
 
@@ -98,7 +98,7 @@ class SupplierProduct(models.Model):
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     # Währung als optionales Override für die Lieferanten-Standardwährung
-    currency = models.ForeignKey('core.Currency', on_delete=models.SET_NULL, null=True, blank=True,
+    currency = models.ForeignKey('master_data.Currency', on_delete=models.SET_NULL, null=True, blank=True,
                                  verbose_name="Währung", related_name='supplier_products')
 
     lead_time_days = models.IntegerField(default=7)
@@ -119,7 +119,6 @@ class SupplierProduct(models.Model):
         elif self.supplier and self.supplier.default_currency:
             return self.supplier.default_currency
         else:
-            from core.models import Currency
             return Currency.get_default_currency()
 
     class Meta:

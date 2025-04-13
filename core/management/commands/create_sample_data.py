@@ -1,8 +1,20 @@
+from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
+from admin_dashboard.models import CompanyAddress
 from core.factories import create_sample_data
-from core.models import ImportError as ImportErrorModel
+from core.models import SerialNumber, BatchNumber, UserProfile
+from data_operations.models.importers import ImportError as ImportErrorModel, ImportLog
+from inventory.models import Warehouse
+from master_data.models.categories import Category
+from master_data.models.currency import Currency
+from master_data.models.tax import Tax
+from order.models import PurchaseOrderComment, PurchaseOrderReceiptItem, PurchaseOrderReceipt, OrderSplitItem, \
+    OrderSplit, OrderTemplateItem, OrderTemplate, OrderSuggestion, PurchaseOrderItem, PurchaseOrder
+from organization.models import Department
+from product_management.models.products import ProductVariant, ProductPhoto, ProductAttachment, ProductWarehouse, \
+    Product, ProductVariantType
 
 
 class Command(BaseCommand):
@@ -175,24 +187,10 @@ class Command(BaseCommand):
             raise CommandError(f'Fehler beim Erstellen der Testdaten: {str(e)}')
 
     def clear_existing_data(self):
-        from django.contrib.auth.models import User
-        from core.models import (
-            Tax, Category, Product, ProductWarehouse, ImportLog, ImportError,
-            UserProfile, ProductPhoto, ProductAttachment, ProductVariantType,
-            ProductVariant, SerialNumber, BatchNumber, Currency
-        )
-        from organization.models import Department
-        from inventory.models import Warehouse
 
         # Lösche Bestellwesen-Daten, falls vorhanden
         self.stdout.write('Lösche Bestellwesen-Daten...')
         try:
-            from admin_dashboard.models import CompanyAddress
-            from order.models import (
-                PurchaseOrderComment, PurchaseOrderReceiptItem, PurchaseOrderReceipt,
-                OrderSplitItem, OrderSplit, OrderTemplateItem, OrderTemplate,
-                OrderSuggestion, PurchaseOrderItem, PurchaseOrder
-            )
 
             # Löschen in einer sinnvollen Reihenfolge, um Fremdschlüsselabhängigkeiten zu respektieren
             PurchaseOrderComment.objects.all().delete()

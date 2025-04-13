@@ -4,9 +4,10 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render
 from django.utils import timezone
 
-from core.models import SerialNumber, BatchNumber, Category
+from core.models import SerialNumber, BatchNumber
 from core.utils.filters import filter_expiring_serials, filter_expiring_batches
 from core.utils.pagination import paginate_queryset
+from master_data.models.categories import Category
 
 
 @login_required

@@ -1,8 +1,10 @@
-from django.db.models import Sum, F, Q, Exists, OuterRef
 from decimal import Decimal
-from core.models import Product, ProductWarehouse
+
+from django.db.models import Sum, F, Q, Exists, OuterRef
+
+from product_management.models.products import Product
 from suppliers.models import SupplierProduct
-from .models import OrderSuggestion, PurchaseOrder, PurchaseOrderItem
+from .models import OrderSuggestion, PurchaseOrderItem
 
 
 # Korrigierte Version der generate_order_suggestions-Funktion

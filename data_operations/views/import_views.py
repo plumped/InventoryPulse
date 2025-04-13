@@ -10,14 +10,16 @@ from django.templatetags.static import static
 from accessmanagement.models import WarehouseAccess
 from core.forms import ProductImportForm, SupplierImportForm, CategoryImportForm, SupplierProductImportForm, \
     WarehouseImportForm, DepartmentImportForm, WarehouseProductImportForm
-from core.importers.categories import CategoryImporter
-from core.importers.products import ProductImporter, SupplierProductImporter
-from core.importers.suppliers import SupplierImporter
-from core.models import SerialNumber, ImportLog, Product, ProductWarehouse, ProductVariant
+from core.models import SerialNumber
 from core.utils.imports import handle_csv_import
 from core.utils.stock import get_accessible_stock
+from data_operations.importers.categories import CategoryImporter
+from data_operations.importers.products import ProductImporter, SupplierProductImporter
+from data_operations.importers.suppliers import SupplierImporter
+from data_operations.models.importers import ImportLog
 from inventory.models import Warehouse, StockMovement
 from organization.models import Department
+from product_management.models.products import ProductWarehouse, Product, ProductVariant
 
 
 @login_required

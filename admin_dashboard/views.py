@@ -12,16 +12,18 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from accessmanagement.models import WarehouseAccess
-from core.models import Tax
 from core.utils.filters import filter_users, filter_departments, filter_taxes, filter_interface_types, \
     filter_supplier_interfaces, filter_company_addresses
 from core.utils.forms import handle_form_view
 from core.utils.logging_utils import log_list_view_usage
 from core.utils.pagination import paginate_queryset
 from interfaces.models import InterfaceType
-from inventory.models import Department, Warehouse
+from inventory.models import Warehouse
+from master_data.forms.tax_forms import TaxForm
+from master_data.models.tax import Tax
+from organization.models import Department
 from .forms import SystemSettingsForm, WorkflowSettingsForm, UserCreateForm, UserEditForm, GroupForm, DepartmentForm, \
-    TaxForm, CompanyAddressForm, InterfaceTypeForm
+    CompanyAddressForm, InterfaceTypeForm
 from .models import CompanyAddress, CompanyAddressType
 
 logger = logging.getLogger(__name__)

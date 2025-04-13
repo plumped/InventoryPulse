@@ -1,11 +1,12 @@
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils import timezone
 from decimal import Decimal
 
-from core.models import Product
-from inventory.models import Warehouse, StockMovement
+from django.contrib.auth.models import User
+from django.db import models
+from django.utils import timezone
+
+from inventory.models import Warehouse
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem
+from product_management.models.products import Product
 from suppliers.models import SupplierProduct
 
 

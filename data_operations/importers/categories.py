@@ -1,7 +1,7 @@
-from core.importers.base import BaseImporter
 from django.db import transaction
 
-from core.models import Category
+from data_operations.importers.base import BaseImporter
+from master_data.models.categories import Category
 
 
 class CategoryImporter(BaseImporter):

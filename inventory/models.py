@@ -1,9 +1,9 @@
 from datetime import datetime
 from decimal import Decimal
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import F
-from organization.models import Department
 
 
 class Warehouse(models.Model):
@@ -17,7 +17,7 @@ class Warehouse(models.Model):
 
 
 class StockMovement(models.Model):
-    product = models.ForeignKey('core.Product', on_delete=models.CASCADE)  # String-Referenz
+    product = models.ForeignKey('product_management.Product', on_delete=models.CASCADE)  # String-Referenz
     warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     movement_type = models.CharField(
@@ -136,7 +136,7 @@ class StockTake(models.Model):
 class StockTakeItem(models.Model):
     """Model for individual items in a stock take."""
     stock_take = models.ForeignKey(StockTake, on_delete=models.CASCADE, verbose_name="Inventur")
-    product = models.ForeignKey('core.Product', on_delete=models.CASCADE, verbose_name="Produkt")
+    product = models.ForeignKey('product_management.Product', on_delete=models.CASCADE, verbose_name="Produkt")
     expected_quantity = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Erwartete Menge")
     counted_quantity = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
                                            verbose_name="Gezählte Menge")
@@ -179,3 +179,40 @@ class StockTakeItem(models.Model):
         ordering = ['product__name']
         verbose_name = "Inventurposition"
         verbose_name_plural = "Inventurpositionen"
+
+
+class VariantWarehouse(models.Model):
+    """
+    Modell für die Verwaltung des Lagerbestands von Produktvarianten in bestimmten Lagern.
+    """
+    variant = models.ForeignKey('product_management.ProductVariant', on_delete=models.CASCADE,
+                                related_name='warehouse_stocks', verbose_name="Produktvariante")
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE,
+                                  related_name='variant_stocks', verbose_name="Lager")
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                   verbose_name="Bestandsmenge")
+    min_stock_level = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                          verbose_name="Mindestbestand")
+    max_stock_level = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
+                                          verbose_name="Maximalbestand")
+    last_updated = models.DateTimeField(auto_now=True, verbose_name="Letzte Aktualisierung")
+
+    class Meta:
+        unique_together = ('variant', 'warehouse')
+        verbose_name = "Varianten-Lagerbestand"
+        verbose_name_plural = "Varianten-Lagerbestände"
+
+    def __str__(self):
+        return f"{self.variant.name} - {self.warehouse.name}: {self.quantity}"
+
+    @property
+    def is_below_min_stock(self):
+        """Prüft, ob der Bestand unter dem Mindestbestand liegt."""
+        return self.quantity < self.min_stock_level
+
+    @property
+    def is_above_max_stock(self):
+        """Prüft, ob der Bestand über dem Maximalbestand liegt."""
+        if self.max_stock_level is None:
+            return False
+        return self.quantity > self.max_stock_level

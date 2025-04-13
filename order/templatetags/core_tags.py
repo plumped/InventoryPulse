@@ -1,5 +1,6 @@
 from django import template
-from core.models import Currency
+
+from master_data.models.currency import Currency
 
 register = template.Library()
 

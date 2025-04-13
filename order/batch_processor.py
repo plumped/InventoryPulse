@@ -3,20 +3,20 @@
 import csv
 import io
 from decimal import Decimal
-from django.utils import timezone
+
+from django.contrib import messages
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
-from django.contrib import messages
-
-from core.models import Product, Tax, Currency
-from suppliers.models import Supplier, SupplierProduct
-from order.models import PurchaseOrder, PurchaseOrderItem
-from order.workflow import get_initial_order_status
-
+from django.utils import timezone
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
 from openpyxl.utils import get_column_letter
+
+from master_data.models.currency import Currency
+from order.models import PurchaseOrder, PurchaseOrderItem
+from order.workflow import get_initial_order_status
+from suppliers.models import Supplier, SupplierProduct
 
 
 class BatchOrderProcessor:
@@ -322,7 +322,6 @@ class BatchOrderProcessor:
 
                 # Get currency
                 if not currency:
-                    from core.models import Currency
                     currency = Currency.get_default_currency()
 
                 # Create order item

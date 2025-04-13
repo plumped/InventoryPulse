@@ -3,9 +3,10 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.forms import ProductVariantForm, ProductVariantTypeForm
-from core.models import Product, ProductVariant, BatchNumber, SerialNumber, ProductVariantType
+from core.models import SerialNumber, BatchNumber
 from core.utils.view_helpers import handle_model_update
 from inventory.models import Warehouse
+from product_management.models.products import ProductVariantType, ProductVariant, Product
 
 
 @login_required

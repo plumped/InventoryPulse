@@ -7,8 +7,9 @@ from django.contrib.auth.models import User
 from django.http.response import JsonResponse, HttpResponse
 from django.shortcuts import redirect, get_object_or_404, render
 
-from core.models import ImportLog
 from core.utils.pagination import paginate_queryset
+from data_operations.models.importers import ImportError as ImportErrorModel
+from data_operations.models.importers import ImportLog
 
 
 @login_required
@@ -115,7 +116,6 @@ def delete_import_log(request, log_id):
         log_name = f"Import #{log.pk} ({log.import_type})"
 
         # Delete all errors associated with the log
-        from core.models import ImportError as ImportErrorModel
         ImportErrorModel.objects.filter(import_log=log).delete()
 
         # Delete the log
@@ -149,7 +149,6 @@ def bulk_delete_import_logs(request):
             ids = [int(id_str.strip()) for id_str in ids_str.split(',') if id_str.strip()]
 
             # Delete errors associated with the logs
-            from core.models import ImportError as ImportErrorModel
             ImportErrorModel.objects.filter(import_log_id__in=ids).delete()
 
             # Delete logs

@@ -9,7 +9,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.utils.timezone import make_aware
 
-from core.models import Product
+from master_data.models.currency import Currency
 from rma.models import RMA, RMAStatus
 from .forms import SupplierForm, SupplierProductForm, SupplierPerformanceForm, DateRangeForm, \
     SupplierPerformanceMetricForm, SupplierContactForm, SupplierAddressForm
@@ -62,7 +62,6 @@ def supplier_detail(request, pk):
     supplier_products = SupplierProduct.objects.filter(supplier=supplier).select_related('product')
 
     # Systemwährung ermitteln
-    from core.models import Currency
     system_currency = Currency.get_default_currency()
 
     # Umgerechnete Preise berechnen
@@ -414,7 +413,6 @@ def get_supplier_data(request):
             }
         else:
             # Fallback to system default currency
-            from core.models import Currency
             default_currency = Currency.get_default_currency()
             if default_currency:
                 currency_data = {

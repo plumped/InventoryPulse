@@ -5,10 +5,11 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import render
 
 from accessmanagement.models import WarehouseAccess
-from core.models import ProductWarehouse, Product, Category
 from inventory.models import StockTake, StockMovement, Warehouse
+from master_data.models.categories import Category
 from order.models import PurchaseOrder, OrderSuggestion
 from organization.models import Department
+from product_management.models.products import ProductWarehouse, Product
 from suppliers.models import Supplier
 
 

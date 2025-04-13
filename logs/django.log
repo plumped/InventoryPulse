@@ -2557,3 +2557,199 @@
 2025-04-13 01:59:47,537 [INFO] django.server: "GET / HTTP/1.1" 200 82509
 2025-04-13 02:00:26,114 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\migrations\0001_initial.py changed, reloading.
 2025-04-13 02:00:26,884 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 02:00:29,174 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\models.py changed, reloading.
+2025-04-13 02:00:29,900 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 02:00:37,614 [INFO] django.server: "GET /suppliers/ HTTP/1.1" 200 39682
+2025-04-13 02:00:49,152 [INFO] django.server: "GET /suppliers/13/ HTTP/1.1" 200 44990
+2025-04-13 02:00:52,627 [INFO] django.server: "GET /suppliers/product/add/?supplier=13 HTTP/1.1" 200 39869
+2025-04-13 02:00:52,644 [INFO] django.server: "GET /static/admin/js/vendor/select2/i18n/en.js HTTP/1.1" 304 0
+2025-04-13 02:00:52,644 [INFO] django.server: "GET /static/django_select2/django_select2.css HTTP/1.1" 200 54
+2025-04-13 02:00:52,644 [INFO] django.server: "GET /static/admin/css/vendor/select2/select2.min.css HTTP/1.1" 200 14966
+2025-04-13 02:00:52,645 [INFO] django.server: "GET /static/django_select2/django_select2.js HTTP/1.1" 200 2561
+2025-04-13 02:00:52,645 [INFO] django.server: "GET /static/admin/js/vendor/select2/select2.full.min.js HTTP/1.1" 200 79212
+2025-04-13 02:00:57,159 [INFO] django.server: "GET /suppliers/13/update/ HTTP/1.1" 200 38965
+2025-04-13 02:01:11,385 [INFO] django.server: "GET /suppliers/performance/13/ HTTP/1.1" 200 58286
+2025-04-13 02:01:11,426 [INFO] django.server: "GET /suppliers/performance/13/rma-data/?start_date=2025-01-13&end_date=2025-04-13 HTTP/1.1" 200 1295
+2025-04-13 02:01:14,489 [INFO] django.server: "GET /suppliers/performance/13/calculate/?start_date=2025-01-13&end_date=2025-04-13 HTTP/1.1" 302 0
+2025-04-13 02:01:14,503 [INFO] django.server: "GET /suppliers/performance/13/ HTTP/1.1" 200 69426
+2025-04-13 02:01:14,557 [INFO] django.server: "GET /suppliers/performance/13/rma-data/?start_date=2025-01-13&end_date=2025-04-13 HTTP/1.1" 200 1295
+2025-04-13 02:01:28,523 [INFO] django.server: "GET /suppliers/performance/13/ HTTP/1.1" 200 69056
+2025-04-13 02:01:36,773 [INFO] django.server: "GET /products/ HTTP/1.1" 200 74022
+2025-04-13 02:01:37,661 [INFO] django.server: "GET /products/192/ HTTP/1.1" 200 46697
+2025-04-13 02:01:39,850 [INFO] django.server: "GET /suppliers/product/add/?product=192 HTTP/1.1" 200 39958
+2025-04-13 02:01:51,962 [INFO] django.server: "POST /suppliers/product/add/?product=192 HTTP/1.1" 302 0
+2025-04-13 02:01:51,974 [INFO] django.server: "GET /products/192/ HTTP/1.1" 200 48803
+2025-04-13 02:01:56,799 [INFO] django.server: "GET /suppliers/ HTTP/1.1" 200 39667
+2025-04-13 02:01:58,713 [INFO] django.server: "GET /suppliers/13/ HTTP/1.1" 200 47894
+2025-04-13 14:20:52,783 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:20:54,761 [INFO] django.server: "GET / HTTP/1.1" 302 0
+2025-04-13 14:20:54,996 [INFO] django.server: "GET /login/?next=/ HTTP/1.1" 200 3318
+2025-04-13 14:20:55,112 [WARNING] django.server: "GET /favicon.ico HTTP/1.1" 404 8299
+2025-04-13 14:24:18,622 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\forms.py changed, reloading.
+2025-04-13 14:24:19,447 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:24:43,174 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\master_data\views\currency_views.py changed, reloading.
+2025-04-13 14:24:43,808 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:25:04,894 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:25:22,461 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:25:24,835 [INFO] django.server: "POST /login/?next=/ HTTP/1.1" 302 0
+2025-04-13 14:25:24,909 [INFO] django.server: "GET / HTTP/1.1" 200 66833
+2025-04-13 14:25:27,628 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-13 14:25:27,638 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 48852
+2025-04-13 14:25:29,154 [INFO] django.server: "GET /admin-dashboard/currencies/ HTTP/1.1" 200 35944
+2025-04-13 14:25:30,643 [INFO] django.server: "GET /admin-dashboard/currencies/create/ HTTP/1.1" 200 39027
+2025-04-13 14:28:02,738 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\forms.py changed, reloading.
+2025-04-13 14:28:03,400 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:28:26,001 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-13 14:28:26,669 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:33:52,704 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:33:54,795 [INFO] django.server: "GET /admin-dashboard/currencies/create/ HTTP/1.1" 200 39027
+2025-04-13 14:33:57,764 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'tax_management', 'filters': {'search': ''}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/taxes/'}
+2025-04-13 14:33:57,767 [INFO] django.server: "GET /admin-dashboard/taxes/ HTTP/1.1" 200 35709
+2025-04-13 14:33:59,037 [INFO] django.server: "GET /admin-dashboard/taxes/create/ HTTP/1.1" 200 32846
+2025-04-13 14:36:15,178 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 14:36:15,640 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:37:04,604 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 14:37:04,917 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:37:23,398 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 14:37:23,709 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:50:27,188 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:50:29,571 [INFO] django.server: "GET /admin-dashboard/taxes/ HTTP/1.1" 302 0
+2025-04-13 14:50:29,578 [INFO] django.server: "GET /login/?next=/admin-dashboard/taxes/ HTTP/1.1" 200 3340
+2025-04-13 14:51:38,945 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\views.py changed, reloading.
+2025-04-13 14:54:08,938 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:54:14,644 [INFO] django.server: "GET / HTTP/1.1" 302 0
+2025-04-13 14:54:14,651 [INFO] django.server: "GET /login/?next=/ HTTP/1.1" 200 3318
+2025-04-13 14:56:11,410 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\views.py changed, reloading.
+2025-04-13 14:56:12,115 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:56:28,579 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:56:59,059 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\services.py changed, reloading.
+2025-04-13 14:56:59,710 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:57:43,895 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\forms.py changed, reloading.
+2025-04-13 14:57:44,556 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:58:33,293 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py changed, reloading.
+2025-04-13 14:58:34,166 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:59:47,914 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-13 14:59:48,373 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 14:59:55,654 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\models.py changed, reloading.
+2025-04-13 14:59:56,010 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:00:02,290 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\models.py changed, reloading.
+2025-04-13 15:00:02,609 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:00:14,989 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\models.py changed, reloading.
+2025-04-13 15:00:15,575 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:09:18,886 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\forms.py changed, reloading.
+2025-04-13 15:09:19,561 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:11:25,508 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\forms.py changed, reloading.
+2025-04-13 15:11:26,213 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:11:37,239 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\views.py changed, reloading.
+2025-04-13 15:11:37,908 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:11:47,941 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-13 15:11:48,655 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:11:58,707 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\forms.py changed, reloading.
+2025-04-13 15:11:59,311 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:13:14,041 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\models\products.py changed, reloading.
+2025-04-13 15:13:14,800 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:15:28,705 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\models.py changed, reloading.
+2025-04-13 15:15:29,495 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:15:40,097 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:15:54,890 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:15:57,760 [INFO] django.server: "POST /login/?next=/ HTTP/1.1" 302 0
+2025-04-13 15:15:57,824 [INFO] django.server: "GET / HTTP/1.1" 200 66833
+2025-04-13 15:16:00,786 [INFO] django.server: "GET /products/ HTTP/1.1" 200 31978
+2025-04-13 15:16:02,729 [INFO] django.server: "GET /products/create/ HTTP/1.1" 200 50138
+2025-04-13 15:16:04,208 [INFO] django.server: "GET / HTTP/1.1" 200 66833
+2025-04-13 15:19:13,474 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 15:19:13,946 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:21:30,438 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 15:21:30,991 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:21:40,430 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\signals.py changed, reloading.
+2025-04-13 15:21:41,165 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:23:09,735 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 15:23:10,378 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:23:33,853 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 15:23:34,599 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:24:49,282 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 15:24:49,951 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:25:11,016 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-13 15:25:11,712 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:26:02,329 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\views\batch_views.py changed, reloading.
+2025-04-13 15:26:03,040 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:26:13,999 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\importers\suppliers.py changed, reloading.
+2025-04-13 15:26:14,650 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:26:32,904 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\views\serial_views.py changed, reloading.
+2025-04-13 15:26:33,566 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:26:53,902 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\importers\products.py changed, reloading.
+2025-04-13 15:26:54,530 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:27:59,832 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\importers\products.py changed, reloading.
+2025-04-13 15:28:00,464 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:29:06,886 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\importers\products.py changed, reloading.
+2025-04-13 15:29:07,549 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:30:05,447 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\models.py changed, reloading.
+2025-04-13 15:30:06,082 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:30:20,202 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\importers\base.py changed, reloading.
+2025-04-13 15:30:20,837 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:30:38,045 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\export_views.py changed, reloading.
+2025-04-13 15:30:38,645 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:30:55,863 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-13 15:30:56,465 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:32:09,055 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-13 15:32:09,741 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:32:19,652 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\models\importers.py changed, reloading.
+2025-04-13 15:32:20,234 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:32:30,162 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\models\importers.py changed, reloading.
+2025-04-13 15:32:30,779 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:32:37,024 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\models\importers.py changed, reloading.
+2025-04-13 15:32:37,780 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:32:59,852 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\models\importers.py changed, reloading.
+2025-04-13 15:33:00,645 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:33:36,542 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-13 15:33:37,280 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:33:41,529 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\export_views.py changed, reloading.
+2025-04-13 15:33:42,197 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:33:48,638 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\importers\base.py changed, reloading.
+2025-04-13 15:33:49,321 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:34:51,288 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:49:13,661 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:49:16,037 [INFO] django.server: "GET / HTTP/1.1" 200 84130
+2025-04-13 15:49:24,546 [INFO] django.server: "GET /low-stock/ HTTP/1.1" 200 34856
+2025-04-13 15:49:32,311 [INFO] django.server: "GET /order/templates/ HTTP/1.1" 200 50664
+2025-04-13 15:49:38,226 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:49:41,117 [INFO] django.server: "POST /order/suggestions/refresh/ HTTP/1.1" 200 86
+2025-04-13 15:49:41,139 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:49:50,881 [INFO] django.server: "GET /api/products/search/?q=Seam HTTP/1.1" 200 155
+2025-04-13 15:49:52,229 [INFO] django.server: "GET /api/products/search/?q=Se HTTP/1.1" 200 2099
+2025-04-13 15:49:57,786 [INFO] django.server: "GET / HTTP/1.1" 200 84130
+2025-04-13 15:50:00,421 [INFO] django.server: "GET /low-stock/ HTTP/1.1" 200 34856
+2025-04-13 15:50:11,178 [ERROR] django.server: "GET /products/2/ HTTP/1.1" 500 86073
+2025-04-13 15:50:15,515 [ERROR] django.server: "GET /products/39/ HTTP/1.1" 500 86089
+2025-04-13 15:53:00,234 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\product_views.py changed, reloading.
+2025-04-13 15:53:00,995 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 15:53:03,281 [INFO] django.server: "GET /low-stock/ HTTP/1.1" 200 34856
+2025-04-13 15:53:04,213 [INFO] django.server: "GET /products/2/ HTTP/1.1" 200 51780
+2025-04-13 15:53:09,870 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:53:11,770 [INFO] django.server: "POST /order/suggestions/refresh/ HTTP/1.1" 200 86
+2025-04-13 15:53:11,790 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:53:12,467 [INFO] django.server: "POST /order/suggestions/refresh/ HTTP/1.1" 200 86
+2025-04-13 15:53:12,487 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:53:13,128 [INFO] django.server: "POST /order/suggestions/refresh/ HTTP/1.1" 200 86
+2025-04-13 15:53:13,147 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:53:13,743 [INFO] django.server: "POST /order/suggestions/refresh/ HTTP/1.1" 200 86
+2025-04-13 15:53:13,764 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:53:23,807 [INFO] django.server: "GET / HTTP/1.1" 200 84130
+2025-04-13 15:53:30,211 [INFO] django.server: "GET /low-stock/ HTTP/1.1" 200 34856
+2025-04-13 15:53:44,101 [INFO] django.server: "GET /products/2/ HTTP/1.1" 200 51780
+2025-04-13 15:53:51,304 [INFO] django.server: "GET /products/2/update/ HTTP/1.1" 200 56104
+2025-04-13 15:54:04,683 [INFO] django.server: "GET /products/ HTTP/1.1" 200 73858
+2025-04-13 15:54:07,211 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:54:09,339 [INFO] django.server: "POST /order/suggestions/refresh/ HTTP/1.1" 200 86
+2025-04-13 15:54:09,359 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:54:15,764 [INFO] django.server: "GET / HTTP/1.1" 200 84130
+2025-04-13 15:54:19,366 [INFO] django.server: "GET /low-stock/ HTTP/1.1" 200 34856
+2025-04-13 15:54:27,763 [INFO] django.server: "GET /products/2/ HTTP/1.1" 200 51780
+2025-04-13 15:54:33,425 [INFO] django.server: "GET /products/39/ HTTP/1.1" 200 45655
+2025-04-13 15:54:42,712 [INFO] django.server: "GET /products/39/update/ HTTP/1.1" 200 56051
+2025-04-13 15:54:45,446 [INFO] django.server: "POST /products/39/update/ HTTP/1.1" 302 0
+2025-04-13 15:54:45,457 [INFO] django.server: "GET /products/39/ HTTP/1.1" 200 45285
+2025-04-13 15:54:47,789 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:54:49,201 [INFO] django.server: "POST /order/suggestions/refresh/ HTTP/1.1" 200 86
+2025-04-13 15:54:49,225 [INFO] django.server: "GET /order/suggestions/ HTTP/1.1" 200 64558
+2025-04-13 15:54:53,671 [INFO] django.server: "GET / HTTP/1.1" 200 84130

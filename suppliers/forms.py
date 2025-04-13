@@ -1,11 +1,15 @@
 from datetime import timedelta
-from django.utils import timezone
+
 from django import forms
 from django.forms.models import inlineformset_factory
+from django.utils import timezone
 from django_select2 import forms as s2forms
+
+from master_data.models.currency import Currency
+from product_management.models.products import Product
 from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric, SupplierContact, \
     SupplierAddress
-from core.models import Product
+
 
 class SupplierAddressForm(forms.ModelForm):
     """Form für Lieferantenadressen."""
@@ -116,7 +120,6 @@ class SupplierForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Währungen nach Code sortieren
-        from core.models import Currency
         self.fields['default_currency'].queryset = Currency.objects.filter(is_active=True).order_by('code')
 
         # Wenn keine Standardwährung gesetzt ist (neue Instanz), setze die Systemstandardwährung
@@ -206,7 +209,6 @@ class SupplierProductForm(forms.ModelForm):
         self.fields['product'].queryset = Product.objects.all().order_by('name')
 
         # Currency field - abweichende Währung ist optional
-        from core.models import Currency
         self.fields['currency'].queryset = Currency.objects.filter(is_active=True).order_by('code')
         self.fields[
             'currency'].required = False  # Wichtig: Nicht erforderlich, da die Lieferantenwährung verwendet wird

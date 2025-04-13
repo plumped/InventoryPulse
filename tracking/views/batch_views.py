@@ -14,7 +14,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 
-from core.forms import BatchNumberForm
 from core.utils.filters import apply_exact_filter, apply_expiry_filter
 from core.utils.forms import handle_form_view
 from core.utils.imports import handle_csv_import
@@ -24,6 +23,7 @@ from data_operations.forms.import_forms import BatchNumberImportForm
 from data_operations.importers.batch_numbers import BatchNumberImporter
 from inventory.models import Warehouse
 from product_management.models.products import Product
+from tracking.forms.tracking_forms import BatchNumberForm
 from tracking.models import BatchNumber
 
 

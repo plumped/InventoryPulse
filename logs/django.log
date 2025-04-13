@@ -2852,3 +2852,13 @@
 2025-04-13 17:54:40,810 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\forms\product_forms.py changed, reloading.
 2025-04-13 17:54:41,599 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
 2025-04-13 17:54:47,974 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\forms.py changed, reloading.
+2025-04-13 17:54:48,742 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:55:43,546 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\forms.py changed, reloading.
+2025-04-13 17:55:44,249 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:56:00,420 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\views\batch_views.py changed, reloading.
+2025-04-13 17:56:01,051 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:56:07,852 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\views\serial_views.py changed, reloading.
+2025-04-13 17:56:08,469 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:57:04,867 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:57:15,347 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\forms\tracking_forms.py changed, reloading.
+2025-04-13 17:57:16,056 [INFO] django.utils.autoreload: Watching for file changes with StatReloader

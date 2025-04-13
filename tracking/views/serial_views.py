@@ -11,7 +11,6 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.utils import timezone
 
 from accessmanagement.models import WarehouseAccess
-from core.forms import SerialNumberForm, BulkSerialNumberForm
 from core.utils.filters import filter_product_serials
 from core.utils.imports import handle_csv_import
 from core.utils.pagination import paginate_queryset
@@ -19,6 +18,7 @@ from data_operations.forms.import_forms import SerialNumberImportForm
 from data_operations.importers.serialnumbers import SerialNumberImporter
 from inventory.models import Warehouse
 from product_management.models.products import Product
+from tracking.forms.tracking_forms import SerialNumberForm, BulkSerialNumberForm
 from tracking.models import SerialNumber
 
 

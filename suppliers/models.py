@@ -1,7 +1,9 @@
 from datetime import timedelta
-from django.utils import timezone
+
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils import timezone
+
 from core.models import Product
 
 
@@ -17,6 +19,8 @@ class Supplier(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+    website = models.URLField(blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
 
     # Behalten Sie bestehende Felder bei
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0,
@@ -397,7 +401,7 @@ class SupplierPerformanceCalculator:
                 - quality_score: Prozentsatz (0-100) der Qualitätsbewertung
                 - relevant_orders: Liste der relevanten Bestellungen
         """
-        from django.db.models import Count, Q, Sum
+        from django.db.models import Sum
         from order.models import PurchaseOrder, PurchaseOrderItem
         from rma.models import RMA, RMAStatus, RMAItem, RMAIssueType
 

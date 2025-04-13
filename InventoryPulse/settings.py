@@ -151,9 +151,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_select2',
     'core',
-    'inventory',
-    'suppliers',
-    'rma',
+    'master_data',
     'order',
     'admin_dashboard',
     'organization',
@@ -162,7 +160,9 @@ INSTALLED_APPS = [
     'tracking',
     'data_operations',
     'analytics',
-    'master_data',
+    'inventory',
+    'suppliers',
+    'rma',
     'rest_framework',
     'drf_yasg',  # Für API-Dokumentation
     'django_filters',  # Für Filterfunktionalität

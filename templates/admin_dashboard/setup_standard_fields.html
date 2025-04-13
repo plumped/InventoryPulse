@@ -102,8 +102,9 @@
                                         <td>
                                             {% if field.is_key_field %}<span
                                                 class="badge bg-primary">Schlüsselfeld</span>{% endif %}
-                                            {% if field.is_required %}<span class="badge bg-danger">Erforderlich</span>{%
-                                            endif %}
+                                            {% if field.is_required %}
+                                            <span class="badge bg-danger">Erforderlich</span>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}

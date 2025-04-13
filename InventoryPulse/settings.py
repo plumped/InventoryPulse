@@ -248,7 +248,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = 'landing_page'
+LOGIN_REDIRECT_URL = 'dashboard'
 LOGIN_URL = 'login'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',  # Füge diese Zeile hinzu

@@ -7,6 +7,7 @@ from django.urls import path, include
 from core import views as core_views
 
 urlpatterns = [
+
     # === Admin ===
     path('admin/', admin.site.urls),
 

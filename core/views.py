@@ -12,6 +12,33 @@ from product_management.models.products_models import Product, ProductVariant
 from suppliers.models import SupplierProduct
 
 
+def anonymous_required(function=None, redirect_url=None):
+    """
+    Decorator for views that should only be accessed by anonymous users.
+    If a user is authenticated, they'll be redirected to the specified URL.
+    """
+    if not redirect_url:
+        redirect_url = 'dashboard'  # Replace with your dashboard URL name
+
+    actual_decorator = user_passes_test(
+        lambda u: u.is_anonymous,
+        login_url=redirect_url
+    )
+
+    if function:
+        return actual_decorator(function)
+    return actual_decorator
+
+
+@anonymous_required
+def landing_page(request):
+    """
+    Render the landing page for unauthenticated users.
+    Redirects authenticated users to the dashboard.
+    """
+    return render(request, 'landing.html')
+
+
 @login_required
 def profile(request):
     """User profile view."""

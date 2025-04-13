@@ -1,12 +1,13 @@
 from datetime import timedelta
-from django.utils import timezone
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.db.models import Q
+from django.utils import timezone
 
-from suppliers.models import SupplierPerformanceCalculator
+from data_operations.models.supplier_performance import SupplierPerformanceCalculator, SupplierPerformanceMetric, \
+    SupplierPerformance
+from order.models import PurchaseOrderComment
 from .models import RMA, RMAStatus
-from order.models import PurchaseOrder, PurchaseOrderComment
 
 
 @receiver(post_save, sender=RMA)
@@ -83,7 +84,6 @@ def update_supplier_performance_after_rma_change(sender, instance, created, **kw
 
             # Wenn ein gültiger Score berechnet wurde, speichere ihn
             if quality_score is not None:
-                from suppliers.models import SupplierPerformanceMetric, SupplierPerformance
 
                 # Qualitätsmetrik abrufen oder erstellen
                 quality_metric, _ = SupplierPerformanceMetric.objects.get_or_create(

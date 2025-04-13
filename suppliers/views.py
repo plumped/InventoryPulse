@@ -9,12 +9,15 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.utils.timezone import make_aware
 
+from data_operations.models.supplier_performance import SupplierPerformance, SupplierPerformanceMetric, \
+    SupplierPerformanceCalculator
 from master_data.models.currency import Currency
+from product_management.models.products import Product
 from rma.models import RMA, RMAStatus
 from .forms import SupplierForm, SupplierProductForm, SupplierPerformanceForm, DateRangeForm, \
     SupplierPerformanceMetricForm, SupplierContactForm, SupplierAddressForm
-from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric, \
-    SupplierPerformanceCalculator, SupplierContact, SupplierAddress, AddressType, ContactType
+from .models import Supplier, SupplierProduct, \
+    SupplierContact, SupplierAddress, AddressType, ContactType
 
 
 @login_required
@@ -1494,7 +1497,6 @@ def get_supplier_rma_performance(request, supplier_id):
 
         # Qualitätsscore berechnen
         quality_score = None
-        from suppliers.models import SupplierPerformanceCalculator
         score_result, _ = SupplierPerformanceCalculator.calculate_rma_quality(
             supplier, start_date, end_date
         )
@@ -1603,7 +1605,6 @@ def supplier_rma_overview(request, pk):
     total_value = sum(group['total_value'] or 0 for group in status_summary)
 
     # RMA-Qualitätsscore berechnen
-    from suppliers.models import SupplierPerformanceCalculator
     quality_score, _ = SupplierPerformanceCalculator.calculate_rma_quality(
         supplier, start_date, end_date
     )

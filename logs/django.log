@@ -2862,3 +2862,124 @@
 2025-04-13 17:57:04,867 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
 2025-04-13 17:57:15,347 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\forms\tracking_forms.py changed, reloading.
 2025-04-13 17:57:16,056 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:58:15,125 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\admin.py changed, reloading.
+2025-04-13 17:58:15,584 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:58:24,903 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\admin.py changed, reloading.
+2025-04-13 17:58:25,476 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:59:26,439 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\interfaces\admin.py changed, reloading.
+2025-04-13 17:59:27,107 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:59:32,298 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\documents\admin.py changed, reloading.
+2025-04-13 17:59:33,051 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 17:59:49,847 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\admin.py changed, reloading.
+2025-04-13 17:59:50,510 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:00:33,558 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\tracking\admin.py changed, reloading.
+2025-04-13 18:00:34,220 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:00:41,498 [INFO] django.server: "GET /admin/ HTTP/1.1" 200 7381
+2025-04-13 18:00:43,480 [INFO] django.server: "GET /admin/tracking/batchnumber/ HTTP/1.1" 200 28046
+2025-04-13 18:00:43,496 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:00:44,731 [INFO] django.server: "GET /admin/tracking/serialnumber/ HTTP/1.1" 200 27931
+2025-04-13 18:00:44,744 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:00:45,566 [INFO] django.server: "GET /admin/tracking/batchnumber/ HTTP/1.1" 200 28046
+2025-04-13 18:00:45,583 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:00:48,168 [INFO] django.server: "GET /admin/tracking/batchnumber/add/ HTTP/1.1" 200 16624
+2025-04-13 18:00:48,183 [INFO] django.server: "GET /static/admin/js/calendar.js HTTP/1.1" 304 0
+2025-04-13 18:00:48,183 [INFO] django.server: "GET /static/admin/css/forms.css HTTP/1.1" 200 8794
+2025-04-13 18:00:48,183 [INFO] django.server: "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+2025-04-13 18:00:48,185 [INFO] django.server: "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 304 0
+2025-04-13 18:00:48,186 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:00:48,187 [INFO] django.server: "GET /static/admin/css/widgets.css HTTP/1.1" 200 11564
+2025-04-13 18:00:48,196 [INFO] django.server: "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+2025-04-13 18:00:48,230 [INFO] django.server: "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 304 0
+2025-04-13 18:00:56,605 [INFO] django.server: "GET /admin/tracking/batchnumber/ HTTP/1.1" 200 28046
+2025-04-13 18:02:19,892 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\admin.py changed, reloading.
+2025-04-13 18:02:20,720 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:03:05,248 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\admin.py changed, reloading.
+2025-04-13 18:03:06,018 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:03:46,179 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\admin.py changed, reloading.
+2025-04-13 18:03:46,954 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:03:50,084 [INFO] django.server: "GET /admin/tracking/batchnumber/ HTTP/1.1" 200 31229
+2025-04-13 18:03:50,103 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:03:52,060 [INFO] django.server: "GET /admin/suppliers/suppliercontact/ HTTP/1.1" 200 13428
+2025-04-13 18:03:52,076 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:03:53,363 [INFO] django.server: "GET /admin/suppliers/suppliercontact/add/ HTTP/1.1" 200 21595
+2025-04-13 18:03:53,377 [INFO] django.server: "GET /static/admin/css/vendor/select2/select2.css HTTP/1.1" 304 0
+2025-04-13 18:03:53,378 [INFO] django.server: "GET /static/admin/css/autocomplete.css HTTP/1.1" 304 0
+2025-04-13 18:03:53,378 [INFO] django.server: "GET /static/admin/js/vendor/select2/select2.full.js HTTP/1.1" 304 0
+2025-04-13 18:03:53,378 [INFO] django.server: "GET /static/admin/js/autocomplete.js HTTP/1.1" 304 0
+2025-04-13 18:03:53,379 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:04:00,365 [INFO] django.server: "GET /admin/autocomplete/?app_label=suppliers&model_name=suppliercontact&field_name=supplier HTTP/1.1" 200 256
+2025-04-13 18:04:05,813 [INFO] django.server: "GET /admin/suppliers/supplieraddress/ HTTP/1.1" 200 13443
+2025-04-13 18:04:05,834 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:04:07,291 [INFO] django.server: "GET /admin/suppliers/suppliercontact/ HTTP/1.1" 200 13428
+2025-04-13 18:04:07,309 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:04:10,133 [INFO] django.server: "GET /admin/suppliers/supplieraddress/ HTTP/1.1" 200 13443
+2025-04-13 18:04:10,147 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:04:11,171 [INFO] django.server: "GET /admin/suppliers/supplieraddress/add/ HTTP/1.1" 200 21541
+2025-04-13 18:04:11,192 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:04:13,738 [INFO] django.server: "GET /admin/suppliers/supplierperformancemetric/ HTTP/1.1" 200 16357
+2025-04-13 18:04:13,752 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:04:15,583 [INFO] django.server: "GET /admin/suppliers/supplierperformance/ HTTP/1.1" 200 33441
+2025-04-13 18:04:15,605 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:04:17,022 [INFO] django.server: "GET /admin/suppliers/supplierproduct/ HTTP/1.1" 200 13682
+2025-04-13 18:04:17,044 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:04:18,863 [INFO] django.server: "GET /admin/suppliers/supplierperformance/ HTTP/1.1" 200 33441
+2025-04-13 18:04:18,878 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:09:40,627 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:10:40,846 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\views.py changed, reloading.
+2025-04-13 18:10:41,580 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:11:03,310 [WARNING] django.server: "GET /admin/suppliers/supplierperformance/ HTTP/1.1" 404 7085
+2025-04-13 18:11:06,244 [INFO] django.server: "GET /admin/suppliers/supplierproduct/ HTTP/1.1" 200 12636
+2025-04-13 18:12:51,883 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\admin.py changed, reloading.
+2025-04-13 18:12:52,648 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:12:56,836 [INFO] django.server: "GET /admin/suppliers/supplierproduct/ HTTP/1.1" 200 13738
+2025-04-13 18:12:56,849 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:13:02,934 [INFO] django.server: "GET /admin/data_operations/importerror/ HTTP/1.1" 200 38272
+2025-04-13 18:13:02,950 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:13:07,831 [ERROR] django.server: "GET /admin/data_operations/importlog/ HTTP/1.1" 500 407106
+2025-04-13 18:14:00,812 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\admin.py changed, reloading.
+2025-04-13 18:14:01,482 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:14:03,523 [INFO] django.server: "GET /admin/data_operations/importlog/ HTTP/1.1" 200 40173
+2025-04-13 18:14:03,539 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:14:06,369 [INFO] django.server: "GET /admin/data_operations/importlog/ HTTP/1.1" 200 40173
+2025-04-13 18:14:06,385 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:14:11,832 [INFO] django.server: "GET /admin/data_operations/importerror/ HTTP/1.1" 200 38272
+2025-04-13 18:14:11,846 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:15:50,568 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\models\supplier_performance.py changed, reloading.
+2025-04-13 18:15:51,083 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:16:30,923 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\admin.py changed, reloading.
+2025-04-13 18:16:31,510 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:16:34,381 [INFO] django.server: "GET /admin/data_operations/importerror/ HTTP/1.1" 200 39366
+2025-04-13 18:16:34,402 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:37,359 [INFO] django.server: "GET /admin/data_operations/supplierperformancemetric/ HTTP/1.1" 200 14760
+2025-04-13 18:16:37,374 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:38,782 [INFO] django.server: "GET /admin/data_operations/supplierperformance/ HTTP/1.1" 200 31702
+2025-04-13 18:16:38,797 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:45,692 [INFO] django.server: "GET /admin/suppliers/supplier/ HTTP/1.1" 200 19519
+2025-04-13 18:16:45,706 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:47,214 [INFO] django.server: "GET /admin/data_operations/supplierperformance/ HTTP/1.1" 200 31702
+2025-04-13 18:16:47,228 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:48,695 [INFO] django.server: "GET /admin/suppliers/supplier/ HTTP/1.1" 200 19519
+2025-04-13 18:16:48,714 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:51,078 [INFO] django.server: "GET /admin/data_operations/supplierperformance/ HTTP/1.1" 200 31702
+2025-04-13 18:16:51,100 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:53,323 [INFO] django.server: "GET /admin/suppliers/supplier/ HTTP/1.1" 200 19519
+2025-04-13 18:16:53,342 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:58,469 [INFO] django.server: "GET /admin/suppliers/supplier/4/change/ HTTP/1.1" 200 53478
+2025-04-13 18:16:58,482 [INFO] django.server: "GET /static/admin/js/inlines.js HTTP/1.1" 304 0
+2025-04-13 18:16:58,484 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:16:58,530 [INFO] django.server: "GET /static/admin/img/inline-delete.svg HTTP/1.1" 200 560
+2025-04-13 18:21:19,934 [INFO] django.server: "GET /admin/suppliers/supplier/4/change/ HTTP/1.1" 200 53478
+2025-04-13 18:21:19,948 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:23:19,257 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\admin.py changed, reloading.
+2025-04-13 18:23:19,971 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:23:34,723 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\admin.py changed, reloading.
+2025-04-13 18:23:35,459 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-13 18:23:39,166 [INFO] django.server: "GET /admin/suppliers/supplier/4/change/ HTTP/1.1" 200 56333
+2025-04-13 18:23:39,182 [INFO] django.server: "GET /static/admin/img/icon-unknown.svg HTTP/1.1" 200 655
+2025-04-13 18:23:39,185 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:23:40,364 [INFO] django.server: "GET /admin/suppliers/supplier/ HTTP/1.1" 200 19519
+2025-04-13 18:23:40,380 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:23:41,986 [INFO] django.server: "GET /admin/suppliers/supplier/3/change/ HTTP/1.1" 200 56362
+2025-04-13 18:23:42,000 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-13 18:24:02,015 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\admin.py changed, reloading.
+2025-04-13 18:24:02,730 [INFO] django.utils.autoreload: Watching for file changes with StatReloader

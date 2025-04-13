@@ -5,9 +5,10 @@ from django.forms.models import inlineformset_factory
 from django.utils import timezone
 from django_select2 import forms as s2forms
 
+from data_operations.models.supplier_performance import SupplierPerformanceMetric, SupplierPerformance
 from master_data.models.currency import Currency
 from product_management.models.products import Product
-from .models import Supplier, SupplierProduct, SupplierPerformance, SupplierPerformanceMetric, SupplierContact, \
+from .models import Supplier, SupplierProduct, SupplierContact, \
     SupplierAddress
 
 

@@ -1,8 +1,16 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 from inventory.models import Warehouse
 from organization.models import Department
 
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    departments = models.ManyToManyField(Department, related_name='user_profiles', blank=True)
+
+    def __str__(self):
+        return f"Profil von {self.user.username}"
 
 class WarehouseAccess(models.Model):
     """Model for warehouse access rights per department."""

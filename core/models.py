@@ -1,18 +1,8 @@
 from datetime import date
 
-from django.contrib.auth.models import User
 from django.db import models
 
-from organization.models import Department
 from product_management.models.products import Product, ProductVariant
-
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    departments = models.ManyToManyField(Department, related_name='user_profiles', blank=True)
-
-    def __str__(self):
-        return f"Profil von {self.user.username}"
 
 
 # SerialNumber - für Seriennummern

@@ -2,8 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import render, get_object_or_404, redirect
 
-from core.forms import CategoryForm
-from master_data.models.categories import Category
+from product_management.forms.categories_forms import CategoryForm
+from product_management.models.categories import Category
 from product_management.models.products import Product
 
 

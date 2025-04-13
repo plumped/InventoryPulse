@@ -15,8 +15,8 @@ from django.utils import timezone
 from accessmanagement.models import WarehouseAccess
 from core.models import BatchNumber
 from core.utils.pagination import paginate_queryset
-from master_data.models.categories import Category
 from organization.models import Department
+from product_management.models.categories import Category
 from product_management.models.products import ProductWarehouse, Product
 from .forms import StockTakeForm, StockTakeItemForm, StockTakeFilterForm, DepartmentForm, \
     WarehouseForm, StockAdjustmentForm

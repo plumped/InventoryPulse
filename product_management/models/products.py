@@ -3,8 +3,8 @@ import os
 from django.db import models
 
 from inventory.models import Warehouse, VariantWarehouse
-from master_data.models.categories import Category
 from master_data.models.tax import Tax
+from product_management.models.categories import Category
 
 
 class Product(models.Model):

@@ -8,10 +8,10 @@ from rest_framework.response import Response
 from core.models import SerialNumber, BatchNumber
 from core.utils.api_helpers import generate_related_action
 from inventory.models import Warehouse, StockMovement, StockTake
-from master_data.models.categories import Category
 from master_data.models.tax import Tax
 from order.models import PurchaseOrder, PurchaseOrderItem, OrderSuggestion
 from order.workflow import can_approve_order
+from product_management.models.categories import Category
 from product_management.models.products import ProductPhoto, ProductAttachment, ProductWarehouse, ProductVariantType, \
     Product, ProductVariant
 from suppliers.models import Supplier, SupplierProduct

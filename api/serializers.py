@@ -3,9 +3,9 @@ from rest_framework import serializers
 
 from core.models import SerialNumber, BatchNumber
 from inventory.models import Warehouse, StockMovement, StockTake
-from master_data.models.categories import Category
 from master_data.models.tax import Tax
 from order.models import PurchaseOrder, PurchaseOrderItem, OrderSuggestion
+from product_management.models.categories import Category
 from product_management.models.products import ProductPhoto, ProductAttachment, ProductVariantType, ProductWarehouse, \
     Product, ProductVariant
 from suppliers.models import Supplier, SupplierProduct

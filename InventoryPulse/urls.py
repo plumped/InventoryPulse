@@ -7,6 +7,8 @@ from django.urls import path, include
 from core import views as core_views
 
 urlpatterns = [
+    # === Landing Page (für nicht eingeloggte Benutzer) ===
+    path('', core_views.landing_page, name='landing_page'),
 
     # === Admin ===
     path('admin/', admin.site.urls),
@@ -22,26 +24,30 @@ urlpatterns = [
         template_name='auth/password_change_done.html'
     ), name='password_change_done'),
 
-    path('', include('product_management.urls')),
-    path('', include('tracking.urls')),
-    path('', include('data_operations.urls')),
-    path('', include('analytics.urls')),
-    path('', include('master_data.urls')),
+    # === Geschützte Routen (Dashboard nach Login) ===
+    path('dashboard/', include([
+        path('', include('product_management.urls')),
+        path('', include('tracking.urls')),
+        path('', include('data_operations.urls')),
+        path('', include('analytics.urls')),
+        path('', include('master_data.urls')),
 
+        # === User Profile ===
+        path('profile/', core_views.profile, name='profile'),
 
-    # === User Profile ===
-    path('profile/', core_views.profile, name='profile'),
+        path('modules/', include('module_management.urls')),
 
-    path('rma/', include('rma.urls')),
+        path('rma/', include('rma.urls')),
 
-    # === External Apps ===
-    path('inventory/', include('inventory.urls')),
-    path('suppliers/', include('suppliers.urls')),
-    path('order/', include('order.urls')),
-    path('admin-dashboard/', include('admin_dashboard.urls')),
-    path('access/', include('accessmanagement.urls')),
-    path('interfaces/', include('interfaces.urls')),
-    path('documents/', include('documents.urls')),  # New documents app URLs
+        # === External Apps ===
+        path('inventory/', include('inventory.urls')),
+        path('suppliers/', include('suppliers.urls')),
+        path('order/', include('order.urls')),
+        path('admin-dashboard/', include('admin_dashboard.urls')),
+        path('access/', include('accessmanagement.urls')),
+        path('interfaces/', include('interfaces.urls')),
+        path('documents/', include('documents.urls')),
+    ])),
 
     # === API Endpoints ===
     path('api/v1/', include('api.urls')),

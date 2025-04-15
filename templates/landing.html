@@ -170,6 +170,65 @@
             font-size: 1.5rem;
             color: var(--primary-color);
         }
+
+        /* Karussell-Stile */
+        .carousel-section {
+            padding: 5rem 0;
+        }
+
+        .carousel-item {
+            height: 500px;
+            background-color: #f8f9fa;
+        }
+
+        .carousel-item img {
+            object-fit: cover;
+            height: 100%;
+            width: 100%;
+        }
+
+        .carousel-caption {
+            bottom: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .thumbnail {
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+
+        .thumbnail:hover, .thumbnail.active {
+            opacity: 1;
+        }
+
+        /* Verbesserte Steuerelemente */
+        .carousel-control-prev, .carousel-control-next {
+            width: 5%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            height: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .carousel-indicators button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin: 0 5px;
+        }
+
+        /* Für Mobilansicht */
+        @media (max-width: 768px) {
+            .carousel-item {
+                height: 300px;
+            }
+        }
+
+        .cursor-pointer {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -216,7 +275,99 @@
                 </div>
             </div>
             <div class="col-lg-6 d-none d-lg-block">
-                <img alt="InventoryPulse Dashboard" class="img-fluid rounded shadow-lg" src="/api/placeholder/600/400">
+                <img alt="InventoryPulse Dashboard" class="img-fluid rounded shadow-lg" src="/media/dashboard.png">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="carousel-section py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Einblicke in InventoryPulse</h2>
+            <p class="lead text-muted">Entdecken Sie die Funktionen und Möglichkeiten unserer Plattform</p>
+        </div>
+
+        <div class="carousel slide" data-bs-ride="carousel" id="imageCarousel">
+            <!-- Indikatoren -->
+            <div class="carousel-indicators">
+                <button aria-current="true" aria-label="Slide 1" class="active" data-bs-slide-to="0"
+                        data-bs-target="#imageCarousel" type="button"></button>
+                <button aria-label="Slide 2" data-bs-slide-to="1" data-bs-target="#imageCarousel"
+                        type="button"></button>
+                <button aria-label="Slide 3" data-bs-slide-to="2" data-bs-target="#imageCarousel"
+                        type="button"></button>
+                <button aria-label="Slide 4" data-bs-slide-to="3" data-bs-target="#imageCarousel"
+                        type="button"></button>
+            </div>
+
+            <!-- Karussell-Inhalt -->
+            <div class="carousel-inner rounded shadow-lg">
+                <div class="carousel-item active">
+                    <img alt="Inventarverwaltung Dashboard" class="d-block w-100" src="/media/dashboard.png">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                        <h3>Übersichtliches Dashboard</h3>
+                        <p>Behalten Sie den Überblick über alle wichtigen Kennzahlen Ihres Lagerbestands</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img alt="Produkt-Management" class="d-block w-100" src="/api/placeholder/1200/600">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                        <h3>Produktverwaltung</h3>
+                        <p>Verwalten Sie Ihre Produkte, Varianten und Attribute in einer übersichtlichen Oberfläche</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img alt="Lieferanten-Portal" class="d-block w-100" src="/api/placeholder/1200/600">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                        <h3>Lieferantenmanagement</h3>
+                        <p>Optimieren Sie Ihre Lieferantenbeziehungen und behalten Sie den Überblick über
+                            Leistungskennzahlen</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img alt="Bestellwesen" class="d-block w-100" src="/api/placeholder/1200/600">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                        <h3>Bestellwesen</h3>
+                        <p>Erstellen und verfolgen Sie Bestellungen mit automatisierten Workflows</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Steuerelemente -->
+            <button class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#imageCarousel" type="button">
+                <span aria-hidden="true" class="carousel-control-prev-icon"></span>
+                <span class="visually-hidden">Zurück</span>
+            </button>
+            <button class="carousel-control-next" data-bs-slide="next" data-bs-target="#imageCarousel" type="button">
+                <span aria-hidden="true" class="carousel-control-next-icon"></span>
+                <span class="visually-hidden">Weiter</span>
+            </button>
+        </div>
+
+        <!-- Thumbnails für schnellen Zugriff -->
+        <div class="mt-4 d-none d-md-block">
+            <div class="row g-2">
+                <div class="col-3">
+                    <div class="thumbnail active" data-bs-slide-to="0" data-bs-target="#imageCarousel">
+                        <img alt="Thumbnail 1" class="img-fluid rounded cursor-pointer" src="/api/placeholder/300/150">
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="thumbnail" data-bs-slide-to="1" data-bs-target="#imageCarousel">
+                        <img alt="Thumbnail 2" class="img-fluid rounded cursor-pointer" src="/api/placeholder/300/150">
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="thumbnail" data-bs-slide-to="2" data-bs-target="#imageCarousel">
+                        <img alt="Thumbnail 3" class="img-fluid rounded cursor-pointer" src="/api/placeholder/300/150">
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="thumbnail" data-bs-slide-to="3" data-bs-target="#imageCarousel">
+                        <img alt="Thumbnail 4" class="img-fluid rounded cursor-pointer" src="/api/placeholder/300/150">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -630,5 +781,35 @@
 
 <!-- Bootstrap JS and dependencies -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Thumbnails aktivieren
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        thumbnails.forEach(thumb => {
+            thumb.addEventListener('click', function () {
+                const slideIndex = this.getAttribute('data-bs-slide-to');
+                const carousel = new bootstrap.Carousel(document.getElementById('imageCarousel'));
+                carousel.to(parseInt(slideIndex));
+
+                // Aktiven Zustand aktualisieren
+                thumbnails.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Aktiven Thumbnail basierend auf Karussell-Änderungen aktualisieren
+        const carouselElement = document.getElementById('imageCarousel');
+        carouselElement.addEventListener('slide.bs.carousel', event => {
+            const slideIndex = event.to;
+            thumbnails.forEach((thumb, index) => {
+                if (index === slideIndex) {
+                    thumb.classList.add('active');
+                } else {
+                    thumb.classList.remove('active');
+                }
+            });
+        });
+    });
+</script>
 </body>
 </html>

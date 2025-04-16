@@ -1,0 +1,13 @@
+{% load subscription_tags %}
+{% show_upgrade_notice feature_code='feature_name' required_level='professional' %}
+
+{% if not has_access %}
+<div class="alert alert-info upgrade-notice">
+    <i class="bi bi-stars me-2"></i>
+    <strong>Premium-Funktion</strong>
+    <p>Diese Funktion ist im {{ required_level|title }}-Paket oder höher verfügbar.</p>
+    <a class="btn btn-sm btn-primary" href="{% url 'module_management:subscription_plans' %}">
+        <i class="bi bi-arrow-up-circle me-1"></i> Jetzt upgraden
+    </a>
+</div>
+{% endif %}

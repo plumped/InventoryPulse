@@ -6,15 +6,33 @@ register = template.Library()
 logger = logging.getLogger(__name__)
 
 
-@register.simple_tag(takes_context=True)
-def has_module_access(context, module_code):
+@register.filter(name='has_module_access')
+def has_module_access_filter(company, module_code):
+    """
+    Prüft, ob ein Unternehmen Zugriff auf das angegebene Modul hat
+
+    Beispiel:
+    {% load module_tags %}
+    {% if company|has_module_access:module.code %}
+        <!-- Content here -->
+    {% endif %}
+    """
+    # Prüfen, ob das Unternehmensabonnement aktiv ist
+    if not company.subscription_active:
+        return False
+
+    # Prüfen, ob das Unternehmen Zugriff auf das Modul hat
+    return company.has_module_access(module_code)
+
+
+@register.simple_tag(takes_context=True, name='check_module_access')
+def check_module_access(context, module_code):
     """
     Prüft, ob der aktuelle Benutzer Zugriff auf das angegebene Modul hat
 
     Beispiel:
     {% load module_tags %}
-
-    {% if has_module_access 'inventory' %}
+    {% if check_module_access module.code %}
         <a href="{% url 'inventory:dashboard' %}">Lagerverwaltung</a>
     {% endif %}
     """
@@ -42,6 +60,7 @@ def has_module_access(context, module_code):
 
     # Prüfen, ob das Unternehmen Zugriff auf das Modul hat
     return company.has_module_access(module_code)
+
 
 
 @register.simple_tag(takes_context=True)

@@ -1,10 +1,13 @@
 import logging
+import re
 
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import resolve
 from django.urls import reverse
+
+from module_management.utils import is_feature_available
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +44,24 @@ class ModuleAccessMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
+        # Feature-Code zu URL-Mapping
+        self.FEATURE_URL_MAPPING = {
+            # Inventory Features
+            'inventory_multi_warehouse': ['/dashboard/inventory/warehouses/'],
+            'inventory_stock_take': ['/dashboard/inventory/stocktake/'],
+
+            # Order Features
+            'order_templates': ['/dashboard/order/templates/'],
+            'order_split_delivery': ['/dashboard/order/.*/splits/'],
+            'order_suggestions': ['/dashboard/order/suggestions/'],
+
+            # Dokumenten-Features
+            'document_ocr': ['/dashboard/documents/ocr/'],
+
+            # API-Features
+            'api_access': ['/api/'],
+        }
+
     def __call__(self, request):
         # Zuerst prüfen, ob Middleware aktiv sein soll
         if not getattr(settings, 'ENABLE_MODULE_ACCESS_CHECK', True):
@@ -56,6 +77,21 @@ class ModuleAccessMiddleware:
 
         # Prüfen, ob die URL von der Zugriffsüberprüfung ausgenommen ist
         path = request.path_info
+        if request.user.is_authenticated and hasattr(request.user, 'company_profile'):
+            company = request.user.company_profile.company
+
+            # Feature-Flags prüfen
+            for feature_code, url_patterns in self.FEATURE_URL_MAPPING.items():
+                if any(re.match(pattern, path) for pattern in url_patterns):
+                    if not is_feature_available(company, feature_code):
+                        logger.warning(
+                            f"User {request.user.username} attempted to access {path}, but lacks access to feature {feature_code}"
+                        )
+
+                        # Upgrade-Seite anzeigen statt Zugriff verweigern
+                        return redirect(
+                            reverse('module_management:subscription_plans') + f'?required_feature={feature_code}')
+
         if any(path.startswith(exempt_url) for exempt_url in self.EXEMPT_URLS):
             return self.get_response(request)
 

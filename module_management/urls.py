@@ -13,4 +13,7 @@ urlpatterns = [
     path('module/<str:module_code>/', views.module_details, name='module_details'),
     path('history/', views.subscription_history, name='subscription_history'),
     path('overview/', views.user_module_overview, name='user_module_overview'),
+    # Neue Paket-URLs
+    path('packages/', views.subscription_plans, name='subscription_plans'),
+    path('packages/<int:package_id>/subscribe/', views.subscribe_to_package, name='subscribe_to_package'),
 ]

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load subscription_tags %}
+{% load module_tags %}
+
+{% block title %}Subscription-Pläne{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Subscription-Pläne</h1>
+
+    {% if required_feature %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>
+        <strong>Premium-Funktion erforderlich</strong>
+        <p>Die Funktion "{{ required_feature|title|replace:"_: " }}" ist in einem höheren Subscription-Plan
+            verfügbar.</p>
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        {% for package in packages %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 {% if current_package.id == package.id %}border-primary{% endif %}">
+                <div class="card-header text-center {% if package.package_type == 'basic' %}bg-secondary{% elif package.package_type == 'professional' %}bg-primary{% elif package.package_type == 'enterprise' %}bg-dark{% endif %} text-white">
+                    <h3 class="card-title mb-0">{{ package.name }}</h3>
+                    {% if current_package.id == package.id %}
+                    <span class="badge bg-success">Ihr aktueller Plan</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <h4 class="display-4">{{ package.price_monthly }} €</h4>
+                        <span class="text-muted">pro Monat</span>
+                        <p class="text-muted mt-2">oder {{ package.price_yearly }} € jährlich</p>
+                    </div>
+
+                    <div class="package-features">
+                        <h5>Enthaltene Module:</h5>
+                        <ul class="list-group mb-4">
+                            {% for module in package.modules.all %}
+                            <li class="list-group-item">
+                                <i class="{{ module.icon }}"></i> {{ module.name }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+
+                        <h5>Features:</h5>
+                        <ul class="list-group">
+                            {% for feature, value in package.feature_flags.items %}
+                            <li class="list-group-item {% if value %}list-group-item-success{% else %}list-group-item-light text-muted{% endif %}">
+                                <i class="bi {% if value %}bi-check-circle{% else %}bi-x-circle{% endif %} me-2"></i>
+                                {{ feature|replace:"_: "|title }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    {% if current_package.id == package.id %}
+                    <button class="btn btn-outline-primary" disabled>Aktueller Plan</button>
+                    {% else %}
+                    <a class="btn btn-primary" href="{% url 'module_management:subscribe_to_package' package.id %}">
+                        {% if current_package %}Upgrade{% else %}Auswählen{% endif %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

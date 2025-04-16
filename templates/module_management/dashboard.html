@@ -1,12 +1,32 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load subscription_tags %}
 {% load module_tags %}
+
 
 {% block title %}Modul-Management{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <h1 class="mb-4">Modulverwaltung</h1>
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>Modulverwaltung</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="subscription-badge">
+                <span class="badge bg-primary">
+                    <i class="bi bi-stars"></i>
+                    {% get_subscription_name %} Plan
+                </span>
+
+                {% if is_admin %}
+                <a class="btn btn-sm btn-outline-primary ms-2" href="{% url 'module_management:subscription_plans' %}">
+                    <i class="bi bi-arrow-up-circle"></i> Upgrade
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
     {% if company %}
     <div class="row mb-4">
@@ -27,6 +47,7 @@
                     </p>
                     <p><strong>Maximale Benutzeranzahl:</strong> {{ company.max_users }}</p>
                     <p><strong>Aktive Module:</strong> {{ active_modules.count }}</p>
+                    <p><strong>Subscription-Plan:</strong> {% get_subscription_name %}</p>
 
                     {% if is_admin %}
                     <a class="btn btn-primary" href="{% url 'module_management:manage_modules' %}">
@@ -34,6 +55,9 @@
                     </a>
                     <a class="btn btn-outline-secondary" href="{% url 'module_management:subscription_history' %}">
                         <i class="bi bi-clock-history"></i> Verlauf anzeigen
+                    </a>
+                    <a class="btn btn-outline-primary" href="{% url 'module_management:subscription_plans' %}">
+                        <i class="bi bi-arrow-up-circle"></i> Abonnement ändern
                     </a>
                     {% endif %}
                 </div>
@@ -50,28 +74,103 @@
                 </div>
                 <div class="card-body">
                     {% if active_modules %}
-                    <div class="row row-cols-1 row-cols-md-3 g-4">
-                        {% for module in active_modules %}
-                        <div class="col">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        {% if module.icon %}
-                                        <i class="{{ module.icon }}"></i>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Modul</th>
+                                <th>Beschreibung</th>
+                                <th>Status</th>
+                                <th>Features</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for module in active_modules %}
+                            <tr>
+                                <td>
+                                    <i class="{{ module.icon }}"></i> {{ module.name }}
+                                </td>
+                                <td>{{ module.description }}</td>
+                                <td>
+                                    {% if company|has_module_access:module.code %}
+                                    <span class="badge bg-success">Aktiviert</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Nicht aktiviert</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <!-- Feature-spezifische Anzeigen -->
+                                    {% if module.code == 'inventory' %}
+                                    <small>
+                                        {% has_feature 'inventory_multi_warehouse' as feature_inventory_multi_warehouse
+                                        %}
+                                        {% if feature_inventory_multi_warehouse %}
+                                        <span class="badge bg-info">Multi-Lager</span>
                                         {% endif %}
-                                        {{ module.name }}
-                                    </h5>
-                                    <p class="card-text small">{{ module.description|truncatechars:100 }}</p>
-                                </div>
-                                <div class="card-footer bg-transparent">
-                                    <a class="btn btn-sm btn-outline-primary"
+
+                                        {% has_feature 'inventory_stock_take' as feature_inventory_stock_take %}
+                                        {% if feature_inventory_stock_take %}
+                                        <span class="badge bg-info">Inventur</span>
+                                        {% endif %}
+                                    </small>
+                                    {% endif %}
+
+                                    {% if module.code == 'order_management' %}
+                                    <small>
+                                        {% has_feature 'order_templates' as feature_order_templates %}
+                                        {% if feature_order_templates %}
+                                        <span class="badge bg-info">Vorlagen</span>
+                                        {% endif %}
+
+                                        {% has_feature 'order_split_delivery' as feature_split %}
+                                        {% if feature_split %}
+                                        <span class="badge bg-info">Teillieferungen</span>
+                                        {% endif %}
+
+                                        {% has_feature 'order_suggestions' as feature_suggestions %}
+                                        {% if feature_suggestions %}
+                                        <span class="badge bg-info">Bestellvorschläge</span>
+                                        {% endif %}
+                                    </small>
+                                    {% endif %}
+
+                                    {% if module.code == 'document_management' %}
+                                    <small>
+                                        {% has_feature 'document_ocr' as feature_ocr %}
+                                        {% if feature_ocr %}
+                                        <span class="badge bg-info">OCR</span>
+                                        {% endif %}
+                                    </small>
+                                    {% endif %}
+
+                                    {% if module.code == 'analytics' %}
+                                    <small>
+                                        {% has_feature 'analytics_dashboard' as feature_dashboard %}
+                                        {% if feature_dashboard %}
+                                        <span class="badge bg-info">Dashboard</span>
+                                        {% endif %}
+                                    </small>
+                                    {% endif %}
+
+                                    {% if module.code == 'api_access' %}
+                                    <small>
+                                        {% has_feature 'api_access' as feature_api %}
+                                        {% if feature_api %}
+                                        <span class="badge bg-info">API-Zugriff</span>
+                                        {% endif %}
+                                    </small>
+                                    {% endif %}
+
+
+                                    <a class="btn btn-sm btn-outline-secondary"
                                        href="{% url 'module_management:module_details' module.code %}">
-                                        Details
+                                        <i class="bi bi-info-circle"></i>
                                     </a>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                     {% else %}
                     <div class="alert alert-info">

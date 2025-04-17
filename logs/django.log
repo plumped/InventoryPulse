@@ -3954,3 +3954,205 @@
 2025-04-16 23:03:41,053 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 63707
 2025-04-16 23:03:42,531 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43702
 2025-04-16 23:04:01,318 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\utils.py changed, reloading.
+2025-04-16 23:04:02,057 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 16:51:01,534 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 16:51:02,967 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62535
+2025-04-17 16:51:03,022 [WARNING] django.server: "GET /favicon.ico HTTP/1.1" 404 4440
+2025-04-17 16:51:08,917 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62535
+2025-04-17 16:51:09,494 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62535
+2025-04-17 16:51:18,485 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62535
+2025-04-17 16:51:32,949 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 16:54:48,105 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\models.py changed, reloading.
+2025-04-17 16:54:48,828 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 16:55:05,779 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\models.py changed, reloading.
+2025-04-17 16:55:06,539 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 16:55:34,146 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\models.py changed, reloading.
+2025-04-17 16:55:34,871 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 16:55:55,021 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\models.py changed, reloading.
+2025-04-17 16:55:55,762 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 16:56:27,671 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\views.py changed, reloading.
+2025-04-17 16:56:28,435 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 16:57:52,584 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\views.py changed, reloading.
+2025-04-17 16:57:53,324 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 17:00:32,536 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:00:33,388 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:00:34,504 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:00:42,827 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62535
+2025-04-17 17:00:50,120 [INFO] django.server: "GET /dashboard/modules/manage/ HTTP/1.1" 200 63678
+2025-04-17 17:00:58,370 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62535
+2025-04-17 17:01:00,169 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:01:45,502 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:01:46,911 [INFO] django.server: "GET /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 200 35244
+2025-04-17 17:01:58,503 [INFO] django.server: "POST /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:01:58,525 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 76055
+2025-04-17 17:02:03,963 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:02:09,651 [INFO] django.server: "GET /dashboard/modules/packages/3/subscribe/ HTTP/1.1" 200 35984
+2025-04-17 17:02:19,913 [INFO] django.server: "POST /dashboard/modules/packages/3/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:02:19,942 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 97584
+2025-04-17 17:02:21,667 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:02:27,471 [INFO] django.server: "GET /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 200 35244
+2025-04-17 17:02:37,676 [INFO] django.server: "POST /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:02:37,697 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 71212
+2025-04-17 17:02:51,281 [INFO] django.server: "GET /dashboard/modules/manage/ HTTP/1.1" 200 62676
+2025-04-17 17:02:54,231 [ERROR] django.server: "POST /dashboard/modules/unsubscribe/6/ HTTP/1.1" 500 98833
+2025-04-17 17:03:10,457 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 70857
+2025-04-17 17:03:11,375 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:03:13,373 [INFO] django.server: "GET /dashboard/modules/packages/1/subscribe/ HTTP/1.1" 200 34644
+2025-04-17 17:03:19,541 [INFO] django.server: "POST /dashboard/modules/packages/1/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:03:19,562 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 71218
+2025-04-17 17:03:22,527 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 70870
+2025-04-17 17:03:43,644 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:03:45,079 [INFO] django.server: "GET /dashboard/modules/packages/3/subscribe/ HTTP/1.1" 200 35984
+2025-04-17 17:03:48,109 [INFO] django.server: "POST /dashboard/modules/packages/3/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:03:48,129 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62904
+2025-04-17 17:03:57,466 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:03:59,517 [INFO] django.server: "GET /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 200 35244
+2025-04-17 17:04:01,968 [INFO] django.server: "POST /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:04:01,995 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 76071
+2025-04-17 17:04:06,805 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:04:09,053 [INFO] django.server: "GET /dashboard/modules/packages/3/subscribe/ HTTP/1.1" 200 35984
+2025-04-17 17:04:10,302 [INFO] django.server: "POST /dashboard/modules/packages/3/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:04:10,321 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62911
+2025-04-17 17:04:12,525 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:04:14,219 [INFO] django.server: "GET /dashboard/modules/packages/1/subscribe/ HTTP/1.1" 200 34644
+2025-04-17 17:04:15,509 [INFO] django.server: "POST /dashboard/modules/packages/1/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:04:15,527 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62864
+2025-04-17 17:04:20,876 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:04:46,496 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\models.py changed, reloading.
+2025-04-17 17:04:47,199 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 17:04:51,560 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:04:52,975 [INFO] django.server: "GET /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 200 33860
+2025-04-17 17:05:11,631 [INFO] django.server: "GET /admin/ HTTP/1.1" 200 19064
+2025-04-17 17:05:17,019 [INFO] django.server: "GET /admin/module_management/companymodulesubscription/ HTTP/1.1" 200 67085
+2025-04-17 17:05:17,032 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 17:05:21,616 [INFO] django.server: "POST /admin/module_management/companymodulesubscription/ HTTP/1.1" 200 28758
+2025-04-17 17:05:21,627 [INFO] django.server: "GET /static/admin/js/cancel.js HTTP/1.1" 200 884
+2025-04-17 17:05:23,663 [INFO] django.server: "POST /admin/module_management/companymodulesubscription/ HTTP/1.1" 302 0
+2025-04-17 17:05:23,673 [INFO] django.server: "GET /admin/module_management/companymodulesubscription/ HTTP/1.1" 200 18721
+2025-04-17 17:05:23,686 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 17:05:25,906 [INFO] django.server: "GET /admin/module_management/moduledependency/ HTTP/1.1" 200 24247
+2025-04-17 17:05:25,918 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 17:05:27,369 [INFO] django.server: "GET /admin/module_management/usercompany/ HTTP/1.1" 200 19941
+2025-04-17 17:05:27,380 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 17:05:28,942 [INFO] django.server: "GET /admin/module_management/subscriptionlog/ HTTP/1.1" 200 76082
+2025-04-17 17:05:28,955 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 17:05:29,909 [ERROR] django.server: "GET /admin/module_management/company/ HTTP/1.1" 500 445995
+2025-04-17 17:05:32,903 [INFO] django.server: "GET /admin/module_management/subscriptionlog/ HTTP/1.1" 200 76082
+2025-04-17 17:05:34,329 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 39850
+2025-04-17 17:05:37,209 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 43338
+2025-04-17 17:05:41,063 [INFO] django.server: "GET /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 200 33860
+2025-04-17 17:05:42,284 [INFO] django.server: "POST /dashboard/modules/packages/2/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:05:42,300 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 54632
+2025-04-17 17:05:50,037 [INFO] django.server: "GET /dashboard/modules/module/order_management/ HTTP/1.1" 200 41507
+2025-04-17 17:15:18,106 [INFO] django.server: "GET /admin/module_management/module/ HTTP/1.1" 200 26677
+2025-04-17 17:15:18,126 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 17:16:45,423 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\templatetags\subscription_tags.py changed, reloading.
+2025-04-17 17:16:46,180 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 17:18:00,229 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 54277
+2025-04-17 17:18:09,417 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\views.py changed, reloading.
+2025-04-17 17:18:10,190 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 17:18:55,797 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\urls.py changed, reloading.
+2025-04-17 17:18:56,488 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 17:19:21,171 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 54472
+2025-04-17 17:19:32,123 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 59309
+2025-04-17 17:20:10,322 [INFO] django.server: "GET /dashboard/modules/packages/ HTTP/1.1" 200 61186
+2025-04-17 17:20:24,455 [INFO] django.server: "GET /dashboard/modules/packages/3/subscribe/ HTTP/1.1" 200 42066
+2025-04-17 17:20:27,199 [INFO] django.server: "POST /dashboard/modules/packages/3/subscribe/ HTTP/1.1" 302 0
+2025-04-17 17:20:27,217 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 63151
+2025-04-17 17:20:31,635 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 65985
+2025-04-17 17:21:09,128 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62798
+2025-04-17 17:21:10,800 [INFO] django.server: "GET /dashboard/modules/manage/ HTTP/1.1" 200 63538
+2025-04-17 17:57:50,419 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62798
+2025-04-17 17:57:52,461 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62798
+2025-04-17 17:57:53,166 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 62798
+2025-04-17 17:58:57,426 [WARNING] django.server: "GET /dashboard/overview HTTP/1.1" 404 10735
+2025-04-17 17:59:01,055 [WARNING] django.server: "GET /overview HTTP/1.1" 404 4431
+2025-04-17 18:00:05,601 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\views.py changed, reloading.
+2025-04-17 18:00:06,434 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 18:00:24,393 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\urls.py changed, reloading.
+2025-04-17 18:00:25,045 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 18:06:48,797 [WARNING] django.server: "GET /overview HTTP/1.1" 404 4431
+2025-04-17 18:06:51,255 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79277
+2025-04-17 18:07:19,000 [INFO] django.server: "GET /dashboard/modules/modules/ HTTP/1.1" 200 122665
+2025-04-17 18:07:52,633 [WARNING] django.server: "POST /dashboard/modules/unsubscribe/5/ HTTP/1.1" 404 14824
+2025-04-17 18:08:25,351 [INFO] django.server: "GET /admin/module_management/module/ HTTP/1.1" 200 26677
+2025-04-17 18:08:25,364 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 18:08:34,112 [INFO] django.server: "POST /admin/module_management/module/ HTTP/1.1" 200 16119
+2025-04-17 18:08:34,848 [INFO] django.server: "POST /admin/module_management/module/ HTTP/1.1" 302 0
+2025-04-17 18:08:34,865 [INFO] django.server: "GET /admin/module_management/module/ HTTP/1.1" 200 26241
+2025-04-17 18:08:34,879 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 18:08:36,670 [INFO] django.server: "GET /dashboard/modules/modules/ HTTP/1.1" 200 116890
+2025-04-17 18:08:49,669 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79277
+2025-04-17 18:08:56,821 [INFO] django.server: "GET /dashboard/modules/modules/order_management/ HTTP/1.1" 200 41507
+2025-04-17 18:09:12,463 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79277
+2025-04-17 18:09:15,006 [ERROR] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 500 385775
+2025-04-17 18:09:24,438 [INFO] django.server: "GET /dashboard/modules/modules/api_access/ HTTP/1.1" 200 39913
+2025-04-17 18:09:34,285 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 73322
+2025-04-17 18:10:39,274 [ERROR] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 500 385781
+2025-04-17 18:12:50,591 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 105448
+2025-04-17 18:13:15,929 [INFO] django.server: "GET /dashboard/modules/modules/inventory/ HTTP/1.1" 200 41488
+2025-04-17 18:13:22,182 [INFO] django.server: "GET /dashboard/modules/modules/document_management/ HTTP/1.1" 200 39978
+2025-04-17 18:13:48,434 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79277
+2025-04-17 18:13:56,725 [INFO] django.server: "GET /dashboard/modules/modules/ HTTP/1.1" 200 116890
+2025-04-17 18:14:45,817 [WARNING] django.server: "POST /dashboard/modules/unsubscribe/9/ HTTP/1.1" 404 14824
+2025-04-17 18:14:53,341 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 105448
+2025-04-17 18:16:48,191 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 105448
+2025-04-17 18:17:13,969 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 105448
+2025-04-17 18:17:15,147 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 105448
+2025-04-17 18:17:17,556 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77839
+2025-04-17 18:17:24,330 [INFO] django.server: "GET /dashboard/modules/plans/1/subscribe/ HTTP/1.1" 200 45841
+2025-04-17 18:17:32,609 [INFO] django.server: "POST /dashboard/modules/plans/1/subscribe/ HTTP/1.1" 302 0
+2025-04-17 18:17:32,628 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79532
+2025-04-17 18:17:39,147 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77220
+2025-04-17 18:17:59,368 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79184
+2025-04-17 18:18:04,058 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79184
+2025-04-17 18:18:04,698 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79184
+2025-04-17 18:18:05,313 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79184
+2025-04-17 18:18:05,919 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 79184
+2025-04-17 18:18:15,833 [INFO] django.server: "GET /admin/module_management/companymodulesubscription/ HTTP/1.1" 200 28091
+2025-04-17 18:18:15,851 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 18:18:20,408 [INFO] django.server: "POST /admin/module_management/companymodulesubscription/ HTTP/1.1" 200 17993
+2025-04-17 18:18:21,186 [INFO] django.server: "POST /admin/module_management/companymodulesubscription/ HTTP/1.1" 302 0
+2025-04-17 18:18:21,195 [INFO] django.server: "GET /admin/module_management/companymodulesubscription/ HTTP/1.1" 200 18721
+2025-04-17 18:18:21,206 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 18:18:23,121 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 47674
+2025-04-17 18:18:29,026 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77220
+2025-04-17 18:18:31,466 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 70267
+2025-04-17 18:18:32,807 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77220
+2025-04-17 18:18:39,956 [ERROR] django.server: "GET /admin/module_management/company/ HTTP/1.1" 500 446005
+2025-04-17 18:18:42,393 [INFO] django.server: "GET /admin/module_management/companymodulesubscription/ HTTP/1.1" 200 18574
+2025-04-17 18:18:43,509 [INFO] django.server: "GET /admin/module_management/usercompany/ HTTP/1.1" 200 19941
+2025-04-17 18:18:43,521 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 18:18:44,674 [INFO] django.server: "GET /admin/module_management/subscriptionlog/ HTTP/1.1" 200 76440
+2025-04-17 18:18:44,686 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 18:18:47,663 [INFO] django.server: "POST /admin/module_management/subscriptionlog/ HTTP/1.1" 200 38224
+2025-04-17 18:18:49,475 [INFO] django.server: "POST /admin/module_management/subscriptionlog/ HTTP/1.1" 302 0
+2025-04-17 18:18:49,521 [INFO] django.server: "GET /admin/module_management/subscriptionlog/ HTTP/1.1" 200 63623
+2025-04-17 18:18:49,533 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-17 18:18:51,996 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77220
+2025-04-17 18:18:52,640 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77220
+2025-04-17 18:18:53,643 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 47493
+2025-04-17 18:18:56,219 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 47493
+2025-04-17 18:18:57,563 [INFO] django.server: "GET /dashboard/modules/subscription/ HTTP/1.1" 200 70136
+2025-04-17 18:18:59,143 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77220
+2025-04-17 18:19:02,596 [INFO] django.server: "GET /dashboard/modules/plans/3/subscribe/ HTTP/1.1" 200 48018
+2025-04-17 18:19:16,644 [INFO] django.server: "POST /dashboard/modules/plans/3/subscribe/ HTTP/1.1" 302 0
+2025-04-17 18:19:16,665 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 82371
+2025-04-17 18:19:23,223 [INFO] django.server: "GET /dashboard/modules/modules/data_operations/ HTTP/1.1" 200 39915
+2025-04-17 18:19:30,210 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77839
+2025-04-17 18:31:32,380 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77839
+2025-04-17 18:33:07,715 [INFO] django.server: "GET /dashboard/modules/plans/ HTTP/1.1" 200 77839
+2025-04-17 18:33:36,208 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 82018
+2025-04-17 18:33:38,013 [INFO] django.server: "GET /dashboard/modules/modules/ HTTP/1.1" 200 117788
+2025-04-17 18:34:16,227 [INFO] django.server: "GET /dashboard/modules/modules/product_management/ HTTP/1.1" 200 41214
+2025-04-17 18:34:27,102 [INFO] django.server: "GET /dashboard/modules/modules/order_management/ HTTP/1.1" 200 41507
+2025-04-17 18:34:41,629 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 82018
+2025-04-17 18:34:53,211 [INFO] django.server: "GET /dashboard/modules/subscription/history/ HTTP/1.1" 200 123205
+2025-04-17 18:34:56,939 [INFO] django.server: "GET /dashboard/modules/ HTTP/1.1" 200 82018
+2025-04-17 18:35:00,787 [INFO] django.server: "GET /dashboard/modules/subscription/history/ HTTP/1.1" 200 123205
+2025-04-17 18:36:35,336 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\urls.py changed, reloading.
+2025-04-17 18:36:35,791 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 18:36:43,098 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\settings.py changed, reloading.
+2025-04-17 18:36:43,640 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-17 18:38:03,920 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\settings.py changed, reloading.
+2025-04-17 18:38:04,594 [INFO] django.utils.autoreload: Watching for file changes with StatReloader

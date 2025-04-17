@@ -35,8 +35,6 @@ urlpatterns = [
         # === User Profile ===
         path('profile/', core_views.profile, name='profile'),
 
-        path('modules/', include('module_management.urls')),
-
         path('rma/', include('rma.urls')),
 
         # === External Apps ===

@@ -168,7 +168,6 @@ INSTALLED_APPS = [
     'api',
     'interfaces',
     'documents',
-    'module_management',
 ]
 
 MIDDLEWARE = [
@@ -179,15 +178,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'module_management.middleware.ModuleAccessMiddleware',
 ]
 
-MODULE_MANAGEMENT = {
-    'ENABLE_MODULE_ACCESS_CHECK': True,  # Aktiviert/deaktiviert die Zugriffskontrolle (nützlich für Entwicklung)
-    'AUTO_CREATE_COMPANY_ON_USER_CREATION': True,  # Automatisch Unternehmen für neue Benutzer erstellen
-    'DEFAULT_MODULES': ['product_management', 'inventory'],  # Standardmodule für neue Unternehmen
-    'SUBSCRIPTION_GRACE_PERIOD_DAYS': 3,  # Karenzzeit nach Ablauf eines Abonnements
-}
 
 ROOT_URLCONF = 'InventoryPulse.urls'
 

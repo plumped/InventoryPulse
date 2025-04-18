@@ -250,6 +250,7 @@ MIDDLEWARE = [
     'core.middleware.TenantMiddleware',  # Tenant identification and context
     'accessmanagement.middleware.PasswordPolicyMiddleware',  # Password policy enforcement
     'accessmanagement.middleware.RoleBasedAccessMiddleware',  # Role-based access control
+    'accessmanagement.login_rate_limit_middleware.LoginRateLimitMiddleware',  # Rate limiting for login attempts
     'module_management.middleware.ModuleAccessMiddleware',  # Module access control
     'superadmin.middleware.SuperAdminMiddleware',  # Superadmin access control
 ]
@@ -317,8 +318,9 @@ AUTH_PASSWORD_VALIDATORS = [
 PASSWORD_EXPIRY_DAYS = 90  # Passwords expire after 90 days
 PASSWORD_HISTORY_COUNT = 5  # Cannot reuse the last 5 passwords
 
-# Superadmin security settings
-SUPERADMIN_ALLOWED_IPS = ['127.0.0.1', '::1']  # Allow localhost access only by default
+# Import security settings from security_config.py
+
+# Password reset timeout
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 24 hours (in seconds)
 
 

@@ -73,7 +73,7 @@ urlpatterns = [
     path('inventory/', include('inventory.urls')),
     path('suppliers/', include('suppliers.urls')),
     path('orders/', include('order.urls')),
-    path('admin/', include('admin_dashboard.urls')),
+    path('admin-dashboard/', include('admin_dashboard.urls')),
     path('access/', include('accessmanagement.urls')),
     path('interfaces/', include('interfaces.urls')),
     path('documents/', include('documents.urls')),

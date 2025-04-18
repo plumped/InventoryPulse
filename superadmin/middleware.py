@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
+from django.utils import timezone
 
 logger = logging.getLogger('superadmin')
 
@@ -11,7 +12,8 @@ class SuperAdminMiddleware:
     """
     Middleware to restrict access to superadmin routes to superusers only.
     This middleware checks if the user is a superuser and blocks access to
-    superadmin routes for non-superusers.
+    superadmin routes for non-superusers. It also enforces session timeout
+    for the superadmin area.
     """
 
     def __init__(self, get_response):
@@ -79,6 +81,46 @@ class SuperAdminMiddleware:
                         "You don't have access to the superadmin area. This incident has been logged."
                     )
                 return redirect('dashboard')
+
+            # Check for session timeout
+            if 'superadmin_last_activity' in request.session:
+                last_activity = request.session['superadmin_last_activity']
+                now = timezone.now().timestamp()
+
+                # If session has expired, log the user out of superadmin
+                if now - last_activity > settings.SUPERADMIN_SESSION_TIMEOUT:
+                    # Log the session timeout
+                    logger.info(
+                        f"Superadmin session timeout for user {request.user.username} "
+                        f"from IP {client_ip}"
+                    )
+
+                    # Create audit log for session timeout
+                    from core.models import AuditLog
+                    AuditLog.objects.create(
+                        user=request.user,
+                        action='other',
+                        ip_address=client_ip,
+                        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                        data={
+                            'message': 'Superadmin session timeout',
+                            'path': request.path,
+                            'timeout_seconds': settings.SUPERADMIN_SESSION_TIMEOUT
+                        }
+                    )
+
+                    # Show message to user
+                    messages.warning(
+                        request,
+                        f"Your superadmin session has timed out due to inactivity. "
+                        f"This is a security measure."
+                    )
+
+                    # Redirect to dashboard
+                    return redirect('dashboard')
+
+            # Update last activity timestamp
+            request.session['superadmin_last_activity'] = timezone.now().timestamp()
 
         # User has access or not accessing superadmin routes, continue with the request
         return self.get_response(request)

@@ -5160,3 +5160,40 @@
 2025-04-18 12:01:41,485 [INFO] [no-request-id] django.server: "GET /superadmin/feature-flags/8/ HTTP/1.1" 200 37673
 2025-04-18 12:01:52,437 [INFO] [no-request-id] django.server: "GET /superadmin/feature-flags/ HTTP/1.1" 200 44886
 2025-04-18 12:02:31,482 [INFO] [no-request-id] django.server: "GET /superadmin/packages/5/ HTTP/1.1" 200 59472
+2025-04-18 12:04:00,990 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\superadmin\admin.py changed, reloading.
+2025-04-18 12:04:01,929 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:10:02,778 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\settings.py changed, reloading.
+2025-04-18 12:10:03,601 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:10:19,694 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\superadmin\middleware.py changed, reloading.
+2025-04-18 12:10:20,665 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:11:11,245 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\superadmin\middleware.py changed, reloading.
+2025-04-18 12:11:12,111 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:11:30,407 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\superadmin\middleware.py changed, reloading.
+2025-04-18 12:11:31,231 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:12:21,795 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\settings.py changed, reloading.
+2025-04-18 12:12:22,694 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:13:09,106 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\superadmin\views.py changed, reloading.
+2025-04-18 12:13:09,907 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:13:27,143 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\superadmin\views.py changed, reloading.
+2025-04-18 12:13:27,961 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:20:30,538 [WARNING] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 404 9604
+2025-04-18 12:20:30,560 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9589
+2025-04-18 12:20:39,624 [WARNING] [no-request-id] django.server: "GET /dashboard/admin-dashboard/ HTTP/1.1" 404 9742
+2025-04-18 12:21:51,210 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:22:04,239 [WARNING] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 404 9604
+2025-04-18 12:23:22,796 [WARNING] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 404 9604
+2025-04-18 12:23:24,802 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 302 0
+2025-04-18 12:23:24,851 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 70913
+2025-04-18 12:24:18,686 [INFO] [no-request-id] django.server: "GET /admin/ HTTP/1.1" 200 57241
+2025-04-18 12:26:42,021 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\urls.py changed, reloading.
+2025-04-18 12:26:42,891 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:27:04,094 [INFO] [no-request-id] django.server: "GET /admin/ HTTP/1.1" 200 57241
+2025-04-18 12:27:13,848 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 70923
+2025-04-18 12:27:15,096 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-18 12:27:15,106 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 52924
+2025-04-18 12:29:09,061 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-18 12:29:09,069 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 52924
+2025-04-18 12:29:09,758 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-18 12:29:09,765 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 52924
+2025-04-18 12:30:37,641 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-18 12:30:37,649 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 52924

@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.contenttypes.models import ContentType
@@ -7,6 +9,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from core.models import AuditLog
 from master_data.models.organisations_models import Organization
 from module_management.models import Module, FeatureFlag, SubscriptionPackage, Subscription
+
+logger = logging.getLogger('superadmin')
 
 
 def is_superuser(user):
@@ -21,18 +25,18 @@ def dashboard(request):
     # Get counts for dashboard widgets
     module_count = Module.objects.count()
     active_module_count = Module.objects.filter(is_active=True).count()
-    
+
     package_count = SubscriptionPackage.objects.count()
     active_package_count = SubscriptionPackage.objects.filter(is_active=True).count()
-    
+
     subscription_count = Subscription.objects.count()
     active_subscription_count = Subscription.objects.filter(is_active=True).count()
-    
+
     organization_count = Organization.objects.count()
-    
+
     # Get recent audit logs for the activity feed
     recent_logs = AuditLog.objects.all().order_by('-timestamp')[:10]
-    
+
     context = {
         'module_count': module_count,
         'active_module_count': active_module_count,
@@ -43,7 +47,7 @@ def dashboard(request):
         'organization_count': organization_count,
         'recent_logs': recent_logs,
     }
-    
+
     return render(request, 'superadmin/dashboard.html', context)
 
 
@@ -164,7 +168,7 @@ def module_update(request, module_id):
             'price_yearly': str(module.price_yearly),
             'is_active': module.is_active
         }
-        
+
         content_type = ContentType.objects.get_for_model(Module)
         AuditLog.objects.create(
             user=request.user,
@@ -190,11 +194,47 @@ def module_update(request, module_id):
 def module_delete(request, module_id):
     """View to delete a module"""
     module = get_object_or_404(Module, id=module_id)
+    context = {
+        'module': module,
+        'action': 'Delete'
+    }
 
     if request.method == 'POST':
+        # Verify password before proceeding
+        password = request.POST.get('password')
+        if not password:
+            context['password_error'] = 'Password is required to confirm this action.'
+            return render(request, 'superadmin/module_confirm_delete.html', context)
+
+        # Check if password is correct
+        if not request.user.check_password(password):
+            # Log failed password verification
+            client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+            logger.warning(
+                f"Failed password verification for critical operation by user {request.user.username} "
+                f"from IP {client_ip}"
+            )
+
+            # Create audit log for failed verification
+            AuditLog.objects.create(
+                user=request.user,
+                action='other',
+                ip_address=client_ip,
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                data={
+                    'message': 'Failed password verification for module deletion',
+                    'module_id': module_id,
+                    'module_name': module.name
+                }
+            )
+
+            context['password_error'] = 'Incorrect password. Please try again.'
+            return render(request, 'superadmin/module_confirm_delete.html', context)
+
+        # Password verified, proceed with deletion
         module_name = module.name
         module_id = module.id
-        
+
         # Store data for audit log
         before_state = {
             'name': module.name,
@@ -204,10 +244,10 @@ def module_delete(request, module_id):
             'price_yearly': str(module.price_yearly),
             'is_active': module.is_active
         }
-        
+
         # Delete the module
         module.delete()
-        
+
         # Log the action
         content_type = ContentType.objects.get_for_model(Module)
         AuditLog.objects.create(
@@ -217,14 +257,10 @@ def module_delete(request, module_id):
             object_id=module_id,
             before_state=before_state
         )
-        
+
         messages.success(request, f'Module "{module_name}" deleted successfully.')
         return redirect('superadmin:module_list')
 
-    context = {
-        'module': module,
-        'action': 'Delete'
-    }
     return render(request, 'superadmin/module_confirm_delete.html', context)
 
 
@@ -234,7 +270,7 @@ def module_delete(request, module_id):
 def feature_flag_list(request):
     """View to list all feature flags"""
     feature_flags = FeatureFlag.objects.all()
-    
+
     context = {
         'feature_flags': feature_flags,
         'active_flags': feature_flags.filter(is_active=True).count(),
@@ -248,10 +284,10 @@ def feature_flag_list(request):
 def feature_flag_detail(request, flag_id):
     """View to show details of a specific feature flag"""
     feature_flag = get_object_or_404(FeatureFlag, id=flag_id)
-    
+
     # Get packages that include this feature flag
     packages = feature_flag.subscription_packages.all()
-    
+
     context = {
         'feature_flag': feature_flag,
         'packages': packages,
@@ -265,7 +301,7 @@ def feature_flag_detail(request, flag_id):
 def package_list(request):
     """View to list all subscription packages"""
     packages = SubscriptionPackage.objects.all()
-    
+
     context = {
         'packages': packages,
         'active_packages': packages.filter(is_active=True).count(),
@@ -279,16 +315,16 @@ def package_list(request):
 def package_detail(request, package_id):
     """View to show details of a specific subscription package"""
     package = get_object_or_404(SubscriptionPackage, id=package_id)
-    
+
     # Get modules in this package
     modules = package.modules.all()
-    
+
     # Get feature flags in this package
     feature_flags = package.feature_flags.all()
-    
+
     # Get subscriptions for this package
     subscriptions = package.subscriptions.all()
-    
+
     context = {
         'package': package,
         'modules': modules,
@@ -304,7 +340,7 @@ def package_detail(request, package_id):
 def subscription_list(request):
     """View to list all subscriptions"""
     subscriptions = Subscription.objects.all()
-    
+
     context = {
         'subscriptions': subscriptions,
         'active_subscriptions': subscriptions.filter(is_active=True).count(),
@@ -318,7 +354,7 @@ def subscription_list(request):
 def subscription_detail(request, subscription_id):
     """View to show details of a specific subscription"""
     subscription = get_object_or_404(Subscription, id=subscription_id)
-    
+
     context = {
         'subscription': subscription,
     }
@@ -331,7 +367,7 @@ def subscription_detail(request, subscription_id):
 def organization_list(request):
     """View to list all organizations"""
     organizations = Organization.objects.all()
-    
+
     context = {
         'organizations': organizations,
         'total_organizations': organizations.count(),
@@ -344,10 +380,10 @@ def organization_list(request):
 def organization_detail(request, organization_id):
     """View to show details of a specific organization"""
     organization = get_object_or_404(Organization, id=organization_id)
-    
+
     # Get subscriptions for this organization
     subscriptions = organization.subscriptions.all()
-    
+
     context = {
         'organization': organization,
         'subscriptions': subscriptions,
@@ -361,7 +397,7 @@ def organization_detail(request, organization_id):
 def audit_log_list(request):
     """View to list all audit logs"""
     audit_logs = AuditLog.objects.all().order_by('-timestamp')
-    
+
     context = {
         'audit_logs': audit_logs,
     }

@@ -10614,3 +10614,835 @@ Traceback (most recent call last):
   File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
     raise NoReverseMatch(msg)
 django.urls.exceptions.NoReverseMatch: Reverse for 'create' not found. 'create' is not a valid view function or pattern name.
+2025-04-18 02:53:57,994 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 02:53:59,409 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:50:48,120 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:50:52,072 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:51:02,292 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:51:02,794 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:51:02,967 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:51:03,145 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:51:03,298 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:51:03,469 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?
+2025-04-18 10:59:48,022 [ERROR] [no-request-id] django.request: Internal Server Error: /inventory/warehouses/create/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'create' not found. 'create' is not a valid view function or pattern name.
+2025-04-18 10:59:57,197 [ERROR] [no-request-id] django.request: Internal Server Error: /inventory/stock-takes/create/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'create' not found. 'create' is not a valid view function or pattern name.
+2025-04-18 11:01:43,381 [ERROR] [no-request-id] django.request: Internal Server Error: /dashboard/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 510, in parse
+    compile_func = self.tags[command]
+                   ~~~~~~~~~^^^^^^^^^
+KeyError: 'endfor'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\analytics\views\dashboard_views.py", line 162, in dashboard
+    return render(request, 'dashboard.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 15, in get_template
+    return engine.get_template(template_name)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\backends\django.py", line 79, in get_template
+    return Template(self.engine.get_template(template_name), self)
+                    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 177, in get_template
+    template, origin = self.find_template(template_name)
+                       ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\engine.py", line 159, in find_template
+    template = loader.get_template(name, skip=skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\cached.py", line 57, in get_template
+    template = super().get_template(template_name, skip)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loaders\base.py", line 28, in get_template
+    return Template(
+        contents,
+    ...<2 lines>...
+        self.engine,
+    )
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 154, in __init__
+    self.nodelist = self.compile_nodelist()
+                    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 196, in compile_nodelist
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 295, in do_extends
+    nodelist = parser.parse()
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader_tags.py", line 234, in do_block
+    nodelist = parser.parse(("endblock",))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 518, in parse
+    raise self.error(token, e)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 516, in parse
+    compiled_result = compile_func(self, token)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\defaulttags.py", line 962, in do_if
+    nodelist = parser.parse(("elif", "else", "endif"))
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 512, in parse
+    self.invalid_block_tag(token, command, parse_until)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\base.py", line 563, in invalid_block_tag
+    raise self.error(
+    ...<8 lines>...
+    )
+django.template.exceptions.TemplateSyntaxError: Invalid block tag on line 194: 'endfor', expected 'elif', 'else' or 'endif'. Did you forget to register or load this tag?

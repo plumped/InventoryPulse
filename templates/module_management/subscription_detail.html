@@ -1,0 +1,215 @@
+{% extends "module_management/base.html" %}
+
+{% block title %}Subscription Details - Module Management{% endblock %}
+
+{% block module_content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+            Subscription Details
+            {% if subscription.organization %}
+            <small class="text-muted">for {{ subscription.organization.name }}</small>
+            {% endif %}
+        </h4>
+        <div>
+            <a href="{% url 'subscription_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Subscriptions
+            </a>
+            {% if user.is_superuser or user.is_staff %}
+            <a href="{% url 'subscription_update' subscription.id %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'subscription_delete' subscription.id %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Subscription Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 30%">Organization</th>
+                                <td>
+                                    {% if subscription.organization %}
+                                    {{ subscription.organization.name }}
+                                    {% else %}
+                                    <span class="text-muted">No Organization</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Package</th>
+                                <td>
+                                    <a href="{% url 'package_detail' subscription.package.id %}">{{ subscription.package.name }}</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Subscription Type</th>
+                                <td>{{ subscription.get_subscription_type_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Start Date</th>
+                                <td>{{ subscription.start_date|date:"F j, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>End Date</th>
+                                <td>{{ subscription.end_date|date:"F j, Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    {% if subscription.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Payment Status</th>
+                                <td>
+                                    {% if subscription.payment_status == 'paid' %}
+                                    <span class="badge bg-success">{{ subscription.get_payment_status_display }}</span>
+                                    {% elif subscription.payment_status == 'pending' %}
+                                    <span class="badge bg-warning">{{ subscription.get_payment_status_display }}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ subscription.get_payment_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Created</th>
+                                <td>{{ subscription.created_at|date:"F j, Y, g:i a" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Last Updated</th>
+                                <td>{{ subscription.updated_at|date:"F j, Y, g:i a" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if subscription.custom_settings %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Custom Settings</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre class="bg-light p-3 rounded"><code>{{ custom_settings|pprint }}</code></pre>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Modules</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>Package Modules</h6>
+                            {% if package_modules %}
+                            <ul class="list-group">
+                                {% for module in package_modules %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{% url 'module_detail' module.id %}">{{ module.name }}</a>
+                                        {% if not module.is_active %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Package</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">No modules included in the package.</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <h6>Custom Modules</h6>
+                            {% if custom_modules %}
+                            <ul class="list-group">
+                                {% for module in custom_modules %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{% url 'module_detail' module.id %}">{{ module.name }}</a>
+                                        {% if not module.is_active %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge bg-success rounded-pill">Custom</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">No custom modules added.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Feature Flags</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>Package Features</h6>
+                            {% if package_features %}
+                            <ul class="list-group">
+                                {% for feature in package_features %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{% url 'feature_flag_detail' feature.id %}">{{ feature.name }}</a>
+                                        <small class="text-muted">({{ feature.module.name }})</small>
+                                        {% if not feature.is_active %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">Package</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">No feature flags included in the package.</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <h6>Custom Features</h6>
+                            {% if custom_features %}
+                            <ul class="list-group">
+                                {% for feature in custom_features %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <a href="{% url 'feature_flag_detail' feature.id %}">{{ feature.name }}</a>
+                                        <small class="text-muted">({{ feature.module.name }})</small>
+                                        {% if not feature.is_active %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge bg-success rounded-pill">Custom</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">No custom feature flags added.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

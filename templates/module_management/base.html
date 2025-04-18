@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Module Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Module Management</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'module_list' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'module_list' or request.resolver_match.url_name == 'module_management_dashboard' %}active{% endif %}">
+                        <i class="fas fa-cubes me-2"></i> Modules
+                    </a>
+                    <a href="{% url 'feature_flag_list' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'feature_flag_list' %}active{% endif %}">
+                        <i class="fas fa-flag me-2"></i> Feature Flags
+                    </a>
+                    <a href="{% url 'package_list' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'package_list' %}active{% endif %}">
+                        <i class="fas fa-box me-2"></i> Subscription Packages
+                    </a>
+                    <a href="{% url 'subscription_list' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'subscription_list' %}active{% endif %}">
+                        <i class="fas fa-receipt me-2"></i> Subscriptions
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block module_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    {% block module_extra_js %}{% endblock %}
+{% endblock %}

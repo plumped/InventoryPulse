@@ -1,0 +1,168 @@
+{% extends "module_management/base.html" %}
+
+{% block title %}Subscriptions - Module Management{% endblock %}
+
+{% block module_content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">
+            Subscriptions
+            {% if organization %}
+            <small class="text-muted">for {{ organization.name }}</small>
+            {% endif %}
+            {% if package %}
+            <small class="text-muted">for {{ package.name }} package</small>
+            {% endif %}
+        </h4>
+        {% if user.is_superuser or user.is_staff %}
+        <a href="{% url 'subscription_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Subscription
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Total Subscriptions</h5>
+                        <h2 class="mb-0">{{ total_subscriptions }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Active Subscriptions</h5>
+                        <h2 class="mb-0">{{ active_subscriptions }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-warning">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Inactive Subscriptions</h5>
+                        <h2 class="mb-0">{{ total_subscriptions|add:"-"|add:active_subscriptions }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <form method="get" class="row g-3">
+                {% if organization %}
+                <div class="col-auto">
+                    <a href="{% url 'subscription_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-filter"></i> Show All Organizations
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if package %}
+                <div class="col-auto">
+                    <a href="{% url 'subscription_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-filter"></i> Show All Packages
+                    </a>
+                </div>
+                {% endif %}
+                
+                <div class="col-auto">
+                    <select name="status" class="form-select" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        {% if status == 'active' %}
+                        <option value="active" selected>Active Only</option>
+                        {% else %}
+                        <option value="active">Active Only</option>
+                        {% endif %}
+                        
+                        {% if status == 'inactive' %}
+                        <option value="inactive" selected>Inactive Only</option>
+                        {% else %}
+                        <option value="inactive">Inactive Only</option>
+                        {% endif %}
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Organization</th>
+                        <th>Package</th>
+                        <th>Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subscription in subscriptions %}
+                    <tr>
+                        <td>
+                            {% if subscription.organization %}
+                            {{ subscription.organization.name }}
+                            {% else %}
+                            <span class="text-muted">No Organization</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'package_detail' subscription.package.id %}">{{ subscription.package.name }}</a>
+                        </td>
+                        <td>{{ subscription.get_subscription_type_display }}</td>
+                        <td>{{ subscription.start_date|date:"M j, Y" }}</td>
+                        <td>{{ subscription.end_date|date:"M j, Y" }}</td>
+                        <td>
+                            {% if subscription.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if subscription.payment_status == 'paid' %}
+                            <span class="badge bg-success">{{ subscription.get_payment_status_display }}</span>
+                            {% elif subscription.payment_status == 'pending' %}
+                            <span class="badge bg-warning">{{ subscription.get_payment_status_display }}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ subscription.get_payment_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{% url 'subscription_detail' subscription.id %}" class="btn btn-sm btn-info" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if user.is_superuser or user.is_staff %}
+                                <a href="{% url 'subscription_update' subscription.id %}" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'subscription_delete' subscription.id %}" class="btn btn-sm btn-danger" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">
+                            {% if organization %}
+                            No subscriptions found for this organization.
+                            {% elif package %}
+                            No subscriptions found for this package.
+                            {% else %}
+                            No subscriptions found.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

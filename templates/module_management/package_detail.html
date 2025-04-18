@@ -1,0 +1,199 @@
+{% extends "module_management/base.html" %}
+
+{% block title %}{{ package.name }} - Module Management{% endblock %}
+
+{% block module_content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Package: {{ package.name }}</h4>
+        <div>
+            <a href="{% url 'package_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Packages
+            </a>
+            {% if user.is_superuser or user.is_staff %}
+            <a href="{% url 'package_update' package.id %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{% url 'package_delete' package.id %}" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Delete
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Package Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th style="width: 30%">Name</th>
+                                <td>{{ package.name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Code</th>
+                                <td><code>{{ package.code }}</code></td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    {% if package.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Monthly Price</th>
+                                <td>${{ package.price_monthly }}</td>
+                            </tr>
+                            <tr>
+                                <th>Yearly Price</th>
+                                <td>${{ package.price_yearly }}</td>
+                            </tr>
+                            <tr>
+                                <th>Created</th>
+                                <td>{{ package.created_at|date:"F j, Y, g:i a" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Last Updated</th>
+                                <td>{{ package.updated_at|date:"F j, Y, g:i a" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if package.description %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Description</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>{{ package.description|linebreaks }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Subscriptions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if subscriptions %}
+                        <div class="list-group">
+                            {% for subscription in subscriptions %}
+                            <a href="{% url 'subscription_detail' subscription.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ subscription.organization.name|default:"No Organization" }}</h5>
+                                    {% if subscription.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-1">
+                                    {{ subscription.get_subscription_type_display }} subscription
+                                    ({{ subscription.start_date|date:"M j, Y" }} - {{ subscription.end_date|date:"M j, Y" }})
+                                </p>
+                                <small>
+                                    Payment Status: 
+                                    <span class="badge {% if subscription.payment_status == 'paid' %}bg-success{% elif subscription.payment_status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ subscription.get_payment_status_display }}
+                                    </span>
+                                </small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No active subscriptions for this package.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Included Modules</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if modules %}
+                        <div class="list-group">
+                            {% for module in modules %}
+                            <a href="{% url 'module_detail' module.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ module.name }}</h5>
+                                    {% if module.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-1">{{ module.description|truncatechars:100 }}</p>
+                                <small>
+                                    Monthly: ${{ module.price_monthly }} | 
+                                    Yearly: ${{ module.price_yearly }}
+                                </small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No modules included in this package.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Included Feature Flags</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if feature_flags %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Module</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for flag in feature_flags %}
+                                    <tr>
+                                        <td>{{ flag.name }}</td>
+                                        <td>
+                                            <a href="{% url 'module_detail' flag.module.id %}">{{ flag.module.name }}</a>
+                                        </td>
+                                        <td>
+                                            {% if flag.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'feature_flag_detail' flag.id %}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No feature flags included in this package.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

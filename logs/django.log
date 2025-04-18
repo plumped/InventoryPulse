@@ -4988,3 +4988,7 @@
 2025-04-18 02:52:48,653 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51452
 2025-04-18 02:52:53,365 [INFO] [no-request-id] django.server: "GET /admin/ HTTP/1.1" 200 4505
 2025-04-18 02:53:13,534 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-18 02:53:14,571 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 02:53:57,997 [ERROR] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 500 304701
+2025-04-18 02:53:59,411 [ERROR] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 500 304701
+2025-04-18 02:54:13,038 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51452

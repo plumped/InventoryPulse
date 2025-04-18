@@ -11,7 +11,6 @@ class HistoryCheckingPasswordChangeForm(PasswordChangeForm):
     """
     Custom password change form that checks password history.
     """
-
     def clean_new_password1(self):
         """
         Validate that the new password hasn't been used before.
@@ -44,7 +43,6 @@ class HistoryCheckingSetPasswordForm(SetPasswordForm):
     Custom set password form that checks password history.
     Used for password reset.
     """
-
     def clean_new_password1(self):
         """
         Validate that the new password hasn't been used before.
@@ -81,7 +79,7 @@ class RegistrationForm(UserCreationForm):
     company_name = forms.CharField(max_length=100, required=True, help_text="Required. Enter your company name.")
     subdomain = forms.CharField(
         max_length=50,
-        required=True,
+        required=True, 
         help_text="Required. This will be your unique subdomain (e.g., 'yourcompany' for yourcompany.inventorypulse.com)."
     )
 
@@ -141,37 +139,55 @@ class RegistrationForm(UserCreationForm):
             subdomain = self.cleaned_data['subdomain']
 
             # Create the organization with subdomain
-            company = Organization.objects.create(
-                name=self.cleaned_data['company_name'],
-                code=org_code,
-                subdomain=subdomain,
-                subscription_active=True
-            )
-
-            # Add the user as an admin of the organization
-            company.admin_users.add(user)
-
-            # Create user profile if it doesn't exist
-            if not UserProfile.objects.filter(user=user).exists():
-                UserProfile.objects.create(
-                    user=user,
-                    organization=company
+            try:
+                company = Organization.objects.create(
+                    name=self.cleaned_data['company_name'],
+                    code=org_code,
+                    subdomain=subdomain,
+                    subscription_active=True
                 )
 
-            # Assign the Basic subscription package to the organization
-            basic_package = None
-            try:
-                basic_package = SubscriptionPackage.objects.get(code='basic')
-            except SubscriptionPackage.DoesNotExist:
-                # Create a basic package if it doesn't exist
+                # Log successful organization creation
                 import logging
                 logger = logging.getLogger('accessmanagement')
+                logger.info(f"Created organization {company.name} with code {company.code} for user {user.username}")
+
+                # Add the user as an admin of the organization
+                company.admin_users.add(user)
+
+                # Create user profile if it doesn't exist
+                if not UserProfile.objects.filter(user=user).exists():
+                    user_profile = UserProfile.objects.create(
+                        user=user,
+                        organization=company
+                    )
+                    logger.info(f"Created user profile for {user.username} with organization {company.name}")
+                else:
+                    # If profile exists, ensure organization is set
+                    user_profile = UserProfile.objects.get(user=user)
+                    if not user_profile.organization:
+                        user_profile.organization = company
+                        user_profile.save()
+                        logger.info(
+                            f"Updated existing user profile for {user.username} with organization {company.name}")
+            except Exception as e:
+                import logging
+                logger = logging.getLogger('accessmanagement')
+                logger.error(f"Error creating organization or user profile: {str(e)}")
+                raise
+
+            # Assign the Basic subscription package to the organization
+            try:
+                basic_package = SubscriptionPackage.objects.get(code='basic')
+                logger.info(f"Found existing basic subscription package for {company.name}")
+            except SubscriptionPackage.DoesNotExist:
+                # Create a basic package if it doesn't exist
                 logger.warning(
                     f"Basic subscription package not found during registration for {company.name}. Creating default package.")
 
+                # Create a default Basic package
+                from decimal import Decimal
                 try:
-                    # Create a default Basic package
-                    from decimal import Decimal
                     basic_package = SubscriptionPackage.objects.create(
                         name='Basic',
                         code='basic',
@@ -180,6 +196,7 @@ class RegistrationForm(UserCreationForm):
                         price_yearly=Decimal('499.90'),
                         is_active=True
                     )
+                    logger.info(f"Created new basic subscription package: {basic_package.name}")
 
                     # Try to add the inventory module if it exists
                     try:
@@ -187,54 +204,43 @@ class RegistrationForm(UserCreationForm):
                         inventory_module = Module.objects.filter(code='inventory', is_active=True).first()
                         if inventory_module:
                             basic_package.modules.add(inventory_module)
+                            logger.info(f"Added inventory module to basic package")
+                        else:
+                            logger.warning("No active inventory module found to add to basic package")
                     except Exception as e:
                         logger.warning(f"Could not add inventory module to basic package: {str(e)}")
                 except Exception as e:
-                    # If we can't create the package, log the error
                     logger.error(f"Error creating basic subscription package: {str(e)}")
-                    # Create a minimal package to avoid NoneType errors
-                    try:
-                        basic_package = SubscriptionPackage.objects.create(
-                            name='Basic',
-                            code='basic-' + str(uuid.uuid4())[:8],  # Ensure unique code
-                            description='Basic package',
-                            price_monthly=Decimal('0.00'),
-                            price_yearly=Decimal('0.00'),
-                            is_active=True
-                        )
-                    except Exception as e2:
-                        logger.error(f"Critical error creating fallback package: {str(e2)}")
-                        # If we still can't create a package, log it but continue
-                        # The template has null checks to handle this case
+                    raise
 
             # Set the subscription package on the organization
-            company.subscription_package = basic_package
-            company.save()
+            try:
+                company.subscription_package = basic_package
+                company.save()
+                logger.info(f"Assigned subscription package {basic_package.name} to organization {company.name}")
+            except Exception as e:
+                logger.error(f"Error assigning subscription package to organization: {str(e)}")
+                raise
 
             # Create a subscription record
-            today = datetime.date.today()
-            # Default to a 30-day trial period
-            end_date = today + datetime.timedelta(days=30)
+            try:
+                today = datetime.date.today()
+                # Default to a 30-day trial period
+                end_date = today + datetime.timedelta(days=30)
 
-            # Only create a subscription if we have a package
-            if basic_package:
-                try:
-                    Subscription.objects.create(
-                        organization=company,
-                        package=basic_package,
-                        subscription_type='trial',
-                        start_date=today,
-                        end_date=end_date,
-                        is_active=True,
-                        payment_status='pending'
-                    )
-                except Exception as e:
-                    # Log the error but continue
-                    import logging
-                    logger = logging.getLogger('accessmanagement')
-                    logger.error(f"Error creating subscription: {str(e)}")
-                    # The user can still access the system without a subscription record
-                    # They'll need to set up a subscription later
+                subscription = Subscription.objects.create(
+                    organization=company,
+                    package=basic_package,
+                    subscription_type='trial',
+                    start_date=today,
+                    end_date=end_date,
+                    is_active=True,
+                    payment_status='pending'
+                )
+                logger.info(f"Created subscription for {company.name}: {subscription}")
+            except Exception as e:
+                logger.error(f"Error creating subscription: {str(e)}")
+                raise
 
             # Add the new password to history
             add_password_to_history(user)

@@ -189,10 +189,6 @@
         <div class="row">
             <div class="col-md-4">
                 <p class="mb-0">
-                    <strong>Ihre Subdomain:</strong> {{ request.user.profile.organization.subdomain
-                    }}.inventorypulse.com<br>
-                    <strong>Ihr Paket:</strong> {% if request.user.profile.organization.subscription_package %}{{
-                    request.user.profile.organization.subscription_package.name }}{% else %}Basic{% endif %}<br>
                     <strong>Testphase endet am:</strong> {% for sub in
                     request.user.profile.organization.subscriptions.all %}{% if sub.is_active %}{{
                     sub.end_date|date:"d.m.Y" }}{% endif %}{% endfor %}

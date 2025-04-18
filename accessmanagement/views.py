@@ -220,28 +220,48 @@ def register(request):
                 user = form.save()
 
                 # Get the user's organization
-                organization = user.profile.organization
+                try:
+                    # Check if user has a profile
+                    if hasattr(user, 'profile'):
+                        organization = user.profile.organization
 
-                # Set the current tenant context
-                from core.middleware import TenantMiddleware
-                TenantMiddleware.set_tenant(organization)
+                        # Log organization details for debugging
+                        logger.info(f"User {user.username} has profile with organization: {organization}")
+
+                        # Set the current tenant context if organization exists
+                        if organization:
+                            from core.middleware import TenantMiddleware
+                            TenantMiddleware.set_tenant(organization)
+                        else:
+                            logger.warning(f"User {user.username} has profile but organization is None")
+                    else:
+                        logger.warning(f"User {user.username} does not have a profile")
+                        organization = None
+                except Exception as e:
+                    logger.error(f"Error getting organization for user {user.username}: {str(e)}")
+                    organization = None
 
                 # Log the user in
                 login(request, user)
 
                 # Add success message with organization and subscription details
-                messages.success(
-                    request,
-                    f'Welcome to InventoryPulse, {organization.name}! '
-                    f'Your account has been created successfully and your 30-day trial has started. '
-                    f'You can access your dashboard at {organization.subdomain}.inventorypulse.com'
-                )
+                if organization:
+                    messages.success(
+                        request,
+                        f'Welcome to InventoryPulse, {organization.name}! '
+                        f'Your account has been created successfully and your 30-day trial has started. '
+                        f'You can access your dashboard at {organization.subdomain}.inventorypulse.com'
+                    )
+                else:
+                    messages.success(
+                        request,
+                        f'Welcome to InventoryPulse! '
+                        f'Your account has been created successfully and your 30-day trial has started.'
+                    )
 
                 return redirect('dashboard')
             except Exception as e:
                 # Log the error
-                import logging
-                logger = logging.getLogger('accessmanagement')
                 logger.error(f"Error during registration: {str(e)}")
 
                 # Show error message to user

@@ -34,6 +34,23 @@ class OrganizationRegistrationForm(forms.ModelForm):
         model = Organization
         fields = ['name', 'subdomain', 'email', 'phone', 'address', 'website']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Check if active subscription packages exist
+        active_packages = SubscriptionPackage.objects.filter(is_active=True)
+        if not active_packages.exists():
+            # Log this issue
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error("No active subscription packages found for registration")
+
+            # You could set a default error message on the field
+            self.fields[
+                'subscription_package'].help_text = "No active subscription packages available. Please contact the administrator."
+
+        self.fields['subscription_package'].queryset = active_packages
+
     def clean_subdomain(self):
         """
         Validate that the subdomain is unique and contains only valid characters.
@@ -87,7 +104,18 @@ class OrganizationRegistrationForm(forms.ModelForm):
         """
         # Save the organization
         organization = super().save(commit=False)
-        organization.subscription_package = self.cleaned_data.get('subscription_package')
+
+        # Get subscription package safely
+        subscription_package = self.cleaned_data.get('subscription_package')
+        if subscription_package:
+            organization.subscription_package = subscription_package
+        else:
+            # Log the issue
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning("Creating organization without subscription package")
+            # You might want to set a default package or handle this case differently
+
         organization.subscription_active = True
 
         if commit:

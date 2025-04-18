@@ -8,13 +8,15 @@ from master_data.models.organisations_models import Organization
 from .models import Module, FeatureFlag, SubscriptionPackage, Subscription
 
 
-# Helper function to check if user is admin
+# Helper function to check if user is superadmin
 def is_admin(user):
-    return user.is_superuser or user.is_staff
+    # Only superusers can access module management
+    return user.is_superuser
 
 
 # Module views
 @login_required
+@user_passes_test(is_admin)
 def module_list(request):
     """View to list all modules"""
     modules = Module.objects.all()
@@ -34,6 +36,7 @@ def module_list(request):
 
 
 @login_required
+@user_passes_test(is_admin)
 def module_detail(request, module_id):
     """View to show details of a specific module"""
     module = get_object_or_404(Module, id=module_id)
@@ -129,6 +132,7 @@ def module_delete(request, module_id):
 
 # Feature Flag views
 @login_required
+@user_passes_test(is_admin)
 def feature_flag_list(request):
     """View to list all feature flags"""
     feature_flags = FeatureFlag.objects.all()
@@ -151,6 +155,7 @@ def feature_flag_list(request):
 
 
 @login_required
+@user_passes_test(is_admin)
 def feature_flag_detail(request, flag_id):
     """View to show details of a specific feature flag"""
     feature_flag = get_object_or_404(FeatureFlag, id=flag_id)
@@ -252,6 +257,7 @@ def feature_flag_delete(request, flag_id):
 
 # Subscription Package views
 @login_required
+@user_passes_test(is_admin)
 def package_list(request):
     """View to list all subscription packages"""
     packages = SubscriptionPackage.objects.all()
@@ -265,6 +271,7 @@ def package_list(request):
 
 
 @login_required
+@user_passes_test(is_admin)
 def package_detail(request, package_id):
     """View to show details of a specific subscription package"""
     package = get_object_or_404(SubscriptionPackage, id=package_id)
@@ -393,6 +400,7 @@ def package_delete(request, package_id):
 
 # Subscription views
 @login_required
+@user_passes_test(is_admin)
 def subscription_list(request):
     """View to list all subscriptions"""
     subscriptions = Subscription.objects.all()
@@ -432,6 +440,7 @@ def subscription_list(request):
 
 
 @login_required
+@user_passes_test(is_admin)
 def subscription_detail(request, subscription_id):
     """View to show details of a specific subscription"""
     subscription = get_object_or_404(Subscription, id=subscription_id)

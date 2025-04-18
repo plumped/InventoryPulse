@@ -88,6 +88,9 @@ urlpatterns = [
     path('docs/', core_views.documentation_view, name='docs'),
     path('docs/<path:path>', core_views.documentation_view, name='docs_with_path'),
 
+    # === Superadmin Dashboard ===
+    path('superadmin/', include('superadmin.urls')),
+
     # === Select2 ===
     path('select2/', include('django_select2.urls')),
 ]

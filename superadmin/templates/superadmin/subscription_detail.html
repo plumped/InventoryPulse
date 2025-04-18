@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ subscription.organization.name }} - Subscription Details - Superadmin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0">Subscription Details: {{ subscription.organization.name }}</h1>
+                    <div>
+                        <a href="{% url 'superadmin:subscription_list' %}" class="btn btn-light btn-sm me-2">
+                            <i class="bi bi-arrow-left"></i> Back to Subscriptions
+                        </a>
+                        <a href="{% url 'superadmin:dashboard' %}" class="btn btn-light btn-sm">
+                            <i class="bi bi-house"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Subscription Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Organization:</div>
+                                        <div class="col-md-9">
+                                            <a href="{% url 'superadmin:organization_detail' subscription.organization.id %}">
+                                                {{ subscription.organization.name }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Package:</div>
+                                        <div class="col-md-9">
+                                            <a href="{% url 'superadmin:package_detail' subscription.package.id %}">
+                                                {{ subscription.package.name }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Subscription Type:</div>
+                                        <div class="col-md-9">{{ subscription.get_subscription_type_display }}</div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Status:</div>
+                                        <div class="col-md-9">
+                                            {% if subscription.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Start Date:</div>
+                                        <div class="col-md-9">{{ subscription.start_date|date:"d.m.Y" }}</div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">End Date:</div>
+                                        <div class="col-md-9">{{ subscription.end_date|date:"d.m.Y" }}</div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Payment Status:</div>
+                                        <div class="col-md-9">
+                                            {% if subscription.payment_status == 'paid' %}
+                                            <span class="badge bg-success">Paid</span>
+                                            {% elif subscription.payment_status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                            {% elif subscription.payment_status == 'failed' %}
+                                            <span class="badge bg-danger">Failed</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ subscription.payment_status|title }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-3 fw-bold">Created:</div>
+                                        <div class="col-md-9">{{ subscription.created_at|date:"d.m.Y H:i" }}</div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-3 fw-bold">Last Updated:</div>
+                                        <div class="col-md-9">{{ subscription.updated_at|date:"d.m.Y H:i" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Subscription Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-4">
+                                        <h6>Package Modules</h6>
+                                        <div class="d-flex align-items-center">
+                                            <div class="display-4 me-3">{{ package_modules.count }}</div>
+                                            <div class="text-muted">Modules from package</div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <h6>Custom Modules</h6>
+                                        <div class="d-flex align-items-center">
+                                            <div class="display-4 me-3">{{ custom_modules.count }}</div>
+                                            <div class="text-muted">Additional modules</div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <h6>Package Features</h6>
+                                        <div class="d-flex align-items-center">
+                                            <div class="display-4 me-3">{{ package_features.count }}</div>
+                                            <div class="text-muted">Features from package</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6>Custom Features</h6>
+                                        <div class="d-flex align-items-center">
+                                            <div class="display-4 me-3">{{ custom_features.count }}</div>
+                                            <div class="text-muted">Additional features</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Modules Section -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Modules</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if all_modules %}
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Code</th>
+                                            <th>Status</th>
+                                            <th>Source</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for module in all_modules %}
+                                        <tr>
+                                            <td>{{ module.name }}</td>
+                                            <td><code>{{ module.code }}</code></td>
+                                            <td>
+                                                {% if module.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if module in package_modules %}
+                                                <span class="badge bg-primary">Package</span>
+                                                {% else %}
+                                                <span class="badge bg-info">Custom</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'superadmin:module_detail' module.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                No modules are included in this subscription.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- All Features Section -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Feature Flags</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if all_features %}
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Code</th>
+                                            <th>Module</th>
+                                            <th>Status</th>
+                                            <th>Source</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for feature in all_features %}
+                                        <tr>
+                                            <td>{{ feature.name }}</td>
+                                            <td><code>{{ feature.code }}</code></td>
+                                            <td>
+                                                <a href="{% url 'superadmin:module_detail' feature.module.id %}">
+                                                    {{ feature.module.name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% if feature.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if feature in package_features %}
+                                                <span class="badge bg-primary">Package</span>
+                                                {% else %}
+                                                <span class="badge bg-info">Custom</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'superadmin:feature_flag_detail' feature.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                No feature flags are included in this subscription.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Custom Settings Section -->
+                    {% if custom_settings %}
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Custom Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <pre class="bg-light p-3 rounded"><code>{{ custom_settings|pprint }}</code></pre>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

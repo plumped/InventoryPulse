@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ action }} Module - Superadmin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0">{{ action }} Module</h1>
+                    <div>
+                        <a href="{% url 'superadmin:module_list' %}" class="btn btn-light btn-sm me-2">
+                            <i class="bi bi-arrow-left"></i> Back to Modules
+                        </a>
+                        <a href="{% url 'superadmin:dashboard' %}" class="btn btn-light btn-sm">
+                            <i class="bi bi-house"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Basic Information</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="name" class="form-label">Module Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="name" name="name" value="{{ module.name|default:'' }}" required>
+                                            <div class="invalid-feedback">
+                                                Please provide a module name.
+                                            </div>
+                                            <small class="text-muted">The display name of the module.</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="code" class="form-label">Module Code <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" id="code" name="code" value="{{ module.code|default:'' }}" required>
+                                            <div class="invalid-feedback">
+                                                Please provide a module code.
+                                            </div>
+                                            <small class="text-muted">A unique identifier for the module (e.g., inventory, suppliers).</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label">Description</label>
+                                            <textarea class="form-control" id="description" name="description" rows="5">{{ module.description|default:'' }}</textarea>
+                                            <small class="text-muted">A detailed description of the module's functionality.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Pricing & Status</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="price_monthly" class="form-label">Monthly Price (€) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">€</span>
+                                                <input type="number" class="form-control" id="price_monthly" name="price_monthly" 
+                                                       value="{{ module.price_monthly|default:'0.00' }}" step="0.01" min="0" required>
+                                                <div class="invalid-feedback">
+                                                    Please provide a valid price.
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">The monthly subscription price for this module.</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="price_yearly" class="form-label">Yearly Price (€) <span class="text-danger">*</span></label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">€</span>
+                                                <input type="number" class="form-control" id="price_yearly" name="price_yearly" 
+                                                       value="{{ module.price_yearly|default:'0.00' }}" step="0.01" min="0" required>
+                                                <div class="invalid-feedback">
+                                                    Please provide a valid price.
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">The yearly subscription price for this module.</small>
+                                        </div>
+                                        
+                                        <div class="form-check form-switch mb-3">
+                                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                                   {% if module.is_active|default:True %}checked{% endif %}>
+                                            <label class="form-check-label" for="is_active">Module Active</label>
+                                            <div class="form-text">
+                                                If checked, this module will be available for subscription packages.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'superadmin:module_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Save Module
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll('.needs-validation');
+        
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+    
+    // Calculate yearly price based on monthly price (with discount)
+    document.getElementById('price_monthly').addEventListener('change', function() {
+        const monthlyPrice = parseFloat(this.value) || 0;
+        const yearlyPrice = (monthlyPrice * 12 * 0.9).toFixed(2); // 10% discount
+        document.getElementById('price_yearly').value = yearlyPrice;
+    });
+</script>
+{% endblock %}
+{% endblock %}

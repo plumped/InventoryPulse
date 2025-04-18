@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Superadmin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Superadmin Dashboard</h1>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-shield-lock-fill me-2"></i>
+                        <strong>Restricted Area:</strong> This dashboard is only accessible to superadmins and provides platform-level administration capabilities.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Modules</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">{{ active_module_count }}/{{ module_count }}</h2>
+                        <i class="bi bi-boxes fs-1"></i>
+                    </div>
+                    <p class="card-text">Active/Total Modules</p>
+                    <a href="{% url 'superadmin:module_list' %}" class="btn btn-light btn-sm">Manage Modules</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Packages</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">{{ active_package_count }}/{{ package_count }}</h2>
+                        <i class="bi bi-box-seam fs-1"></i>
+                    </div>
+                    <p class="card-text">Active/Total Packages</p>
+                    <a href="{% url 'superadmin:package_list' %}" class="btn btn-light btn-sm">Manage Packages</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Subscriptions</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">{{ active_subscription_count }}/{{ subscription_count }}</h2>
+                        <i class="bi bi-credit-card fs-1"></i>
+                    </div>
+                    <p class="card-text">Active/Total Subscriptions</p>
+                    <a href="{% url 'superadmin:subscription_list' %}" class="btn btn-light btn-sm">Manage Subscriptions</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h5 class="card-title">Organizations</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">{{ organization_count }}</h2>
+                        <i class="bi bi-building fs-1"></i>
+                    </div>
+                    <p class="card-text">Total Organizations</p>
+                    <a href="{% url 'superadmin:organization_list' %}" class="btn btn-light btn-sm">Manage Organizations</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="{% url 'superadmin:module_create' %}" class="btn btn-primary btn-lg w-100 mb-2">
+                                <i class="bi bi-plus-circle me-2"></i> Create Module
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'superadmin:audit_log_list' %}" class="btn btn-secondary btn-lg w-100 mb-2">
+                                <i class="bi bi-journal-text me-2"></i> View Audit Logs
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'admin:index' %}" class="btn btn-info btn-lg w-100 mb-2">
+                                <i class="bi bi-gear me-2"></i> Django Admin
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-lg w-100 mb-2">
+                                <i class="bi bi-house me-2"></i> Main Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Object</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_logs %}
+                                <tr>
+                                    <td>{{ log.timestamp|date:"d.m.Y H:i" }}</td>
+                                    <td>{{ log.user.username|default:"Anonymous" }}</td>
+                                    <td>{{ log.get_action_display }}</td>
+                                    <td>
+                                        {% if log.content_type %}
+                                            {{ log.content_type.model|title }} #{{ log.object_id }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ log.ip_address|default:"N/A" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No recent activity</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'superadmin:audit_log_list' %}" class="btn btn-sm btn-outline-secondary">View All Logs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

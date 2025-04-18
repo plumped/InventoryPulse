@@ -175,6 +175,11 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'superadmin': {
+            'handlers': ['console', 'file', 'error_file', 'security_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     }
 }
 
@@ -221,6 +226,7 @@ INSTALLED_APPS = [
     'interfaces',
     'documents',
     'module_management',  # Module management system
+    'superadmin',  # Superadmin dashboard
 
     # Two-factor authentication
     'django_otp',
@@ -245,6 +251,7 @@ MIDDLEWARE = [
     'accessmanagement.middleware.PasswordPolicyMiddleware',  # Password policy enforcement
     'accessmanagement.middleware.RoleBasedAccessMiddleware',  # Role-based access control
     'module_management.middleware.ModuleAccessMiddleware',  # Module access control
+    'superadmin.middleware.SuperAdminMiddleware',  # Superadmin access control
 ]
 
 
@@ -309,6 +316,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Password expiration settings (custom middleware will enforce these)
 PASSWORD_EXPIRY_DAYS = 90  # Passwords expire after 90 days
 PASSWORD_HISTORY_COUNT = 5  # Cannot reuse the last 5 passwords
+
+# Superadmin security settings
+SUPERADMIN_ALLOWED_IPS = ['127.0.0.1', '::1']  # Allow localhost access only by default
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 24 hours (in seconds)
 
 

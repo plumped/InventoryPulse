@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Module - Superadmin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h1 class="h3 mb-0">Delete Module: {{ module.name }}</h1>
+                    <div>
+                        <a href="{% url 'superadmin:module_detail' module.id %}" class="btn btn-light btn-sm me-2">
+                            <i class="bi bi-arrow-left"></i> Back to Module
+                        </a>
+                        <a href="{% url 'superadmin:dashboard' %}" class="btn btn-light btn-sm">
+                            <i class="bi bi-house"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Warning:</strong> You are about to delete the module "{{ module.name }}". This action cannot be undone.
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Module Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Name:</div>
+                                        <div class="col-md-8">{{ module.name }}</div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Code:</div>
+                                        <div class="col-md-8"><code>{{ module.code }}</code></div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4 fw-bold">Status:</div>
+                                        <div class="col-md-8">
+                                            {% if module.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 fw-bold">Created:</div>
+                                        <div class="col-md-8">{{ module.created_at|date:"d.m.Y H:i" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">Deletion Impact</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Deleting this module will have the following consequences:</p>
+                                    <ul>
+                                        <li>All feature flags associated with this module will be deleted</li>
+                                        <li>The module will be removed from all subscription packages</li>
+                                        <li>Organizations with access to this module will lose that access</li>
+                                        <li>Any custom modules in subscriptions will be removed</li>
+                                    </ul>
+                                    <p class="mb-0 text-danger">
+                                        <strong>Note:</strong> This action will be logged in the audit trail.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'superadmin:module_detail' module.id %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Confirm Delete
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

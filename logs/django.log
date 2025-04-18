@@ -5197,3 +5197,140 @@
 2025-04-18 12:29:09,765 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 52924
 2025-04-18 12:30:37,641 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
 2025-04-18 12:30:37,649 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 52924
+2025-04-18 12:33:56,421 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\superadmin\middleware.py changed, reloading.
+2025-04-18 12:33:57,350 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 12:38:07,315 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51389
+2025-04-18 12:38:16,756 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 12:38:20,687 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-18 12:38:20,722 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 53228
+2025-04-18 12:38:24,723 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 200 36106
+2025-04-18 12:38:31,265 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-18 12:38:31,273 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 53228
+2025-04-18 13:05:19,307 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 13:05:24,333 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-18 13:05:24,435 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 53228
+2025-04-18 13:05:25,079 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-18 13:05:25,086 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 53228
+2025-04-18 13:05:27,166 [ERROR] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 500 84313
+2025-04-18 13:06:21,754 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\settings.py changed, reloading.
+2025-04-18 13:06:22,771 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 13:07:13,058 [INFO] [no-request-id] superadmin: Superadmin session timeout for user chrigi from IP 127.0.0.1
+2025-04-18 13:07:13,111 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 302 0
+2025-04-18 13:07:13,164 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71594
+2025-04-18 13:07:22,048 [INFO] [no-request-id] superadmin: Superadmin session timeout for user chrigi from IP 127.0.0.1
+2025-04-18 13:07:22,055 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 302 0
+2025-04-18 13:07:22,068 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71594
+2025-04-18 13:07:33,684 [INFO] [no-request-id] django.server: "POST /logout/ HTTP/1.1" 302 0
+2025-04-18 13:07:33,688 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 200 37210
+2025-04-18 13:07:33,705 [INFO] [no-request-id] django.server: "GET /media/dashboard.png HTTP/1.1" 200 240284
+2025-04-18 13:07:33,711 [WARNING] [no-request-id] django.server: "GET /api/placeholder/600/500 HTTP/1.1" 404 9635
+2025-04-18 13:07:33,717 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/600 HTTP/1.1" 404 9638
+2025-04-18 13:07:33,719 [WARNING] [no-request-id] django.server: "GET /api/placeholder/300/150 HTTP/1.1" 404 9635
+2025-04-18 13:07:33,722 [WARNING] [no-request-id] django.server: "GET /api/placeholder/50/50 HTTP/1.1" 404 9629
+2025-04-18 13:07:33,722 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/800 HTTP/1.1" 404 9638
+2025-04-18 13:07:39,760 [INFO] [no-request-id] accessmanagement: User chrigi logged in successfully
+2025-04-18 13:07:39,764 [INFO] [no-request-id] django.server: "POST /login/ HTTP/1.1" 302 0
+2025-04-18 13:07:39,771 [INFO] [no-request-id] django.server: "GET /account/two_factor/ HTTP/1.1" 200 1418
+2025-04-18 13:07:43,809 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 302 0
+2025-04-18 13:07:43,824 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71227
+2025-04-18 13:07:45,724 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 200 36984
+2025-04-18 13:07:55,527 [INFO] [no-request-id] django.server: "GET /superadmin/modules/ HTTP/1.1" 200 43433
+2025-04-18 13:08:02,495 [INFO] [no-request-id] django.server: "GET /superadmin/packages/ HTTP/1.1" 200 38798
+2025-04-18 13:08:04,961 [INFO] [no-request-id] django.server: "GET /superadmin/packages/2/ HTTP/1.1" 200 42743
+2025-04-18 13:08:06,966 [INFO] [no-request-id] django.server: "GET /superadmin/feature-flags/ HTTP/1.1" 200 45206
+2025-04-18 13:08:21,230 [INFO] [no-request-id] django.server: "GET /superadmin/feature-flags/8/ HTTP/1.1" 200 37993
+2025-04-18 13:08:35,362 [INFO] [no-request-id] django.server: "GET /superadmin/packages/ HTTP/1.1" 200 38798
+2025-04-18 13:08:38,707 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 200 36984
+2025-04-18 13:08:39,831 [INFO] [no-request-id] django.server: "GET /superadmin/organizations/ HTTP/1.1" 200 34709
+2025-04-18 13:08:42,194 [INFO] [no-request-id] django.server: "GET /superadmin/organizations/15/ HTTP/1.1" 200 40177
+2025-04-18 13:08:48,736 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 200 36984
+2025-04-18 13:09:34,070 [INFO] [no-request-id] django.server: "GET /modules/ HTTP/1.1" 302 0
+2025-04-18 13:09:34,084 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 200 36984
+2025-04-18 13:09:39,815 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 302 0
+2025-04-18 13:09:39,826 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71227
+2025-04-18 13:09:44,118 [INFO] [no-request-id] django.server: "GET /modules/ HTTP/1.1" 302 0
+2025-04-18 13:09:44,132 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 200 36984
+2025-04-18 13:09:55,480 [INFO] [no-request-id] django.server: "GET /superadmin/audit-logs/ HTTP/1.1" 200 49388
+2025-04-18 13:10:19,475 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:10:20,414 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:10:21,096 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:10:21,858 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:11:34,814 [INFO] [no-request-id] django.server: "GET /superadmin/packages/ HTTP/1.1" 200 38798
+2025-04-18 13:11:39,542 [INFO] [no-request-id] django.server: "GET /superadmin/packages/3/ HTTP/1.1" 200 44859
+2025-04-18 13:46:52,833 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-18 13:46:56,069 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:47:01,040 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:47:03,026 [ERROR] [no-request-id] django.server: "GET /inventory/warehouses/create/ HTTP/1.1" 500 110363
+2025-04-18 13:47:10,327 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47017
+2025-04-18 13:47:10,341 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:47:10,881 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47017
+2025-04-18 13:47:10,890 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:47:17,687 [INFO] [no-request-id] django.server: "GET /admin/auth/user/17/change/ HTTP/1.1" 200 91849
+2025-04-18 13:47:17,698 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:47:34,513 [INFO] [no-request-id] django.server: "GET /admin/core/auditlog/ HTTP/1.1" 200 55372
+2025-04-18 13:47:34,526 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:47:48,280 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/ HTTP/1.1" 200 48435
+2025-04-18 13:47:48,291 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:47:49,395 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/15/change/ HTTP/1.1" 200 66467
+2025-04-18 13:47:49,407 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:47:49,429 [INFO] [no-request-id] django.server: "GET /static/admin/img/inline-delete.svg HTTP/1.1" 200 560
+2025-04-18 13:48:17,845 [INFO] [no-request-id] django.server: "GET /admin/module_management/subscriptionpackage/ HTTP/1.1" 200 47853
+2025-04-18 13:48:17,855 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:48:20,601 [INFO] [no-request-id] django.server: "GET /admin/module_management/subscriptionpackage/2/change/ HTTP/1.1" 200 65988
+2025-04-18 13:48:20,612 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:51:02,829 [INFO] [no-request-id] django.server: "GET /admin/module_management/subscriptionpackage/2/change/ HTTP/1.1" 200 65988
+2025-04-18 13:51:02,841 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:51:04,208 [INFO] [no-request-id] django.server: "GET /admin/module_management/subscriptionpackage/2/change/ HTTP/1.1" 200 65988
+2025-04-18 13:51:04,220 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:51:05,685 [INFO] [no-request-id] django.server: "GET /admin/module_management/subscriptionpackage/ HTTP/1.1" 200 47853
+2025-04-18 13:51:08,587 [INFO] [no-request-id] django.server: "GET /admin/module_management/subscriptionpackage/3/change/ HTTP/1.1" 200 71630
+2025-04-18 13:51:08,599 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:51:12,854 [INFO] [no-request-id] django.server: "GET /admin/module_management/subscriptionpackage/ HTTP/1.1" 200 47853
+2025-04-18 13:51:41,545 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:51:42,049 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:51:42,220 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:51:42,385 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51319
+2025-04-18 13:51:49,140 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/ HTTP/1.1" 200 48435
+2025-04-18 13:51:49,151 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:51:50,591 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/15/change/ HTTP/1.1" 200 66467
+2025-04-18 13:51:50,602 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:51:55,253 [INFO] [no-request-id] django.server: "POST /admin/master_data/organization/15/change/ HTTP/1.1" 302 0
+2025-04-18 13:51:55,269 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/ HTTP/1.1" 200 48659
+2025-04-18 13:51:55,281 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-18 13:51:58,687 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-18 13:51:59,418 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-18 13:51:59,568 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-18 13:51:59,733 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-18 13:52:02,528 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-18 13:52:02,853 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-18 13:52:31,519 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-18 13:52:32,180 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-18 13:52:38,892 [INFO] [no-request-id] superadmin: Superadmin session timeout for user chrigi from IP 127.0.0.1
+2025-04-18 13:52:38,896 [INFO] [no-request-id] django.server: "GET /superadmin/packages/3/ HTTP/1.1" 302 0
+2025-04-18 13:52:38,917 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71594
+2025-04-18 13:52:43,549 [INFO] [no-request-id] superadmin: Superadmin session timeout for user chrigi from IP 127.0.0.1
+2025-04-18 13:52:43,556 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 302 0
+2025-04-18 13:52:43,569 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71594
+2025-04-18 13:52:44,049 [INFO] [no-request-id] superadmin: Superadmin session timeout for user chrigi from IP 127.0.0.1
+2025-04-18 13:52:44,057 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 302 0
+2025-04-18 13:52:44,069 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71594
+2025-04-18 13:52:46,541 [INFO] [no-request-id] django.server: "POST /logout/ HTTP/1.1" 302 0
+2025-04-18 13:52:46,544 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 200 37210
+2025-04-18 13:52:46,556 [INFO] [no-request-id] django.server: "GET /media/dashboard.png HTTP/1.1" 200 240284
+2025-04-18 13:52:46,572 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/800 HTTP/1.1" 404 9638
+2025-04-18 13:52:46,573 [WARNING] [no-request-id] django.server: "GET /api/placeholder/300/150 HTTP/1.1" 404 9635
+2025-04-18 13:52:46,578 [WARNING] [no-request-id] django.server: "GET /api/placeholder/50/50 HTTP/1.1" 404 9629
+2025-04-18 13:52:46,578 [WARNING] [no-request-id] django.server: "GET /api/placeholder/600/500 HTTP/1.1" 404 9635
+2025-04-18 13:52:46,590 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/600 HTTP/1.1" 404 9638
+2025-04-18 13:52:51,973 [INFO] [no-request-id] accessmanagement: User chrigi logged in successfully
+2025-04-18 13:52:51,976 [INFO] [no-request-id] django.server: "POST /login/ HTTP/1.1" 302 0
+2025-04-18 13:52:51,985 [INFO] [no-request-id] django.server: "GET /account/two_factor/ HTTP/1.1" 200 1418
+2025-04-18 13:52:55,047 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 302 0
+2025-04-18 13:52:55,060 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71227
+2025-04-18 13:52:56,237 [INFO] [no-request-id] django.server: "GET /superadmin/ HTTP/1.1" 200 38607
+2025-04-18 13:53:00,733 [INFO] [no-request-id] django.server: "GET /superadmin/modules/ HTTP/1.1" 200 43435
+2025-04-18 13:53:04,600 [INFO] [no-request-id] django.server: "GET /superadmin/modules/1/ HTTP/1.1" 200 51674
+2025-04-18 13:53:17,772 [ERROR] [no-request-id] django.server: "GET /inventory/warehouses/create/ HTTP/1.1" 500 110363
+2025-04-18 13:53:22,974 [WARNING] [no-request-id] django.server: "GET /products/products/ HTTP/1.1" 403 135
+2025-04-18 13:53:27,548 [WARNING] [no-request-id] django.server: "GET /products/categories/ HTTP/1.1" 403 135
+2025-04-18 13:53:50,878 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\templatetags\module_tags.py changed, reloading.

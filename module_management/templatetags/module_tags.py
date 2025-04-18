@@ -122,3 +122,40 @@ def subscription_info(context):
         'subscription': subscription,
         'organization': organization
     }
+
+
+@register.simple_tag(takes_context=True)
+def has_feature_access(context, feature_code):
+    """
+    Check if the current user has access to a feature.
+    Usage: {% has_feature_access "feature_code" %}
+    """
+    request = context.get('request')
+    if not request or not request.user.is_authenticated:
+        return False
+
+    # For superusers, always return True
+    if request.user.is_superuser:
+        return True
+
+    # Check if the user's organization has an active subscription with this feature
+    try:
+        # Get user's organization through profile
+        if hasattr(request.user, 'profile') and hasattr(request.user.profile, 'departments'):
+            departments = request.user.profile.departments.all()
+            if departments.exists():
+                organization = departments.first().organization
+
+                # Check if organization has an active subscription with this feature
+                active_subscriptions = Subscription.objects.filter(
+                    organization=organization,
+                    is_active=True
+                )
+
+                for subscription in active_subscriptions:
+                    if subscription.has_feature_access(feature_code):
+                        return True
+    except Exception:
+        pass
+
+    return False

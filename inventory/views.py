@@ -15,6 +15,8 @@ from django.utils import timezone
 from accessmanagement.models import WarehouseAccess
 from core.utils.pagination import paginate_queryset
 from master_data.models.organisations_models import Department
+from master_data.models.organisations_models import Organization
+from module_management.models import Subscription
 from product_management.models.categories_models import Category
 from product_management.models.products_models import ProductWarehouse, Product
 from tracking.models.batch_numbers_models import BatchNumber
@@ -726,6 +728,39 @@ def stock_take_barcode_scan(request, pk):
     if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'manage_stock'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, in dieser Inventur zu zählen.")
 
+    # Check if user has access to barcode scanning feature
+    has_feature_access = False
+
+    # Superusers always have access
+    if request.user.is_superuser:
+        has_feature_access = True
+    else:
+        # Get user's organization
+        user_organizations = Organization.objects.filter(
+            Q(admin_users=request.user) |
+            Q(departments__members=request.user) |
+            Q(departments__manager=request.user)
+        ).distinct()
+
+        # Check if any organization has access to the feature
+        for org in user_organizations:
+            subscriptions = Subscription.objects.filter(
+                organization=org,
+                is_active=True
+            )
+
+            for subscription in subscriptions:
+                if subscription.has_feature_access('barcode_scanning'):
+                    has_feature_access = True
+                    break
+
+            if has_feature_access:
+                break
+
+    if not has_feature_access:
+        messages.warning(request, 'Barcode scanning is not available in your subscription package.')
+        return redirect('stock_take_detail', pk=stock_take.pk)
+
     # Nur laufende Inventuren können gescannt werden
     if stock_take.status != 'in_progress':
         messages.error(request, f'Barcode-Scan nicht möglich, da die Inventur {stock_take.get_status_display()} ist.')
@@ -781,6 +816,39 @@ def stock_take_report(request, pk):
     # Zugriffskontrolle
     if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'view'):
         return HttpResponseForbidden("Sie haben keinen Zugriff auf diesen Bericht.")
+
+    # Check if user has access to stock take reports feature
+    has_feature_access = False
+
+    # Superusers always have access
+    if request.user.is_superuser:
+        has_feature_access = True
+    else:
+        # Get user's organization
+        user_organizations = Organization.objects.filter(
+            Q(admin_users=request.user) |
+            Q(departments__members=request.user) |
+            Q(departments__manager=request.user)
+        ).distinct()
+
+        # Check if any organization has access to the feature
+        for org in user_organizations:
+            subscriptions = Subscription.objects.filter(
+                organization=org,
+                is_active=True
+            )
+
+            for subscription in subscriptions:
+                if subscription.has_feature_access('stock_take_reports'):
+                    has_feature_access = True
+                    break
+
+            if has_feature_access:
+                break
+
+    if not has_feature_access:
+        messages.warning(request, 'Detailed stock take reports are not available in your subscription package.')
+        return redirect('stock_take_detail', pk=stock_take.pk)
 
     # Statistiken berechnen
     total_items = stock_take.stocktakeitem_set.count()
@@ -891,6 +959,39 @@ def stock_take_export_csv(request, pk):
     if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'view'):
         return HttpResponseForbidden("Sie haben keinen Zugriff auf diesen Export.")
 
+    # Check if user has access to CSV export feature
+    has_feature_access = False
+
+    # Superusers always have access
+    if request.user.is_superuser:
+        has_feature_access = True
+    else:
+        # Get user's organization
+        user_organizations = Organization.objects.filter(
+            Q(admin_users=request.user) |
+            Q(departments__members=request.user) |
+            Q(departments__manager=request.user)
+        ).distinct()
+
+        # Check if any organization has access to the feature
+        for org in user_organizations:
+            subscriptions = Subscription.objects.filter(
+                organization=org,
+                is_active=True
+            )
+
+            for subscription in subscriptions:
+                if subscription.has_feature_access('export_csv'):
+                    has_feature_access = True
+                    break
+
+            if has_feature_access:
+                break
+
+    if not has_feature_access:
+        messages.warning(request, 'CSV export is not available in your subscription package.')
+        return redirect('stock_take_detail', pk=stock_take.pk)
+
     # CSV Datei erstellen
     response = HttpResponse(content_type='text/csv')
     response[
@@ -929,6 +1030,43 @@ def stock_take_export_csv(request, pk):
 def stock_take_export_pdf(request, pk):
     """Export a stock take to PDF."""
     stock_take = get_object_or_404(StockTake, pk=pk)
+
+    # Zugriffskontrolle
+    if not WarehouseAccess.has_access(request.user, stock_take.warehouse, 'view'):
+        return HttpResponseForbidden("Sie haben keinen Zugriff auf diesen Export.")
+
+    # Check if user has access to PDF export feature
+    has_feature_access = False
+
+    # Superusers always have access
+    if request.user.is_superuser:
+        has_feature_access = True
+    else:
+        # Get user's organization
+        user_organizations = Organization.objects.filter(
+            Q(admin_users=request.user) |
+            Q(departments__members=request.user) |
+            Q(departments__manager=request.user)
+        ).distinct()
+
+        # Check if any organization has access to the feature
+        for org in user_organizations:
+            subscriptions = Subscription.objects.filter(
+                organization=org,
+                is_active=True
+            )
+
+            for subscription in subscriptions:
+                if subscription.has_feature_access('export_pdf'):
+                    has_feature_access = True
+                    break
+
+            if has_feature_access:
+                break
+
+    if not has_feature_access:
+        messages.warning(request, 'PDF export is not available in your subscription package.')
+        return redirect('stock_take_detail', pk=stock_take.pk)
 
     # Hier würde man eine PDF-Bibliothek wie ReportLab verwenden
     # Für dieses Beispiel geben wir nur eine einfache Nachricht zurück

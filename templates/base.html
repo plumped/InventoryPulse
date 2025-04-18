@@ -540,6 +540,14 @@
                         </a>
                     </li>
                     {% endif %}
+                    {% if user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'superadmin' in request.path %}active{% endif %}"
+                           href="{% url 'superadmin:dashboard' %}">
+                           <i class="bi bi-shield-lock"></i> Superadmin
+                        </a>
+                    </li>
+                    {% endif %}
                     <!-- Dark Mode Toggle -->
                     <li class="nav-item me-2">
                         <button id="theme-toggle" class="btn btn-outline-light border-0">

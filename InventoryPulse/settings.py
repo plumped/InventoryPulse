@@ -281,12 +281,42 @@ WSGI_APPLICATION = 'InventoryPulse.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# Default to SQLite for development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Use PostgreSQL in production or if configured
+if not DEBUG or os.environ.get('USE_POSTGRES'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'inventorypulse'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 600,  # 10 minutes connection persistence
+            'OPTIONS': {
+                'connect_timeout': 10,
+                'application_name': 'InventoryPulse',
+            },
+            'ATOMIC_REQUESTS': True,  # Wrap each HTTP request in a transaction
+        }
+    }
+
+# Database connection pooling (requires django-db-connection-pool)
+if os.environ.get('USE_DB_POOL'):
+    # Update the engine to use the pooled version
+    DATABASES['default']['ENGINE'] = 'django_db_connection_pool.backends.postgresql'
+    DATABASES['default']['POOL_OPTIONS'] = {
+        'POOL_SIZE': 20,
+        'MAX_OVERFLOW': 10,
+        'RECYCLE': 300,  # 5 minutes
+    }
 
 
 # Password validation
@@ -319,6 +349,7 @@ PASSWORD_EXPIRY_DAYS = 90  # Passwords expire after 90 days
 PASSWORD_HISTORY_COUNT = 5  # Cannot reuse the last 5 passwords
 
 # Import security settings from security_config.py
+from .security_config import *
 
 # Password reset timeout
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 24 hours (in seconds)
@@ -353,7 +384,7 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# REST Framework Konfiguration
+# REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -371,6 +402,11 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 25,
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_VERSIONING_CLASS': 'api.versioning.InventoryPulseAPIVersioning',
+    'DEFAULT_VERSION': 'v1',
+    'ALLOWED_VERSIONS': ['v1', 'v2'],
+    'VERSION_PARAM': 'version',
+    'EXCEPTION_HANDLER': 'api.exception_handlers.api_exception_handler',
 }
 
 # JWT Settings
@@ -394,6 +430,37 @@ SIMPLE_JWT = {
 # Encryption settings
 ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', None)  # Should be a URL-safe base64-encoded 32-byte key
 
+# Cache configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+# In production, use Redis for caching
+if not DEBUG and os.environ.get('REDIS_URL'):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'PARSER_CLASS': 'redis.connection.HiredisParser',
+                'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
+                'CONNECTION_POOL_CLASS_KWARGS': {
+                    'max_connections': 50,
+                    'timeout': 20,
+                }
+            }
+        }
+    }
+
+# Cache timeout settings
+CACHE_MIDDLEWARE_SECONDS = 60 * 15  # 15 minutes
+CACHE_MIDDLEWARE_KEY_PREFIX = 'inventorypulse'
+
+# Select2 cache backend
 SELECT2_CACHE_BACKEND = "default"
 
 # Tesseract configuration
@@ -416,3 +483,19 @@ TWO_FACTOR_PATCH_ADMIN = True  # Enable two-factor for admin
 TWO_FACTOR_CALL_GATEWAY = None  # No call gateway by default
 TWO_FACTOR_SMS_GATEWAY = None  # No SMS gateway by default
 TWO_FACTOR_TOTP_DIGITS = 6
+
+# Celery Configuration
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000
+CELERY_WORKER_PREFETCH_MULTIPLIER = 4
+
+# Celery Beat settings (for scheduled tasks)
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'

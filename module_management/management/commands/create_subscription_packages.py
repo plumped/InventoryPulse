@@ -42,7 +42,7 @@ class Command(BaseCommand):
                 'price_monthly': Decimal('49.99'),
                 'price_yearly': Decimal('499.90'),
                 'modules': ['inventory'],
-                'feature_flags': [],
+                'feature_flags': ['basic_reports', 'basic_rma', 'document_upload'],
             },
             {
                 'name': 'Standard',
@@ -51,7 +51,7 @@ class Command(BaseCommand):
                 'price_monthly': Decimal('89.99'),
                 'price_yearly': Decimal('899.90'),
                 'modules': ['inventory', 'suppliers'],
-                'feature_flags': ['multi_warehouse', 'barcode_scanning'],
+                'feature_flags': ['basic_reports', 'basic_rma', 'document_upload', 'barcode_scanning', 'stock_take_reports', 'export_csv', 'supplier_analytics', 'order_tracking', 'data_export'],
             },
             {
                 'name': 'Professional',
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 'price_monthly': Decimal('129.99'),
                 'price_yearly': Decimal('1299.90'),
                 'modules': ['inventory', 'suppliers', 'order'],
-                'feature_flags': ['multi_warehouse', 'barcode_scanning', 'batch_tracking', 'auto_purchasing'],
+                'feature_flags': ['basic_reports', 'basic_rma', 'document_upload', 'barcode_scanning', 'stock_take_reports', 'export_csv', 'supplier_analytics', 'order_tracking', 'data_export', 'export_pdf', 'bulk_warehouse_transfer', 'bulk_product_management', 'supplier_documents', 'advanced_order_processing', 'advanced_analytics', 'advanced_rma', 'ocr_processing', 'advanced_document_search'],
             },
             {
                 'name': 'Enterprise',
@@ -70,10 +70,12 @@ class Command(BaseCommand):
                 'price_yearly': Decimal('1999.90'),
                 'modules': ['inventory', 'suppliers', 'order', 'analytics', 'rma', 'documents'],
                 'feature_flags': [
-                    'multi_warehouse', 'barcode_scanning', 'batch_tracking',
-                    'supplier_portal', 'auto_purchasing', 'customer_portal',
-                    'shipping_integration', 'advanced_reports', 'warranty_tracking',
-                    'ocr_processing'
+                    'basic_reports', 'basic_rma', 'document_upload', 
+                    'barcode_scanning', 'stock_take_reports', 'export_csv', 
+                    'supplier_analytics', 'order_tracking', 'data_export', 
+                    'export_pdf', 'bulk_warehouse_transfer', 'bulk_product_management', 
+                    'supplier_documents', 'advanced_order_processing', 'advanced_analytics', 
+                    'advanced_rma', 'ocr_processing', 'advanced_document_search'
                 ],
             },
         ]

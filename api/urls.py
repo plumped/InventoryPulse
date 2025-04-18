@@ -1,8 +1,8 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+from rest_framework.routers import DefaultRouter
 
 from . import views
 
@@ -38,6 +38,11 @@ router.register(r'purchase-orders', views.PurchaseOrderViewSet)
 router.register(r'purchase-order-items', views.PurchaseOrderItemViewSet)
 router.register(r'order-suggestions', views.OrderSuggestionViewSet)
 router.register(r'users', views.UserViewSet)  # Neuer Endpunkt für Benutzer
+router.register(r'user-permissions', views.UserPermissionsViewSet,
+                basename='user-permissions')  # Endpoint for user permissions
+router.register(r'product-search', views.ProductSearchViewSet, basename='product-search')  # Endpoint for product search
+router.register(r'product-variants-list', views.ProductVariantListViewSet,
+                basename='product-variants-list')  # Endpoint for product variants
 
 urlpatterns = [
     # API-Endpunkte

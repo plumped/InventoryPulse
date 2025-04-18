@@ -1,13 +1,15 @@
 import logging
 
 from django.contrib import messages
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group, Permission
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
+from admin_dashboard.forms import WarehouseAccessForm
 from core.utils.logging_utils import log_list_view_usage
-from .forms import WarehouseAccessForm
+from .forms import RegistrationForm
 from .models import WarehouseAccess
 
 logger = logging.getLogger(__name__)
@@ -199,3 +201,63 @@ def get_user_permissions(request):
 
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
+
+
+def register(request):
+    """
+    View for user registration.
+    Creates a new user account, associated company, and sets up tenant isolation.
+    """
+    # If user is already authenticated, redirect to dashboard
+    if request.user.is_authenticated:
+        return redirect('dashboard/')
+
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            try:
+                # Create user, organization, and subscription
+                user = form.save()
+
+                # Get the user's organization
+                organization = user.profile.organization
+
+                # Set the current tenant context
+                from core.middleware import TenantMiddleware
+                TenantMiddleware.set_tenant(organization)
+
+                # Log the user in
+                login(request, user)
+
+                # Add success message with organization and subscription details
+                messages.success(
+                    request,
+                    f'Welcome to InventoryPulse, {organization.name}! '
+                    f'Your account has been created successfully and your 30-day trial has started. '
+                    f'You can access your dashboard at {organization.subdomain}.inventorypulse.com'
+                )
+
+                return redirect('dashboard')
+            except Exception as e:
+                # Log the error
+                import logging
+                logger = logging.getLogger('accessmanagement')
+                logger.error(f"Error during registration: {str(e)}")
+
+                # Show error message to user
+                messages.error(
+                    request,
+                    "There was an error creating your account. Please try again or contact support."
+                )
+
+                # If the user was created but something else failed, we should delete the user
+                # to prevent orphaned accounts
+                if 'user' in locals() and user.pk:
+                    try:
+                        user.delete()
+                    except Exception:
+                        pass
+    else:
+        form = RegistrationForm()
+
+    return render(request, 'auth/register.html', {'form': form})

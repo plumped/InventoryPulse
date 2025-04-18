@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,25 +33,64 @@ LOGGING = {
             'format': '[{levelname}] {message}',
             'style': '{',
         },
+        'request_id': {
+            'format': '{asctime} [{levelname}] [{request_id}] {name}: {message}',
+            'style': '{',
+            'class': 'core.utils.logging_formatters.RequestIDLogFormatter',
+        },
+        'request_id_simple': {
+            'format': '[{levelname}] [{request_id}] {message}',
+            'style': '{',
+            'class': 'core.utils.logging_formatters.RequestIDLogFormatter',
+        },
+    },
+
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
     },
 
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+            'formatter': 'request_id_simple',
         },
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'django.log',
-            'formatter': 'verbose',
+            'formatter': 'request_id',
         },
         'error_file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
             'filename': BASE_DIR / 'logs' / 'errors.log',
+            'formatter': 'request_id',
+        },
+        'security_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'security.log',
+            'formatter': 'request_id',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'filters': ['require_debug_false'],
             'formatter': 'verbose',
         },
+        'rotating_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': BASE_DIR / 'logs' / 'django_rotated.log',
+            'maxBytes': 1024 * 1024 * 5,  # 5 MB
+            'backupCount': 5,
+            'formatter': 'request_id',
+        }
     },
 
     'loggers': {
@@ -56,73 +100,81 @@ LOGGING = {
             'propagate': False,
         },
         'django.request': {
-            'handlers': ['error_file'],
+            'handlers': ['error_file', 'mail_admins'],
             'level': 'ERROR',
             'propagate': False,
         },
+        'django.security': {
+            'handlers': ['security_file', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'INFO',  # Change to DEBUG to log all SQL queries
+            'filters': ['require_debug_true'],
+            'propagate': False,
+        },
         'admin_dashboard': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'core': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'inventory': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'order': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'suppliers': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'rma': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'organization': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'accessmanagement': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'api': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'interfaces': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'documents': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'file', 'error_file'],
             'level': 'DEBUG',
             'propagate': False,
         },
-        'rotating_file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django_rotated.log',
-            'maxBytes': 1024 * 1024 * 5,  # 5 MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-        }
+        'module_management': {
+            'handlers': ['console', 'file', 'error_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     }
 }
 
@@ -132,7 +184,7 @@ LOGGING = {
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^272z8irp-cqj6lrpixdyn-z3@qi-dla^r%26r@37tszi*(=xw'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-for-development-only')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -168,6 +220,14 @@ INSTALLED_APPS = [
     'api',
     'interfaces',
     'documents',
+    'module_management',  # Module management system
+
+    # Two-factor authentication
+    'django_otp',
+    'django_otp.plugins.otp_static',
+    'django_otp.plugins.otp_totp',
+    'two_factor',
+    'phonenumber_field',
 ]
 
 MIDDLEWARE = [
@@ -176,8 +236,15 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',  # Two-factor authentication
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.utils.error_handling.RequestIDMiddleware',  # Add request ID to each request
+    'core.utils.error_handling.ErrorLoggingMiddleware',  # Centralized error handling
+    'core.middleware.TenantMiddleware',  # Tenant identification and context
+    'accessmanagement.middleware.PasswordPolicyMiddleware',  # Password policy enforcement
+    'accessmanagement.middleware.RoleBasedAccessMiddleware',  # Role-based access control
+    'module_management.middleware.ModuleAccessMiddleware',  # Module access control
 ]
 
 
@@ -220,9 +287,16 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'OPTIONS': {
+            'user_attributes': ['username', 'email', 'first_name', 'last_name'],
+            'max_similarity': 0.7,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 10,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -231,6 +305,11 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Password expiration settings (custom middleware will enforce these)
+PASSWORD_EXPIRY_DAYS = 90  # Passwords expire after 90 days
+PASSWORD_HISTORY_COUNT = 5  # Cannot reuse the last 5 passwords
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # 24 hours (in seconds)
 
 
 # Internationalization
@@ -291,7 +370,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': 'eslikrtjhwlrebsgnlbkjwz65iouhj<ho87yftgvxi87vi8zghkjbasnKHGIUZGJH234',
+    'SIGNING_KEY': os.environ.get('JWT_SIGNING_KEY', 'default-signing-key-for-development-only'),
     'VERIFYING_KEY': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
@@ -300,6 +379,9 @@ SIMPLE_JWT = {
     'TOKEN_TYPE_CLAIM': 'token_type',
 }
 
+# Encryption settings
+ENCRYPTION_KEY = os.environ.get('ENCRYPTION_KEY', None)  # Should be a URL-safe base64-encoded 32-byte key
+
 SELECT2_CACHE_BACKEND = "default"
 
 # Tesseract configuration
@@ -307,3 +389,18 @@ TESSERACT_CMD = r'C:\Program Files\Tesseract-OCR\tesseract.exe'  # Windows path
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Two-factor authentication settings
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Login URL and redirect settings
+LOGIN_URL = 'two_factor:login'
+LOGIN_REDIRECT_URL = 'two_factor:profile'
+
+# Two-factor specific settings
+TWO_FACTOR_PATCH_ADMIN = True  # Enable two-factor for admin
+TWO_FACTOR_CALL_GATEWAY = None  # No call gateway by default
+TWO_FACTOR_SMS_GATEWAY = None  # No SMS gateway by default
+TWO_FACTOR_TOTP_DIGITS = 6

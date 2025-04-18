@@ -1,4 +1,5 @@
 import mimetypes
+import os
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import user_passes_test
@@ -127,8 +128,11 @@ def products_search(request):
                         'id': supplier_product.supplier.id,
                         'name': supplier_product.supplier.name
                     }
-        except:
-            pass
+        except (SupplierProduct.DoesNotExist, AttributeError) as e:
+            # Log the error
+            import logging
+            logger = logging.getLogger('core')
+            logger.warning(f"Error getting preferred supplier for product {product.id}: {str(e)}")
 
         # Produktdaten zusammenstellen
         product_data = {
@@ -165,15 +169,20 @@ def documentation_view(request, path=''):
     """Weiterleitung zur Dokumentation."""
     if not path:
         return redirect('/static/docs/index.html')
-    return redirect(f'/static/docs/{path}')
 
-    # MIME-Typ bestimmen
-    content_type, encoding = mimetypes.guess_type(file_path)
-    if content_type is None:
-        content_type = 'text/html'  # Standard-MIME-Typ
+    # Check if the file exists
+    file_path = f'static/docs/{path}'
+    if os.path.exists(file_path):
+        # MIME-Typ bestimmen
+        content_type, encoding = mimetypes.guess_type(file_path)
+        if content_type is None:
+            content_type = 'text/html'  # Standard-MIME-Typ
 
-    # Datei lesen und ausliefern
-    with open(file_path, 'rb') as f:
-        file_content = f.read()
+        # Datei lesen und ausliefern
+        with open(file_path, 'rb') as f:
+            file_content = f.read()
 
-    return HttpResponse(file_content, content_type=content_type)
+        return HttpResponse(file_content, content_type=content_type)
+
+    # If file doesn't exist, redirect to the docs index
+    return redirect('/static/docs/index.html')

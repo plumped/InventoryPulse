@@ -179,6 +179,54 @@
 {% endblock %}
 
 {% block content %}
+{% if is_new_user %}
+<div class="alert alert-success mb-4">
+    <div class="container">
+        <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>Willkommen bei InventoryPulse!</h4>
+        <p>Ihr Tenant wurde erfolgreich erstellt. Ihr Konto wurde erfolgreich eingerichtet und Sie können jetzt mit der
+            Verwaltung Ihres Inventars beginnen.</p>
+        <hr>
+        <div class="row">
+            <div class="col-md-4">
+                <p class="mb-0">
+                    <strong>Ihre Subdomain:</strong> {{ request.user.profile.organization.subdomain
+                    }}.inventorypulse.com<br>
+                    <strong>Ihr Paket:</strong> {% if request.user.profile.organization.subscription_package %}{{
+                    request.user.profile.organization.subscription_package.name }}{% else %}Basic{% endif %}<br>
+                    <strong>Testphase endet am:</strong> {% for sub in
+                    request.user.profile.organization.subscriptions.all %}{% if sub.is_active %}{{
+                    sub.end_date|date:"d.m.Y" }}{% endif %}{% endfor %}
+                </p>
+            </div>
+            <div class="col-md-8">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <a class="btn btn-sm btn-primary w-100" href="{% url 'warehouse_create' %}">
+                            <i class="bi bi-building me-1"></i> Lager anlegen
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a class="btn btn-sm btn-success w-100" href="{% url 'category_create' %}">
+                            <i class="bi bi-tags me-1"></i> Kategorie erstellen
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a class="btn btn-sm btn-info w-100" href="{% url 'product_create' %}">
+                            <i class="bi bi-box-seam me-1"></i> Produkt hinzufügen
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a class="btn btn-sm btn-warning w-100" href="{% url 'user_permissions_management' %}">
+                            <i class="bi bi-people me-1"></i> Team verwalten
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div id="dashboard-controls" class="d-flex justify-content-between align-items-center mb-3">
     <h1>Dashboard</h1>
     <div class="btn-group">
@@ -264,6 +312,64 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Widget templates mit Links
         const widgetTemplates = {
+            welcome: {
+                w: 12, h: 4, title: "Willkommen bei InventoryPulse",
+                color: "success",
+                content: `
+                    <div class="p-2">
+                        <div class="alert alert-success mb-4">
+                            <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>Ihr Tenant wurde erfolgreich erstellt!</h4>
+                            <p>Willkommen bei InventoryPulse, {{ request.user.profile.organization.name }}! Ihr Konto wurde erfolgreich eingerichtet und Sie können jetzt mit der Verwaltung Ihres Inventars beginnen.</p>
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Ihre Subdomain:</strong> {{ request.user.profile.organization.subdomain }}.inventorypulse.com<br>
+                                <strong>Ihr Paket:</strong> {% if request.user.profile.organization.subscription_package %}{{ request.user.profile.organization.subscription_package.name }}{% else %}Basic{% endif %}<br>
+                                <strong>Testphase endet am:</strong> {% for sub in request.user.profile.organization.subscriptions.all %}{% if sub.is_active %}{{ sub.end_date|date:"d.m.Y" }}{% endif %}{% endfor %}
+                            </p>
+                        </div>
+
+                        <h5 class="mb-3">Erste Schritte</h5>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i class="bi bi-building me-2 text-primary"></i>1. Lager anlegen</h5>
+                                        <p class="card-text">Erstellen Sie Ihre Lager, um Produkte zu organisieren.</p>
+                                        <a href="{% url 'warehouse_create' %}" class="btn btn-sm btn-primary">Lager anlegen</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i class="bi bi-tags me-2 text-success"></i>2. Kategorien erstellen</h5>
+                                        <p class="card-text">Organisieren Sie Ihre Produkte in Kategorien.</p>
+                                        <a href="{% url 'category_create' %}" class="btn btn-sm btn-success">Kategorie erstellen</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i class="bi bi-box-seam me-2 text-info"></i>3. Produkte hinzufügen</h5>
+                                        <p class="card-text">Fügen Sie Ihre Produkte zum Inventar hinzu.</p>
+                                        <a href="{% url 'product_create' %}" class="btn btn-sm btn-info">Produkt hinzufügen</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i class="bi bi-people me-2 text-warning"></i>4. Team einladen</h5>
+                                        <p class="card-text">Laden Sie Teammitglieder ein, um zusammenzuarbeiten.</p>
+                                        <a href="{% url 'user_permissions_management' %}" class="btn btn-sm btn-warning">Team verwalten</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
             products: {
                 w: 3, h: 2, title: "Produkte",
                 color: "primary",

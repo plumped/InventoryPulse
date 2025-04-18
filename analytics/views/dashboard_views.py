@@ -1,8 +1,11 @@
+import datetime
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import DecimalField, F, Sum
 from django.db.models.expressions import Subquery, OuterRef, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
+from django.utils import timezone
 
 from accessmanagement.models import WarehouseAccess
 from inventory.models import StockTake, StockMovement, Warehouse
@@ -53,7 +56,7 @@ def dashboard(request):
     low_stock_count = low_stock_products.count()
 
     # Neue Daten für Lager und Abteilungen
-    total_warehouses = accessible_warehouses.count()
+    total_warehouses = len(accessible_warehouses)
     total_departments = Department.objects.count()
     active_stock_takes_count = StockTake.objects.filter(status='in_progress').count()
 
@@ -121,6 +124,21 @@ def dashboard(request):
     # Letzte Bestellungen
     recent_orders = PurchaseOrder.objects.select_related('supplier').order_by('-order_date')[:5]
 
+    # Check if the user is new (organization created within the last 24 hours)
+    is_new_user = False
+    try:
+        # Get the user's organization
+        if hasattr(request.user, 'profile') and request.user.profile.organization:
+            organization = request.user.profile.organization
+            # Check if the organization was created within the last 24 hours
+            one_day_ago = timezone.now() - datetime.timedelta(hours=24)
+            is_new_user = organization.created_at > one_day_ago
+    except Exception as e:
+        # Log the error but continue
+        import logging
+        logger = logging.getLogger('analytics')
+        logger.warning(f"Error checking if user is new: {str(e)}")
+
     context = {
         'total_products': total_products,
         'total_categories': total_categories,
@@ -138,6 +156,7 @@ def dashboard(request):
         'partial_count': partial_count,
         'suggestion_count': suggestion_count,
         'recent_orders': recent_orders,
+        'is_new_user': is_new_user,  # Add flag to indicate if user is new
     }
 
     return render(request, 'dashboard.html', context)

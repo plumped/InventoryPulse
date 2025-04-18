@@ -1,10 +1,13 @@
 from django.contrib.auth.models import User
+from django.db.models import Q, Sum
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, status, filters, permissions
+from rest_framework import viewsets, status, filters, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, DjangoModelPermissions
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 
+from core.middleware import TenantMiddleware
 from core.utils.api_helpers import generate_related_action
 from inventory.models import Warehouse, StockMovement, StockTake
 from master_data.models.tax_models import Tax
@@ -25,7 +28,9 @@ from .serializers import (
     ProductWarehouseSerializer, StockMovementSerializer, SupplierSerializer,
     SupplierProductSerializer, StockTakeListSerializer,
     PurchaseOrderListSerializer, PurchaseOrderDetailSerializer,
-    PurchaseOrderItemSerializer, OrderSuggestionSerializer, UserSerializer
+    PurchaseOrderItemSerializer, OrderSuggestionSerializer, UserSerializer,
+    UserPermissionsSerializer, ProductSearchSerializer,
+    ProductVariantListSerializer
 )
 
 
@@ -38,7 +43,47 @@ class ReadOnlyPermission(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class TenantViewSet:
+    """
+    Base ViewSet for tenant-specific models.
+    Automatically filters queryset by the current tenant.
+    """
+
+    def get_queryset(self):
+        """
+        Filter queryset by the current tenant.
+        """
+        queryset = super().get_queryset()
+
+        # Skip tenant filtering for superusers when explicitly requested
+        if self.request.user.is_superuser and self.request.query_params.get('all_tenants') == 'true':
+            return queryset
+
+        # Get the current tenant from the middleware
+        tenant = TenantMiddleware.get_current_tenant()
+
+        # If no tenant is set in the middleware, try to get it from the user's profile
+        if not tenant and hasattr(self.request.user, 'profile') and hasattr(self.request.user.profile, 'organization'):
+            tenant = self.request.user.profile.organization
+
+        # If still no tenant, try to get it from the user's departments
+        if not tenant and hasattr(self.request.user, 'profile') and hasattr(self.request.user.profile, 'departments'):
+            departments = self.request.user.profile.departments.all()
+            if departments.exists():
+                tenant = departments.first().organization
+
+        # If no tenant is found, return an empty queryset
+        if not tenant:
+            return queryset.none()
+
+        # Filter queryset by tenant if the model has an organization field
+        if hasattr(queryset.model, 'organization'):
+            return queryset.filter(organization=tenant)
+
+        return queryset
+
+
+class ProductViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = Product.objects.all()
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -83,7 +128,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         return generate_related_action(self, SupplierProduct, SupplierProductSerializer)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -96,7 +141,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return generate_related_action(self, Product, ProductListSerializer, 'category')
 
 
-class TaxViewSet(viewsets.ModelViewSet):
+class TaxViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = Tax.objects.all()
     serializer_class = TaxSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -106,7 +151,7 @@ class TaxViewSet(viewsets.ModelViewSet):
     ordering = ['rate']
 
 
-class ProductVariantTypeViewSet(viewsets.ModelViewSet):
+class ProductVariantTypeViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = ProductVariantType.objects.all()
     serializer_class = ProductVariantTypeSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -115,7 +160,7 @@ class ProductVariantTypeViewSet(viewsets.ModelViewSet):
     ordering = ['name']
 
 
-class ProductVariantViewSet(viewsets.ModelViewSet):
+class ProductVariantViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = ProductVariant.objects.all()
     serializer_class = ProductVariantSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -125,7 +170,7 @@ class ProductVariantViewSet(viewsets.ModelViewSet):
     ordering = ['parent_product__name', 'name']
 
 
-class SerialNumberViewSet(viewsets.ModelViewSet):
+class SerialNumberViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = SerialNumber.objects.all()
     serializer_class = SerialNumberSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -148,7 +193,7 @@ class SerialNumberViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Serial number not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
-class BatchNumberViewSet(viewsets.ModelViewSet):
+class BatchNumberViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = BatchNumber.objects.all()
     serializer_class = BatchNumberSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -158,7 +203,7 @@ class BatchNumberViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
 
-class WarehouseViewSet(viewsets.ModelViewSet):
+class WarehouseViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = Warehouse.objects.all()
     serializer_class = WarehouseSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -177,7 +222,7 @@ class WarehouseViewSet(viewsets.ModelViewSet):
                                        order_by='-created_at')
 
 
-class StockMovementViewSet(viewsets.ModelViewSet):
+class StockMovementViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = StockMovement.objects.all()
     serializer_class = StockMovementSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -187,7 +232,7 @@ class StockMovementViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
 
-class StockTakeViewSet(viewsets.ModelViewSet):
+class StockTakeViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = StockTake.objects.all()
     serializer_class = StockTakeListSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -197,7 +242,7 @@ class StockTakeViewSet(viewsets.ModelViewSet):
     ordering = ['-start_date']
 
 
-class SupplierViewSet(viewsets.ModelViewSet):
+class SupplierViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = Supplier.objects.all()
     serializer_class = SupplierSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -215,7 +260,7 @@ class SupplierViewSet(viewsets.ModelViewSet):
         return generate_related_action(self, PurchaseOrder, PurchaseOrderListSerializer, 'supplier')
 
 
-class SupplierProductViewSet(viewsets.ModelViewSet):
+class SupplierProductViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = SupplierProduct.objects.all()
     serializer_class = SupplierProductSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -225,7 +270,7 @@ class SupplierProductViewSet(viewsets.ModelViewSet):
     ordering = ['supplier__name', 'product__name']
 
 
-class PurchaseOrderViewSet(viewsets.ModelViewSet):
+class PurchaseOrderViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = PurchaseOrder.objects.all()
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -289,7 +334,7 @@ class PurchaseOrderViewSet(viewsets.ModelViewSet):
         return Response(self.get_serializer(order).data)
 
 
-class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
+class PurchaseOrderItemViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = PurchaseOrderItem.objects.all()
     serializer_class = PurchaseOrderItemSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -299,7 +344,7 @@ class PurchaseOrderItemViewSet(viewsets.ModelViewSet):
     ordering = ['purchase_order__order_number', 'product__name']
 
 
-class OrderSuggestionViewSet(viewsets.ModelViewSet):
+class OrderSuggestionViewSet(TenantViewSet, viewsets.ModelViewSet):
     queryset = OrderSuggestion.objects.all()
     serializer_class = OrderSuggestionSerializer
     permission_classes = [IsAuthenticated, DjangoModelPermissions]
@@ -344,3 +389,169 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     def groups(self, request, pk=None):
         user = self.get_object()
         return Response([{'id': g.id, 'name': g.name} for g in user.groups.all()])
+
+
+class UserPermissionsViewSet(mixins.RetrieveModelMixin, GenericViewSet):
+    """
+    ViewSet for retrieving user permissions.
+    """
+    queryset = User.objects.all()
+    serializer_class = UserPermissionsSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['get'])
+    def permissions(self, request, pk=None):
+        """
+        Get permissions for a specific user.
+        """
+        user = self.get_object()
+
+        # Check if the requesting user is a superuser or the user themselves
+        if not request.user.is_superuser and request.user.id != user.id:
+            return Response(
+                {"error": "You don't have permission to view this user's permissions"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Groups
+        groups = list(user.groups.values_list('id', flat=True))
+
+        # Direct permissions
+        direct_permissions = list(user.user_permissions.values_list('id', flat=True))
+
+        # Effective permissions (including from groups)
+        effective_permissions = []
+
+        # From groups
+        for group in user.groups.all():
+            for perm in group.permissions.all():
+                effective_permissions.append({
+                    'id': perm.id,
+                    'name': perm.name,
+                    'codename': perm.codename,
+                    'source': f'Group: {group.name}'
+                })
+
+        # Direct
+        for perm in user.user_permissions.all():
+            effective_permissions.append({
+                'id': perm.id,
+                'name': perm.name,
+                'codename': perm.codename,
+                'source': 'Directly assigned'
+            })
+
+        data = {
+            'groups': groups,
+            'direct_permissions': direct_permissions,
+            'effective_permissions': effective_permissions
+        }
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data)
+
+
+class ProductSearchViewSet(TenantViewSet, mixins.ListModelMixin, GenericViewSet):
+    """
+    ViewSet for searching products with stock information and preferred supplier.
+    """
+    serializer_class = ProductSearchSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None  # Disable pagination for search results
+
+    def get_queryset(self):
+        """
+        Filter products based on search query.
+        """
+        search_query = self.request.query_params.get('q', '')
+
+        if not search_query or len(search_query) < 2:
+            return Product.objects.none()
+
+        # Search products
+        products = Product.objects.filter(
+            Q(name__icontains=search_query) |
+            Q(sku__icontains=search_query) |
+            Q(barcode__icontains=search_query)
+        ).prefetch_related('supplier_products', 'productwarehouse_set')
+
+        # Limit to 50 results
+        return products[:50]
+
+    def list(self, request, *args, **kwargs):
+        """
+        Override list method to format the response.
+        """
+        queryset = self.get_queryset()
+
+        results = []
+        for product in queryset:
+            # Calculate current stock
+            stock = product.productwarehouse_set.aggregate(total=Sum('quantity'))['total'] or 0
+
+            # Get preferred supplier
+            preferred_supplier = None
+            try:
+                supplier_product = SupplierProduct.objects.filter(
+                    product=product,
+                    is_preferred=True
+                ).select_related('supplier').first()
+
+                if supplier_product:
+                    preferred_supplier = {
+                        'id': supplier_product.supplier.id,
+                        'name': supplier_product.supplier.name
+                    }
+                else:
+                    # Fallback: Use the first available supplier
+                    supplier_product = SupplierProduct.objects.filter(
+                        product=product
+                    ).select_related('supplier').first()
+
+                    if supplier_product:
+                        preferred_supplier = {
+                            'id': supplier_product.supplier.id,
+                            'name': supplier_product.supplier.name
+                        }
+            except Exception:
+                pass
+
+            # Compile product data
+            product_data = {
+                'id': product.id,
+                'name': product.name,
+                'sku': product.sku,
+                'stock': float(stock),
+                'minimum_stock': float(product.minimum_stock),
+                'unit': product.unit,
+                'preferred_supplier': preferred_supplier
+            }
+
+            results.append(product_data)
+
+        serializer = self.get_serializer(results, many=True)
+        return Response(serializer.data)
+
+
+class ProductVariantListViewSet(TenantViewSet, mixins.ListModelMixin, GenericViewSet):
+    """
+    ViewSet for listing variants of a specific product.
+    """
+    serializer_class = ProductVariantListSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None  # Disable pagination for variant lists
+
+    def get_queryset(self):
+        """
+        Filter variants based on product_id query parameter.
+        """
+        product_id = self.request.query_params.get('product_id', None)
+
+        if not product_id:
+            return ProductVariant.objects.none()
+
+        return ProductVariant.objects.filter(
+            parent_product_id=product_id,
+            is_active=True
+        )

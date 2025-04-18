@@ -10,5 +10,5 @@ class AccessmanagementConfig(AppConfig):
         """
         Import signals when the app is ready.
         """
-        # Import signals or perform other initialization
-        pass
+        # Import signals to register them
+

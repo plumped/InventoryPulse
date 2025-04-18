@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from rest_framework import serializers
 
 from inventory.models import Warehouse, StockMovement, StockTake
@@ -252,8 +252,53 @@ class UserSerializer(serializers.ModelSerializer):
         try:
             departments = obj.profile.departments.all()
             return [{'id': dept.id, 'name': dept.name} for dept in departments]
-        except:
+        except (AttributeError, ValueError) as e:
+            # Log the error
+            import logging
+            logger = logging.getLogger('api')
+            logger.warning(f"Error getting departments for user {obj.id}: {str(e)}")
             return []
 
     def get_groups(self, obj):
         return [{'id': group.id, 'name': group.name} for group in obj.groups.all()]
+
+
+class PermissionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Django Permission model
+    """
+
+    class Meta:
+        model = Permission
+        fields = ['id', 'name', 'codename', 'content_type']
+
+
+class UserPermissionsSerializer(serializers.Serializer):
+    """
+    Serializer for user permissions information
+    """
+    groups = serializers.ListField(child=serializers.IntegerField())
+    direct_permissions = serializers.ListField(child=serializers.IntegerField())
+    effective_permissions = serializers.ListField(child=serializers.DictField())
+
+
+class ProductSearchSerializer(serializers.Serializer):
+    """
+    Serializer for product search results
+    """
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    sku = serializers.CharField()
+    stock = serializers.FloatField()
+    minimum_stock = serializers.FloatField()
+    unit = serializers.CharField()
+    preferred_supplier = serializers.DictField(required=False, allow_null=True)
+
+
+class ProductVariantListSerializer(serializers.Serializer):
+    """
+    Serializer for listing product variants
+    """
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    value = serializers.CharField()

@@ -254,7 +254,10 @@
                     <a class="nav-link" href="#benefits">Vorteile</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link btn btn-primary text-white ms-2 px-4" href="#login">Anmelden</a>
+                    <a class="nav-link btn btn-outline-primary me-2 px-3" href="#login">Anmelden</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn btn-primary text-white px-3" href="{% url 'register' %}">Registrieren</a>
                 </li>
             </ul>
         </div>
@@ -270,7 +273,7 @@
                 <p class="lead mb-4">Die umfassende Lösung für Bestandskontrolle, Lieferantenmanagement und Bestellwesen
                     in einem intuitiven System.</p>
                 <div class="d-flex gap-3">
-                    <a class="btn btn-light btn-lg px-4" href="#login">Jetzt starten</a>
+                    <a class="btn btn-light btn-lg px-4" href="{% url 'register' %}">Jetzt starten</a>
                     <a class="btn btn-outline-light btn-lg px-4" href="#features">Mehr erfahren</a>
                 </div>
             </div>
@@ -696,28 +699,55 @@
     </div>
 </section>
 
-<!-- Login Section -->
+<!-- Login/Register Section -->
 <section class="login-section" id="login">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="login-card">
-                    <h2 class="text-center mb-4">Anmelden</h2>
-                    <form action="{% url 'login' %}" method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label" for="username">Benutzername</label>
-                            <input class="form-control" id="username" name="username" required type="text">
+            <div class="col-lg-10">
+                <div class="row">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <div class="login-card h-100">
+                            <h2 class="text-center mb-4">Anmelden</h2>
+                            <form action="{% url 'login' %}" method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label" for="username">Benutzername</label>
+                                    <input class="form-control" id="username" name="username" required type="text">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="password">Passwort</label>
+                                    <input class="form-control" id="password" name="password" required type="password">
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-primary btn-lg" type="submit">Anmelden</button>
+                                    <a class="btn btn-outline-primary" href="{% url 'password_reset' %}">Passwort
+                                        vergessen?</a>
+                                </div>
+                            </form>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="password">Passwort</label>
-                            <input class="form-control" id="password" name="password" required type="password">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="login-card h-100 d-flex flex-column">
+                            <h2 class="text-center mb-4">Neu bei InventoryPulse?</h2>
+                            <p class="text-center mb-4">Erstellen Sie ein kostenloses Konto und entdecken Sie die
+                                Vorteile unserer professionellen Inventarverwaltungslösung.</p>
+                            <div class="mt-auto">
+                                <ul class="list-unstyled mb-4">
+                                    <li class="mb-2"><i class="fas fa-check text-primary me-2"></i>Vollständige
+                                        Bestandsverwaltung
+                                    </li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary me-2"></i>Lieferantenmanagement
+                                    </li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary me-2"></i>Bestellwesen</li>
+                                    <li class="mb-2"><i class="fas fa-check text-primary me-2"></i>Dokumentenverarbeitung
+                                    </li>
+                                </ul>
+                                <div class="d-grid">
+                                    <a class="btn btn-success btn-lg" href="{% url 'register' %}">Jetzt registrieren</a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-primary btn-lg" type="submit">Anmelden</button>
-                            <a class="btn btn-outline-primary" href="#">Passwort vergessen?</a>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

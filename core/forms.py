@@ -134,6 +134,20 @@ class OrganizationRegistrationForm(forms.ModelForm):
             # Add the user to the organization's admin_users
             organization.admin_users.add(admin_user)
 
+            # Assign the Administrator role to the user
+            from accessmanagement.models import Role, UserRole
+            try:
+                admin_role = Role.objects.get(name='Administrator')
+                UserRole.objects.create(
+                    user=admin_user,
+                    role=admin_role,
+                    organization=organization
+                )
+                logger.info(f"Administrator role assigned to user {admin_user.username} for organization {organization.name}")
+            except Role.DoesNotExist:
+                logger.error(f"Administrator role not found when registering user {admin_user.username}")
+                # Here you could implement a fallback or issue a warning
+
             # Create a user profile for the admin user
             from accessmanagement.models import UserProfile
             UserProfile.objects.create(

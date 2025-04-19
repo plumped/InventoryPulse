@@ -269,6 +269,7 @@ TEMPLATES = [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'accessmanagement.context_processors.custom_auth_context_processor',
                 'django.contrib.messages.context_processors.messages',
             ],
         },

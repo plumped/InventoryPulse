@@ -155,6 +155,20 @@ class RegistrationForm(UserCreationForm):
                 # Add the user as an admin of the organization
                 company.admin_users.add(user)
 
+                # Assign the Administrator role to the user
+                from accessmanagement.models import Role, UserRole
+                try:
+                    admin_role = Role.objects.get(name='Administrator')
+                    UserRole.objects.create(
+                        user=user,
+                        role=admin_role,
+                        organization=company
+                    )
+                    logger.info(f"Administrator role assigned to user {user.username} for organization {company.name}")
+                except Role.DoesNotExist:
+                    logger.error(f"Administrator role not found when registering user {user.username}")
+                    # Here you could implement a fallback or issue a warning
+
                 # Create user profile if it doesn't exist
                 if not UserProfile.objects.filter(user=user).exists():
                     user_profile = UserProfile.objects.create(
@@ -198,15 +212,25 @@ class RegistrationForm(UserCreationForm):
                     )
                     logger.info(f"Created new basic subscription package: {basic_package.name}")
 
-                    # Try to add the inventory module if it exists
+                    # Try to add the inventory module if it exists, or create it if it doesn't
                     try:
                         from module_management.models import Module
                         inventory_module = Module.objects.filter(code='inventory', is_active=True).first()
                         if inventory_module:
                             basic_package.modules.add(inventory_module)
-                            logger.info(f"Added inventory module to basic package")
+                            logger.info(f"Added existing inventory module to basic package")
                         else:
-                            logger.warning("No active inventory module found to add to basic package")
+                            # Create the inventory module if it doesn't exist
+                            inventory_module = Module.objects.create(
+                                name='Inventory Management',
+                                code='inventory',
+                                description='Manage inventory, stock levels, and warehouse operations',
+                                price_monthly=Decimal('49.99'),
+                                price_yearly=Decimal('499.90'),
+                                is_active=True
+                            )
+                            basic_package.modules.add(inventory_module)
+                            logger.info(f"Created and added new inventory module to basic package")
                     except Exception as e:
                         logger.warning(f"Could not add inventory module to basic package: {str(e)}")
                 except Exception as e:

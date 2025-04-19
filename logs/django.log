@@ -5420,3 +5420,340 @@
 2025-04-18 23:41:04,328 [WARNING] [no-request-id] django.server: "GET /products/ HTTP/1.1" 404 10476
 2025-04-18 23:41:14,100 [INFO] [no-request-id] django.server: "GET /products/products HTTP/1.1" 301 0
 2025-04-18 23:41:14,106 [WARNING] [no-request-id] django.server: "GET /products/products/ HTTP/1.1" 403 135
+2025-04-19 17:31:43,164 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 17:31:44,593 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:31:46,535 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:31:51,476 [WARNING] [no-request-id] django.server: "GET /products/ HTTP/1.1" 404 10476
+2025-04-19 17:31:58,461 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 45422
+2025-04-19 17:31:58,473 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:31:59,711 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 45422
+2025-04-19 17:31:59,722 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:32:01,259 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/add/ HTTP/1.1" 200 51539
+2025-04-19 17:32:01,270 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:32:09,612 [INFO] [no-request-id] django.server: "POST /admin/accessmanagement/userrole/add/ HTTP/1.1" 302 0
+2025-04-19 17:32:09,632 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 47810
+2025-04-19 17:32:09,642 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:32:11,938 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:12,454 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:12,908 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:13,104 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:13,307 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:14,737 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:15,106 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:15,137 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:15,236 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:15,360 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:15,471 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:15,589 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:15,687 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:15,992 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:16,107 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:16,203 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:16,293 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:16,424 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:16,537 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:16,624 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:16,726 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:16,859 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:16,955 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:17,072 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:17,173 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:17,867 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:17,982 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:18,277 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:18,377 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:18,512 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:18,626 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:18,739 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:18,833 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:32:20,050 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:32:21,470 [WARNING] [no-request-id] django.server: "GET /inventory/warehouses/ HTTP/1.1" 403 135
+2025-04-19 17:32:37,494 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/ HTTP/1.1" 200 50771
+2025-04-19 17:32:37,504 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:32:38,708 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 47562
+2025-04-19 17:32:38,720 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:33:34,184 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 47562
+2025-04-19 17:33:34,194 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:33:35,068 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/ HTTP/1.1" 200 50771
+2025-04-19 17:33:35,080 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:33:36,574 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/1/change/ HTTP/1.1" 200 78952
+2025-04-19 17:33:36,587 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:33:48,603 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 47562
+2025-04-19 17:33:48,616 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:33:51,849 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/1/change/ HTTP/1.1" 200 51916
+2025-04-19 17:33:51,859 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:34:19,601 [INFO] [no-request-id] django.server: "GET /admin/core/sensitivedata/ HTTP/1.1" 200 42767
+2025-04-19 17:34:19,614 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:34:22,021 [INFO] [no-request-id] django.server: "GET /admin/core/sensitivedata/add/ HTTP/1.1" 200 47328
+2025-04-19 17:34:22,033 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:34:27,219 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/objectpermission/ HTTP/1.1" 200 52536
+2025-04-19 17:34:27,229 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:34:35,132 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/passwordhistory/ HTTP/1.1" 200 45827
+2025-04-19 17:34:35,144 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:34:36,997 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/passwordhistory/13/change/ HTTP/1.1" 200 44832
+2025-04-19 17:34:37,008 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:34:39,312 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/passwordhistory/ HTTP/1.1" 200 45827
+2025-04-19 17:34:43,483 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47017
+2025-04-19 17:34:43,494 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:34:44,602 [INFO] [no-request-id] django.server: "GET /admin/auth/user/17/change/ HTTP/1.1" 200 91858
+2025-04-19 17:34:44,613 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:36:02,550 [INFO] [no-request-id] django.server: "POST /admin/auth/user/17/change/ HTTP/1.1" 302 0
+2025-04-19 17:36:02,570 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47210
+2025-04-19 17:36:02,583 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:36:05,344 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:36:06,212 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:36:07,131 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:36:07,314 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:36:16,118 [INFO] [no-request-id] django.server: "GET /admin/auth/user/17/change/ HTTP/1.1" 200 94666
+2025-04-19 17:36:16,130 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:36:19,396 [INFO] [no-request-id] django.server: "POST /admin/auth/user/17/change/ HTTP/1.1" 302 0
+2025-04-19 17:36:19,413 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47210
+2025-04-19 17:36:19,428 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:36:43,552 [INFO] [no-request-id] django.server: "GET /admin/otp_static/staticdevice/ HTTP/1.1" 200 45481
+2025-04-19 17:36:43,564 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:36:48,659 [INFO] [no-request-id] django.server: "GET /admin/otp_totp/totpdevice/ HTTP/1.1" 200 47814
+2025-04-19 17:36:48,673 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:38:41,150 [INFO] [no-request-id] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 42736
+2025-04-19 17:38:41,160 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:38:43,628 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47017
+2025-04-19 17:38:43,638 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:38:44,137 [INFO] [no-request-id] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 42736
+2025-04-19 17:38:44,149 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:38:45,047 [INFO] [no-request-id] django.server: "GET /admin/auth/group/add/ HTTP/1.1" 200 72716
+2025-04-19 17:38:45,057 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:38:59,178 [INFO] [no-request-id] django.server: "POST /admin/auth/group/add/ HTTP/1.1" 302 0
+2025-04-19 17:38:59,191 [INFO] [no-request-id] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 44191
+2025-04-19 17:38:59,206 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:39:00,935 [INFO] [no-request-id] django.server: "GET /admin/auth/group/1/change/ HTTP/1.1" 200 75728
+2025-04-19 17:39:00,948 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:39:02,773 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47306
+2025-04-19 17:39:02,785 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:39:03,978 [INFO] [no-request-id] django.server: "GET /admin/auth/user/17/change/ HTTP/1.1" 200 91892
+2025-04-19 17:39:03,989 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:39:09,089 [INFO] [no-request-id] django.server: "POST /admin/auth/user/17/change/ HTTP/1.1" 302 0
+2025-04-19 17:39:09,103 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47499
+2025-04-19 17:39:09,116 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:39:11,890 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:39:12,733 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 49496
+2025-04-19 17:41:20,022 [INFO] [no-request-id] django.server: "POST /admin/auth/user/ HTTP/1.1" 200 43473
+2025-04-19 17:41:20,037 [INFO] [no-request-id] django.server: "GET /static/admin/js/cancel.js HTTP/1.1" 200 884
+2025-04-19 17:41:20,810 [INFO] [no-request-id] django.server: "POST /admin/auth/user/ HTTP/1.1" 302 0
+2025-04-19 17:41:20,824 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 46925
+2025-04-19 17:41:20,835 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:21,870 [INFO] [no-request-id] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 44000
+2025-04-19 17:41:21,881 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:24,594 [INFO] [no-request-id] django.server: "POST /admin/auth/group/ HTTP/1.1" 200 65200
+2025-04-19 17:41:26,624 [INFO] [no-request-id] django.server: "POST /admin/auth/group/ HTTP/1.1" 302 0
+2025-04-19 17:41:26,636 [INFO] [no-request-id] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 42871
+2025-04-19 17:41:26,647 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:30,802 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/ HTTP/1.1" 200 48438
+2025-04-19 17:41:30,813 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:36,530 [INFO] [no-request-id] django.server: "POST /admin/master_data/organization/ HTTP/1.1" 200 43138
+2025-04-19 17:41:37,613 [INFO] [no-request-id] django.server: "POST /admin/master_data/organization/ HTTP/1.1" 302 0
+2025-04-19 17:41:37,626 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/ HTTP/1.1" 200 45388
+2025-04-19 17:41:37,639 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:38,954 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/ HTTP/1.1" 200 50771
+2025-04-19 17:41:38,964 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:40,182 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 44690
+2025-04-19 17:41:40,192 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:41,126 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/objectpermission/ HTTP/1.1" 200 52133
+2025-04-19 17:41:41,139 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:41,639 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/passwordhistory/ HTTP/1.1" 200 44020
+2025-04-19 17:41:41,651 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:44,045 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 46502
+2025-04-19 17:41:44,055 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:49,645 [INFO] [no-request-id] django.server: "GET /admin/master_data/department/ HTTP/1.1" 200 43939
+2025-04-19 17:41:49,656 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:41:54,899 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 17:41:55,972 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 17:42:28,389 [INFO] [no-request-id] django.server: "GET /products/products/ HTTP/1.1" 200 32528
+2025-04-19 17:42:29,384 [INFO] [no-request-id] django.server: "GET /products/products/ HTTP/1.1" 200 32528
+2025-04-19 17:42:30,177 [INFO] [no-request-id] django.server: "GET /products/products/ HTTP/1.1" 200 32528
+2025-04-19 17:42:31,348 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71227
+2025-04-19 17:42:32,982 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71227
+2025-04-19 17:42:35,324 [INFO] [no-request-id] django.server: "GET /admin/master_data/department/ HTTP/1.1" 200 43939
+2025-04-19 17:42:35,334 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:43:09,464 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71227
+2025-04-19 17:43:10,994 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71227
+2025-04-19 17:43:17,056 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 302 0
+2025-04-19 17:43:17,084 [INFO] [no-request-id] django.server: "GET /account/login/?next=/dashboard/ HTTP/1.1" 200 1960
+2025-04-19 17:43:20,962 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 200 37210
+2025-04-19 17:43:20,995 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/600 HTTP/1.1" 404 9638
+2025-04-19 17:43:21,001 [WARNING] [no-request-id] django.server: "GET /api/placeholder/300/150 HTTP/1.1" 404 9635
+2025-04-19 17:43:21,011 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/800 HTTP/1.1" 404 9638
+2025-04-19 17:43:21,011 [WARNING] [no-request-id] django.server: "GET /api/placeholder/600/500 HTTP/1.1" 404 9635
+2025-04-19 17:43:21,011 [WARNING] [no-request-id] django.server: "GET /api/placeholder/50/50 HTTP/1.1" 404 9629
+2025-04-19 17:43:21,012 [INFO] [no-request-id] django.server: "GET /media/dashboard.png HTTP/1.1" 200 240284
+2025-04-19 17:43:23,241 [INFO] [no-request-id] django.server: "GET /register/ HTTP/1.1" 200 7136
+2025-04-19 17:43:40,458 [INFO] [no-request-id] accessmanagement: Created security settings for user hans
+2025-04-19 17:43:40,461 [INFO] [no-request-id] accessmanagement: Created organization Testfirma with code ORG-BC6E2653 for user hans
+2025-04-19 17:43:40,466 [INFO] [no-request-id] accessmanagement: Administrator role assigned to user hans for organization Testfirma
+2025-04-19 17:43:40,469 [INFO] [no-request-id] accessmanagement: Updated existing user profile for hans with organization Testfirma
+2025-04-19 17:43:40,469 [INFO] [no-request-id] accessmanagement: Found existing basic subscription package for Testfirma
+2025-04-19 17:43:40,472 [INFO] [no-request-id] accessmanagement: Assigned subscription package Basic to organization Testfirma
+2025-04-19 17:43:40,475 [INFO] [no-request-id] accessmanagement: Created subscription for Testfirma: Testfirma - Basic (Trial)
+2025-04-19 17:43:40,480 [INFO] [no-request-id] accessmanagement: Password changed for user hans
+2025-04-19 17:43:40,480 [INFO] [no-request-id] accessmanagement.views: User hans has profile with organization: None
+2025-04-19 17:43:40,481 [WARNING] [no-request-id] accessmanagement.views: User hans has profile but organization is None
+2025-04-19 17:43:40,490 [INFO] [no-request-id] accessmanagement: User hans logged in successfully
+2025-04-19 17:43:40,494 [INFO] [no-request-id] django.server: "POST /register/ HTTP/1.1" 302 0
+2025-04-19 17:43:40,510 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51706
+2025-04-19 17:43:47,549 [ERROR] [no-request-id] django.server: "GET /inventory/warehouses/create/ HTTP/1.1" 500 110159
+2025-04-19 17:44:03,006 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 71227
+2025-04-19 17:44:05,299 [INFO] [no-request-id] django.server: "GET /admin/master_data/department/ HTTP/1.1" 200 43939
+2025-04-19 17:44:05,312 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:06,824 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/ HTTP/1.1" 200 50771
+2025-04-19 17:44:06,835 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:07,849 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 47117
+2025-04-19 17:44:07,863 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:10,586 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/2/change/ HTTP/1.1" 200 51786
+2025-04-19 17:44:10,600 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:18,317 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/usersecuritysettings/ HTTP/1.1" 200 49474
+2025-04-19 17:44:18,331 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:23,800 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/passwordhistory/ HTTP/1.1" 200 45826
+2025-04-19 17:44:23,810 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:32,701 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/ HTTP/1.1" 200 47818
+2025-04-19 17:44:32,713 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:38,677 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/16/change/ HTTP/1.1" 200 66465
+2025-04-19 17:44:38,688 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:49,885 [INFO] [no-request-id] django.server: "POST /admin/master_data/organization/16/change/ HTTP/1.1" 302 0
+2025-04-19 17:44:49,904 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/ HTTP/1.1" 200 48042
+2025-04-19 17:44:49,916 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:44:52,414 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:44:53,513 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:44:57,970 [ERROR] [no-request-id] django.server: "GET /inventory/warehouses/create/ HTTP/1.1" 500 110159
+2025-04-19 17:45:01,186 [WARNING] [no-request-id] django.server: "GET /inventory/warehouses/ HTTP/1.1" 403 135
+2025-04-19 17:45:03,153 [WARNING] [no-request-id] django.server: "GET /products/products/ HTTP/1.1" 403 135
+2025-04-19 17:45:23,848 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/warehouseaccess/ HTTP/1.1" 200 44153
+2025-04-19 17:45:23,859 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:45:27,901 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47007
+2025-04-19 17:45:27,912 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:45:32,564 [INFO] [no-request-id] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 42736
+2025-04-19 17:45:32,576 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:45:33,623 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47007
+2025-04-19 17:45:33,637 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:45:37,296 [INFO] [no-request-id] django.server: "GET /admin/core/auditlog/ HTTP/1.1" 200 57503
+2025-04-19 17:45:37,310 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:45:57,936 [INFO] [no-request-id] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-19 17:45:57,946 [INFO] [no-request-id] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 53272
+2025-04-19 17:46:00,352 [INFO] [no-request-id] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-19 17:46:00,356 [INFO] [no-request-id] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 39342
+2025-04-19 17:46:11,116 [INFO] [no-request-id] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-19 17:46:11,125 [INFO] [no-request-id] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 50351
+2025-04-19 17:46:26,165 [INFO] [no-request-id] django.server: "GET /admin-dashboard/users/18/details/ HTTP/1.1" 200 263
+2025-04-19 17:46:32,814 [INFO] [no-request-id] django.server: "GET /admin-dashboard/users/18/edit/ HTTP/1.1" 200 42684
+2025-04-19 17:46:45,576 [INFO] [no-request-id] django.server: "GET /admin-dashboard/system-settings/ HTTP/1.1" 200 43556
+2025-04-19 17:46:50,589 [INFO] [no-request-id] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'department_management', 'filters': {'search': ''}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/departments/'}
+2025-04-19 17:46:50,597 [INFO] [no-request-id] django.server: "GET /admin-dashboard/departments/ HTTP/1.1" 200 38297
+2025-04-19 17:46:55,007 [INFO] [no-request-id] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-19 17:46:55,009 [INFO] [no-request-id] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 39342
+2025-04-19 17:46:57,016 [INFO] [no-request-id] django.server: "GET /admin-dashboard/groups/create/ HTTP/1.1" 200 470588
+2025-04-19 17:47:24,393 [INFO] [no-request-id] django.server: "POST /admin-dashboard/groups/create/ HTTP/1.1" 200 470914
+2025-04-19 17:47:49,185 [INFO] [no-request-id] admin_dashboard.views: Group test permissions updated with 28 permissions.
+2025-04-19 17:47:49,188 [INFO] [no-request-id] django.server: "POST /admin-dashboard/groups/create/ HTTP/1.1" 302 0
+2025-04-19 17:47:49,193 [INFO] [no-request-id] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-19 17:47:49,197 [INFO] [no-request-id] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 41650
+2025-04-19 17:47:52,117 [INFO] [no-request-id] django.server: "GET /admin-dashboard/groups/2/edit/ HTTP/1.1" 200 530423
+2025-04-19 17:48:02,700 [INFO] [no-request-id] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-19 17:48:02,704 [INFO] [no-request-id] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 41067
+2025-04-19 17:48:03,961 [INFO] [no-request-id] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-19 17:48:03,964 [INFO] [no-request-id] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 50449
+2025-04-19 17:48:05,096 [INFO] [no-request-id] django.server: "GET /admin-dashboard/users/18/edit/ HTTP/1.1" 200 42790
+2025-04-19 17:48:08,351 [INFO] [no-request-id] admin_dashboard.views: User hans updated.
+2025-04-19 17:48:08,355 [INFO] [no-request-id] django.server: "POST /admin-dashboard/users/18/edit/ HTTP/1.1" 302 0
+2025-04-19 17:48:08,361 [INFO] [no-request-id] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-19 17:48:08,364 [INFO] [no-request-id] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 50782
+2025-04-19 17:48:09,722 [WARNING] [no-request-id] django.server: "GET /inventory/movements/ HTTP/1.1" 403 135
+2025-04-19 17:48:12,396 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:12,899 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:13,131 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:13,304 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:13,484 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:13,653 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:15,257 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:15,533 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:15,741 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:16,450 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:16,675 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 17:48:21,037 [INFO] [no-request-id] django.server: "GET /documents/ HTTP/1.1" 302 0
+2025-04-19 17:48:21,052 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51718
+2025-04-19 17:48:33,248 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51322
+2025-04-19 17:48:36,300 [ERROR] [no-request-id] django.server: "GET /products/products/create/ HTTP/1.1" 500 110133
+2025-04-19 17:48:41,966 [ERROR] [no-request-id] django.server: "GET /products/products/create/ HTTP/1.1" 500 110133
+2025-04-19 17:48:47,352 [INFO] [no-request-id] django.server: "GET /products/products/create/ HTTP/1.1" 200 50707
+2025-04-19 17:48:53,078 [INFO] [no-request-id] django.server: "GET /profile/ HTTP/1.1" 200 32011
+2025-04-19 17:48:55,346 [INFO] [no-request-id] django.server: "GET /admin/ HTTP/1.1" 200 57330
+2025-04-19 17:48:57,268 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47179
+2025-04-19 17:48:57,282 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:48:58,342 [INFO] [no-request-id] django.server: "GET /admin/auth/user/1/change/ HTTP/1.1" 200 91534
+2025-04-19 17:48:58,354 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:49:10,624 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47179
+2025-04-19 17:49:11,801 [INFO] [no-request-id] django.server: "GET /admin/auth/user/18/change/ HTTP/1.1" 200 91547
+2025-04-19 17:49:11,813 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:49:24,200 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47179
+2025-04-19 17:49:24,899 [INFO] [no-request-id] django.server: "GET /admin/ HTTP/1.1" 200 57330
+2025-04-19 17:49:26,428 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47179
+2025-04-19 17:49:58,523 [INFO] [no-request-id] django.server: "GET /admin/auth/user/18/change/ HTTP/1.1" 200 91547
+2025-04-19 17:49:58,535 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:50:02,863 [INFO] [no-request-id] django.server: "POST /admin/auth/user/18/change/ HTTP/1.1" 302 0
+2025-04-19 17:50:02,879 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47372
+2025-04-19 17:50:02,891 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:50:04,919 [INFO] [no-request-id] django.server: "GET /products/products/create/ HTTP/1.1" 200 50705
+2025-04-19 17:50:10,078 [INFO] [no-request-id] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 30967
+2025-04-19 17:50:11,003 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 73077
+2025-04-19 17:50:12,561 [INFO] [no-request-id] django.server: "GET /inventory/warehouses/create/ HTTP/1.1" 200 33489
+2025-04-19 17:50:14,550 [INFO] [no-request-id] django.server: "GET /products/categories/create/ HTTP/1.1" 200 32501
+2025-04-19 17:50:16,638 [INFO] [no-request-id] django.server: "GET /products/products/create/ HTTP/1.1" 200 50705
+2025-04-19 17:50:20,402 [INFO] [no-request-id] django.server: "GET /admin/auth/user/18/change/ HTTP/1.1" 200 91563
+2025-04-19 17:50:20,413 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:50:29,426 [INFO] [no-request-id] django.server: "POST /admin/auth/user/18/change/ HTTP/1.1" 302 0
+2025-04-19 17:50:29,441 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47372
+2025-04-19 17:50:29,453 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 17:57:44,792 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\settings.py changed, reloading.
+2025-04-19 17:57:45,878 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 17:58:25,659 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 17:58:26,542 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 18:00:25,608 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\middleware.py changed, reloading.
+2025-04-19 18:00:26,657 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 18:01:25,141 [INFO] [no-request-id] django.server: "POST /logout/ HTTP/1.1" 302 0
+2025-04-19 18:01:25,149 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 200 37210
+2025-04-19 18:01:25,172 [INFO] [no-request-id] django.server: "GET /media/dashboard.png HTTP/1.1" 200 240284
+2025-04-19 18:01:25,179 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/600 HTTP/1.1" 404 9638
+2025-04-19 18:01:25,185 [WARNING] [no-request-id] django.server: "GET /api/placeholder/50/50 HTTP/1.1" 404 9629
+2025-04-19 18:01:25,185 [WARNING] [no-request-id] django.server: "GET /api/placeholder/600/500 HTTP/1.1" 404 9635
+2025-04-19 18:01:25,190 [WARNING] [no-request-id] django.server: "GET /api/placeholder/300/150 HTTP/1.1" 404 9635
+2025-04-19 18:01:25,198 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/800 HTTP/1.1" 404 9638
+2025-04-19 18:01:26,231 [INFO] [no-request-id] django.server: "GET /register/ HTTP/1.1" 200 7136
+2025-04-19 18:01:41,787 [INFO] [no-request-id] accessmanagement: Created security settings for user dfhdh
+2025-04-19 18:01:41,790 [INFO] [no-request-id] accessmanagement: Created organization Fickloch with code ORG-FAB9F8BE for user dfhdh
+2025-04-19 18:01:41,797 [INFO] [no-request-id] accessmanagement: Administrator role assigned to user dfhdh for organization Fickloch
+2025-04-19 18:01:41,800 [INFO] [no-request-id] accessmanagement: Updated existing user profile for dfhdh with organization Fickloch
+2025-04-19 18:01:41,800 [INFO] [no-request-id] accessmanagement: Found existing basic subscription package for Fickloch
+2025-04-19 18:01:41,803 [INFO] [no-request-id] accessmanagement: Assigned subscription package Basic to organization Fickloch
+2025-04-19 18:01:41,807 [INFO] [no-request-id] accessmanagement: Created subscription for Fickloch: Fickloch - Basic (Trial)
+2025-04-19 18:01:41,813 [INFO] [no-request-id] accessmanagement: Password changed for user dfhdh
+2025-04-19 18:01:41,813 [INFO] [no-request-id] accessmanagement.views: User dfhdh has profile with organization: None
+2025-04-19 18:01:41,813 [WARNING] [no-request-id] accessmanagement.views: User dfhdh has profile but organization is None
+2025-04-19 18:01:41,822 [INFO] [no-request-id] accessmanagement: User dfhdh logged in successfully
+2025-04-19 18:01:41,826 [INFO] [no-request-id] django.server: "POST /register/ HTTP/1.1" 302 0
+2025-04-19 18:01:41,856 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51707
+2025-04-19 18:01:56,779 [ERROR] [no-request-id] django.server: "GET /products/categories/create/ HTTP/1.1" 500 110282
+2025-04-19 18:02:01,120 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 18:02:09,555 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 47678
+2025-04-19 18:02:09,567 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 18:02:11,367 [INFO] [no-request-id] django.server: "GET /admin/auth/user/19/change/ HTTP/1.1" 200 91617
+2025-04-19 18:02:11,377 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 18:02:21,492 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/objectpermission/ HTTP/1.1" 200 52407
+2025-04-19 18:02:21,505 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 18:02:24,132 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/objectpermission/add/ HTTP/1.1" 200 58108
+2025-04-19 18:02:24,143 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 18:02:36,304 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/ HTTP/1.1" 200 50653
+2025-04-19 18:02:36,316 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 18:02:38,509 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/1/change/ HTTP/1.1" 200 78834
+2025-04-19 18:02:38,523 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 18:02:45,636 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 47583
+2025-04-19 18:02:45,648 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 18:02:47,840 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/3/change/ HTTP/1.1" 200 51745
+2025-04-19 18:02:47,851 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 20:33:18,338 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 20:33:18,638 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599

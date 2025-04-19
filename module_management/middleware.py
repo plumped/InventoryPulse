@@ -140,8 +140,7 @@ class ModuleAccessMiddleware:
             from module_management.models import Subscription
             active_subscriptions = Subscription.objects.filter(
                 organization=organization,
-                is_active=True,
-                payment_status='paid'
+                is_active=True
             )
 
             for subscription in active_subscriptions:

@@ -121,7 +121,7 @@ class RoleBasedAccessMiddleware:
             (r'^/dashboard/access/', 'auth.view_user'),
 
             # Products
-            (r'^/dashboard/product/', 'product_management.view_product'),
+            (r'^/dashboard/product/', 'product.view'),
         ]
 
         # Compile the permission mapping for faster matching

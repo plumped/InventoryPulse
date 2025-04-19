@@ -22,6 +22,7 @@ class ModuleAccessMiddleware:
             'analytics': 'analytics',
             'rma': 'rma',
             'documents': 'documents',
+            'product': 'product',
             # Add more modules as they are created
         }
 
@@ -132,7 +133,32 @@ class ModuleAccessMiddleware:
             if not organization.subscription_package:
                 return False
 
-            # Check if the module is included in the organization's subscription package
+            # Check if user is a tenant admin (has Administrator role or is in admin_users)
+            is_tenant_admin = False
+            if organization.admin_users.filter(id=user.id).exists():
+                is_tenant_admin = True
+            else:
+                # Check for Administrator role
+                from accessmanagement.permissions import user_has_role
+                is_tenant_admin = user_has_role(user, 'Administrator', organization=organization)
+
+            # Tenant admins have access to all modules in their subscription
+            if is_tenant_admin:
+                # Check if module is in subscription package
+                if organization.subscription_package.modules.filter(code=module_code, is_active=True).exists():
+                    return True
+
+                # Check active subscriptions
+                from module_management.models import Subscription
+                active_subscriptions = Subscription.objects.filter(
+                    organization=organization,
+                    is_active=True
+                )
+                for subscription in active_subscriptions:
+                    if subscription.has_module_access(module_code):
+                        return True
+
+            # For non-admins, check if the module is included in the organization's subscription package
             if organization.subscription_package.modules.filter(code=module_code, is_active=True).exists():
                 return True
 

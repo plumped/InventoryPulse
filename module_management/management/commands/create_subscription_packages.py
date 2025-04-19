@@ -36,13 +36,20 @@ class Command(BaseCommand):
         # Define packages
         packages = [
             {
-                'name': 'Basic',
+                'name': '10-Day Trial',
                 'code': 'basic',
-                'description': 'Basic inventory management for small businesses',
-                'price_monthly': Decimal('49.99'),
-                'price_yearly': Decimal('499.90'),
-                'modules': ['inventory'],
-                'feature_flags': ['basic_reports', 'basic_rma', 'document_upload'],
+                'description': 'Free 10-day trial with all features enabled. After expiration, a subscription to Standard, Professional, or Enterprise is required.',
+                'price_monthly': Decimal('0.00'),
+                'price_yearly': Decimal('0.00'),
+                'modules': ['inventory', 'suppliers', 'order', 'analytics', 'rma', 'documents'],
+                'feature_flags': [
+                    'basic_reports', 'basic_rma', 'document_upload', 
+                    'barcode_scanning', 'stock_take_reports', 'export_csv', 
+                    'supplier_analytics', 'order_tracking', 'data_export', 
+                    'export_pdf', 'bulk_warehouse_transfer', 'bulk_product_management', 
+                    'supplier_documents', 'advanced_order_processing', 'advanced_analytics', 
+                    'advanced_rma', 'ocr_processing', 'advanced_document_search'
+                ],
             },
             {
                 'name': 'Standard',

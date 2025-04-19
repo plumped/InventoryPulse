@@ -249,14 +249,16 @@ def register(request):
                     messages.success(
                         request,
                         f'Welcome to InventoryPulse, {organization.name}! '
-                        f'Your account has been created successfully and your 30-day trial has started. '
+                        f'Your account has been created successfully and your free 10-day trial has started. '
+                        f'After the trial period, you will need to subscribe to a paid plan. '
                         f'You can access your dashboard at {organization.subdomain}.inventorypulse.com'
                     )
                 else:
                     messages.success(
                         request,
                         f'Welcome to InventoryPulse! '
-                        f'Your account has been created successfully and your 30-day trial has started.'
+                        f'Your account has been created successfully and your free 10-day trial has started. '
+                        f'After the trial period, you will need to subscribe to a paid plan.'
                     )
 
                 return redirect('dashboard')

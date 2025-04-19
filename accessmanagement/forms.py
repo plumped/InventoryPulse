@@ -190,37 +190,38 @@ class RegistrationForm(UserCreationForm):
                 logger.error(f"Error creating organization or user profile: {str(e)}")
                 raise
 
-            # Assign the Basic subscription package to the organization
+            # Assign the 10-Day Trial subscription package to the organization
             try:
                 basic_package = SubscriptionPackage.objects.get(code='basic')
-                logger.info(f"Found existing basic subscription package for {company.name}")
+                logger.info(f"Found existing 10-Day Trial subscription package for {company.name}")
             except SubscriptionPackage.DoesNotExist:
-                # Create a basic package if it doesn't exist
+                # Create a 10-Day Trial package if it doesn't exist
                 logger.warning(
-                    f"Basic subscription package not found during registration for {company.name}. Creating default package.")
+                    f"10-Day Trial subscription package not found during registration for {company.name}. Creating default package.")
 
-                # Create a default Basic package
+                # Create a default 10-Day Trial package
                 from decimal import Decimal
                 try:
                     basic_package = SubscriptionPackage.objects.create(
-                        name='Basic',
+                        name='10-Day Trial',
                         code='basic',
-                        description='Basic inventory management for small businesses',
-                        price_monthly=Decimal('49.99'),
-                        price_yearly=Decimal('499.90'),
+                        description='Free 10-day trial with all features enabled. After expiration, a subscription to Standard, Professional, or Enterprise is required.',
+                        price_monthly=Decimal('0.00'),
+                        price_yearly=Decimal('0.00'),
                         is_active=True
                     )
-                    logger.info(f"Created new basic subscription package: {basic_package.name}")
+                    logger.info(f"Created new 10-Day Trial subscription package: {basic_package.name}")
 
-                    # Try to add the inventory module if it exists, or create it if it doesn't
+                    # Try to add all modules to the trial package
                     try:
                         from module_management.models import Module
-                        inventory_module = Module.objects.filter(code='inventory', is_active=True).first()
-                        if inventory_module:
-                            basic_package.modules.add(inventory_module)
-                            logger.info(f"Added existing inventory module to basic package")
+                        # Add all active modules to the trial package
+                        all_modules = Module.objects.filter(is_active=True)
+                        if all_modules.exists():
+                            basic_package.modules.add(*all_modules)
+                            logger.info(f"Added {all_modules.count()} existing modules to 10-Day Trial package")
                         else:
-                            # Create the inventory module if it doesn't exist
+                            # Create the inventory module if no modules exist
                             inventory_module = Module.objects.create(
                                 name='Inventory Management',
                                 code='inventory',
@@ -230,11 +231,62 @@ class RegistrationForm(UserCreationForm):
                                 is_active=True
                             )
                             basic_package.modules.add(inventory_module)
-                            logger.info(f"Created and added new inventory module to basic package")
+                            logger.info(f"Created and added new inventory module to 10-Day Trial package")
+
+                            # Create other essential modules
+                            modules_to_create = [
+                                {
+                                    'name': 'Supplier Management',
+                                    'code': 'suppliers',
+                                    'description': 'Manage suppliers, purchase orders, and supplier relationships',
+                                },
+                                {
+                                    'name': 'Order Management',
+                                    'code': 'order',
+                                    'description': 'Manage customer orders, order processing, and fulfillment',
+                                },
+                                {
+                                    'name': 'Analytics',
+                                    'code': 'analytics',
+                                    'description': 'Advanced analytics, reporting, and business intelligence',
+                                },
+                                {
+                                    'name': 'RMA Management',
+                                    'code': 'rma',
+                                    'description': 'Manage returns, warranties, and RMA processes',
+                                },
+                                {
+                                    'name': 'Document Management',
+                                    'code': 'documents',
+                                    'description': 'Manage documents, OCR processing, and document workflows',
+                                }
+                            ]
+
+                            for module_data in modules_to_create:
+                                module = Module.objects.create(
+                                    name=module_data['name'],
+                                    code=module_data['code'],
+                                    description=module_data['description'],
+                                    price_monthly=Decimal('49.99'),
+                                    price_yearly=Decimal('499.90'),
+                                    is_active=True
+                                )
+                                basic_package.modules.add(module)
+                                logger.info(f"Created and added new {module.name} module to 10-Day Trial package")
                     except Exception as e:
-                        logger.warning(f"Could not add inventory module to basic package: {str(e)}")
+                        logger.warning(f"Could not add all modules to 10-Day Trial package: {str(e)}")
+
+                    # Try to add all feature flags to the trial package
+                    try:
+                        from module_management.models import FeatureFlag
+                        all_features = FeatureFlag.objects.filter(is_active=True)
+                        if all_features.exists():
+                            basic_package.feature_flags.add(*all_features)
+                            logger.info(f"Added {all_features.count()} existing feature flags to 10-Day Trial package")
+                    except Exception as e:
+                        logger.warning(f"Could not add feature flags to 10-Day Trial package: {str(e)}")
                 except Exception as e:
-                    logger.error(f"Error creating basic subscription package: {str(e)}")
+                    logger.error(f"Error creating 10-Day Trial subscription package: {str(e)}")
                     raise
 
             # Set the subscription package on the organization
@@ -249,8 +301,8 @@ class RegistrationForm(UserCreationForm):
             # Create a subscription record
             try:
                 today = datetime.date.today()
-                # Default to a 30-day trial period
-                end_date = today + datetime.timedelta(days=30)
+                # Default to a 10-day trial period
+                end_date = today + datetime.timedelta(days=10)
 
                 subscription = Subscription.objects.create(
                     organization=company,

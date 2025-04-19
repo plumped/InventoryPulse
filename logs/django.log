@@ -5757,3 +5757,128 @@
 2025-04-19 18:02:47,851 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
 2025-04-19 20:33:18,338 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
 2025-04-19 20:33:18,638 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 20:56:31,678 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:56:32,953 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:56:38,531 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\views.py changed, reloading.
+2025-04-19 20:56:39,537 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:56:44,942 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\views.py changed, reloading.
+2025-04-19 20:56:45,884 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:57:10,694 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:57:11,618 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:57:21,324 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:57:22,380 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:57:29,989 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:57:30,954 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:57:38,523 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:57:39,485 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:57:45,974 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:57:46,942 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:57:52,330 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:57:53,330 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:58:02,025 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:58:03,036 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:58:08,485 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:58:09,413 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 20:58:15,939 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 20:58:16,990 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:00:46,247 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\middleware.py changed, reloading.
+2025-04-19 21:00:47,253 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:01:20,528 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 21:01:21,512 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:04:07,204 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\forms.py changed, reloading.
+2025-04-19 21:04:08,150 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:04:28,786 [INFO] [no-request-id] django.server: "POST /logout/ HTTP/1.1" 302 0
+2025-04-19 21:04:28,794 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 200 37210
+2025-04-19 21:04:28,817 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/600 HTTP/1.1" 404 9638
+2025-04-19 21:04:28,824 [WARNING] [no-request-id] django.server: "GET /api/placeholder/600/500 HTTP/1.1" 404 9635
+2025-04-19 21:04:28,826 [WARNING] [no-request-id] django.server: "GET /api/placeholder/50/50 HTTP/1.1" 404 9629
+2025-04-19 21:04:28,829 [WARNING] [no-request-id] django.server: "GET /api/placeholder/300/150 HTTP/1.1" 404 9635
+2025-04-19 21:04:28,830 [INFO] [no-request-id] django.server: "GET /media/dashboard.png HTTP/1.1" 200 240284
+2025-04-19 21:04:28,833 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/800 HTTP/1.1" 404 9638
+2025-04-19 21:04:31,018 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\views.py changed, reloading.
+2025-04-19 21:04:31,976 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:04:38,443 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\views.py changed, reloading.
+2025-04-19 21:04:39,455 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:05:31,865 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 200 37210
+2025-04-19 21:05:31,885 [WARNING] [no-request-id] django.server: "GET /api/placeholder/300/150 HTTP/1.1" 404 9635
+2025-04-19 21:05:31,886 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/600 HTTP/1.1" 404 9638
+2025-04-19 21:05:31,892 [WARNING] [no-request-id] django.server: "GET /api/placeholder/50/50 HTTP/1.1" 404 9629
+2025-04-19 21:05:31,893 [WARNING] [no-request-id] django.server: "GET /api/placeholder/600/500 HTTP/1.1" 404 9635
+2025-04-19 21:05:31,896 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/800 HTTP/1.1" 404 9638
+2025-04-19 21:05:32,379 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 200 37210
+2025-04-19 21:05:32,404 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/600 HTTP/1.1" 404 9638
+2025-04-19 21:05:32,413 [WARNING] [no-request-id] django.server: "GET /api/placeholder/600/500 HTTP/1.1" 404 9635
+2025-04-19 21:05:32,413 [WARNING] [no-request-id] django.server: "GET /api/placeholder/300/150 HTTP/1.1" 404 9635
+2025-04-19 21:05:32,413 [WARNING] [no-request-id] django.server: "GET /api/placeholder/50/50 HTTP/1.1" 404 9629
+2025-04-19 21:05:32,418 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/800 HTTP/1.1" 404 9638
+2025-04-19 21:05:33,374 [INFO] [no-request-id] django.server: "GET /register/ HTTP/1.1" 200 7136
+2025-04-19 21:05:47,221 [INFO] [no-request-id] accessmanagement: Created security settings for user qweqwe
+2025-04-19 21:05:47,223 [INFO] [no-request-id] accessmanagement: Created organization Bums AG with code ORG-644C1DA6 for user qweqwe
+2025-04-19 21:05:47,229 [INFO] [no-request-id] accessmanagement: Administrator role assigned to user qweqwe for organization Bums AG
+2025-04-19 21:05:47,232 [INFO] [no-request-id] accessmanagement: Updated existing user profile for qweqwe with organization Bums AG
+2025-04-19 21:05:47,233 [INFO] [no-request-id] accessmanagement: Found existing 10-Day Trial subscription package for Bums AG
+2025-04-19 21:05:47,239 [INFO] [no-request-id] accessmanagement: Assigned subscription package Basic to organization Bums AG
+2025-04-19 21:05:47,244 [INFO] [no-request-id] accessmanagement: Created subscription for Bums AG: Bums AG - Basic (Trial)
+2025-04-19 21:05:47,251 [INFO] [no-request-id] accessmanagement: Password changed for user qweqwe
+2025-04-19 21:05:47,251 [INFO] [no-request-id] accessmanagement.views: User qweqwe has profile with organization: None
+2025-04-19 21:05:47,251 [WARNING] [no-request-id] accessmanagement.views: User qweqwe has profile but organization is None
+2025-04-19 21:05:47,259 [INFO] [no-request-id] accessmanagement: User qweqwe logged in successfully
+2025-04-19 21:05:47,262 [INFO] [no-request-id] django.server: "POST /register/ HTTP/1.1" 302 0
+2025-04-19 21:05:47,292 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51779
+2025-04-19 21:05:52,957 [ERROR] [no-request-id] django.server: "GET /inventory/warehouses/create/ HTTP/1.1" 500 110277
+2025-04-19 21:06:17,041 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 48165
+2025-04-19 21:06:17,057 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:06:20,642 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/4/change/ HTTP/1.1" 200 51822
+2025-04-19 21:06:20,653 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:06:28,609 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/ HTTP/1.1" 200 48896
+2025-04-19 21:06:28,620 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:06:32,541 [INFO] [no-request-id] django.server: "GET /admin/master_data/organization/18/change/ HTTP/1.1" 200 66565
+2025-04-19 21:06:32,552 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:08:14,293 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/ HTTP/1.1" 200 50653
+2025-04-19 21:08:14,305 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:08:16,540 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/role/1/change/ HTTP/1.1" 200 78834
+2025-04-19 21:08:16,552 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:08:20,958 [INFO] [no-request-id] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 48180
+2025-04-19 21:08:20,969 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:08:23,335 [INFO] [no-request-id] django.server: "GET /admin/auth/user/19/change/ HTTP/1.1" 200 91695
+2025-04-19 21:08:23,348 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:08:39,985 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/ HTTP/1.1" 200 48165
+2025-04-19 21:08:39,995 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:08:41,560 [INFO] [no-request-id] django.server: "GET /admin/accessmanagement/userrole/4/change/ HTTP/1.1" 200 51822
+2025-04-19 21:08:41,574 [INFO] [no-request-id] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-19 21:09:19,784 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\module_management\middleware.py changed, reloading.
+2025-04-19 21:09:20,857 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:09:42,306 [INFO] [no-request-id] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\middleware.py changed, reloading.
+2025-04-19 21:09:43,304 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:09:59,404 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 21:10:00,741 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 21:15:25,881 [INFO] [no-request-id] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-19 21:15:28,230 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 21:15:28,989 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 21:15:30,652 [WARNING] [no-request-id] django.server: "GET /inventory/movements/ HTTP/1.1" 403 135
+2025-04-19 21:15:36,527 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 21:15:36,798 [WARNING] [no-request-id] django.server: "GET /favicon.ico HTTP/1.1" 404 9599
+2025-04-19 21:15:41,163 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 21:15:41,785 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51320
+2025-04-19 21:15:44,147 [INFO] [no-request-id] django.server: "POST /logout/ HTTP/1.1" 302 0
+2025-04-19 21:15:44,154 [INFO] [no-request-id] django.server: "GET / HTTP/1.1" 200 37210
+2025-04-19 21:15:44,171 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/600 HTTP/1.1" 404 9638
+2025-04-19 21:15:44,183 [WARNING] [no-request-id] django.server: "GET /api/placeholder/300/150 HTTP/1.1" 404 9635
+2025-04-19 21:15:44,187 [WARNING] [no-request-id] django.server: "GET /api/placeholder/600/500 HTTP/1.1" 404 9635
+2025-04-19 21:15:44,190 [WARNING] [no-request-id] django.server: "GET /api/placeholder/50/50 HTTP/1.1" 404 9629
+2025-04-19 21:15:44,190 [WARNING] [no-request-id] django.server: "GET /api/placeholder/1200/800 HTTP/1.1" 404 9638
+2025-04-19 21:15:45,206 [INFO] [no-request-id] django.server: "GET /register/ HTTP/1.1" 200 7136
+2025-04-19 21:16:06,186 [INFO] [no-request-id] accessmanagement: Created security settings for user rzujghnbvm
+2025-04-19 21:16:06,189 [INFO] [no-request-id] accessmanagement: Created organization InventoryPulser with code ORG-7E4F3483 for user rzujghnbvm
+2025-04-19 21:16:06,194 [INFO] [no-request-id] accessmanagement: Administrator role assigned to user rzujghnbvm for organization InventoryPulser
+2025-04-19 21:16:06,198 [INFO] [no-request-id] accessmanagement: Updated existing user profile for rzujghnbvm with organization InventoryPulser
+2025-04-19 21:16:06,198 [INFO] [no-request-id] accessmanagement: Found existing 10-Day Trial subscription package for InventoryPulser
+2025-04-19 21:16:06,201 [INFO] [no-request-id] accessmanagement: Assigned subscription package Basic to organization InventoryPulser
+2025-04-19 21:16:06,205 [INFO] [no-request-id] accessmanagement: Created subscription for InventoryPulser: InventoryPulser - Basic (Trial)
+2025-04-19 21:16:06,210 [INFO] [no-request-id] accessmanagement: Password changed for user rzujghnbvm
+2025-04-19 21:16:06,211 [INFO] [no-request-id] accessmanagement.views: User rzujghnbvm has profile with organization: None
+2025-04-19 21:16:06,211 [WARNING] [no-request-id] accessmanagement.views: User rzujghnbvm has profile but organization is None
+2025-04-19 21:16:06,218 [INFO] [no-request-id] accessmanagement: User rzujghnbvm logged in successfully
+2025-04-19 21:16:06,221 [INFO] [no-request-id] django.server: "POST /register/ HTTP/1.1" 302 0
+2025-04-19 21:16:06,245 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51789
+2025-04-19 21:16:58,658 [INFO] [no-request-id] django.server: "GET /dashboard/ HTTP/1.1" 200 51330

@@ -12,7 +12,7 @@ from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def expiry_management(request):
     """Zentrale Verwaltung aller Produkte mit Verfallsdaten."""
 

@@ -8,11 +8,18 @@ class AccessmanagementConfig(AppConfig):
 
     def ready(self):
         """
-        Import signals when the app is ready.
+        Import signals and extensions when the app is ready.
         """
         # Set up security signals
         from .security import setup_security_signals
         setup_security_signals()
+
+        # Import models extension to add properties to Group model
+        import importlib
+        try:
+            importlib.import_module('.models_extension', 'accessmanagement')
+        except ImportError:
+            pass
 
         # Set up signal to create user profiles automatically
         from django.db.models.signals import post_save

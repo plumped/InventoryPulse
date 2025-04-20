@@ -7,11 +7,12 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import models
 from django.db import transaction
 from django.db.models import Q, Sum, F
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 
+from core.utils.access import has_object_permission
 from inventory.models import Warehouse, StockMovement
 from master_data.models.addresses_models import CompanyAddress
 from master_data.models.currency_models import Currency
@@ -33,8 +34,7 @@ from .workflow import get_initial_order_status, check_auto_approval, can_approve
 
 
 @login_required
-@permission_required('order.view_order', raise_exception=True)
-
+@permission_required('order.view_purchaseorder', raise_exception=True)
 def purchase_order_list(request):
     """Liste aller Bestellungen mit Filteroptionen."""
     # Basis-Queryset
@@ -121,8 +121,7 @@ def purchase_order_list(request):
 
 
 @login_required
-@permission_required('order.view_order', raise_exception=True)
-
+@permission_required('order.view_purchaseorder', raise_exception=True)
 def purchase_order_detail(request, pk):
     """
     Angepasste Funktion für die Bestelldetailseite mit verbesserter Darstellung von Teillieferungen.
@@ -132,6 +131,10 @@ def purchase_order_detail(request, pk):
         .prefetch_related('items__product', 'receipts', 'items__tax'),
         pk=pk
     )
+
+    # Check if user has permission to view this specific order
+    if not request.user.is_superuser and not has_object_permission(request.user, order, 'view'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung anzusehen.")
 
     # Teillieferungen mit zusätzlichen Informationen laden
     splits = []
@@ -165,9 +168,13 @@ def purchase_order_detail(request, pk):
     }
 
     # Ermitteln, ob Benutzer bestimmte Aktionen durchführen darf
-    can_edit = request.user.has_perm('order.edit') and order.status == 'draft'
+    can_edit = (request.user.is_superuser or 
+                (request.user.has_perm('order.change_purchaseorder') and 
+                 has_object_permission(request.user, order, 'edit'))) and order.status == 'draft'
     can_approve = can_approve_order(request.user, order) and order.status == 'pending'
-    can_receive = request.user.has_perm('order.receive') and order.status in ['sent', 'partially_received']
+    can_receive = (request.user.is_superuser or 
+                  (request.user.has_perm('order.add_purchaseorderreceipt') and 
+                   has_object_permission(request.user, order, 'edit'))) and order.status in ['sent', 'partially_received']
 
     # Wareneingangshistorie abrufen
     receipts = order.receipts.select_related('received_by').prefetch_related('items__order_item__product',
@@ -303,7 +310,7 @@ def purchase_order_detail(request, pk):
 
 
 @login_required
-@permission_required('order', 'create')
+@permission_required('order.add_purchaseorder', raise_exception=True)
 def purchase_order_create(request):
     """Neue Bestellung erstellen."""
     # Systemeinstellungen abrufen
@@ -388,10 +395,14 @@ def purchase_order_create(request):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def purchase_order_update(request, pk):
     """Bestehende Bestellung bearbeiten."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
+
+    # Check if user has permission to edit this specific order
+    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung zu bearbeiten.")
 
     # Nur Entwürfe können bearbeitet werden
     if order.status != 'draft':
@@ -557,10 +568,14 @@ def process_order_items(post_data, order):
             item.delete()
 
 @login_required
-@permission_required('order', 'delete')
+@permission_required('order.delete_purchaseorder', raise_exception=True)
 def purchase_order_delete(request, pk):
     """Bestellung löschen (nur im Entwurfsstatus)."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
+
+    # Check if user has permission to delete this specific order
+    if not request.user.is_superuser and not has_object_permission(request.user, order, 'delete'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung zu löschen.")
 
     # Nur Entwürfe können gelöscht werden
     if order.status != 'draft':
@@ -583,10 +598,14 @@ def purchase_order_delete(request, pk):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def purchase_order_submit(request, pk):
     """Bestellung zur Genehmigung einreichen."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
+
+    # Check if user has permission to submit this specific order
+    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung einzureichen.")
 
     # Nur Entwürfe können eingereicht werden
     if order.status != 'draft':
@@ -625,10 +644,14 @@ def purchase_order_submit(request, pk):
 
 
 @login_required
-@permission_required('order', 'approve')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def purchase_order_approve(request, pk):
     """Bestellung genehmigen."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
+
+    # Check if user has permission to approve this specific order
+    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung zu genehmigen.")
 
     # Nur wartende Bestellungen können genehmigt werden
     if order.status != 'pending':
@@ -666,10 +689,14 @@ def purchase_order_approve(request, pk):
     return render(request, 'order/purchase_order_confirm_approve.html', context)
 
 @login_required
-@permission_required('order', 'approve')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def purchase_order_reject(request, pk):
     """Bestellung ablehnen."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
+
+    # Check if user has permission to reject this specific order
+    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung abzulehnen.")
 
     # Nur wartende Bestellungen können abgelehnt werden
     if order.status != 'pending':
@@ -696,10 +723,14 @@ def purchase_order_reject(request, pk):
     return render(request, 'order/purchase_order_confirm_reject.html', context)
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def purchase_order_mark_sent(request, pk):
     """Bestellung als bestellt markieren."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
+
+    # Check if user has permission to mark this specific order as sent
+    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung als bestellt zu markieren.")
 
     # Nur genehmigte Bestellungen können als bestellt markiert werden
     if order.status != 'approved':
@@ -722,12 +753,16 @@ def purchase_order_mark_sent(request, pk):
 
 
 @login_required
-@permission_required('order', 'receive')
+@permission_required('order.add_purchaseorderreceipt', raise_exception=True)
 def purchase_order_receive(request, pk):
     """
     Vereinheitlichte Funktion für Wareneingang, die sowohl normale als auch Teillieferungen unterstützt.
     """
     order = get_object_or_404(PurchaseOrder, pk=pk)
+
+    # Check if user has permission to receive items for this specific order
+    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Wareneingänge für diese Bestellung zu erfassen.")
 
     # Nur Bestellungen im Status "bestellt" oder "teilweise erhalten" können Wareneingänge haben
     if order.status not in ['sent', 'partially_received']:
@@ -1149,7 +1184,7 @@ def order_suggestions(request):
     return render(request, 'order/order_suggestions.html', context)
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_ordersuggestion', raise_exception=True)
 def refresh_order_suggestions(request):
     """Aktualisiert die Bestellvorschläge (AJAX-Endpunkt)."""
     if request.method == 'POST':
@@ -1174,7 +1209,7 @@ def refresh_order_suggestions(request):
 # Füge diese Methode in der order/views.py hinzu, um manuelle Produkte in der create_orders_from_suggestions Funktion zu verarbeiten
 
 @login_required
-@permission_required('order', 'create')
+@permission_required('order.add_purchaseorder', raise_exception=True)
 # Update in order/views.py - create_orders_from_suggestions function
 # Add this code to handle expected delivery date calculation
 
@@ -1505,7 +1540,7 @@ def get_supplier_product_price(request):
         })
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def bulk_send_orders(request):
     """Sendet mehrere ausgewählte Bestellungen über die jeweiligen Standard-Schnittstellen."""
     if request.method != 'POST':
@@ -1570,7 +1605,7 @@ def bulk_send_orders(request):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorderreceipt', raise_exception=True)
 def purchase_order_receipt_edit(request, pk, receipt_id):
     """Edit a purchase order receipt."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -1804,7 +1839,7 @@ def purchase_order_receipt_edit(request, pk, receipt_id):
 
 
 @login_required
-@permission_required('order', 'delete')
+@permission_required('order.delete_purchaseorderreceipt', raise_exception=True)
 def purchase_order_receipt_delete(request, pk, receipt_id):
     """Delete a purchase order receipt."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -2140,7 +2175,7 @@ def order_template_detail(request, pk):
 
 
 @login_required
-@permission_required('order', 'create')
+@permission_required('order.add_ordertemplate', raise_exception=True)
 def order_template_create(request):
     """Create a new order template."""
     if request.method == 'POST':
@@ -2198,7 +2233,7 @@ def order_template_create(request):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_ordertemplate', raise_exception=True)
 def order_template_update(request, pk):
     """Update an existing order template."""
     template = get_object_or_404(OrderTemplate, pk=pk)
@@ -2365,7 +2400,7 @@ def process_template_items(post_data, template):
 
 
 @login_required
-@permission_required('order', 'delete')
+@permission_required('order.delete_ordertemplate', raise_exception=True)
 def order_template_delete(request, pk):
     """Delete an order template."""
     template = get_object_or_404(OrderTemplate, pk=pk)
@@ -2384,7 +2419,7 @@ def order_template_delete(request, pk):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_ordertemplate', raise_exception=True)
 def order_template_toggle_active(request, pk):
     """Toggle active status of an order template."""
     template = get_object_or_404(OrderTemplate, pk=pk)
@@ -2404,7 +2439,7 @@ def order_template_toggle_active(request, pk):
 
 
 @login_required
-@permission_required('order', 'create')
+@permission_required('order.add_ordertemplate', raise_exception=True)
 def order_template_duplicate(request, pk):
     """Duplicate an order template."""
     template = get_object_or_404(OrderTemplate, pk=pk)
@@ -2437,7 +2472,7 @@ def order_template_duplicate(request, pk):
 
 
 @login_required
-@permission_required('order', 'create')
+@permission_required('order.add_purchaseorder', raise_exception=True)
 def create_order_from_template(request, pk):
     """Create a purchase order from a template."""
     template = get_object_or_404(
@@ -2682,7 +2717,7 @@ def handle_recurring_orders():
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorderitem', raise_exception=True)
 def purchase_order_item_cancel(request, pk, item_id):
     """Cancel a specific order item."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -2753,7 +2788,7 @@ def purchase_order_item_cancel(request, pk, item_id):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorderitem', raise_exception=True)
 def purchase_order_item_edit_cancellation(request, pk, item_id):
     """Stornierung einer Bestellposition bearbeiten oder rückgängig machen."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -2814,7 +2849,7 @@ def purchase_order_item_edit_cancellation(request, pk, item_id):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.add_ordersplit', raise_exception=True)
 def order_split_create(request, pk):
     """Create a new order split (partial shipment) for a purchase order."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -2952,7 +2987,7 @@ def order_split_detail(request, pk, split_id):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_ordersplit', raise_exception=True)
 def order_split_update(request, pk, split_id):
     """Update an existing order split."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -2983,7 +3018,7 @@ def order_split_update(request, pk, split_id):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.delete_ordersplit', raise_exception=True)
 def order_split_delete(request, pk, split_id):
     """Delete an order split."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -3010,7 +3045,7 @@ def order_split_delete(request, pk, split_id):
 
 
 @login_required
-@permission_required('order', 'receive')
+@permission_required('order.add_purchaseorderreceipt', raise_exception=True)
 def receive_order_split(request, pk, split_id):
     """Receive goods for a specific order split."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -3305,7 +3340,7 @@ def check_order_has_splits(request, pk):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_ordersplit', raise_exception=True)
 def order_split_update_status(request, pk, split_id):
     """Update the status of an order split."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -3416,7 +3451,7 @@ def purchase_order_comments(request, pk):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.add_purchaseordercomment', raise_exception=True)
 def add_order_comment(request, pk):
     """Add a comment to a purchase order."""
     order = get_object_or_404(PurchaseOrder, pk=pk)
@@ -3465,7 +3500,7 @@ def add_order_comment(request, pk):
 
 
 @login_required
-@permission_required('order', 'delete')
+@permission_required('order.delete_purchaseordercomment', raise_exception=True)
 def delete_order_comment(request, pk, comment_id):
     """Delete a comment from a purchase order."""
     order = get_object_or_404(PurchaseOrder, pk=pk)

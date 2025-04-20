@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Predefined Roles{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Predefined Roles</h1>
+        <div>
+            <a href="{% url 'admin_group_management' %}" class="btn btn-sm btn-outline-secondary me-2">
+                <i class="fas fa-users"></i> Manage Custom Groups
+            </a>
+            <a href="{% url 'admin_role_hierarchy' %}" class="btn btn-sm btn-outline-secondary me-2">
+                <i class="fas fa-sitemap"></i> Role Hierarchies
+            </a>
+            <button id="create-all-roles-btn" class="btn btn-sm btn-primary">
+                <i class="fas fa-sync"></i> Create/Update All Predefined Roles
+            </button>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">About Predefined Roles</h6>
+                </div>
+                <div class="card-body">
+                    <p>Predefined roles are pre-configured sets of permissions designed for common user responsibilities in the system. 
+                    These roles can be applied to users to quickly grant them appropriate permissions for their job functions.</p>
+                    
+                    <p>Benefits of using predefined roles:</p>
+                    <ul>
+                        <li>Consistent permission assignment across users with similar responsibilities</li>
+                        <li>Simplified user management</li>
+                        <li>Reduced risk of permission errors</li>
+                        <li>Easy onboarding of new users</li>
+                    </ul>
+                    
+                    <p>To apply a predefined role to a user, go to the <a href="{% url 'admin_user_management' %}">User Management</a> page, 
+                    edit the user, and assign them to the appropriate group.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Categories -->
+    {% for category, roles in roles_by_category.items %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">{{ category }}</h6>
+                </div>
+                <div class="card-body">
+                    {% if roles %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Role Name</th>
+                                    <th>Description</th>
+                                    <th>Users</th>
+                                    <th>Permissions</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for role in roles %}
+                                <tr>
+                                    <td>{{ role.name }}</td>
+                                    <td>{{ role.description }}</td>
+                                    <td>{{ role.user_set.count }}</td>
+                                    <td>
+                                        <div class="d-flex flex-wrap">
+                                            {% for perm in role.permissions.all|slice:":5" %}
+                                            <span class="badge bg-info me-1 mb-1">{{ perm.name }}</span>
+                                            {% empty %}
+                                            <span class="badge bg-secondary">No permissions</span>
+                                            {% endfor %}
+                                            {% if role.permissions.count > 5 %}
+                                            <span class="badge bg-secondary">+{{ role.permissions.count|add:"-5" }} more</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'admin_group_edit' role.id %}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-success create-role-btn" 
+                                                    data-role-key="{{ role.role_key }}" title="Recreate">
+                                                <i class="fas fa-sync"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No roles found in this category. Click "Create All Predefined Roles" to create them.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i> No role categories defined. Please check the system configuration.
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle create/update all roles button
+        document.getElementById('create-all-roles-btn').addEventListener('click', function() {
+            if (confirm('This will create or update all predefined roles. Continue?')) {
+                fetch('{% url "admin_create_all_predefined_roles" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('All predefined roles have been created or updated successfully.');
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while creating predefined roles.');
+                });
+            }
+        });
+
+        // Handle individual role create/update buttons
+        document.querySelectorAll('.create-role-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const roleKey = this.getAttribute('data-role-key');
+                if (confirm(`This will create or update the "${roleKey}" role. Continue?`)) {
+                    fetch('{% url "admin_create_predefined_role" %}', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            role_key: roleKey
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(`The "${data.role_name}" role has been created or updated successfully.`);
+                            window.location.reload();
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while creating the predefined role.');
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

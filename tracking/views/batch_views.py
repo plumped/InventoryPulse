@@ -28,7 +28,7 @@ from tracking.models.batch_numbers_models import BatchNumber
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def product_batches(request, pk):
     """Zeigt alle Chargen eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
@@ -93,7 +93,7 @@ def product_batches(request, pk):
 
 
 @login_required
-@permission_required('product', 'create')
+@permission_required('product_management.add_product', raise_exception=True)
 def product_batch_add(request, pk):
     """Fügt eine Charge zu einem Produkt hinzu."""
     product = get_object_or_404(Product, pk=pk)
@@ -125,7 +125,7 @@ def product_batch_add(request, pk):
 
 
 @login_required
-@permission_required('product', 'edit')
+@permission_required('product_management.change_product', raise_exception=True)
 def product_batch_update(request, pk, batch_id):
     """Aktualisiert eine Charge."""
     product = get_object_or_404(Product, pk=pk)
@@ -150,7 +150,7 @@ def product_batch_update(request, pk, batch_id):
 
 
 @login_required
-@permission_required('product', 'delete')
+@permission_required('product_management.delete_product', raise_exception=True)
 def product_batch_delete(request, pk, batch_id):
     """Löscht eine Charge."""
     product = get_object_or_404(Product, pk=pk)
@@ -170,7 +170,7 @@ def product_batch_delete(request, pk, batch_id):
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def batch_number_list(request):
     """Liste aller Chargen im System."""
     # Filteroptionen
@@ -237,7 +237,7 @@ def batch_number_list(request):
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def batch_number_detail(request, batch_id):
     """Detailansicht einer Charge."""
     batch = get_object_or_404(BatchNumber.objects.select_related(
@@ -251,7 +251,7 @@ def batch_number_detail(request, batch_id):
 
 
 @login_required
-@permission_required('product', 'create')
+@permission_required('product_management.add_product', raise_exception=True)
 def batch_number_add(request):
     """Fügt eine neue Charge hinzu (produktunabhängig)."""
 
@@ -276,7 +276,7 @@ def batch_number_add(request):
 
 
 @login_required
-@permission_required('product', 'edit')
+@permission_required('product_management.change_product', raise_exception=True)
 def batch_number_edit(request, batch_id):
     """Bearbeitet eine bestehende Charge."""
     batch = get_object_or_404(BatchNumber, pk=batch_id)
@@ -303,7 +303,7 @@ def batch_number_edit(request, batch_id):
 
 
 @login_required
-@permission_required('product', 'delete')
+@permission_required('product_management.delete_product', raise_exception=True)
 def batch_number_delete(request, batch_id):
     """Löscht eine Charge."""
     batch = get_object_or_404(BatchNumber, pk=batch_id)
@@ -333,7 +333,7 @@ def batch_number_delete(request, batch_id):
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def batch_number_scan(request):
     """Scannt eine Chargennummer und zeigt Details an."""
     scanned_number = request.GET.get('scan', '')
@@ -414,7 +414,7 @@ def batch_number_scan(request):
 
 
 @login_required
-@permission_required('product', 'edit')
+@permission_required('product_management.change_product', raise_exception=True)
 def batch_number_transfer(request):
     """Transferiert eine Charge von einem Lager zu einem anderen."""
     if request.method == 'POST':
@@ -499,7 +499,7 @@ def batch_number_transfer(request):
 
 
 @login_required
-@permission_required('product', 'import')
+@permission_required('product_management.import_product', raise_exception=True)
 def batch_number_import(request):
     """Importiert Chargen aus einer CSV-Datei."""
     # Verwendet die handle_csv_import Utility-Funktion
@@ -521,7 +521,7 @@ def batch_number_import(request):
 
 
 @login_required
-@permission_required('product', 'export')
+@permission_required('product_management.export_product', raise_exception=True)
 def batch_number_export(request):
     """Exportiert Chargen in eine CSV- oder Excel-Datei."""
     # Filteroptionen für den Export

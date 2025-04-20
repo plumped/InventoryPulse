@@ -36,9 +36,9 @@
                             <td>{{ access.warehouse.name }}</td>
                             <td>{{ access.department.name }}</td>
                             <td>
-                                {% if access.can_view %}<span class="badge badge-info">View</span>{% endif %}
-                                {% if access.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
-                                {% if access.can_manage_stock %}<span class="badge badge-success">Manage Stock</span>{% endif %}
+                                {% if access.can_view %}<span class="badge bg-info">View</span>{% endif %}
+                                {% if access.can_edit %}<span class="badge bg-warning">Edit</span>{% endif %}
+                                {% if access.can_manage_stock %}<span class="badge bg-success">Manage Stock</span>{% endif %}
                             </td>
                             <td>
                                 {% if access.department.user_profiles.all.exists %}
@@ -65,10 +65,10 @@
                             </td>
                             <td>
                                 <a href="{% url 'admin_warehouse_access_edit' access.id %}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="bi bi-pencil"></i>
                                 </a>
                                 <a href="{% url 'admin_warehouse_access_delete' access.id %}" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="bi bi-trash"></i>
                                 </a>
                             </td>
                         </tr>
@@ -108,9 +108,9 @@
                                     {% with access=department.warehouseaccess_set.all|dictsort:"warehouse.id" %}
                                         {% for a in access %}
                                             {% if a.warehouse.id == warehouse.id %}
-                                                {% if a.can_view %}<span class="badge badge-info">View</span>{% endif %}
-                                                {% if a.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
-                                                {% if a.can_manage_stock %}<span class="badge badge-success">Manage</span>{% endif %}
+                                                {% if a.can_view %}<span class="badge bg-info">View</span>{% endif %}
+                                                {% if a.can_edit %}<span class="badge bg-warning">Edit</span>{% endif %}
+                                                {% if a.can_manage_stock %}<span class="badge bg-success">Manage</span>{% endif %}
                                             {% endif %}
                                         {% endfor %}
                                     {% endwith %}

@@ -91,7 +91,6 @@
                     </li>
 
                     <!-- Produkt-Dropdown -->
-                    {% if perms.product.view %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'product' in request.path or 'serialnumber' in request.path or 'category' in request.path %}active{% endif %}"
                            href="#" id="productDropdown" role="button"
@@ -106,7 +105,6 @@
                                 </a>
                             </li>
                             {% if perms.product.add %}
-
                             <li>
                                 <a class="dropdown-item {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}"
                                    href="{% url 'product_create' %}">
@@ -190,7 +188,6 @@
                                     <i class="bi bi-file-earmark-arrow-up me-2"></i>Seriennummern exportieren
                                 </a>
                             </li>
-                            {% endif %}
                             {% endif %}
                             {% if perms.product.view%}
                             <li><hr class="dropdown-divider"></li>

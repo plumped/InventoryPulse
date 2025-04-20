@@ -99,7 +99,7 @@
     <!-- Second Row of Cards -->
     <div class="row">
         <!-- Object Permissions Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-danger shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -119,8 +119,31 @@
             </div>
         </div>
 
+        <!-- Predefined Roles Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Predefined Roles</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                <i class="fas fa-user-tag"></i> App-Specific Roles
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-shield fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'admin_predefined_roles' %}" class="btn btn-sm btn-primary">Manage Predefined Roles</a>
+                </div>
+            </div>
+        </div>
+
         <!-- Role Hierarchy Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-secondary shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -141,7 +164,7 @@
         </div>
 
         <!-- Time-Based Permissions Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-left-dark shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -213,9 +236,9 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if perm.can_view %}<span class="badge badge-info">View</span>{% endif %}
-                                        {% if perm.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
-                                        {% if perm.can_delete %}<span class="badge badge-danger">Delete</span>{% endif %}
+                                        {% if perm.can_view %}<span class="badge bg-info">View</span>{% endif %}
+                                        {% if perm.can_edit %}<span class="badge bg-warning">Edit</span>{% endif %}
+                                        {% if perm.can_delete %}<span class="badge bg-danger">Delete</span>{% endif %}
                                     </td>
                                     <td>
                                         {% if perm.valid_until %}
@@ -259,9 +282,9 @@
                                     <td>{{ access.warehouse.name }}</td>
                                     <td>{{ access.department.name }}</td>
                                     <td>
-                                        {% if access.can_view %}<span class="badge badge-info">View</span>{% endif %}
-                                        {% if access.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
-                                        {% if access.can_manage_stock %}<span class="badge badge-success">Manage Stock</span>{% endif %}
+                                        {% if access.can_view %}<span class="badge bg-info">View</span>{% endif %}
+                                        {% if access.can_edit %}<span class="badge bg-warning">Edit</span>{% endif %}
+                                        {% if access.can_manage_stock %}<span class="badge bg-success">Manage Stock</span>{% endif %}
                                     </td>
                                 </tr>
                                 {% empty %}

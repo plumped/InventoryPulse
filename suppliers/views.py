@@ -4,11 +4,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db.models import Q, Count
 from django.db.models.aggregates import Avg, Min, Max
+from django.http import HttpResponseForbidden
 from django.http.response import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.utils.timezone import make_aware
 
+from core.utils.access import has_object_permission
 from data_operations.models.performance_models import SupplierPerformance, SupplierPerformanceMetric, \
     SupplierPerformanceCalculator
 from master_data.models.currency_models import Currency
@@ -21,7 +23,7 @@ from .models import Supplier, SupplierProduct, \
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
+@permission_required('suppliers.view_supplier', raise_exception=True)
 
 def supplier_list(request):
     """List all suppliers with filtering and search."""
@@ -55,11 +57,14 @@ def supplier_list(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('suppliers.view_supplier', raise_exception=True)
 def supplier_detail(request, pk):
     """Show details for a specific supplier."""
     supplier = get_object_or_404(Supplier, pk=pk)
+
+    # Check if user has permission to view this specific supplier
+    if not request.user.is_superuser and not has_object_permission(request.user, supplier, 'view'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diesen Lieferanten anzusehen.")
 
     # Produkte dieses Lieferanten
     supplier_products = SupplierProduct.objects.filter(supplier=supplier).select_related('product')
@@ -221,7 +226,7 @@ def supplier_detail(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'create')
+@permission_required('suppliers.add_supplier', raise_exception=True)
 def supplier_create(request):
     """Create a new supplier."""
     if request.method == 'POST':
@@ -241,10 +246,14 @@ def supplier_create(request):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('suppliers.change_supplier', raise_exception=True)
 def supplier_update(request, pk):
     """Update an existing supplier."""
     supplier = get_object_or_404(Supplier, pk=pk)
+
+    # Check if user has permission to edit this specific supplier
+    if not request.user.is_superuser and not has_object_permission(request.user, supplier, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diesen Lieferanten zu bearbeiten.")
 
     if request.method == 'POST':
         form = SupplierForm(request.POST, instance=supplier)
@@ -264,7 +273,7 @@ def supplier_update(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('suppliers.add_supplierproduct', raise_exception=True)
 def supplier_product_add(request):
     """Add a product to a supplier."""
     # Vorausgewähltes Produkt oder Lieferant (z.B. aus URL-Parametern)
@@ -333,7 +342,7 @@ def supplier_product_add(request):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('suppliers.change_supplierproduct', raise_exception=True)
 def supplier_product_update(request, pk):
     """Update a supplier-product relationship."""
     supplier_product = get_object_or_404(SupplierProduct, pk=pk)
@@ -370,7 +379,7 @@ def supplier_product_update(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'delete')
+@permission_required('suppliers.delete_supplierproduct', raise_exception=True)
 def supplier_product_delete(request, pk):
     """Delete a supplier-product relationship."""
     supplier_product = get_object_or_404(SupplierProduct, pk=pk)

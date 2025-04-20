@@ -1,28 +1,24 @@
-import os
 import json
 import base64
+import json
 from io import BytesIO
-from PIL import Image
+
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, permission_required
+from django.db.models import Q
+from django.http import JsonResponse, HttpResponseForbidden
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.translation import gettext_lazy as _
+from django.views.decorators.csrf import csrf_exempt
 from pdf2image import convert_from_path
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponse
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from django.utils.translation import gettext_lazy as _
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import PermissionDenied
-from django.db.models import Q
-
+from core.utils.access import has_object_permission
 from core.utils.pagination import paginate_queryset
 from suppliers.models import Supplier
-from .models import Document, DocumentTemplate, TemplateField, DocumentType, DocumentMatch, StandardField
 from .forms import DocumentUploadForm, DocumentTemplateForm, TemplateFieldForm, DocumentMatchForm
+from .models import Document, DocumentTemplate, TemplateField, DocumentType, DocumentMatch, StandardField
 from .utils import process_document_with_ocr, extract_field_from_document, log_processing_event, \
     extract_fields_from_document
-from .tasks import process_document_ocr
 
 
 @login_required
@@ -99,9 +95,14 @@ def document_upload(request):
 
 
 @login_required
+@permission_required('documents.view_document', raise_exception=True)
 def document_detail(request, pk):
     """View for viewing document details and OCR results."""
     document = get_object_or_404(Document, pk=pk)
+
+    # Check if user has permission to view this specific document
+    if not request.user.is_superuser and not has_object_permission(request.user, document, 'view'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Dokument anzusehen.")
 
     # Get processing logs
     processing_logs = document.processing_logs.all().order_by('-timestamp')
@@ -132,9 +133,14 @@ def document_detail(request, pk):
 
 
 @login_required
+@permission_required('documents.delete_document', raise_exception=True)
 def document_delete(request, pk):
     """View for deleting a document."""
     document = get_object_or_404(Document, pk=pk)
+
+    # Check if user has permission to delete this specific document
+    if not request.user.is_superuser and not has_object_permission(request.user, document, 'delete'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Dokument zu löschen.")
 
     if request.method == 'POST':
         document.delete()
@@ -149,9 +155,14 @@ def document_delete(request, pk):
 
 
 @login_required
+@permission_required('documents.change_document', raise_exception=True)
 def document_process(request, pk):
     """View for manually triggering document processing."""
     document = get_object_or_404(Document, pk=pk)
+
+    # Check if user has permission to process this specific document
+    if not request.user.is_superuser and not has_object_permission(request.user, document, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Dokument zu verarbeiten.")
 
     # Process the document with OCR
     document.processing_status = 'processing'
@@ -171,9 +182,14 @@ def document_process(request, pk):
 
 
 @login_required
+@permission_required('documents.change_document', raise_exception=True)
 def document_match(request, pk):
     """View for manually matching a document to a purchase order."""
     document = get_object_or_404(Document, pk=pk)
+
+    # Check if user has permission to match this specific document
+    if not request.user.is_superuser and not has_object_permission(request.user, document, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Dokument zuzuordnen.")
 
     if request.method == 'POST':
         form = DocumentMatchForm(request.POST, supplier_id=document.supplier_id if document.supplier else None)

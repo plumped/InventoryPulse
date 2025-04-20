@@ -24,7 +24,7 @@ from .models import StockMovement, StockTake, StockTakeItem, Warehouse
 
 
 @login_required
-@permission_required('inventory.view_inventory', raise_exception=True)
+@permission_required('inventory.view_stockmovement', raise_exception=True)
 
 def stock_movement_list(request):
     """List all stock movements with filtering and search."""
@@ -98,7 +98,7 @@ def stock_movement_list(request):
 # Ergänzung zu bestehenden Views in inventory/views.py
 
 @login_required
-@permission_required('inventory.view_inventory', raise_exception=True)
+@permission_required('inventory.view_stocktake', raise_exception=True)
 
 def stock_take_list(request):
     """List all stock takes with filtering."""
@@ -156,7 +156,7 @@ def stock_take_list(request):
 
 
 @login_required
-@permission_required('inventory', 'create')
+@permission_required('inventory.add_stocktake', raise_exception=True)
 def stock_take_create(request):
     """Create a new stock take."""
     # Lager abrufen, auf die der Benutzer Zugriff hat
@@ -269,7 +269,7 @@ def stock_take_create(request):
 
 
 @login_required
-@permission_required('inventory.view_inventory', raise_exception=True)
+@permission_required('inventory.view_stocktake', raise_exception=True)
 
 def stock_take_detail(request, pk):
     """Show details for a specific stock take."""
@@ -326,7 +326,7 @@ def stock_take_detail(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stocktake', raise_exception=True)
 def stock_take_update(request, pk):
     """Update an existing stock take."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -391,7 +391,7 @@ def stock_take_update(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'delete')
+@permission_required('inventory.delete_stocktake', raise_exception=True)
 def stock_take_delete(request, pk):
     """Delete a stock take."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -419,7 +419,7 @@ def stock_take_delete(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stocktake', raise_exception=True)
 def stock_take_start(request, pk):
     """Start a stock take."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -451,7 +451,7 @@ def stock_take_start(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stocktake', raise_exception=True)
 def stock_take_complete(request, pk):
     """Complete a stock take and apply adjustments."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -549,7 +549,7 @@ def stock_take_complete(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stocktake', raise_exception=True)
 def stock_take_cancel(request, pk):
     """Cancel a stock take."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -581,7 +581,7 @@ def stock_take_cancel(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stocktakeitem', raise_exception=True)
 def stock_take_item_count(request, pk, item_id):
     """Count a specific item in a stock take."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -650,7 +650,7 @@ def stock_take_item_count(request, pk, item_id):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stocktakeitem', raise_exception=True)
 def stock_take_count_items(request, pk):
     """Count multiple items in a stock take (optimized counting view)."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -717,7 +717,7 @@ def stock_take_count_items(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stocktakeitem', raise_exception=True)
 def stock_take_barcode_scan(request, pk):
     """Scan barcodes for stock take counting."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -772,7 +772,7 @@ def stock_take_barcode_scan(request, pk):
 
 
 @login_required
-@permission_required('inventory.view_inventory', raise_exception=True)
+@permission_required('inventory.view_stocktake', raise_exception=True)
 
 def stock_take_report(request, pk):
     """Generate a report for a stock take."""
@@ -882,7 +882,7 @@ def stock_take_report(request, pk):
 
 
 @login_required
-@permission_required('report', 'view')
+@permission_required('inventory.view_stocktake', raise_exception=True)
 def stock_take_export_csv(request, pk):
     """Export a stock take to CSV."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -925,7 +925,7 @@ def stock_take_export_csv(request, pk):
 
 
 @login_required
-@permission_required('report', 'view')
+@permission_required('inventory.view_stocktake', raise_exception=True)
 def stock_take_export_pdf(request, pk):
     """Export a stock take to PDF."""
     stock_take = get_object_or_404(StockTake, pk=pk)
@@ -939,7 +939,7 @@ def stock_take_export_pdf(request, pk):
 
 # Beispiel für Lager-Verwaltungs-Views
 @login_required
-@permission_required('inventory.view_inventory', raise_exception=True)
+@permission_required('inventory.view_warehouse', raise_exception=True)
 
 def warehouse_list(request):
     # Nur Lager anzeigen, auf die der Benutzer Zugriff hat
@@ -954,24 +954,23 @@ def warehouse_list(request):
 
 
 @login_required
-@permission_required('inventory.view_inventory', raise_exception=True)
-
+@permission_required('master_data.view_department', raise_exception=True)
 def department_management(request):
-    # Nur für Administratoren
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur für Administratoren.")
+    # Prüfen, ob der Benutzer die Berechtigung hat, Abteilungen zu verwalten
+    if not (request.user.is_superuser or request.user.has_perm('master_data.view_department')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Abteilungen zu verwalten.")
 
     departments = Department.objects.all()
     return render(request, 'inventory/department_management.html', {'departments': departments})
 
 
 @login_required
-@permission_required('inventory', 'create')
+@permission_required('master_data.add_department', raise_exception=True)
 def department_create(request):
     """Neue Abteilung erstellen."""
-    # Nur Administratoren können Abteilungen erstellen
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur Administratoren können Abteilungen erstellen.")
+    # Prüfen, ob der Benutzer die Berechtigung hat, Abteilungen zu erstellen
+    if not (request.user.is_superuser or request.user.has_perm('master_data.add_department')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Abteilungen zu erstellen.")
 
     if request.method == 'POST':
         # Hier müsste ein entsprechendes Formular implementiert werden
@@ -991,14 +990,14 @@ def department_create(request):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('master_data.change_department', raise_exception=True)
 def department_update(request, pk):
     """Abteilung bearbeiten."""
     department = get_object_or_404(Department, pk=pk)
 
-    # Nur Administratoren können Abteilungen bearbeiten
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur Administratoren können Abteilungen bearbeiten.")
+    # Prüfen, ob der Benutzer die Berechtigung hat, Abteilungen zu bearbeiten
+    if not (request.user.is_superuser or request.user.has_perm('master_data.change_department')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Abteilungen zu bearbeiten.")
 
     if request.method == 'POST':
         form = DepartmentForm(request.POST, instance=department)
@@ -1018,14 +1017,14 @@ def department_update(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'delete')
+@permission_required('master_data.delete_department', raise_exception=True)
 def department_delete(request, pk):
     """Abteilung löschen."""
     department = get_object_or_404(Department, pk=pk)
 
-    # Nur Administratoren können Abteilungen löschen
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur Administratoren können Abteilungen löschen.")
+    # Prüfen, ob der Benutzer die Berechtigung hat, Abteilungen zu löschen
+    if not (request.user.is_superuser or request.user.has_perm('master_data.delete_department')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Abteilungen zu löschen.")
 
     if request.method == 'POST':
         department.delete()
@@ -1040,7 +1039,7 @@ def department_delete(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('master_data.change_department', raise_exception=True)
 def department_members(request, pk):
     """Mitglieder einer Abteilung verwalten."""
     department = get_object_or_404(Department, pk=pk)
@@ -1120,7 +1119,7 @@ def department_members(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('master_data.change_department', raise_exception=True)
 def department_add_member(request, pk):
     """Fügt ein Mitglied zur Abteilung hinzu."""
     department = get_object_or_404(Department, pk=pk)
@@ -1146,7 +1145,7 @@ def department_add_member(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('master_data.change_department', raise_exception=True)
 def department_edit_member(request, pk, member_id):
     """Bearbeitet die Rolle eines Abteilungsmitglieds."""
     department = get_object_or_404(Department, pk=pk)
@@ -1180,7 +1179,7 @@ def department_edit_member(request, pk, member_id):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('master_data.change_department', raise_exception=True)
 def department_remove_member(request, pk, member_id):
     """Entfernt ein Mitglied aus der Abteilung."""
     department = get_object_or_404(Department, pk=pk)
@@ -1215,7 +1214,7 @@ def department_remove_member(request, pk, member_id):
     return redirect('department_members', pk=department.pk)
 
 @login_required
-@permission_required('inventory', 'admin')
+@permission_required('accessmanagement.change_warehouseaccess', raise_exception=True)
 def warehouse_access_management(request):
     """Verwaltung der Lagerzugriffsrechte."""
     # Nur Administratoren können Zugriffe verwalten
@@ -1270,7 +1269,7 @@ def warehouse_access_management(request):
 
 
 @login_required
-@permission_required('inventory', 'admin')
+@permission_required('accessmanagement.delete_warehouseaccess', raise_exception=True)
 def warehouse_access_delete(request, pk):
     """Lagerzugriffsrecht löschen."""
     access = get_object_or_404(WarehouseAccess, pk=pk)
@@ -1294,7 +1293,7 @@ def warehouse_access_delete(request, pk):
 
 
 @login_required
-@permission_required('inventory.view_inventory', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 
 def product_warehouses(request, product_id):
     """Bestandsansicht eines Produkts in allen Lagern."""
@@ -1328,12 +1327,12 @@ def product_warehouses(request, product_id):
     return render(request, 'inventory/product_warehouses.html', context)
 
 @login_required
-@permission_required('inventory', 'create')
+@permission_required('inventory.add_warehouse', raise_exception=True)
 def warehouse_create(request):
     """Neues Lager erstellen."""
-    # Nur Administratoren können Lager erstellen
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur Administratoren können Lager erstellen.")
+    # Prüfen, ob der Benutzer die Berechtigung hat, Lager zu erstellen
+    if not (request.user.is_superuser or request.user.has_perm('inventory.add_warehouse')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Lager zu erstellen.")
 
     if request.method == 'POST':
         form = WarehouseForm(request.POST)
@@ -1353,7 +1352,7 @@ def warehouse_create(request):
 
 
 @login_required
-@permission_required('inventory.view_inventory', raise_exception=True)
+@permission_required('inventory.view_warehouse', raise_exception=True)
 def warehouse_detail(request, pk):
     """Detailansicht eines Lagers."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
@@ -1415,14 +1414,14 @@ def warehouse_detail(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_warehouse', raise_exception=True)
 def warehouse_update(request, pk):
     """Lager bearbeiten."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
 
-    # Nur Administratoren können Lager bearbeiten
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur Administratoren können Lager bearbeiten.")
+    # Prüfen, ob der Benutzer Bearbeitungsrechte für dieses Lager hat
+    if not (request.user.is_superuser or WarehouseAccess.has_access(request.user, warehouse, 'edit')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Lager zu bearbeiten.")
 
     if request.method == 'POST':
         form = WarehouseForm(request.POST, instance=warehouse)
@@ -1443,14 +1442,15 @@ def warehouse_update(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'delete')
+@permission_required('inventory.delete_warehouse', raise_exception=True)
 def warehouse_delete(request, pk):
     """Lager löschen."""
     warehouse = get_object_or_404(Warehouse, pk=pk)
 
-    # Nur Administratoren können Lager löschen
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur Administratoren können Lager löschen.")
+    # Prüfen, ob der Benutzer die Berechtigung hat, dieses Lager zu löschen
+    # Für das Löschen benötigen wir sowohl die Django-Berechtigung als auch die Warehouse-Berechtigung
+    if not (request.user.is_superuser or WarehouseAccess.has_access(request.user, warehouse, 'edit')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Lager zu löschen.")
 
     # Prüfen, ob Produkte, Bestandsbewegungen oder Inventuren mit diesem Lager verknüpft sind
     product_count = ProductWarehouse.objects.filter(warehouse=warehouse).count()
@@ -1477,12 +1477,12 @@ def warehouse_delete(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'admin')
+@permission_required('accessmanagement.add_warehouseaccess', raise_exception=True)
 def warehouse_access_add(request):
     """Neue Lagerzugriffsrechte hinzufügen."""
-    # Nur Administratoren können Zugriffsrechte verwalten
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur Administratoren können Lagerzugriffsrechte verwalten.")
+    # Prüfen, ob der Benutzer die Berechtigung hat, Lagerzugriffsrechte zu verwalten
+    if not (request.user.is_superuser or request.user.has_perm('accessmanagement.add_warehouseaccess')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Lagerzugriffsrechte zu verwalten.")
 
     if request.method == 'POST':
         form = WarehouseAccessForm(request.POST)
@@ -1503,14 +1503,14 @@ def warehouse_access_add(request):
 
 
 @login_required
-@permission_required('inventory', 'admin')
+@permission_required('accessmanagement.change_warehouseaccess', raise_exception=True)
 def warehouse_access_update(request, pk):
     """Lagerzugriffsrechte bearbeiten."""
     access = get_object_or_404(WarehouseAccess, pk=pk)
 
-    # Nur Administratoren können Zugriffsrechte verwalten
-    if not request.user.is_superuser:
-        return HttpResponseForbidden("Nur Administratoren können Lagerzugriffsrechte verwalten.")
+    # Prüfen, ob der Benutzer die Berechtigung hat, Lagerzugriffsrechte zu verwalten
+    if not (request.user.is_superuser or request.user.has_perm('accessmanagement.change_warehouseaccess')):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Lagerzugriffsrechte zu verwalten.")
 
     if request.method == 'POST':
         form = WarehouseAccessForm(request.POST, instance=access)
@@ -1532,7 +1532,7 @@ def warehouse_access_update(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_productwarehouse', raise_exception=True)
 def product_add_to_warehouse(request, warehouse_id):
     """Produkt zu einem Lager hinzufügen."""
     warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
@@ -1604,7 +1604,7 @@ def product_add_to_warehouse(request, warehouse_id):
     return render(request, 'inventory/add_product_to_warehouse.html', context)
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_productwarehouse', raise_exception=True)
 def bulk_add_products_to_warehouse(request, warehouse_id):
     """Bulk add products to a warehouse with multiple input methods."""
     warehouse = get_object_or_404(Warehouse, pk=warehouse_id)
@@ -1742,7 +1742,7 @@ class WarehouseAccessForm(forms.ModelForm):
 # In inventory/views.py - bulk_warehouse_transfer View anpassen
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stockmovement', raise_exception=True)
 def bulk_warehouse_transfer(request):
     """Umlagerung von Produkten zwischen Lagern mit Chargenunterstützung."""
 
@@ -2011,7 +2011,7 @@ def update_product_warehouse_from_batches(product, warehouse_id):
 
 
 @login_required
-@permission_required('inventory', 'create')
+@permission_required('inventory.add_stocktake', raise_exception=True)
 def stock_take_create_cycle(request, pk):
     """Create a new cycle count based on an existing one."""
     original_stock_take = get_object_or_404(StockTake, pk=pk)
@@ -2083,7 +2083,7 @@ def stock_take_create_cycle(request, pk):
 
 
 @login_required
-@permission_required('inventory', 'edit')
+@permission_required('inventory.change_stockmovement', raise_exception=True)
 def stock_adjustment(request, product_id, warehouse_id=None):
     """
     Ermöglicht die direkte Korrektur von Produktbeständen in einem Lager,

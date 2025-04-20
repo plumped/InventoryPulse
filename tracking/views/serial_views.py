@@ -23,7 +23,7 @@ from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required
-@permission_required('serialnumber', 'view')
+@permission_required('tracking.view_serialnumber', raise_exception=True)
 def serialnumber_list(request):
     """Zeigt alle Seriennummern im System an."""
     # Filteroptionen
@@ -73,7 +73,7 @@ def serialnumber_list(request):
 
 
 @login_required
-@permission_required('serialnumber', 'view')
+@permission_required('tracking.view_serialnumber', raise_exception=True)
 def serialnumber_detail(request, serial_id):
     """Zeigt Details zu einer Seriennummer an."""
     serial = get_object_or_404(SerialNumber.objects.select_related(
@@ -89,7 +89,7 @@ def serialnumber_detail(request, serial_id):
 
 
 @login_required
-@permission_required('serialnumber', 'view')
+@permission_required('tracking.view_serialnumber', raise_exception=True)
 def serialnumber_history(request, serial_id):
     """Zeigt die Historie einer Seriennummer an."""
     serial = get_object_or_404(SerialNumber.objects.select_related(
@@ -107,7 +107,7 @@ def serialnumber_history(request, serial_id):
 
 
 @login_required
-@permission_required('serialnumber', 'add')
+@permission_required('tracking.add_serialnumber', raise_exception=True)
 def serialnumber_add(request):
     """Fügt eine neue Seriennummer hinzu (produktunabhängig)."""
     if request.method == 'POST':
@@ -134,7 +134,7 @@ def serialnumber_add(request):
 
 
 @login_required
-@permission_required('serialnumber', 'transfer')
+@permission_required('tracking.transfer_serialnumber', raise_exception=True)
 def serialnumber_transfer(request):
     """Transferiert eine Seriennummer von einem Lager zu einem anderen."""
     if request.method == 'POST':
@@ -193,7 +193,7 @@ def serialnumber_transfer(request):
 
 
 @login_required
-@permission_required('serialnumber', 'import')
+@permission_required('tracking.import_serialnumber', raise_exception=True)
 def serialnumber_import(request):
     return handle_csv_import(
         form_class=SerialNumberImportForm,
@@ -213,7 +213,7 @@ def serialnumber_import(request):
 
 
 @login_required
-@permission_required('serialnumber', 'export')
+@permission_required('tracking.export_serialnumber', raise_exception=True)
 def serialnumber_export(request):
     """Exportiert Seriennummern in eine CSV- oder Excel-Datei."""
     # Filteroptionen für den Export
@@ -535,7 +535,7 @@ def serialnumber_export(request):
 
 
 @login_required
-@permission_required('serialnumber', 'view')
+@permission_required('tracking.view_serialnumber', raise_exception=True)
 def serialnumber_scan(request):
     """Scannt eine Seriennummer (z.B. mit Barcode-Scanner) und zeigt Details an."""
     scanned_number = request.GET.get('scan', '')
@@ -614,7 +614,7 @@ def serialnumber_scan(request):
 
 
 @login_required
-@permission_required('serialnumber', 'view')
+@permission_required('tracking.view_serialnumber', raise_exception=True)
 def serialnumber_search(request):
     """Erweiterte Suchfunktion für Seriennummern."""
     search_query = request.GET.get('q', '')
@@ -640,7 +640,7 @@ def serialnumber_search(request):
 
 
 @login_required
-@permission_required('serialnumber', 'edit')
+@permission_required('tracking.change_serialnumber', raise_exception=True)
 def serialnumber_batch_actions(request):
     """Massenaktionen für mehrere Seriennummern gleichzeitig."""
     if request.method == 'POST':
@@ -688,7 +688,7 @@ def serialnumber_batch_actions(request):
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def product_serials(request, pk):
     """Zeigt alle Seriennummern eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
@@ -722,7 +722,7 @@ def product_serials(request, pk):
 
 
 @login_required
-@permission_required('product', 'create')
+@permission_required('product_management.add_product', raise_exception=True)
 def product_serial_add(request, pk):
     """Fügt eine Seriennummer zu einem Produkt hinzu."""
     product = get_object_or_404(Product, pk=pk)
@@ -754,7 +754,7 @@ def product_serial_add(request, pk):
 
 
 @login_required
-@permission_required('product', 'create')
+@permission_required('product_management.add_product', raise_exception=True)
 def product_serial_bulk_add(request, pk):
     """Fügt mehrere Seriennummern zu einem Produkt hinzu."""
     product = get_object_or_404(Product, pk=pk)
@@ -827,7 +827,7 @@ def product_serial_bulk_add(request, pk):
 
 
 @login_required
-@permission_required('product', 'edit')
+@permission_required('product_management.change_product', raise_exception=True)
 def product_serial_update(request, pk, serial_id):
     """Aktualisiert eine Seriennummer."""
     product = get_object_or_404(Product, pk=pk)
@@ -852,7 +852,7 @@ def product_serial_update(request, pk, serial_id):
 
 
 @login_required
-@permission_required('product', 'delete')
+@permission_required('product_management.delete_product', raise_exception=True)
 def product_serial_delete(request, pk, serial_id):
     """Löscht eine Seriennummer."""
     product = get_object_or_404(Product, pk=pk)

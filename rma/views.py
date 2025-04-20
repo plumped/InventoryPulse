@@ -6,9 +6,10 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db import transaction
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 
+from core.utils.access import has_object_permission
 from inventory.models import StockMovement
 from master_data.models.addresses_models import CompanyAddress, CompanyAddressType
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem, PurchaseOrderReceipt
@@ -119,7 +120,6 @@ def rma_list(request):
 
 @login_required
 @permission_required('rma.view_rma', raise_exception=True)
-
 def rma_detail(request, pk):
     """Show details for a specific RMA."""
     rma = get_object_or_404(
@@ -127,6 +127,10 @@ def rma_detail(request, pk):
         .prefetch_related('items__product', 'history', 'comments'),
         pk=pk
     )
+
+    # Check if user has permission to view this specific RMA
+    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'view'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese RMA anzusehen.")
 
     # Group items by resolution
     resolved_items = []
@@ -161,9 +165,15 @@ def rma_detail(request, pk):
     # This would connect to some document templates in the future
 
     # Check user permissions
-    can_edit = request.user.has_perm('rma.edit') and rma.status in [RMAStatus.DRAFT]
-    can_approve = request.user.has_perm('rma.approve') and rma.status == RMAStatus.PENDING
-    can_resolve = request.user.has_perm('rma.edit') and rma.status in [RMAStatus.SENT, RMAStatus.APPROVED]
+    can_edit = (request.user.is_superuser or 
+               (request.user.has_perm('rma.change_rma') and 
+                has_object_permission(request.user, rma, 'edit'))) and rma.status in [RMAStatus.DRAFT]
+    can_approve = (request.user.is_superuser or 
+                  (request.user.has_perm('rma.change_rma') and 
+                   has_object_permission(request.user, rma, 'edit'))) and rma.status == RMAStatus.PENDING
+    can_resolve = (request.user.is_superuser or 
+                  (request.user.has_perm('rma.change_rma') and 
+                   has_object_permission(request.user, rma, 'edit'))) and rma.status in [RMAStatus.SENT, RMAStatus.APPROVED]
 
     # Forms for changing RMA status
     if request.method == 'POST':
@@ -291,7 +301,7 @@ def rma_detail(request, pk):
 
 
 @login_required
-@permission_required('rma', 'create')
+@permission_required('rma.add_rma', raise_exception=True)
 def rma_create(request):
     """Create a new RMA."""
     # Check for optional receipt_item_id to pre-fill the form
@@ -367,10 +377,14 @@ def rma_create(request):
 
 
 @login_required
-@permission_required('rma', 'edit')
+@permission_required('rma.change_rma', raise_exception=True)
 def rma_update(request, pk):
     """Update an existing RMA."""
     rma = get_object_or_404(RMA, pk=pk)
+
+    # Check if user has permission to edit this specific RMA
+    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese RMA zu bearbeiten.")
 
     # Only allow editing if RMA is in draft status
     if rma.status != RMAStatus.DRAFT:
@@ -406,10 +420,14 @@ def rma_update(request, pk):
 
 
 @login_required
-@permission_required('rma', 'edit')
+@permission_required('rma.change_rma', raise_exception=True)
 def rma_add_item(request, pk, receipt_item_id=None):
     """Add an item to an RMA."""
     rma = get_object_or_404(RMA, pk=pk)
+
+    # Check if user has permission to add items to this specific RMA
+    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Positionen zu dieser RMA hinzuzufügen.")
 
     # Only allow adding items if RMA is in draft status
     if rma.status != RMAStatus.DRAFT:
@@ -513,11 +531,15 @@ def rma_add_item(request, pk, receipt_item_id=None):
 
 
 @login_required
-@permission_required('rma', 'edit')
+@permission_required('rma.change_rma', raise_exception=True)
 def rma_edit_item(request, pk, item_id):
     """Edit an existing RMA item."""
     rma = get_object_or_404(RMA, pk=pk)
     item = get_object_or_404(RMAItem, pk=item_id, rma=rma)
+
+    # Check if user has permission to edit this specific RMA
+    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Positionen dieser RMA zu bearbeiten.")
 
     # Only allow editing if RMA is in draft status
     if rma.status != RMAStatus.DRAFT:
@@ -589,11 +611,15 @@ def rma_edit_item(request, pk, item_id):
 
 
 @login_required
-@permission_required('rma', 'delete')
+@permission_required('rma.delete_rmaitem', raise_exception=True)
 def rma_delete_item(request, pk, item_id):
     """Delete an item from an RMA."""
     rma = get_object_or_404(RMA, pk=pk)
     item = get_object_or_404(RMAItem, pk=item_id, rma=rma)
+
+    # Check if user has permission to delete items from this specific RMA
+    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, Positionen dieser RMA zu löschen.")
 
     # Only allow deleting if RMA is in draft status
     if rma.status != RMAStatus.DRAFT:
@@ -685,10 +711,14 @@ def rma_delete_item(request, pk, item_id):
 
 
 @login_required
-@permission_required('rma', 'delete')
+@permission_required('rma.delete_rma', raise_exception=True)
 def rma_delete(request, pk):
     """Delete an RMA."""
     rma = get_object_or_404(RMA, pk=pk)
+
+    # Check if user has permission to delete this specific RMA
+    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'delete'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese RMA zu löschen.")
 
     # Only allow deleting if RMA is in draft status
     if rma.status != RMAStatus.DRAFT:
@@ -769,7 +799,7 @@ def rma_delete(request, pk):
 
 
 @login_required
-@permission_required('rma', 'edit')
+@permission_required('rma.change_rmaitem', raise_exception=True)
 def rma_toggle_item_resolved(request, pk, item_id):
     """Toggle the resolved status of an RMA item."""
     rma = get_object_or_404(RMA, pk=pk)
@@ -818,7 +848,7 @@ def rma_toggle_item_resolved(request, pk, item_id):
 
 
 @login_required
-@permission_required('rma', 'edit')
+@permission_required('rma.change_rmaphoto', raise_exception=True)
 def rma_add_photos(request, pk, item_id):
     """Add photos to an RMA item."""
     rma = get_object_or_404(RMA, pk=pk)
@@ -874,7 +904,7 @@ def rma_add_photos(request, pk, item_id):
 
 
 @login_required
-@permission_required('rma', 'edit')
+@permission_required('rma.delete_rmaphoto', raise_exception=True)
 def rma_delete_photo(request, pk, item_id, photo_id):
     """Delete a photo from an RMA item."""
     rma = get_object_or_404(RMA, pk=pk)
@@ -914,7 +944,7 @@ def rma_delete_photo(request, pk, item_id, photo_id):
 
 
 @login_required
-@permission_required('rma', 'edit')
+@permission_required('rma.add_rmadocument', raise_exception=True)
 def rma_add_document(request, pk):
     """Add a document to an RMA."""
     rma = get_object_or_404(RMA, pk=pk)
@@ -957,7 +987,7 @@ def rma_add_document(request, pk):
 
 
 @login_required
-@permission_required('rma', 'delete')
+@permission_required('rma.delete_rmadocument', raise_exception=True)
 def rma_delete_document(request, pk, document_id):
     """Delete a document from an RMA."""
     rma = get_object_or_404(RMA, pk=pk)
@@ -986,7 +1016,7 @@ def rma_delete_document(request, pk, document_id):
 
 
 @login_required
-@permission_required('rma', 'delete')
+@permission_required('rma.delete_rmacomment', raise_exception=True)
 def rma_delete_comment(request, pk, comment_id):
     """Delete a comment from an RMA."""
     rma = get_object_or_404(RMA, pk=pk)
@@ -1272,4 +1302,3 @@ def rma_create_from_receipt(request, order_id, receipt_id):
     }
 
     return render(request, 'rma/rma_create_from_receipt.html', context)
-

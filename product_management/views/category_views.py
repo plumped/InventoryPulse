@@ -1,14 +1,16 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 
+from core.utils.access import has_object_permission
 from product_management.forms.categories_forms import CategoryForm
 from product_management.models.categories_models import Category
 from product_management.models.products_models import Product
 
 
 @login_required
-@permission_required('categories.view_categories', raise_exception=True)
+@permission_required('product_management.view_category', raise_exception=True)
 def category_list(request):
     """List all categories."""
     categories = Category.objects.all().order_by('name')
@@ -30,7 +32,7 @@ def category_list(request):
 
 
 @login_required
-@permission_required('product', 'create')
+@permission_required('product_management.add_category', raise_exception=True)
 def category_create(request):
     """Create a new category."""
     if request.method == 'POST':
@@ -50,10 +52,14 @@ def category_create(request):
 
 
 @login_required
-@permission_required('product', 'edit')
+@permission_required('product_management.change_category', raise_exception=True)
 def category_update(request, pk):
     """Update an existing category."""
     category = get_object_or_404(Category, pk=pk)
+
+    # Check if user has permission to edit this specific category
+    if not request.user.is_superuser and not has_object_permission(request.user, category, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, diese Kategorie zu bearbeiten.")
 
     if request.method == 'POST':
         form = CategoryForm(request.POST, instance=category)

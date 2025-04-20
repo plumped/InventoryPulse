@@ -3,6 +3,7 @@ from django.urls import path, include
 
 from master_data.views.currency_views import currency_list, currency_create, currency_update, currency_delete
 from . import permission_views
+from . import predefined_role_views
 from . import views
 
 urlpatterns = [
@@ -92,5 +93,8 @@ urlpatterns = [
         path('warehouse-access/add/', permission_views.warehouse_access_add, name='admin_warehouse_access_add'),
         path('warehouse-access/<int:pk>/edit/', permission_views.warehouse_access_edit, name='admin_warehouse_access_edit'),
         path('warehouse-access/<int:pk>/delete/', permission_views.warehouse_access_delete, name='admin_warehouse_access_delete'),
+        path('predefined-roles/', predefined_role_views.predefined_roles, name='admin_predefined_roles'),
+        path('predefined-roles/create-all/', predefined_role_views.create_all_predefined_roles_view, name='admin_create_all_predefined_roles'),
+        path('predefined-roles/create/', predefined_role_views.create_predefined_role_view, name='admin_create_predefined_role'),
     ])),
 ]

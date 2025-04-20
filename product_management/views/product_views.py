@@ -4,10 +4,12 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.db import models
 from django.db.models.aggregates import Sum
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
 from accessmanagement.models import WarehouseAccess
+from core.utils.access import has_object_permission
 from core.utils.pagination import paginate_queryset
 from core.utils.products import get_filtered_products
 from inventory.models import Warehouse, StockMovement
@@ -19,7 +21,7 @@ from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def product_list(request):
     filtered_products = get_filtered_products(request)
     products = paginate_queryset(filtered_products, request.GET.get('page'), per_page=25)
@@ -36,7 +38,7 @@ def product_list(request):
 
 
 @login_required
-@permission_required('product', 'create')
+@permission_required('product_management.add_product', raise_exception=True)
 def product_create(request):
     """Create a new product."""
     if request.method == 'POST':
@@ -88,10 +90,14 @@ def product_create(request):
 
 
 @login_required
-@permission_required('product', 'edit')
+@permission_required('product_management.change_product', raise_exception=True)
 def product_update(request, pk):
     """Update an existing product."""
     product = get_object_or_404(Product, pk=pk)
+
+    # Check if user has permission to edit this specific product
+    if not request.user.is_superuser and not has_object_permission(request.user, product, 'edit'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Produkt zu bearbeiten.")
 
     # Lager abrufen, auf die der Benutzer Zugriff hat
     if request.user.is_superuser:
@@ -152,10 +158,14 @@ def product_update(request, pk):
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def product_detail(request, pk):
     """Show details for a specific product."""
     product = get_object_or_404(Product, pk=pk)
+
+    # Check if user has permission to view this specific product
+    if not request.user.is_superuser and not has_object_permission(request.user, product, 'view'):
+        return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Produkt anzusehen.")
 
     # Lieferanteninformationen
     supplier_products = SupplierProduct.objects.filter(product=product).select_related('supplier')
@@ -266,7 +276,7 @@ def product_detail(request, pk):
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def low_stock_list(request):
     products = get_filtered_products(request, filter_low_stock=True)
     return render(request, 'core/low_stock_list.html', {'products': products, 'title': 'Kritische Bestände'})

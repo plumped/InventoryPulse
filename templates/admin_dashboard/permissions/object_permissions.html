@@ -87,9 +87,9 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if perm.can_view %}<span class="badge badge-info">View</span>{% endif %}
-                                {% if perm.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
-                                {% if perm.can_delete %}<span class="badge badge-danger">Delete</span>{% endif %}
+                                {% if perm.can_view %}<span class="badge bg-info">View</span>{% endif %}
+                                {% if perm.can_edit %}<span class="badge bg-warning">Edit</span>{% endif %}
+                                {% if perm.can_delete %}<span class="badge bg-danger">Delete</span>{% endif %}
                             </td>
                             <td>
                                 {% if perm.valid_from or perm.valid_until %}
@@ -101,10 +101,10 @@
                             </td>
                             <td>
                                 <a href="{% url 'admin_object_permission_edit' perm.id %}" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="bi bi-pencil"></i>
                                 </a>
                                 <a href="{% url 'admin_object_permission_delete' perm.id %}" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="bi bi-trash"></i>
                                 </a>
                             </td>
                         </tr>

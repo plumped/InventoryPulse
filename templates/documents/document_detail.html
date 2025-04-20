@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load document_tags %}
+{% load access_tags %}
 
 {% block title %}{{ document.title }} - Document Detail - InventoryPulse{% endblock %}
 
@@ -123,18 +124,24 @@
                 </a>
                 {% endif %}
                 {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
-                <a href="{% url 'document_process' document.id %}" class="btn btn-primary">
-                    <i class="bi bi-arrow-repeat"></i> Process Document
-                </a>
+                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                    <a href="{% url 'document_process' document.id %}" class="btn btn-primary">
+                        <i class="bi bi-arrow-repeat"></i> Process Document
+                    </a>
+                    {% endif %}
                 {% endif %}
                 {% if document.is_processed and not document.matched_order %}
-                <a href="{% url 'document_match' document.id %}" class="btn btn-success">
-                    <i class="bi bi-link"></i> Match to Order
-                </a>
+                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                    <a href="{% url 'document_match' document.id %}" class="btn btn-success">
+                        <i class="bi bi-link"></i> Match to Order
+                    </a>
+                    {% endif %}
                 {% endif %}
+                {% if user.is_superuser or user|has_object_permission:(document, 'delete') %}
                 <a href="{% url 'document_delete' document.id %}" class="btn btn-outline-danger">
                     <i class="bi bi-trash"></i> Delete
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -247,12 +254,14 @@
                                     <i class="bi bi-eye"></i> View
                                 </a>
                                 {% if document.is_processed and not document.matched_template %}
-                                <form method="post" action="{% url 'match_document_to_template' document.id template.id %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-success">
-                                        <i class="bi bi-link"></i> Match
-                                    </button>
-                                </form>
+                                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                                    <form method="post" action="{% url 'match_document_to_template' document.id template.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-link"></i> Match
+                                        </button>
+                                    </form>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </li>
@@ -260,15 +269,17 @@
                     </ul>
                 </div>
                 <div class="card-footer">
+                    {% if user.is_superuser or perms.documents.add_documenttemplate %}
                     <a href="{% url 'template_create' %}?reference_document={{ document.id }}" class="btn btn-sm btn-primary">
                         <i class="bi bi-plus-circle"></i> Create Template from This Document
                     </a>
+                    {% endif %}
                 </div>
             </div>
             {% endif %}
 
             <!-- Match Form -->
-            {% if match_form and not document.matched_order %}
+            {% if match_form and not document.matched_order and user|has_object_permission:(document, 'edit') %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Match to Order</h5>
@@ -368,7 +379,11 @@
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i> No extracted data available.
                                 {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
-                                <a href="{% url 'document_process' document.id %}" class="alert-link">Process the document</a> to extract data.
+                                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                                    <a href="{% url 'document_process' document.id %}" class="alert-link">Process the document</a> to extract data.
+                                    {% else %}
+                                    The document needs to be processed to extract data.
+                                    {% endif %}
                                 {% endif %}
                             </div>
                             {% endif %}
@@ -382,7 +397,11 @@
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i> No OCR text available.
                                 {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
-                                <a href="{% url 'document_process' document.id %}" class="alert-link">Process the document</a> to extract text.
+                                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                                    <a href="{% url 'document_process' document.id %}" class="alert-link">Process the document</a> to extract text.
+                                    {% else %}
+                                    The document needs to be processed to extract text.
+                                    {% endif %}
                                 {% endif %}
                             </div>
                             {% endif %}

@@ -124,8 +124,7 @@
                                     <i class="bi bi-tags me-2"></i>Kategorien
                                 </a>
                             </li>
-                            {% if perms.product.view%}
-
+                            {% if perms.product_management.view_product %}
                             <li>
                                 <a class="dropdown-item {% if 'expiry' in request.path %}active{% endif %}"
                                    href="{% url 'expiry_management' %}">

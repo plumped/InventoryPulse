@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}User Permissions - {{ user_obj.username }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">User Permissions: {{ user_obj.username }}</h1>
+        <a href="{% url 'admin_user_edit' user_obj.id %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-user-edit fa-sm text-white-50"></i> Edit User
+        </a>
+    </div>
+
+    <!-- User Info Card -->
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">User Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Username:</strong> {{ user_obj.username }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Full Name:</strong> {{ user_obj.get_full_name|default:"Not provided" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Email:</strong> {{ user_obj.email|default:"Not provided" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Status:</strong> 
+                        {% if user_obj.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-danger">Inactive</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Staff Status:</strong> 
+                        {% if user_obj.is_staff %}
+                            <span class="badge badge-info">Staff</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Not Staff</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Admin Status:</strong> 
+                        {% if user_obj.is_superuser %}
+                            <span class="badge badge-warning">Superuser</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Not Superuser</span>
+                        {% endif %}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Last Login:</strong> {{ user_obj.last_login|date:"Y-m-d H:i"|default:"Never" }}
+                    </div>
+                    <div class="mb-2">
+                        <strong>Date Joined:</strong> {{ user_obj.date_joined|date:"Y-m-d H:i" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Groups</h6>
+                </div>
+                <div class="card-body">
+                    {% if groups %}
+                        <ul class="list-group">
+                            {% for group in groups %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ group.name }}
+                                    <a href="{% url 'admin_group_edit' group.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-center">User is not a member of any groups</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Departments</h6>
+                </div>
+                <div class="card-body">
+                    {% if departments %}
+                        <ul class="list-group">
+                            {% for dept in departments %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ dept.name }}
+                                    <a href="{% url 'admin_department_edit' dept.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-center">User is not a member of any departments</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Tabs -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Permissions</h6>
+        </div>
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="permissionTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="direct-tab" data-toggle="tab" href="#direct" role="tab" aria-controls="direct" aria-selected="true">
+                        Direct Permissions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="group-tab" data-toggle="tab" href="#group" role="tab" aria-controls="group" aria-selected="false">
+                        Group Permissions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="inherited-tab" data-toggle="tab" href="#inherited" role="tab" aria-controls="inherited" aria-selected="false">
+                        Inherited Permissions
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="warehouse-tab" data-toggle="tab" href="#warehouse" role="tab" aria-controls="warehouse" aria-selected="false">
+                        Warehouse Access
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="object-tab" data-toggle="tab" href="#object" role="tab" aria-controls="object" aria-selected="false">
+                        Object Permissions
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content" id="permissionTabsContent">
+                <!-- Direct Permissions Tab -->
+                <div class="tab-pane fade show active" id="direct" role="tabpanel" aria-labelledby="direct-tab">
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Permission</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for perm in direct_permissions %}
+                                <tr>
+                                    <td>{{ perm.codename }}</td>
+                                    <td>{{ perm.name }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center">No direct permissions assigned</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Group Permissions Tab -->
+                <div class="tab-pane fade" id="group" role="tabpanel" aria-labelledby="group-tab">
+                    {% if group_permissions %}
+                        {% for group_name, permissions in group_permissions.items %}
+                            <h5 class="mt-3">{{ group_name }}</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered" width="100%" cellspacing="0">
+                                    <thead>
+                                        <tr>
+                                            <th>Permission</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for perm in permissions %}
+                                        <tr>
+                                            <td>{{ perm.codename }}</td>
+                                            <td>{{ perm.name }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="2" class="text-center">No permissions in this group</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center mt-3">No group permissions assigned</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Inherited Permissions Tab -->
+                <div class="tab-pane fade" id="inherited" role="tabpanel" aria-labelledby="inherited-tab">
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Permission</th>
+                                    <th>Description</th>
+                                    <th>Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in inherited_permissions %}
+                                <tr>
+                                    <td>{{ item.permission.codename }}</td>
+                                    <td>{{ item.permission.name }}</td>
+                                    <td>{{ item.source }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No inherited permissions</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Warehouse Access Tab -->
+                <div class="tab-pane fade" id="warehouse" role="tabpanel" aria-labelledby="warehouse-tab">
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Warehouse</th>
+                                    <th>Department</th>
+                                    <th>Permissions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for access in warehouse_access %}
+                                <tr>
+                                    <td>{{ access.warehouse.name }}</td>
+                                    <td>{{ access.department.name }}</td>
+                                    <td>
+                                        {% if access.can_view %}<span class="badge badge-info">View</span>{% endif %}
+                                        {% if access.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
+                                        {% if access.can_manage_stock %}<span class="badge badge-success">Manage Stock</span>{% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No warehouse access rights</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Object Permissions Tab -->
+                <div class="tab-pane fade" id="object" role="tabpanel" aria-labelledby="object-tab">
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Object Type</th>
+                                    <th>Object ID</th>
+                                    <th>Permissions</th>
+                                    <th>Source</th>
+                                    <th>Valid Until</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for perm in object_permissions %}
+                                <tr>
+                                    <td>{{ perm.content_type.model }}</td>
+                                    <td>{{ perm.object_id }}</td>
+                                    <td>
+                                        {% if perm.can_view %}<span class="badge badge-info">View</span>{% endif %}
+                                        {% if perm.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
+                                        {% if perm.can_delete %}<span class="badge badge-danger">Delete</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        {% if perm.user and perm.user.id == user_obj.id %}
+                                            Direct
+                                        {% else %}
+                                            Via {{ perm.department.name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if perm.valid_until %}
+                                            {{ perm.valid_until|date:"Y-m-d H:i" }}
+                                        {% else %}
+                                            Permanent
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No object permissions</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

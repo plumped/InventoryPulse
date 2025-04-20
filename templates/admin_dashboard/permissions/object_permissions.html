@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Object Permissions{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Object Permissions</h1>
+        <a href="{% url 'admin_object_permission_add' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add Object Permission
+        </a>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="form-inline">
+                <div class="form-group mb-2 mr-2">
+                    <label for="search" class="sr-only">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" placeholder="Search..." value="{{ filters.search }}">
+                </div>
+                <div class="form-group mb-2 mr-2">
+                    <label for="content_type" class="sr-only">Object Type</label>
+                    <select class="form-control" id="content_type" name="content_type">
+                        <option value="">All Object Types</option>
+                        {% for ct in content_types %}
+                        <option value="{{ ct.id }}">{{ ct.app_label }}.{{ ct.model }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mb-2 mr-2">
+                    <label for="user" class="sr-only">User</label>
+                    <select class="form-control" id="user" name="user">
+                        <option value="">All Users</option>
+                        {% for user in users %}
+                        <option value="{{ user.id }}">{{ user.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mb-2 mr-2">
+                    <label for="department" class="sr-only">Department</label>
+                    <select class="form-control" id="department" name="department">
+                        <option value="">All Departments</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary mb-2">Apply Filters</button>
+                <a href="{% url 'admin_object_permissions' %}" class="btn btn-secondary mb-2 ml-2">Clear Filters</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Object Permissions Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Object Permissions</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Object Type</th>
+                            <th>Object ID</th>
+                            <th>User/Department</th>
+                            <th>Permissions</th>
+                            <th>Valid Period</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perm in permissions %}
+                        <tr>
+                            <td>{{ perm.content_type.app_label }}.{{ perm.content_type.model }}</td>
+                            <td>{{ perm.object_id }}</td>
+                            <td>
+                                {% if perm.user %}
+                                    <a href="{% url 'admin_user_permissions' perm.user.id %}">{{ perm.user.username }}</a>
+                                {% else %}
+                                    Dept: {{ perm.department.name }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if perm.can_view %}<span class="badge badge-info">View</span>{% endif %}
+                                {% if perm.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
+                                {% if perm.can_delete %}<span class="badge badge-danger">Delete</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if perm.valid_from or perm.valid_until %}
+                                    {% if perm.valid_from %}From: {{ perm.valid_from|date:"Y-m-d H:i" }}<br>{% endif %}
+                                    {% if perm.valid_until %}Until: {{ perm.valid_until|date:"Y-m-d H:i" }}{% endif %}
+                                {% else %}
+                                    Permanent
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_object_permission_edit' perm.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_object_permission_delete' perm.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No object permissions found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if permissions.has_other_pages %}
+            <div class="pagination justify-content-center mt-4">
+                <ul class="pagination">
+                    {% if permissions.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ permissions.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for i in permissions.paginator.page_range %}
+                        {% if permissions.number == i %}
+                        <li class="page-item active">
+                            <a class="page-link" href="#">{{ i }}</a>
+                        </li>
+                        {% elif i > permissions.number|add:'-3' and i < permissions.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if permissions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ permissions.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ permissions.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3546,3 +3546,505 @@
 2025-04-13 22:20:54,104 [INFO] django.server: "POST /logout/ HTTP/1.1" 302 0
 2025-04-13 22:20:54,107 [INFO] django.server: "GET /login/ HTTP/1.1" 200 3317
 2025-04-13 22:21:06,449 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\urls.py changed, reloading.
+2025-04-19 23:55:01,319 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 00:25:59,979 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 00:26:02,294 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 302 0
+2025-04-20 00:26:02,303 [INFO] django.server: "GET /login/?next=/inventory/warehouses/ HTTP/1.1" 200 3339
+2025-04-20 01:01:35,397 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:01:38,330 [INFO] django.server: "POST /login/?next=/inventory/warehouses/ HTTP/1.1" 302 0
+2025-04-20 01:01:38,385 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 30428
+2025-04-20 01:01:39,962 [INFO] django.server: "GET / HTTP/1.1" 200 66833
+2025-04-20 01:01:45,059 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 30428
+2025-04-20 01:01:46,070 [INFO] django.server: "GET / HTTP/1.1" 200 66833
+2025-04-20 01:01:48,149 [INFO] django.server: "GET /suppliers/ HTTP/1.1" 200 31011
+2025-04-20 01:01:49,598 [INFO] django.server: "GET /rma/ HTTP/1.1" 200 33635
+2025-04-20 01:01:51,224 [INFO] django.server: "GET /documents/ HTTP/1.1" 200 33465
+2025-04-20 01:01:52,166 [INFO] django.server: "GET / HTTP/1.1" 200 66833
+2025-04-20 01:48:38,874 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:48:41,506 [INFO] django.server: "GET / HTTP/1.1" 200 66833
+2025-04-20 01:48:49,393 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 01:48:49,411 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 01:48:53,778 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-20 01:48:53,782 [INFO] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 38801
+2025-04-20 01:48:59,094 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-20 01:48:59,099 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 48236
+2025-04-20 01:49:01,922 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 01:49:01,927 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 01:49:03,571 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\models.py changed, reloading.
+2025-04-20 01:49:04,457 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:49:51,159 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-20 01:49:51,209 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 48236
+2025-04-20 01:49:52,854 [INFO] django.server: "GET /admin-dashboard/users/1/edit/ HTTP/1.1" 200 42145
+2025-04-20 01:49:56,506 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\InventoryPulse\settings.py changed, reloading.
+2025-04-20 01:49:57,286 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:50:20,601 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\apps.py changed, reloading.
+2025-04-20 01:50:21,407 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:53:27,983 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:53:28,728 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T01:53:28.728586", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/user/23/change/", "details": {"method": "GET"}}
+2025-04-20 01:53:28,729 [INFO] django.server: "GET /admin/auth/user/23/change/ HTTP/1.1" 302 0
+2025-04-20 01:53:28,749 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T01:53:28.749069", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/", "details": {"method": "GET"}}
+2025-04-20 01:53:28,749 [INFO] django.server: "GET /admin/ HTTP/1.1" 200 13484
+2025-04-20 01:53:28,771 [INFO] django.server: "GET /static/admin/img/icon-alert.svg HTTP/1.1" 200 504
+2025-04-20 01:54:14,024 [INFO] django.server: "GET /admin-dashboard/users/create/ HTTP/1.1" 200 43070
+2025-04-20 01:56:39,420 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\urls.py changed, reloading.
+2025-04-20 01:56:40,140 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:56:54,435 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\urls.py changed, reloading.
+2025-04-20 01:56:55,098 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:58:24,938 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\forms.py changed, reloading.
+2025-04-20 01:58:25,617 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 01:58:47,263 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\forms.py changed, reloading.
+2025-04-20 01:58:47,962 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:00:23,108 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-20 02:00:23,159 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 48236
+2025-04-20 02:00:32,537 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:00:32,544 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:01:11,484 [INFO] django.server: "GET / HTTP/1.1" 200 66833
+2025-04-20 02:01:13,723 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:01:13,730 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:03:59,263 [INFO] django.server: "GET /admin-dashboard/permissions HTTP/1.1" 301 0
+2025-04-20 02:03:59,267 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:03:59,280 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:03:59.280876", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:03:59,281 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 40228
+2025-04-20 02:04:14,591 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'role_hierarchy', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/role-hierarchy/'}
+2025-04-20 02:04:14,615 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:04:14.615535", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/role-hierarchy/", "details": {"method": "GET"}}
+2025-04-20 02:04:14,616 [ERROR] django.server: "GET /admin-dashboard/permissions/role-hierarchy/ HTTP/1.1" 500 109858
+2025-04-20 02:04:18,462 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-20 02:04:18,468 [INFO] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 38801
+2025-04-20 02:04:21,485 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'department_management', 'filters': {'search': ''}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/departments/'}
+2025-04-20 02:04:21,488 [INFO] django.server: "GET /admin-dashboard/departments/ HTTP/1.1" 200 37756
+2025-04-20 02:04:24,251 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:04:24,271 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:04:24.271155", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:04:24,271 [ERROR] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 500 109987
+2025-04-20 02:04:33,591 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'role_hierarchy', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/role-hierarchy/'}
+2025-04-20 02:04:33,613 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:04:33.613702", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/role-hierarchy/", "details": {"method": "GET"}}
+2025-04-20 02:04:33,614 [ERROR] django.server: "GET /admin-dashboard/permissions/role-hierarchy/ HTTP/1.1" 500 109858
+2025-04-20 02:04:36,110 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'object_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/object/'}
+2025-04-20 02:04:36,125 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:04:36.125287", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/", "details": {"method": "GET"}}
+2025-04-20 02:04:36,125 [INFO] django.server: "GET /admin-dashboard/permissions/object/ HTTP/1.1" 200 39461
+2025-04-20 02:04:51,780 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'object_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/object/?search=document&content_type=&user=&department='}
+2025-04-20 02:04:51,795 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:04:51.795305", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/", "details": {"method": "GET"}}
+2025-04-20 02:04:51,795 [INFO] django.server: "GET /admin-dashboard/permissions/object/?search=document&content_type=&user=&department= HTTP/1.1" 200 39469
+2025-04-20 02:05:08,166 [ERROR] admin_dashboard: Error running permission audit: can't compare offset-naive and offset-aware datetimes
+2025-04-20 02:05:08,174 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:05:08.174033", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "GET"}}
+2025-04-20 02:05:08,174 [INFO] django.server: "GET /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:05:08,177 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:05:08,193 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:05:08.193149", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:05:08,193 [ERROR] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 500 112019
+2025-04-20 02:05:14,596 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'role_hierarchy', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/role-hierarchy/'}
+2025-04-20 02:05:14,608 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:05:14.608171", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/role-hierarchy/", "details": {"method": "GET"}}
+2025-04-20 02:05:14,608 [INFO] django.server: "GET /admin-dashboard/permissions/role-hierarchy/ HTTP/1.1" 200 32024
+2025-04-20 02:05:32,898 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:05:32.898056", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/role-hierarchy/add/", "details": {"method": "GET"}}
+2025-04-20 02:05:32,898 [INFO] django.server: "GET /admin-dashboard/permissions/role-hierarchy/add/ HTTP/1.1" 200 32002
+2025-04-20 02:05:59,653 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'time_based_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/time-based/'}
+2025-04-20 02:05:59,663 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:05:59.663369", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/time-based/", "details": {"method": "GET"}}
+2025-04-20 02:05:59,663 [INFO] django.server: "GET /admin-dashboard/permissions/time-based/ HTTP/1.1" 200 32092
+2025-04-20 02:06:03,346 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:06:03.346506", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/time-based/add/", "details": {"method": "GET"}}
+2025-04-20 02:06:03,347 [ERROR] django.server: "GET /admin-dashboard/permissions/time-based/add/ HTTP/1.1" 500 110948
+2025-04-20 02:06:16,905 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-20 02:06:16,908 [INFO] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 38801
+2025-04-20 02:06:18,811 [INFO] django.server: "GET /admin-dashboard/groups/create/ HTTP/1.1" 200 400486
+2025-04-20 02:06:32,333 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'time_based_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/time-based/'}
+2025-04-20 02:06:32,343 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:06:32.343733", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/time-based/", "details": {"method": "GET"}}
+2025-04-20 02:06:32,344 [INFO] django.server: "GET /admin-dashboard/permissions/time-based/ HTTP/1.1" 200 32092
+2025-04-20 02:06:33,308 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:06:33.308370", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/time-based/add/", "details": {"method": "GET"}}
+2025-04-20 02:06:33,308 [INFO] django.server: "GET /admin-dashboard/permissions/time-based/add/ HTTP/1.1" 200 39469
+2025-04-20 02:07:02,293 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'object_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/object/'}
+2025-04-20 02:07:02,312 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:07:02.312758", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/", "details": {"method": "GET"}}
+2025-04-20 02:07:02,313 [INFO] django.server: "GET /admin-dashboard/permissions/object/ HTTP/1.1" 200 39461
+2025-04-20 02:07:05,446 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:07:05.445983", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/add/", "details": {"method": "GET"}}
+2025-04-20 02:07:05,446 [INFO] django.server: "GET /admin-dashboard/permissions/object/add/ HTTP/1.1" 200 39017
+2025-04-20 02:07:28,767 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'object_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/object/'}
+2025-04-20 02:07:28,783 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:07:28.783464", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/", "details": {"method": "GET"}}
+2025-04-20 02:07:28,783 [INFO] django.server: "GET /admin-dashboard/permissions/object/ HTTP/1.1" 200 39461
+2025-04-20 02:07:33,070 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:07:33,082 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:07:33.082657", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:07:33,083 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 40228
+2025-04-20 02:07:44,263 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:07:44,274 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:07:44.274189", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:07:44,274 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 31613
+2025-04-20 02:07:48,340 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:07:48.340369", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/add/", "details": {"method": "GET"}}
+2025-04-20 02:07:48,340 [ERROR] django.server: "GET /admin-dashboard/permissions/warehouse-access/add/ HTTP/1.1" 500 110694
+2025-04-20 02:07:53,708 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:07:53.708611", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/add/", "details": {"method": "GET"}}
+2025-04-20 02:07:53,709 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/add/ HTTP/1.1" 200 33571
+2025-04-20 02:08:12,203 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:08:12,208 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:08:12.208877", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:08:12,209 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 31613
+2025-04-20 02:08:14,820 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:08:14,826 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:08:16,380 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-20 02:08:16,387 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 42941
+2025-04-20 02:08:17,967 [INFO] django.server: "GET /access/warehouse-access/add/ HTTP/1.1" 200 40875
+2025-04-20 02:08:32,301 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:08:32,308 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:08:32.308513", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:08:32,308 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 40228
+2025-04-20 02:08:57,636 [ERROR] admin_dashboard: Error running permission audit: can't compare offset-naive and offset-aware datetimes
+2025-04-20 02:08:57,644 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:08:57.644201", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "GET"}}
+2025-04-20 02:08:57,644 [INFO] django.server: "GET /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:08:57,648 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:08:57,656 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:08:57.656570", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:08:57,657 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 40965
+2025-04-20 02:09:38,906 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-20 02:09:39,696 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:09:41,067 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:09:41,120 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:09:53,931 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:09:53,938 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:10:02,512 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:10:02,517 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:12:05,835 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:12:05,844 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:12:06,978 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:12:06,987 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:13:26,593 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:13:26,598 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:13:38,313 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:13:38,318 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:18:33,514 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:18:33,523 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:18:36,286 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:18:36,292 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:18:36,751 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:18:36,757 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:18:36,923 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:18:36,928 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:18:37,081 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:18:37,086 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:19:59,261 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\urls.py changed, reloading.
+2025-04-20 02:20:00,030 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:20:12,217 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-20 02:20:12,905 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:20:17,090 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:20:17,147 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 49717
+2025-04-20 02:21:47,925 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:21:47,934 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:21:48,869 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:21:48,876 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:21:49,638 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:21:49,643 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:21:49,935 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:21:49,940 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:21:50,228 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:21:50,233 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:21:58,958 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:21:58,963 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:21:59,378 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:21:59,384 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:22:02,143 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:22:02,154 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:22:02.154796", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:22:02,155 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 40228
+2025-04-20 02:22:06,344 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:22:06,354 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:22:06.354250", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:22:06,354 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 31613
+2025-04-20 02:22:08,626 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:22:08.626060", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/add/", "details": {"method": "GET"}}
+2025-04-20 02:22:08,626 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/add/ HTTP/1.1" 200 33571
+2025-04-20 02:22:22,357 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-20 02:22:22,360 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 43232
+2025-04-20 02:22:31,693 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-20 02:22:31,695 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 43232
+2025-04-20 02:22:34,090 [INFO] django.server: "GET /access/warehouse-access/add/ HTTP/1.1" 200 41166
+2025-04-20 02:22:41,335 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 30428
+2025-04-20 02:22:42,805 [INFO] django.server: "GET /inventory/warehouses/create/ HTTP/1.1" 200 32940
+2025-04-20 02:22:48,408 [INFO] django.server: "POST /inventory/warehouses/create/ HTTP/1.1" 302 0
+2025-04-20 02:22:48,419 [INFO] django.server: "GET /inventory/warehouses/1/ HTTP/1.1" 200 36211
+2025-04-20 02:22:50,356 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:22:50,361 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:22:51,271 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:22:51,281 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:22:51.281052", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:22:51,281 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 40228
+2025-04-20 02:22:52,756 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:22:52,765 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:22:52.765044", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:22:52,765 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 31613
+2025-04-20 02:22:54,199 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:22:54.199264", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/add/", "details": {"method": "GET"}}
+2025-04-20 02:22:54,199 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/add/ HTTP/1.1" 200 33606
+2025-04-20 02:23:08,336 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:23:08,342 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:23:09,611 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'department_management', 'filters': {'search': ''}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/departments/'}
+2025-04-20 02:23:09,613 [INFO] django.server: "GET /admin-dashboard/departments/ HTTP/1.1" 200 38047
+2025-04-20 02:23:11,541 [INFO] django.server: "GET /admin-dashboard/departments/create/ HTTP/1.1" 200 38903
+2025-04-20 02:23:17,440 [INFO] admin_dashboard.views: Department Test updated with new manager and members.
+2025-04-20 02:23:17,443 [INFO] django.server: "POST /admin-dashboard/departments/create/ HTTP/1.1" 302 0
+2025-04-20 02:23:17,446 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'department_management', 'filters': {'search': ''}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/departments/'}
+2025-04-20 02:23:17,449 [INFO] django.server: "GET /admin-dashboard/departments/ HTTP/1.1" 200 39758
+2025-04-20 02:23:18,798 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:23:18,809 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:23:18.809132", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:23:18,809 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 40228
+2025-04-20 02:23:20,433 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:23:20,442 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:23:20.442655", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:23:20,443 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 31613
+2025-04-20 02:23:21,498 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:23:21.498698", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/add/", "details": {"method": "GET"}}
+2025-04-20 02:23:21,499 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/add/ HTTP/1.1" 200 33641
+2025-04-20 02:23:27,548 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:23:27.548833", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/add/", "details": {"method": "POST"}}
+2025-04-20 02:23:27,549 [INFO] django.server: "POST /admin-dashboard/permissions/warehouse-access/add/ HTTP/1.1" 302 0
+2025-04-20 02:23:27,552 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:23:27,558 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:23:27.558107", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:23:27,558 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 32975
+2025-04-20 02:23:34,027 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:23:34.027014", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/1/delete/", "details": {"method": "GET"}}
+2025-04-20 02:23:34,027 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/1/delete/ HTTP/1.1" 200 32082
+2025-04-20 02:23:35,637 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:23:35,646 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:23:35.646785", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:23:35,647 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 32642
+2025-04-20 02:23:37,303 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:23:37.303831", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/1/edit/", "details": {"method": "GET"}}
+2025-04-20 02:23:37,304 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/1/edit/ HTTP/1.1" 200 34769
+2025-04-20 02:23:55,153 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:23:55,159 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:23:57,568 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-20 02:23:57,570 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 43232
+2025-04-20 02:24:01,663 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:24:01,670 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:01.670434", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:24:01,670 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 40564
+2025-04-20 02:24:05,704 [ERROR] admin_dashboard: Error running permission audit: can't compare offset-naive and offset-aware datetimes
+2025-04-20 02:24:05,708 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:05.708357", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "GET"}}
+2025-04-20 02:24:05,708 [INFO] django.server: "GET /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:24:05,711 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:24:05,717 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:05.717292", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:24:05,717 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 41953
+2025-04-20 02:24:07,000 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:24:07,003 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:07.003543", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:24:07,003 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:24:07,007 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:24:07,012 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:07.012022", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:24:07,012 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 41945
+2025-04-20 02:24:18,700 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:24:18,709 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:18.709491", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:24:18,709 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 41582
+2025-04-20 02:24:32,783 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:24:32,793 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:32.793197", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:24:32,793 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 32642
+2025-04-20 02:24:46,383 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:24:46,388 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:24:47,558 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-20 02:24:47,566 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 48527
+2025-04-20 02:24:48,898 [INFO] django.server: "GET /admin-dashboard/users/1/edit/ HTTP/1.1" 200 42542
+2025-04-20 02:24:52,051 [INFO] admin_dashboard.views: User chrigi updated.
+2025-04-20 02:24:52,054 [INFO] django.server: "POST /admin-dashboard/users/1/edit/ HTTP/1.1" 302 0
+2025-04-20 02:24:52,057 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-20 02:24:52,060 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 48869
+2025-04-20 02:24:53,881 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:24:53,893 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:53.893260", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:24:53,893 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 40564
+2025-04-20 02:24:58,374 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:24:58,385 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:24:58.385906", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:24:58,386 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 33701
+2025-04-20 02:25:12,716 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'object_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/object/'}
+2025-04-20 02:25:12,728 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:25:12.728000", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/", "details": {"method": "GET"}}
+2025-04-20 02:25:12,728 [INFO] django.server: "GET /admin-dashboard/permissions/object/ HTTP/1.1" 200 39542
+2025-04-20 02:25:21,452 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:25:21.452628", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/add/", "details": {"method": "GET"}}
+2025-04-20 02:25:21,453 [INFO] django.server: "GET /admin-dashboard/permissions/object/add/ HTTP/1.1" 200 39052
+2025-04-20 02:25:41,028 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:25:41.028429", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/add/", "details": {"method": "POST"}}
+2025-04-20 02:25:41,028 [INFO] django.server: "POST /admin-dashboard/permissions/object/add/ HTTP/1.1" 302 0
+2025-04-20 02:25:41,034 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'object_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/object/'}
+2025-04-20 02:25:41,041 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:25:41.041564", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/object/", "details": {"method": "GET"}}
+2025-04-20 02:25:41,041 [INFO] django.server: "GET /admin-dashboard/permissions/object/ HTTP/1.1" 200 40935
+2025-04-20 02:25:44,879 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:25:44,885 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:25:46,528 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:25:46,536 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:25:46.536145", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:25:46,536 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 41203
+2025-04-20 02:26:01,883 [ERROR] admin_dashboard: Error running permission audit: can't compare offset-naive and offset-aware datetimes
+2025-04-20 02:26:01,890 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:26:01.890961", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "GET"}}
+2025-04-20 02:26:01,891 [INFO] django.server: "GET /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:26:01,894 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:26:01,899 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:26:01.899601", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:26:01,900 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 42941
+2025-04-20 02:26:08,797 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:26:08,803 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:26:08.803621", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:26:08,804 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 33701
+2025-04-20 02:26:11,999 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:26:11.999588", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/1/edit/", "details": {"method": "GET"}}
+2025-04-20 02:26:12,000 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/1/edit/ HTTP/1.1" 200 35084
+2025-04-20 02:26:20,745 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_permissions', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/user/1/'}
+2025-04-20 02:26:20,758 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:26:20.758923", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/user/1/", "details": {"method": "GET"}}
+2025-04-20 02:26:20,759 [INFO] django.server: "GET /admin-dashboard/permissions/user/1/ HTTP/1.1" 200 40162
+2025-04-20 02:26:36,535 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-20 02:26:36,539 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 48527
+2025-04-20 02:26:38,171 [INFO] django.server: "GET /admin-dashboard/users/1/edit/ HTTP/1.1" 200 42550
+2025-04-20 02:31:06,152 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py changed, reloading.
+2025-04-20 02:31:06,899 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:31:38,617 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\forms.py changed, reloading.
+2025-04-20 02:31:39,378 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:31:57,356 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\forms.py changed, reloading.
+2025-04-20 02:31:58,103 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:32:45,742 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\models.py changed, reloading.
+2025-04-20 02:32:46,526 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:33:35,329 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\models.py changed, reloading.
+2025-04-20 02:33:36,126 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:38:37,953 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:38:38,012 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:38:38,740 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:38:38,746 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:38:39,893 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:38:39,902 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:38:39.902487", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:38:39,903 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 41203
+2025-04-20 02:38:44,723 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:38:44,735 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:38:44.735619", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:38:44,736 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 34550
+2025-04-20 02:39:32,991 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/warehouse-access/'}
+2025-04-20 02:39:33,002 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:39:33.002692", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/warehouse-access/", "details": {"method": "GET"}}
+2025-04-20 02:39:33,003 [INFO] django.server: "GET /admin-dashboard/permissions/warehouse-access/ HTTP/1.1" 200 34550
+2025-04-20 02:39:36,444 [ERROR] admin_dashboard: Error running permission audit: can't compare offset-naive and offset-aware datetimes
+2025-04-20 02:39:36,451 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:39:36.451798", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "GET"}}
+2025-04-20 02:39:36,452 [INFO] django.server: "GET /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:39:36,455 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:39:36,460 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:39:36.460789", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:39:36,461 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 43929
+2025-04-20 02:40:38,194 [ERROR] admin_dashboard: Error running permission audit: can't compare offset-naive and offset-aware datetimes
+2025-04-20 02:40:38,201 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:40:38.201713", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "GET"}}
+2025-04-20 02:40:38,202 [INFO] django.server: "GET /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:40:38,205 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:40:38,210 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:40:38.210016", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:40:38,210 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44917
+2025-04-20 02:41:04,795 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\models.py changed, reloading.
+2025-04-20 02:41:05,549 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:41:14,006 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\models.py changed, reloading.
+2025-04-20 02:41:14,745 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:41:21,967 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:41:22,016 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:22.016242", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:41:22,016 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44546
+2025-04-20 02:41:26,878 [ERROR] admin_dashboard: Error running permission audit: name 'datetime' is not defined
+2025-04-20 02:41:26,886 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:26.886590", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:41:26,887 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:41:26,891 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:41:26,897 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:26.897313", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:41:26,897 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44899
+2025-04-20 02:41:37,404 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\management\commands\review_permissions.py changed, reloading.
+2025-04-20 02:41:38,117 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:41:41,391 [ERROR] admin_dashboard: Error running permission audit: name 'datetime' is not defined
+2025-04-20 02:41:41,429 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:41.429017", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:41:41,429 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:41:41,432 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:41:41,449 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:41.449368", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:41:41,449 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44899
+2025-04-20 02:41:44,596 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\management\commands\review_permissions.py changed, reloading.
+2025-04-20 02:41:45,339 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:41:48,802 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:41:48,841 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:48.841735", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:41:48,842 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:41:48,846 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:41:48,863 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:48.863343", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:41:48,863 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44909
+2025-04-20 02:41:51,848 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\management\commands\review_permissions.py changed, reloading.
+2025-04-20 02:41:52,574 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:41:55,331 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:41:55,373 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:55.372997", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:41:55,373 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:41:55,377 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:41:55,394 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:41:55.394437", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:41:55,394 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44909
+2025-04-20 02:42:00,127 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\management\commands\review_permissions.py changed, reloading.
+2025-04-20 02:42:00,888 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:42:07,436 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:42:07,476 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:42:07.476870", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:42:07,477 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:42:07,481 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:42:07,497 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:42:07.497730", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:42:07,498 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44909
+2025-04-20 02:42:11,659 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\models.py changed, reloading.
+2025-04-20 02:42:12,405 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:42:15,647 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:42:15,685 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:42:15.685681", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:42:15,686 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:42:15,690 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:42:15,707 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:42:15.707173", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:42:15,707 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44909
+2025-04-20 02:42:23,180 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\management\commands\review_permissions.py changed, reloading.
+2025-04-20 02:42:23,899 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:42:26,984 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:42:27,025 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:42:27.025163", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:42:27,025 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:42:27,029 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:42:27,047 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:42:27.047125", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:42:27,047 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44909
+2025-04-20 02:42:39,136 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\management\commands\review_permissions.py changed, reloading.
+2025-04-20 02:42:39,908 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:42:58,155 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:42:58,197 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:42:58.197152", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:42:58,197 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:42:58,201 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:42:58,218 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:42:58.218152", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:42:58,218 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44909
+2025-04-20 02:43:09,551 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:43:09,558 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:43:09.558573", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:43:09,559 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:43:09,562 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:43:09,568 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:43:09.568339", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:43:09,568 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44909
+2025-04-20 02:43:12,794 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:43:12,803 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:43:12.803820", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:43:12,804 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 44546
+2025-04-20 02:43:14,784 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:43:14,792 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:43:22,209 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:43:22,221 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:43:22.221838", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:43:22,222 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 41203
+2025-04-20 02:43:47,985 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:43:47.985100", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "GET"}}
+2025-04-20 02:43:47,985 [INFO] django.server: "GET /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:43:47,988 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:43:47,993 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:43:47.993749", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:43:47,994 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 48835
+2025-04-20 02:43:53,676 [ERROR] admin_dashboard: Error running permission audit: unsupported type for timedelta days component: str
+2025-04-20 02:43:53,683 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:43:53.683544", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:43:53,684 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:43:53,687 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:43:53,692 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:43:53.692029", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:43:53,692 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 48875
+2025-04-20 02:44:22,752 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py changed, reloading.
+2025-04-20 02:44:23,569 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:44:28,748 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:44:28.748362", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:44:28,749 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:44:28,752 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:44:28,770 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:44:28.770417", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:44:28,771 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 52801
+2025-04-20 02:44:32,183 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py changed, reloading.
+2025-04-20 02:44:32,918 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:44:49,338 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:44:49.338448", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/run/", "details": {"method": "POST"}}
+2025-04-20 02:44:49,339 [INFO] django.server: "POST /admin-dashboard/permissions/audit/run/ HTTP/1.1" 302 0
+2025-04-20 02:44:49,343 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:44:49,361 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:44:49.361515", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:44:49,362 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 56767
+2025-04-20 02:46:57,959 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py changed, reloading.
+2025-04-20 02:46:58,741 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:47:11,546 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:47:11,600 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:47:11.599951", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:47:11,600 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 54140
+2025-04-20 02:47:13,664 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:47:13.663999", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv", "details": {"method": "GET"}}
+2025-04-20 02:47:13,664 [WARNING] django.server: "GET /admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv HTTP/1.1" 404 27752
+2025-04-20 02:47:22,166 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py changed, reloading.
+2025-04-20 02:47:22,935 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:47:34,546 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:47:34,599 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:47:34.599413", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:47:34,600 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 54140
+2025-04-20 02:47:35,233 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:47:35,242 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:47:35.241982", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:47:35,242 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 54140
+2025-04-20 02:47:36,716 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:47:36.716281", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv", "details": {"method": "GET"}}
+2025-04-20 02:47:36,716 [WARNING] django.server: "GET /admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv HTTP/1.1" 404 27752
+2025-04-20 02:47:44,525 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\urls.py changed, reloading.
+2025-04-20 02:47:45,300 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-20 02:47:47,709 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:47:47.709090", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv", "details": {"method": "GET"}}
+2025-04-20 02:47:47,709 [WARNING] django.server: "GET /admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv HTTP/1.1" 404 28578
+2025-04-20 02:47:54,537 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:47:54.537822", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv", "details": {"method": "GET"}}
+2025-04-20 02:47:54,538 [WARNING] django.server: "GET /admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv HTTP/1.1" 404 28578
+2025-04-20 02:48:01,947 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:48:01.947615", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv", "details": {"method": "GET"}}
+2025-04-20 02:48:01,948 [WARNING] django.server: "GET /admin-dashboard/permissions/audit/expired_permissions_20250420_004449.csv HTTP/1.1" 404 28578
+2025-04-20 02:48:15,333 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:48:15,387 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:48:15.387494", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:48:15,388 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 55470
+2025-04-20 02:48:16,481 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:48:16.481892", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/view/expired_permissions_20250420_004449.csv/", "details": {"method": "GET"}}
+2025-04-20 02:48:16,482 [INFO] django.server: "GET /admin-dashboard/permissions/audit/view/expired_permissions_20250420_004449.csv/ HTTP/1.1" 200 58
+2025-04-20 02:48:27,796 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permission_audit', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/audit/'}
+2025-04-20 02:48:27,806 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:48:27.806389", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/", "details": {"method": "GET"}}
+2025-04-20 02:48:27,806 [INFO] django.server: "GET /admin-dashboard/permissions/audit/ HTTP/1.1" 200 55470
+2025-04-20 02:48:32,658 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:48:32.658160", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/audit/view/user_permissions_20250420_004449.csv/", "details": {"method": "GET"}}
+2025-04-20 02:48:32,658 [INFO] django.server: "GET /admin-dashboard/permissions/audit/view/user_permissions_20250420_004449.csv/ HTTP/1.1" 200 219
+2025-04-20 02:48:49,765 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-20 02:48:49,773 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 50008
+2025-04-20 02:48:53,676 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-20 02:48:53,679 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 43232
+2025-04-20 02:48:54,468 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-20 02:48:54,470 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 43232
+2025-04-20 02:48:55,495 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-20 02:48:55,497 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 43232
+2025-04-20 02:48:55,936 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-20 02:48:55,938 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 43232
+2025-04-20 02:48:56,507 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-20 02:48:56,520 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-20T02:48:56.520627", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-20 02:48:56,521 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 41203

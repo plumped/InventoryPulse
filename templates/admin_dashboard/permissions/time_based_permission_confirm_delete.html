@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete Time-Based Permission{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Delete Time-Based Permission</h1>
+        <a href="{% url 'admin_time_based_permissions' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Time-Based Permissions
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Confirm Deletion</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Warning!</h4>
+                <p>Are you sure you want to delete this time-based permission? This action cannot be undone.</p>
+                <p>Access to the object will be immediately revoked if this permission is deleted.</p>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold">Permission Details</h6>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Object Type:</dt>
+                        <dd class="col-sm-9">{{ permission.content_type.app_label }}.{{ permission.content_type.model }}</dd>
+                        
+                        <dt class="col-sm-3">Object ID:</dt>
+                        <dd class="col-sm-9">{{ permission.object_id }}</dd>
+                        
+                        <dt class="col-sm-3">Assigned To:</dt>
+                        <dd class="col-sm-9">
+                            {% if permission.user %}
+                                User: {{ permission.user.username }}
+                            {% else %}
+                                Department: {{ permission.department.name }}
+                            {% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-3">Permissions:</dt>
+                        <dd class="col-sm-9">
+                            {% if permission.can_view %}<span class="badge badge-info">View</span>{% endif %}
+                            {% if permission.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
+                            {% if permission.can_delete %}<span class="badge badge-danger">Delete</span>{% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-3">Valid Period:</dt>
+                        <dd class="col-sm-9">
+                            {% if permission.valid_from %}From: {{ permission.valid_from|date:"Y-m-d H:i" }}<br>{% endif %}
+                            {% if permission.valid_until %}Until: {{ permission.valid_until|date:"Y-m-d H:i" }}{% endif %}
+                        </dd>
+                        
+                        <dt class="col-sm-3">Status:</dt>
+                        <dd class="col-sm-9">
+                            {% if permission.is_valid %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-danger">Expired</span>
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-danger">Delete Permission</button>
+                    <a href="{% url 'admin_time_based_permissions' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

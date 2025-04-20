@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Warehouse Access{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Warehouse Access</h1>
+        <a href="{% url 'admin_warehouse_access_add' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add Warehouse Access
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Warehouse Access Rights</h6>
+        </div>
+        <div class="card-body">
+            <p>Warehouse access rights control which departments have access to which warehouses and what actions they can perform.</p>
+
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Warehouse</th>
+                            <th>Department</th>
+                            <th>Permissions</th>
+                            <th>Users with Access</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for access in access_rights %}
+                        <tr>
+                            <td>{{ access.warehouse.name }}</td>
+                            <td>{{ access.department.name }}</td>
+                            <td>
+                                {% if access.can_view %}<span class="badge badge-info">View</span>{% endif %}
+                                {% if access.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
+                                {% if access.can_manage_stock %}<span class="badge badge-success">Manage Stock</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if access.department.user_profiles.all.exists %}
+                                    {% with user_count=access.department.user_profiles.count %}
+                                        {{ user_count }} user{{ user_count|pluralize }}
+                                        <button class="btn btn-sm btn-outline-info" type="button" data-toggle="collapse" data-target="#users-{{ access.id }}" aria-expanded="false">
+                                            <i class="fas fa-users"></i> Show
+                                        </button>
+                                        <div class="collapse mt-2" id="users-{{ access.id }}">
+                                            <div class="card card-body">
+                                                <ul class="list-unstyled">
+                                                    {% for profile in access.department.user_profiles.all %}
+                                                        <li>
+                                                            <a href="{% url 'admin_user_permissions' profile.user.id %}">{{ profile.user.username }}</a>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    {% endwith %}
+                                {% else %}
+                                    0 users
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admin_warehouse_access_edit' access.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_warehouse_access_delete' access.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No warehouse access rights found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warehouse Access Matrix -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Warehouse Access Matrix</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Department / Warehouse</th>
+                            {% for warehouse in warehouses %}
+                                <th>{{ warehouse.name }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for department in departments %}
+                        <tr>
+                            <td>{{ department.name }}</td>
+                            {% for warehouse in warehouses %}
+                                <td>
+                                    {% with access=department.warehouseaccess_set.all|dictsort:"warehouse.id" %}
+                                        {% for a in access %}
+                                            {% if a.warehouse.id == warehouse.id %}
+                                                {% if a.can_view %}<span class="badge badge-info">View</span>{% endif %}
+                                                {% if a.can_edit %}<span class="badge badge-warning">Edit</span>{% endif %}
+                                                {% if a.can_manage_stock %}<span class="badge badge-success">Manage</span>{% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endwith %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="{% url 'admin_object_permissions' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Object Permissions
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.content_type.id_for_label }}">Object Type</label>
+                            {{ form.content_type }}
+                            {% if form.content_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.content_type.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.object_id.id_for_label }}">Object ID</label>
+                            {{ form.object_id }}
+                            {% if form.object_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.object_id.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.user.id_for_label }}">User (leave empty for department permission)</label>
+                            {{ form.user }}
+                            {% if form.user.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.user.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.department.id_for_label }}">Department (leave empty for user permission)</label>
+                            {{ form.department }}
+                            {% if form.department.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.department.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                {{ form.can_view }}
+                                <label class="custom-control-label" for="{{ form.can_view.id_for_label }}">Can View</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                {{ form.can_edit }}
+                                <label class="custom-control-label" for="{{ form.can_edit.id_for_label }}">Can Edit</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox">
+                                {{ form.can_delete }}
+                                <label class="custom-control-label" for="{{ form.can_delete.id_for_label }}">Can Delete</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.valid_from.id_for_label }}">Valid From (optional)</label>
+                            {{ form.valid_from }}
+                            {% if form.valid_from.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.valid_from.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Leave empty for no start date restriction</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.valid_until.id_for_label }}">Valid Until (optional)</label>
+                            {{ form.valid_until }}
+                            {% if form.valid_until.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.valid_until.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Leave empty for no end date restriction</small>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="{% url 'admin_object_permissions' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

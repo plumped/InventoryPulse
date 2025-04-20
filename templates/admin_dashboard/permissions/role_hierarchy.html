@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Role Hierarchy{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Role Hierarchy</h1>
+        <a href="{% url 'admin_role_hierarchy_add' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Add Role Hierarchy
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Role Hierarchies</h6>
+        </div>
+        <div class="card-body">
+            <p>Role hierarchies allow permissions to be inherited from parent roles to child roles. This means that users in a child role will automatically have all permissions granted to the parent role.</p>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Parent Role</th>
+                            <th>Child Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hierarchy in hierarchies %}
+                        <tr>
+                            <td>{{ hierarchy.parent_role.name }}</td>
+                            <td>{{ hierarchy.child_role.name }}</td>
+                            <td>
+                                <a href="{% url 'admin_role_hierarchy_edit' hierarchy.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'admin_role_hierarchy_delete' hierarchy.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">No role hierarchies found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Role Hierarchy Visualization -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Role Hierarchy Visualization</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <p>This diagram shows the inheritance relationships between roles. Permissions flow from top to bottom.</p>
+            </div>
+            
+            <div id="role-hierarchy-diagram" class="text-center">
+                <!-- This will be populated with a diagram using JavaScript -->
+                <div class="p-5">
+                    {% if hierarchies %}
+                    <div class="role-hierarchy-tree">
+                        <!-- Simple tree visualization -->
+                        <ul class="list-group">
+                            {% for hierarchy in hierarchies %}
+                            <li class="list-group-item">
+                                <strong>{{ hierarchy.parent_role.name }}</strong> 
+                                <i class="fas fa-arrow-right mx-2"></i> 
+                                {{ hierarchy.child_role.name }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No role hierarchies to visualize</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

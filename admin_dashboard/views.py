@@ -115,6 +115,21 @@ def admin_dashboard(request):
             Q(is_superuser=True) | Q(user_permissions__codename='access_admin')).distinct().count(),
     }
 
+    # Add permission-related statistics
+    try:
+        from accessmanagement.models import WarehouseAccess, ObjectPermission, RoleHierarchy
+        permission_stats = {
+            'warehouse_access_count': WarehouseAccess.objects.count(),
+            'object_permission_count': ObjectPermission.objects.count(),
+            'role_hierarchy_count': RoleHierarchy.objects.count(),
+            'time_based_permission_count': ObjectPermission.objects.filter(
+                Q(valid_from__isnull=False) | Q(valid_until__isnull=False)
+            ).count(),
+        }
+        stats.update(permission_stats)
+    except Exception as e:
+        logger.warning(f"Permission stats loading failed: {e}")
+
     try:
         from interfaces.models import SupplierInterface
         interface_stats = {
@@ -754,12 +769,12 @@ def interface_type_edit(request, type_id):
 def interface_type_delete(request, type_id):
     """Schnittstellentyp löschen."""
     from interfaces.models import InterfaceType, SupplierInterface
-    
+
     interface_type = get_object_or_404(InterfaceType, pk=type_id)
-    
+
     # Prüfen, ob dieser Typ von Schnittstellen verwendet wird
     interfaces_using_type = SupplierInterface.objects.filter(interface_type=interface_type).count()
-    
+
     if request.method == 'POST':
         if interfaces_using_type > 0:
             messages.error(
@@ -770,16 +785,23 @@ def interface_type_delete(request, type_id):
             type_name = interface_type.name
             interface_type.delete()
             messages.success(request, f'Schnittstellentyp "{type_name}" wurde erfolgreich gelöscht.')
-        
+
         return redirect('admin_interface_type_management')
-    
+
     context = {
         'interface_type': interface_type,
         'interfaces_using_type': interfaces_using_type,
         'section': 'interfaces'
     }
-    
+
     return render(request, 'admin_dashboard/interface_type_confirm_delete.html', context)
+
+
+@login_required
+@staff_member_required
+def admin_menu(request):
+    """Admin menu view with links to all admin sections."""
+    return render(request, 'admin_dashboard/base_menu.html', {'section': 'menu'})
 
 
 @login_required

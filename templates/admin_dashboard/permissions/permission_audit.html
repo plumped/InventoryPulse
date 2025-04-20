@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Permission Audit{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Permission Audit</h1>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">Run Permission Audit</h6>
+        </div>
+        <div class="card-body">
+            <p>Permission audits help you identify potential security issues such as:</p>
+            <ul>
+                <li>Inactive users with active permissions</li>
+                <li>Expired time-based permissions</li>
+                <li>Excessive permissions granted to users or departments</li>
+                <li>Orphaned permissions (e.g., for deleted objects)</li>
+            </ul>
+
+            <form method="post" action="{% url 'admin_run_permission_audit' %}">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="inactive_days">Inactive User Threshold (days)</label>
+                            <input type="number" class="form-control" id="inactive_days" name="inactive_days" value="90" min="1">
+                            <small class="form-text text-muted">Users who haven't logged in for this many days will be flagged as inactive</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="format">Output Format</label>
+                            <select class="form-control" id="format" name="format">
+                                <option value="csv" selected>CSV</option>
+                                <option value="json">JSON</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-play-circle"></i> Run Audit
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Previous Audit Reports</h6>
+        </div>
+        <div class="card-body">
+            {% if reports %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Report Name</th>
+                                <th>Date Generated</th>
+                                <th>Size</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr>
+                                <td>{{ report.name }}</td>
+                                <td>{{ report.date|date:"Y-m-d H:i:s" }}</td>
+                                <td>{{ report.size|filesizeformat }}</td>
+                                <td>
+                                    <a href="{% url 'admin_download_report' report.path %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                    <button class="btn btn-sm btn-info view-report" data-path="{% url 'admin_view_report' report.path %}">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <p>No audit reports have been generated yet. Run an audit to generate reports.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Report Preview Modal -->
+    <div class="modal fade" id="reportPreviewModal" tabindex="-1" role="dialog" aria-labelledby="reportPreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportPreviewModalLabel">Report Preview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm" id="reportPreviewTable">
+                            <thead id="reportPreviewHeader"></thead>
+                            <tbody id="reportPreviewBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <a href="#" class="btn btn-primary" id="downloadReportBtn" download>
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Handle view report button click
+        $('.view-report').on('click', function() {
+            var reportPath = $(this).data('path');
+            var reportName = $(this).closest('tr').find('td:first').text();
+
+            // Set the download link - convert view URL to download URL
+            var downloadPath = reportPath.replace('/view/', '/download/');
+            $('#downloadReportBtn').attr('href', downloadPath);
+
+            // Update modal title
+            $('#reportPreviewModalLabel').text('Report Preview: ' + reportName);
+
+            // Clear previous content
+            $('#reportPreviewHeader').empty();
+            $('#reportPreviewBody').empty();
+
+            // Load CSV content
+            $.ajax({
+                url: reportPath,
+                dataType: 'text',
+                success: function(data) {
+                    var lines = data.split('\n');
+                    var headerRow = lines[0].split(',');
+
+                    // Create header
+                    var headerHtml = '<tr>';
+                    for (var i = 0; i < headerRow.length; i++) {
+                        headerHtml += '<th>' + headerRow[i] + '</th>';
+                    }
+                    headerHtml += '</tr>';
+                    $('#reportPreviewHeader').html(headerHtml);
+
+                    // Create body (limit to 100 rows for performance)
+                    var bodyHtml = '';
+                    var maxRows = Math.min(lines.length, 100);
+                    for (var i = 1; i < maxRows; i++) {
+                        if (lines[i].trim() === '') continue;
+
+                        var cells = lines[i].split(',');
+                        bodyHtml += '<tr>';
+                        for (var j = 0; j < cells.length; j++) {
+                            bodyHtml += '<td>' + cells[j] + '</td>';
+                        }
+                        bodyHtml += '</tr>';
+                    }
+                    $('#reportPreviewBody').html(bodyHtml);
+
+                    // Show modal
+                    $('#reportPreviewModal').modal('show');
+                },
+                error: function() {
+                    alert('Error loading report. Please try downloading it instead.');
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

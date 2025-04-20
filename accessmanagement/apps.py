@@ -10,5 +10,18 @@ class AccessmanagementConfig(AppConfig):
         """
         Import signals when the app is ready.
         """
-        # Import signals or perform other initialization
-        pass
+        # Set up security signals
+        from .security import setup_security_signals
+        setup_security_signals()
+
+        # Set up signal to create user profiles automatically
+        from django.db.models.signals import post_save
+        from django.contrib.auth.models import User
+        from django.dispatch import receiver
+        from .models import UserProfile
+
+        @receiver(post_save, sender=User)
+        def create_user_profile(sender, instance, created, **kwargs):
+            """Create a UserProfile for each new User."""
+            if created:
+                UserProfile.create_for_user(instance)

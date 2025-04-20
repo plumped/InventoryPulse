@@ -2,6 +2,7 @@
 from django.urls import path, include
 
 from master_data.views.currency_views import currency_list, currency_create, currency_update, currency_delete
+from . import permission_views
 from . import views
 
 urlpatterns = [
@@ -63,4 +64,33 @@ urlpatterns = [
     path('document-types/<int:type_id>/edit/', views.document_type_edit, name='admin_document_type_edit'),
     path('document-types/<int:type_id>/delete/', views.document_type_delete, name='admin_document_type_delete'),
     path('document-types/setup-standard-fields/', views.setup_standard_fields, name='setup_standard_fields'),
+
+    # Admin Menu
+    path('menu/', views.admin_menu, name='admin_menu'),
+
+    # Permissions Management
+    path('permissions/', include([
+        path('', permission_views.permissions_dashboard, name='admin_permissions_dashboard'),
+        path('user/<int:user_id>/', permission_views.user_permissions, name='admin_user_permissions'),
+        path('object/', permission_views.object_permissions, name='admin_object_permissions'),
+        path('object/add/', permission_views.object_permission_add, name='admin_object_permission_add'),
+        path('object/<int:pk>/edit/', permission_views.object_permission_edit, name='admin_object_permission_edit'),
+        path('object/<int:pk>/delete/', permission_views.object_permission_delete, name='admin_object_permission_delete'),
+        path('role-hierarchy/', permission_views.role_hierarchy, name='admin_role_hierarchy'),
+        path('role-hierarchy/add/', permission_views.role_hierarchy_add, name='admin_role_hierarchy_add'),
+        path('role-hierarchy/<int:pk>/edit/', permission_views.role_hierarchy_edit, name='admin_role_hierarchy_edit'),
+        path('role-hierarchy/<int:pk>/delete/', permission_views.role_hierarchy_delete, name='admin_role_hierarchy_delete'),
+        path('time-based/', permission_views.time_based_permissions, name='admin_time_based_permissions'),
+        path('time-based/add/', permission_views.time_based_permission_add, name='admin_time_based_permission_add'),
+        path('time-based/<int:pk>/edit/', permission_views.time_based_permission_edit, name='admin_time_based_permission_edit'),
+        path('time-based/<int:pk>/delete/', permission_views.time_based_permission_delete, name='admin_time_based_permission_delete'),
+        path('audit/', permission_views.permission_audit, name='admin_permission_audit'),
+        path('audit/run/', permission_views.run_permission_audit, name='admin_run_permission_audit'),
+        path('audit/download/<str:filename>/', permission_views.download_report, name='admin_download_report'),
+        path('audit/view/<str:filename>/', permission_views.view_report, name='admin_view_report'),
+        path('warehouse-access/', permission_views.warehouse_access, name='admin_warehouse_access'),
+        path('warehouse-access/add/', permission_views.warehouse_access_add, name='admin_warehouse_access_add'),
+        path('warehouse-access/<int:pk>/edit/', permission_views.warehouse_access_edit, name='admin_warehouse_access_edit'),
+        path('warehouse-access/<int:pk>/delete/', permission_views.warehouse_access_delete, name='admin_warehouse_access_delete'),
+    ])),
 ]

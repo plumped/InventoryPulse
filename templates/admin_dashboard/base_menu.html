@@ -1,0 +1,77 @@
+{% extends 'admin_dashboard/base.html' %}
+
+{% block content_title %}Admin Menu{% endblock %}
+
+{% block content_actions %}
+<div class="btn-group">
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-house"></i> Zurück zum Admin-Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block admin_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Admin-Menü</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Benutzerverwaltung</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>Verwalten Sie Benutzer, Gruppen und Berechtigungen.</p>
+                                <a href="{% url 'admin_user_management' %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-people"></i> Benutzer verwalten
+                                </a>
+                                <a href="{% url 'admin_group_management' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-collection"></i> Gruppen
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Organisationsstruktur</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>Verwalten Sie Abteilungen und Lager-Zugriffsrechte.</p>
+                                <a href="{% url 'admin_department_management' %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-building"></i> Abteilungen verwalten
+                                </a>
+                                <a href="{% url 'warehouse_access_management' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-key"></i> Lagerzugriff
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Berechtigungsverwaltung</h6>
+                            </div>
+                            <div class="card-body">
+                                <p>Verwalten Sie Berechtigungen, Rollen-Hierarchien und zeitbasierte Zugriffsrechte.</p>
+                                <a href="{% url 'admin_permissions_dashboard' %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-shield-lock"></i> Berechtigungen verwalten
+                                </a>
+                                <a href="{% url 'admin_permission_audit' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-clipboard-check"></i> Berechtigungs-Audit
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

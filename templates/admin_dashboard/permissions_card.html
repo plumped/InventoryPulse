@@ -1,0 +1,16 @@
+<div class="col-lg-4 col-md-6 mb-4">
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Berechtigungsverwaltung</h6>
+        </div>
+        <div class="card-body">
+            <p>Verwalten Sie Berechtigungen, Rollen-Hierarchien und zeitbasierte Zugriffsrechte.</p>
+            <a href="{% url 'admin_permissions_dashboard' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-shield-lock"></i> Berechtigungen verwalten
+            </a>
+            <a href="{% url 'admin_permission_audit' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-clipboard-check"></i> Berechtigungs-Audit
+            </a>
+        </div>
+    </div>
+</div>

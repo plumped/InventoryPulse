@@ -3993,3 +3993,129 @@ Traceback (most recent call last):
   File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
     raise NoReverseMatch(msg)
 django.urls.exceptions.NoReverseMatch: Reverse for 'password_reset' not found. 'password_reset' is not a valid view function or pattern name.
+2025-04-20 02:04:14,610 [ERROR] django.request: Internal Server Error: /admin-dashboard/permissions/role-hierarchy/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py", line 258, in role_hierarchy
+    return render(request, 'admin_dashboard/permissions/role_hierarchy.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: admin_dashboard/permissions/role_hierarchy.html
+2025-04-20 02:04:24,263 [ERROR] django.request: Internal Server Error: /admin-dashboard/permissions/warehouse-access/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py", line 428, in warehouse_access
+    return render(request, 'admin_dashboard/permissions/warehouse_access.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: admin_dashboard/permissions/warehouse_access.html
+2025-04-20 02:04:33,605 [ERROR] django.request: Internal Server Error: /admin-dashboard/permissions/role-hierarchy/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py", line 258, in role_hierarchy
+    return render(request, 'admin_dashboard/permissions/role_hierarchy.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: admin_dashboard/permissions/role_hierarchy.html
+2025-04-20 02:05:08,189 [ERROR] django.request: Internal Server Error: /admin-dashboard/permissions/audit/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py", line 533, in permission_audit
+    return render(request, 'admin_dashboard/permissions/permission_audit.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: admin_dashboard/permissions/permission_audit.html
+2025-04-20 02:06:03,338 [ERROR] django.request: Internal Server Error: /admin-dashboard/permissions/time-based/add/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py", line 367, in time_based_permission_add
+    return render(request, 'admin_dashboard/permissions/time_based_permission_form.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: admin_dashboard/permissions/time_based_permission_form.html
+2025-04-20 02:07:48,332 [ERROR] django.request: Internal Server Error: /admin-dashboard/permissions/warehouse-access/add/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py", line 450, in warehouse_access_add
+    return render(request, 'admin_dashboard/permissions/warehouse_access_form.html', context)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 25, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 61, in render_to_string
+    template = get_template(template_name, using=using)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\template\loader.py", line 19, in get_template
+    raise TemplateDoesNotExist(template_name, chain=chain)
+django.template.exceptions.TemplateDoesNotExist: admin_dashboard/permissions/warehouse_access_form.html

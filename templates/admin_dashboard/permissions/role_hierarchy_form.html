@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">{{ title }}</h1>
+        <a href="{% url 'admin_role_hierarchy' %}" class="d-none d-sm-inline-block btn btn-sm btn-secondary shadow-sm">
+            <i class="fas fa-arrow-left fa-sm text-white-50"></i> Back to Role Hierarchies
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ title }}</h6>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <p>Role hierarchies allow permissions to be inherited from parent roles to child roles. Users in a child role will automatically have all permissions granted to the parent role.</p>
+                <p><strong>Note:</strong> Circular references are not allowed (e.g., if Role A is a parent of Role B, then Role B cannot be a parent of Role A).</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.parent_role.id_for_label }}">Parent Role</label>
+                            {{ form.parent_role }}
+                            {% if form.parent_role.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.parent_role.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Permissions will be inherited from this role.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.child_role.id_for_label }}">Child Role</label>
+                            {{ form.child_role }}
+                            {% if form.child_role.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.child_role.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">This role will inherit permissions from the parent role.</small>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <a href="{% url 'admin_role_hierarchy' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

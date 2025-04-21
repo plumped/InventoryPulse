@@ -32,6 +32,7 @@ def has_object_permission(user, obj, permission_type='view'):
     """
     Check if a user has permission for a specific object.
     Uses ObjectPermission.has_object_permission for the permission check.
+    For products, also checks if the user has access to a warehouse containing the product.
 
     Args:
         user: The user to check permissions for
@@ -41,4 +42,37 @@ def has_object_permission(user, obj, permission_type='view'):
     Returns:
         Boolean: True if the user has permission, False otherwise
     """
-    return ObjectPermission.has_object_permission(user, obj, permission_type)
+    import logging
+    logger = logging.getLogger('accessmanagement')
+
+    # First check direct object permissions
+    if ObjectPermission.has_object_permission(user, obj, permission_type):
+        return True
+
+    # For products, also check warehouse access
+    from product_management.models.products_models import Product
+    if isinstance(obj, Product):
+        # Get warehouses the user has access to
+        accessible_warehouses = get_accessible_warehouses(user, permission_type)
+
+        # Check if the product is in any of these warehouses
+        from product_management.models.products_models import ProductWarehouse
+        warehouse_query = ProductWarehouse.objects.filter(
+            product=obj,
+            warehouse__in=accessible_warehouses,
+            quantity__gt=0  # Only consider warehouses with stock
+        )
+
+        warehouse_count = warehouse_query.count()
+
+        # If the product is in at least one accessible warehouse, grant permission
+        if warehouse_count > 0:
+            # Get the first warehouse for logging purposes
+            first_warehouse = warehouse_query.first().warehouse
+            logger.info(f"User {user.username} granted {permission_type} access to product {obj.id} ({obj.name}) via warehouse access to {first_warehouse.name}")
+            return True
+        else:
+            logger.debug(f"User {user.username} denied {permission_type} access to product {obj.id} ({obj.name}) - no accessible warehouses with stock found")
+
+    # No permission found
+    return False

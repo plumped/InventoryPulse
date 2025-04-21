@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 
+from django.apps import apps
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required, permission_required
@@ -616,3 +617,55 @@ def view_report(request, filename):
     except Exception as e:
         logger.error(f"Error serving report file {filename}: {str(e)}")
         return JsonResponse({'error': f'Error serving report file: {str(e)}'}, status=500)
+
+@login_required
+@staff_member_required
+def get_objects_for_content_type(request):
+    """Get objects for a specific content type."""
+    content_type_id = request.GET.get('content_type_id')
+    search_term = request.GET.get('search', '')
+
+    if not content_type_id:
+        return JsonResponse({'error': 'Content type ID is required'}, status=400)
+
+    try:
+        content_type = ContentType.objects.get(id=content_type_id)
+        model = apps.get_model(content_type.app_label, content_type.model)
+
+        # Get objects of this model
+        objects = model.objects.all()
+
+        # Apply search filter if provided
+        if search_term:
+            # Try to find common fields to search in
+            searchable_fields = []
+            for field in model._meta.fields:
+                if field.get_internal_type() in ['CharField', 'TextField']:
+                    searchable_fields.append(field.name)
+
+            # If we have searchable fields, filter objects
+            if searchable_fields:
+                q_objects = Q()
+                for field in searchable_fields:
+                    q_objects |= Q(**{f"{field}__icontains": search_term})
+                objects = objects.filter(q_objects)
+
+        # Limit to a reasonable number
+        objects = objects[:100]
+
+        # Prepare the response
+        result = []
+        for obj in objects:
+            # Try to get a meaningful representation of the object
+            display_name = str(obj)
+            result.append({
+                'id': obj.id,
+                'text': display_name
+            })
+
+        return JsonResponse({'objects': result})
+    except ContentType.DoesNotExist:
+        return JsonResponse({'error': 'Content type not found'}, status=404)
+    except Exception as e:
+        logger.error(f"Error getting objects for content type {content_type_id}: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)

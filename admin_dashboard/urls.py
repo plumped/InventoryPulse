@@ -96,5 +96,6 @@ urlpatterns = [
         path('predefined-roles/', predefined_role_views.predefined_roles, name='admin_predefined_roles'),
         path('predefined-roles/create-all/', predefined_role_views.create_all_predefined_roles_view, name='admin_create_all_predefined_roles'),
         path('predefined-roles/create/', predefined_role_views.create_predefined_role_view, name='admin_create_predefined_role'),
+        path('get-objects-for-content-type/', permission_views.get_objects_for_content_type, name='admin_get_objects_for_content_type'),
     ])),
 ]

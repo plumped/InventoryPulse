@@ -1,6 +1,16 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Hide the original object_id field */
+    #id_object_id {
+        display: none;
+    }
+</style>
+{% endblock %}
+
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
@@ -19,7 +29,7 @@
         <div class="card-body">
             <form method="post">
                 {% csrf_token %}
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -34,7 +44,16 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="{{ form.object_id.id_for_label }}">Object ID</label>
+                            <label for="object_selector">Object</label>
+                            <select id="object_selector" class="form-select" style="width: 100%;">
+                                <option value="">First select an object type</option>
+                            </select>
+                            <div id="object_loading" class="mt-2" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span class="ms-2">Loading objects...</span>
+                            </div>
                             {{ form.object_id }}
                             {% if form.object_id.errors %}
                                 <div class="invalid-feedback d-block">
@@ -44,7 +63,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -69,7 +88,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group">
@@ -96,7 +115,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -123,13 +142,13 @@
                         </div>
                     </div>
                 </div>
-                
+
                 {% if form.non_field_errors %}
                 <div class="alert alert-danger">
                     {{ form.non_field_errors }}
                 </div>
                 {% endif %}
-                
+
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">Save</button>
                     <a href="{% url 'admin_object_permissions' %}" class="btn btn-secondary">Cancel</a>
@@ -138,4 +157,89 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for object selector
+        $('#object_selector').select2({
+            placeholder: "First select an object type",
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Handle content type change
+        $('#id_content_type').change(function() {
+            const contentTypeId = $(this).val();
+            const objectSelector = $('#object_selector');
+
+            // Clear current options and disable
+            objectSelector.empty().append('<option value="">Select an object</option>');
+
+            // If no content type selected, disable object selector
+            if (!contentTypeId) {
+                objectSelector.prop('disabled', true);
+                return;
+            }
+
+            // Show loading indicator
+            $('#object_loading').show();
+
+            // Enable object selector
+            objectSelector.prop('disabled', false);
+
+            // Fetch objects for the selected content type
+            $.ajax({
+                url: "{% url 'admin_get_objects_for_content_type' %}",
+                data: {
+                    content_type_id: contentTypeId
+                },
+                dataType: 'json',
+                success: function(data) {
+                    // Hide loading indicator
+                    $('#object_loading').hide();
+
+                    // Add objects to selector
+                    if (data.objects && data.objects.length > 0) {
+                        $.each(data.objects, function(index, object) {
+                            objectSelector.append(new Option(object.text, object.id));
+                        });
+
+                        // If editing and object_id is already set, select it
+                        const currentObjectId = $('#id_object_id').val();
+                        if (currentObjectId) {
+                            objectSelector.val(currentObjectId).trigger('change');
+                        }
+                    } else {
+                        objectSelector.append('<option value="">No objects found</option>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Hide loading indicator
+                    $('#object_loading').hide();
+
+                    // Show error
+                    alert('Error loading objects: ' + (xhr.responseJSON?.error || error));
+                    objectSelector.append('<option value="">Error loading objects</option>');
+                }
+            });
+        });
+
+        // Handle object selection
+        $('#object_selector').change(function() {
+            const objectId = $(this).val();
+            $('#id_object_id').val(objectId);
+        });
+
+        // Trigger content type change if already selected (for edit mode)
+        if ($('#id_content_type').val()) {
+            $('#id_content_type').trigger('change');
+        } else {
+            // Disable object selector initially
+            $('#object_selector').prop('disabled', true);
+        }
+    });
+</script>
 {% endblock %}

@@ -167,6 +167,9 @@ def product_detail(request, pk):
     if not request.user.is_superuser and not has_object_permission(request.user, product, 'view'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Produkt anzusehen.")
 
+    # Check if user has permission to edit this specific product
+    can_edit = request.user.is_superuser or has_object_permission(request.user, product, 'edit')
+
     # Lieferanteninformationen
     supplier_products = SupplierProduct.objects.filter(product=product).select_related('supplier')
 
@@ -270,6 +273,7 @@ def product_detail(request, pk):
         'warehouse_stocks': warehouse_stocks,
         'total_accessible_stock': total_accessible_stock,
         'accessible_warehouses': accessible_warehouses,
+        'can_edit': can_edit,
     }
 
     return render(request, 'core/product_detail.html', context)

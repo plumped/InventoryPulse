@@ -56,6 +56,11 @@ class WarehouseAccess(models.Model):
             logger.info(f"Superuser {user.username} granted {permission_type} access to warehouse {warehouse.name}")
             return True
 
+        # System Administrator group members have access to all warehouses
+        if user.groups.filter(name="System Administrator").exists():
+            logger.info(f"System Administrator {user.username} granted {permission_type} access to warehouse {warehouse.name}")
+            return True
+
         # Generate a cache key
         cache_key = f"warehouse_access:{user.id}:{warehouse.id}:{permission_type}"
 
@@ -196,6 +201,11 @@ class ObjectPermission(models.Model):
         # Admin always has access
         if user.is_superuser:
             logger.info(f"Superuser {user.username} granted {permission_type} access to {obj.__class__.__name__}:{obj.id}")
+            return True
+
+        # System Administrator group members have access to all objects
+        if user.groups.filter(name="System Administrator").exists():
+            logger.info(f"System Administrator {user.username} granted {permission_type} access to {obj.__class__.__name__}:{obj.id}")
             return True
 
         # Generate cache key

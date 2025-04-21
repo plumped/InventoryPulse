@@ -6044,3 +6044,48 @@
 2025-04-21 02:41:47,278 [INFO] accessmanagement: User testino granted edit access to product 1 (Reinigungstücher) via warehouse access to Test
 2025-04-21 02:41:47,289 [INFO] django.server: "GET /products/1/ HTTP/1.1" 200 23374
 2025-04-21 02:41:59,983 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\accessmanagement\admin.py changed, reloading.
+2025-04-21 02:42:00,765 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 02:42:22,206 [INFO] accessmanagement: User testino granted view access to product 1 (Reinigungstücher) via warehouse access to Test
+2025-04-21 02:42:22,210 [INFO] accessmanagement: User testino granted edit access to product 1 (Reinigungstücher) via warehouse access to Test
+2025-04-21 02:42:22,262 [INFO] django.server: "GET /products/1/ HTTP/1.1" 200 23374
+2025-04-21 15:31:30,577 [INFO] django.server: "GET /products/ HTTP/1.1" 200 13757
+2025-04-21 15:31:32,014 [INFO] accessmanagement: User testino granted view access to product 1 (Reinigungstücher) via warehouse access to Test
+2025-04-21 15:31:32,018 [INFO] accessmanagement: User testino granted edit access to product 1 (Reinigungstücher) via warehouse access to Test
+2025-04-21 15:31:32,025 [INFO] django.server: "GET /products/1/ HTTP/1.1" 200 23374
+2025-04-21 15:31:40,493 [INFO] admin_dashboard.views: Dashboard accessed by chrigi.
+2025-04-21 15:31:40,519 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 52183
+2025-04-21 15:32:18,384 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'chrigi', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-21 15:32:18,392 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T15:32:18.392852", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-21 15:32:18,393 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 44622
+2025-04-21 15:43:58,798 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\utils\view_helpers.py changed, reloading.
+2025-04-21 15:43:59,784 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:44:15,710 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\utils\view_helpers.py changed, reloading.
+2025-04-21 15:44:16,537 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:45:05,187 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\product_views.py changed, reloading.
+2025-04-21 15:45:05,896 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:45:32,226 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\product_views.py changed, reloading.
+2025-04-21 15:45:33,003 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:45:40,450 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\product_views.py changed, reloading.
+2025-04-21 15:45:41,241 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:45:49,640 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\product_views.py changed, reloading.
+2025-04-21 15:45:50,467 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:45:56,824 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:45:57,563 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:46:31,366 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:46:32,088 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:46:40,503 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-21 15:46:41,230 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:47:13,973 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-21 15:47:14,871 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:47:47,620 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\views.py changed, reloading.
+2025-04-21 15:47:48,359 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:47:56,814 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\views.py changed, reloading.
+2025-04-21 15:47:57,564 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:48:05,022 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\suppliers\views.py changed, reloading.
+2025-04-21 15:48:05,823 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:49:45,762 [INFO] django.server: "GET /products/ HTTP/1.1" 200 13757
+2025-04-21 15:51:45,765 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\documents\views.py changed, reloading.
+2025-04-21 15:51:46,523 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:52:14,565 [INFO] django.server: "GET /products/ HTTP/1.1" 200 13757
+2025-04-21 15:52:15,575 [INFO] accessmanagement: User testino granted view access to product 1 (Reinigungstücher) via warehouse access to Test
+2025-04-21 15:52:15,586 [INFO] django.server: "GET /products/1/ HTTP/1.1" 200 23374

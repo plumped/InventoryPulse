@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.templatetags.static import static
@@ -53,7 +53,7 @@ def import_products(request):
 
 
 @login_required
-@permission_required('import', 'create')
+@permission_required('suppliers.add_supplier', raise_exception=True)
 def import_suppliers(request):
     """Import suppliers from CSV."""
     if request.method == 'POST':
@@ -107,7 +107,7 @@ def import_suppliers(request):
 
 
 @login_required
-@permission_required('import', 'create')
+@permission_required('product_management.add_category', raise_exception=True)
 def import_categories(request):
     """Import categories from CSV."""
     if request.method == 'POST':
@@ -161,7 +161,7 @@ def import_categories(request):
 
 
 @login_required
-@permission_required('import', 'create')
+@permission_required('suppliers.add_supplierproduct', raise_exception=True)
 def import_supplier_products(request):
     """Import supplier-product relationships from CSV."""
     if request.method == 'POST':
@@ -215,8 +215,7 @@ def import_supplier_products(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
-@permission_required('import', 'create')
+@permission_required('inventory.add_warehouse', raise_exception=True)
 def import_warehouses(request):
     """Import warehouses from CSV file."""
     if request.method == 'POST':
@@ -351,8 +350,7 @@ def import_warehouses(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
-@permission_required('import', 'create')
+@permission_required('master_data.add_department', raise_exception=True)
 def import_departments(request):
     """Import departments from CSV file."""
     if request.method == 'POST':
@@ -489,8 +487,7 @@ def import_departments(request):
 
 
 @login_required
-@user_passes_test(lambda u: u.is_staff)
-@permission_required('import', 'create')
+@permission_required('product_management.add_productwarehouse', raise_exception=True)
 def import_warehouse_products(request):
     """Import product stock to warehouses from CSV file."""
     if request.method == 'POST':
@@ -696,7 +693,7 @@ def import_warehouse_products(request):
 
 
 @login_required
-@permission_required('serialnumber', 'import')
+@permission_required('tracking.add_serialnumber', raise_exception=True)
 def import_serialnumbers(request):
     """Importiert Seriennummern aus einer CSV-Datei."""
     if request.method == 'POST':

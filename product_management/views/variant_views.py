@@ -11,7 +11,7 @@ from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_productvarianttype', raise_exception=True)
 def variant_type_list(request):
     """Zeigt alle Variantentypen an."""
     variant_types = ProductVariantType.objects.all()
@@ -33,7 +33,7 @@ def variant_type_list(request):
 
 
 @login_required
-@permission_required('product', 'create')
+@permission_required('product_management.add_productvarianttype', raise_exception=True)
 def variant_type_add(request):
     """Erstellt einen neuen Variantentyp."""
     if request.method == 'POST':
@@ -53,7 +53,7 @@ def variant_type_add(request):
 
 
 @login_required
-@permission_required('product', 'edit')
+@permission_required('product_management.change_productvarianttype', raise_exception=True)
 def variant_type_update(request, pk):
     """Aktualisiert einen Variantentyp."""
     variant_type = get_object_or_404(ProductVariantType, pk=pk)
@@ -76,7 +76,7 @@ def variant_type_update(request, pk):
 
 
 @login_required
-@permission_required('product', 'delete')
+@permission_required('product_management.delete_productvarianttype', raise_exception=True)
 def variant_type_delete(request, pk):
     """Löscht einen Variantentyp."""
     variant_type = get_object_or_404(ProductVariantType, pk=pk)
@@ -107,7 +107,7 @@ def variant_type_delete(request, pk):
 # ------------------------------------------------------------------------------
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def product_variants(request, pk):
     """Zeigt alle Varianten eines Produkts an."""
     product = get_object_or_404(Product, pk=pk)
@@ -122,7 +122,7 @@ def product_variants(request, pk):
 
 
 @login_required
-@permission_required('products.view_product', raise_exception=True)
+@permission_required('product_management.view_product', raise_exception=True)
 def product_variant_detail(request, pk, variant_id):
     """Zeigt Details zu einer Produktvariante an."""
     product = get_object_or_404(Product, pk=pk)
@@ -145,7 +145,7 @@ def product_variant_detail(request, pk, variant_id):
 
 
 @login_required
-@permission_required('product', 'create')
+@permission_required('product_management.add_productvariant', raise_exception=True)
 def product_variant_add(request, pk):
     """Fügt eine Variante zu einem Produkt hinzu."""
     product = get_object_or_404(Product, pk=pk)
@@ -226,7 +226,7 @@ def product_variant_add(request, pk):
 
 
 @login_required
-@permission_required('product', 'edit')
+@permission_required('product_management.change_productvariant', raise_exception=True)
 def product_variant_update(request, pk, variant_id):
     product = get_object_or_404(Product, pk=pk)
     variant = get_object_or_404(ProductVariant, pk=variant_id, parent_product=product)
@@ -244,7 +244,7 @@ def product_variant_update(request, pk, variant_id):
 
 
 @login_required
-@permission_required('product', 'delete')
+@permission_required('product_management.delete_productvariant', raise_exception=True)
 def product_variant_delete(request, pk, variant_id):
     """Löscht eine Produktvariante."""
     product = get_object_or_404(Product, pk=pk)

@@ -1143,8 +1143,7 @@ def purchase_order_export(request, pk):
 # In order/views.py - order_suggestions View aktualisieren
 
 @login_required
-@permission_required('order.view_order', raise_exception=True)
-
+@permission_required('order.view_purchaseorder', raise_exception=True)
 def order_suggestions(request):
     """Zeigt Bestellvorschläge basierend auf kritischen Beständen."""
 
@@ -2063,8 +2062,7 @@ def get_supplier_products(request):
 
 
 @login_required
-@permission_required('order.view_order', raise_exception=True)
-
+@permission_required('order.view_ordertemplate', raise_exception=True)
 def order_template_list(request):
     """List all order templates with filtering options."""
     # Base queryset
@@ -2122,8 +2120,7 @@ def order_template_list(request):
 
 
 @login_required
-@permission_required('order.view_order', raise_exception=True)
-
+@permission_required('order.view_ordertemplate', raise_exception=True)
 def order_template_detail(request, pk):
     """Show details for a specific order template."""
     template = get_object_or_404(

@@ -10,6 +10,19 @@ from django.shortcuts import render, get_object_or_404
 from core.utils.pagination import paginate_queryset
 
 
+class ImportPermission(models.Model):
+    """
+    Dieses Modell existiert nur für Berechtigungszwecke.
+    """
+    class Meta:
+        managed = False
+        default_permissions = ()
+        permissions = [
+            ('view_import_dashboard', 'Can view import dashboard'),
+            # Weitere benötigte Berechtigungen...
+        ]
+        app_label = 'data_operations'
+
 class ImportLog(models.Model):
     STATUS_CHOICES = (
         ('completed', 'Completed'),

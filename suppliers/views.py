@@ -500,8 +500,7 @@ def get_supplier_products(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('data_operations.view_supplierperformance', raise_exception=True)
 def supplier_performance_overview(request):
     """Overview of all suppliers' performance metrics."""
     # Get all active metrics
@@ -584,8 +583,7 @@ def supplier_performance_overview(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('data_operations.view_supplierperformance', raise_exception=True)
 def supplier_performance_detail(request, pk):
     """Detailed view of a specific supplier's performance."""
     supplier = get_object_or_404(Supplier, pk=pk)
@@ -665,7 +663,7 @@ def supplier_performance_detail(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('data_operations.add_supplierperformance', raise_exception=True)
 def supplier_performance_add(request, supplier_id):
     """Add a new performance evaluation for a supplier."""
     supplier = get_object_or_404(Supplier, pk=supplier_id)
@@ -708,7 +706,7 @@ def supplier_performance_add(request, supplier_id):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('data_operations.change_supplierperformance', raise_exception=True)
 def supplier_performance_edit(request, pk):
     """Edit an existing performance evaluation."""
     performance = get_object_or_404(SupplierPerformance, pk=pk)
@@ -753,7 +751,7 @@ def supplier_performance_edit(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'delete')
+@permission_required('data_operations.delete_supplierperformance', raise_exception=True)
 def supplier_performance_delete(request, pk):
     """Delete a performance evaluation."""
     performance = get_object_or_404(SupplierPerformance, pk=pk)

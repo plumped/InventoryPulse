@@ -1,4 +1,5 @@
 {% load static %}
+{% load permission_tags %}
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -83,164 +84,169 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
-                           href="{% url 'dashboard' %}">
-                           <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                               href="{% url 'dashboard' %}">
+                               <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                    {% endif %}
 
                     <!-- Produkt-Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'product' in request.path or 'serialnumber' in request.path or 'category' in request.path %}active{% endif %}"
-                           href="#" id="productDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-box-seam"></i> Produkte
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="productDropdown">
-                            <li>
-                                <a class="dropdown-item {% if 'product' in request.path and not 'serialnumber' in request.path and not 'category' in request.path %}active{% endif %}"
-                                   href="{% url 'product_list' %}">
-                                    <i class="bi bi-box-seam me-2"></i>Produktübersicht
-                                </a>
-                            </li>
-                            {% if perms.product.add %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}"
-                                   href="{% url 'product_create' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Produkt hinzufügen
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item {% if 'low-stock' in request.path %}active{% endif %}"
-                                   href="{% url 'low_stock_list' %}">
-                                    <i class="bi bi-exclamation-triangle me-2"></i>Kritische Bestände
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if 'category' in request.path %}active{% endif %}"
-                                   href="{% url 'category_list' %}">
-                                    <i class="bi bi-tags me-2"></i>Kategorien
-                                </a>
-                            </li>
-                            {% if perms.product_management.view_product %}
-                            <li>
-                                <a class="dropdown-item {% if 'expiry' in request.path %}active{% endif %}"
-                                   href="{% url 'expiry_management' %}">
-                                    <i class="bi bi-calendar-check me-2"></i>Verfallsdaten
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'variant_type_list' %}active{% endif %}"
-                                   href="{% url 'variant_type_list' %}">
-                                    <i class="bi bi-grid-3x3-gap me-2"></i>Variantentypen
-                                </a>
-                            </li>
-                            {% endif %}
+                    {% if perms.product_management.view_product %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'product' in request.path or 'serialnumber' in request.path or 'category' in request.path %}active{% endif %}"
+                               href="#" id="productDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-box-seam"></i> Produkte
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="productDropdown">
+                                <li>
+                                    <a class="dropdown-item {% if 'product' in request.path and not 'serialnumber' in request.path and not 'category' in request.path %}active{% endif %}"
+                                       href="{% url 'product_list' %}">
+                                        <i class="bi bi-box-seam me-2"></i>Produktübersicht
+                                    </a>
+                                </li>
+                                {% if perms.product_management.add_product %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'product_create' %}active{% endif %}"
+                                           href="{% url 'product_create' %}">
+                                            <i class="bi bi-plus-circle me-2"></i>Produkt hinzufügen
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li>
+                                    <a class="dropdown-item {% if 'low-stock' in request.path %}active{% endif %}"
+                                       href="{% url 'low_stock_list' %}">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>Kritische Bestände
+                                    </a>
+                                </li>
+                                {% if perms.product_management.view_category %}
+                                    <li>
+                                        <a class="dropdown-item {% if 'category' in request.path %}active{% endif %}"
+                                           href="{% url 'category_list' %}">
+                                            <i class="bi bi-tags me-2"></i>Kategorien
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.product_management.view_product %}
+                                    <li>
+                                        <a class="dropdown-item {% if 'expiry' in request.path %}active{% endif %}"
+                                           href="{% url 'expiry_management' %}">
+                                            <i class="bi bi-calendar-check me-2"></i>Verfallsdaten
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.product_management.view_productvarianttype %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'variant_type_list' %}active{% endif %}"
+                                           href="{% url 'variant_type_list' %}">
+                                            <i class="bi bi-grid-3x3-gap me-2"></i>Variantentypen
+                                        </a>
+                                    </li>
+                                {% endif %}
 
-                            {% if perms.serialnumber.view%}
-
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_list' %}active{% endif %}"
-                                   href="{% url 'serialnumber_list' %}">
-                                    <i class="bi bi-upc-scan me-2"></i>Seriennummern-Übersicht
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_scan' %}active{% endif %}"
-                                   href="{% url 'serialnumber_scan' %}">
-                                    <i class="bi bi-qr-code-scan me-2"></i>Seriennummern Scannen
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if perms.serialnumber.add%}
-
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_add' %}active{% endif %}"
-                                   href="{% url 'serialnumber_add' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Seriennummer hinzufügen
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if perms.serialnumber.change%}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_transfer' %}active{% endif %}"
-                                   href="{% url 'serialnumber_transfer' %}">
-                                    <i class="bi bi-arrow-left-right me-2"></i>Seriennummer transferieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if perms.serialnumber.add%}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_import' %}active{% endif %}"
-                                   href="{% url 'serialnumber_import' %}">
-                                    <i class="bi bi-file-earmark-arrow-down me-2"></i>Seriennummern importieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if perms.serialnumber.view%}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_export' %}active{% endif %}"
-                                   href="{% url 'serialnumber_export' %}">
-                                    <i class="bi bi-file-earmark-arrow-up me-2"></i>Seriennummern exportieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if perms.product.view%}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_list' %}active{% endif %}"
-                                   href="{% url 'batch_number_list' %}">
-                                    <i class="bi bi-card-checklist me-2"></i>Chargenverwaltung
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_scan' %}active{% endif %}"
-                                   href="{% url 'batch_number_scan' %}">
-                                    <i class="bi bi-upc me-2"></i>Chargen scannen
-                                </a>
-                            </li>
-                            {% if perms.product.add %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_add' %}active{% endif %}"
-                                   href="{% url 'batch_number_add' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Charge hinzufügen
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if perms.product.change%}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_transfer' %}active{% endif %}"
-                                   href="{% url 'batch_number_transfer' %}">
-                                    <i class="bi bi-arrow-left-right me-2"></i>Charge transferieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if perms.product.add%}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_import' %}active{% endif %}"
-                                   href="{% url 'batch_number_import' %}">
-                                    <i class="bi bi-file-earmark-arrow-down me-2"></i>Chargen importieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% if perms.product.view%}
-
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_export' %}active{% endif %}"
-                                   href="{% url 'batch_number_export' %}">
-                                    <i class="bi bi-file-earmark-arrow-up me-2"></i>Chargen exportieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            {% endif %}
-                        </ul>
-                    </li>
+                                {% if perms.tracking.view_serialnumber %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_list' %}active{% endif %}"
+                                           href="{% url 'serialnumber_list' %}">
+                                            <i class="bi bi-upc-scan me-2"></i>Seriennummern-Übersicht
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_scan' %}active{% endif %}"
+                                           href="{% url 'serialnumber_scan' %}">
+                                            <i class="bi bi-qr-code-scan me-2"></i>Seriennummern Scannen
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.add_serialnumber %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_add' %}active{% endif %}"
+                                           href="{% url 'serialnumber_add' %}">
+                                            <i class="bi bi-plus-circle me-2"></i>Seriennummer hinzufügen
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.change_serialnumber %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_transfer' %}active{% endif %}"
+                                           href="{% url 'serialnumber_transfer' %}">
+                                            <i class="bi bi-arrow-left-right me-2"></i>Seriennummer transferieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.add_serialnumber %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_import' %}active{% endif %}"
+                                           href="{% url 'serialnumber_import' %}">
+                                            <i class="bi bi-file-earmark-arrow-down me-2"></i>Seriennummern importieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.view_serialnumber %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'serialnumber_export' %}active{% endif %}"
+                                           href="{% url 'serialnumber_export' %}">
+                                            <i class="bi bi-file-earmark-arrow-up me-2"></i>Seriennummern exportieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.view_batchnumber %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_list' %}active{% endif %}"
+                                           href="{% url 'batch_number_list' %}">
+                                            <i class="bi bi-card-checklist me-2"></i>Chargenverwaltung
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_scan' %}active{% endif %}"
+                                           href="{% url 'batch_number_scan' %}">
+                                            <i class="bi bi-upc me-2"></i>Chargen scannen
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.add_batchnumber %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_add' %}active{% endif %}"
+                                           href="{% url 'batch_number_add' %}">
+                                            <i class="bi bi-plus-circle me-2"></i>Charge hinzufügen
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.change_batchnumber %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_transfer' %}active{% endif %}"
+                                           href="{% url 'batch_number_transfer' %}">
+                                            <i class="bi bi-arrow-left-right me-2"></i>Charge transferieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.add_batchnumber %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_import' %}active{% endif %}"
+                                           href="{% url 'batch_number_import' %}">
+                                            <i class="bi bi-file-earmark-arrow-down me-2"></i>Chargen importieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.tracking.view_batchnumber %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_number_export' %}active{% endif %}"
+                                           href="{% url 'batch_number_export' %}">
+                                            <i class="bi bi-file-earmark-arrow-up me-2"></i>Chargen exportieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    {% endif %}
 
                     <!-- Lagerverwaltung Dropdown -->
-                    {% if perms.inventory.view%}
+                    {% if perms.inventory.view_warehouse %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'warehouse' in request.path or 'movement' in request.path or 'stock-take' in request.path %}active{% endif %}"
                            href="#" id="warehouseDropdown" role="button"
@@ -254,138 +260,152 @@
                                     <i class="bi bi-building me-2"></i>Lager
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item {% if 'bulk-transfer' in request.path %}active{% endif %}"
-                                   href="{% url 'bulk_warehouse_transfer' %}">
-                                    <i class="bi bi-arrows-move me-2"></i>Lagerverschiebung
-                                </a>
-                            </li>
-
-                            <li><hr class="dropdown-divider"></li>
-                            <li class="dropdown-header">Bestandsverwaltung</li>
-
-                            <li>
-                                <a class="dropdown-item {% if 'movement' in request.path %}active{% endif %}"
-                                   href="{% url 'stock_movement_list' %}">
-                                    <i class="bi bi-arrow-left-right me-2"></i>Bestandsbewegungen
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if 'stock-take' in request.path %}active{% endif %}"
-                                   href="{% url 'stock_take_list' %}">
-                                    <i class="bi bi-clipboard-check me-2"></i>Inventuren
-                                </a>
-                            </li>
+                            {% if perms.inventory.change_stockmovement %}
+                                <li>
+                                    <a class="dropdown-item {% if 'bulk-transfer' in request.path %}active{% endif %}"
+                                       href="{% url 'bulk_warehouse_transfer' %}">
+                                        <i class="bi bi-arrows-move me-2"></i>Lagerverschiebung
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if perms.inventory.view_stockmovement %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="dropdown-header">Bestandsverwaltung</li>
+                                <li>
+                                    <a class="dropdown-item {% if 'movement' in request.path %}active{% endif %}"
+                                       href="{% url 'stock_movement_list' %}">
+                                        <i class="bi bi-arrow-left-right me-2"></i>Bestandsbewegungen
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if perms.inventory.view_stocktake %}
+                                <li>
+                                    <a class="dropdown-item {% if 'stock-take' in request.path %}active{% endif %}"
+                                       href="{% url 'stock_take_list' %}">
+                                        <i class="bi bi-clipboard-check me-2"></i>Inventuren
+                                    </a>
+                                </li>
+                            {% endif %}
                         </ul>
                     </li>
                     {% endif %}
 
                     <!-- Bestellwesen Dropdown -->
-                    {% if perms.order.view%}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'order' in request.path %}active{% endif %}"
-                           href="#" id="orderDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-cart"></i> Bestellwesen
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="orderDropdown">
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_list' %}active{% endif %}"
-                                   href="{% url 'purchase_order_list' %}">
-                                    <i class="bi bi-list-ul me-2"></i>Bestellungsübersicht
-                                </a>
-                            </li>
-                            {% if perms.order.add%}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_create' %}active{% endif %}"
-                                   href="{% url 'purchase_order_create' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Neue Bestellung
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_order_import' %}active{% endif %}"
-                                   href="{% url 'batch_order_import' %}">
-                                    <i class="bi bi-upload me-2"></i>Batch Order Import
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'order_suggestions' %}active{% endif %}"
-                                   href="{% url 'order_suggestions' %}">
-                                    <i class="bi bi-lightbulb me-2"></i>Bestellvorschläge
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'order_template_list' %}active{% endif %}"
-                                   href="{% url 'order_template_list' %}">
-                                    <i class="bi bi-clipboard-check me-2"></i>Bestellvorlagen
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                    {% if perms.order.view_purchaseorder%}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'order' in request.path %}active{% endif %}"
+                               href="#" id="orderDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-cart"></i> Bestellwesen
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="orderDropdown">
+                                <li>
+                                    <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_list' %}active{% endif %}"
+                                       href="{% url 'purchase_order_list' %}">
+                                        <i class="bi bi-list-ul me-2"></i>Bestellungsübersicht
+                                    </a>
+                                </li>
+                                {% if perms.order.add_purchaseorder %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'purchase_order_create' %}active{% endif %}"
+                                           href="{% url 'purchase_order_create' %}">
+                                            <i class="bi bi-plus-circle me-2"></i>Neue Bestellung
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.order.add_purchaseorder %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'batch_order_import' %}active{% endif %}"
+                                           href="{% url 'batch_order_import' %}">
+                                            <i class="bi bi-upload me-2"></i>Batch Order Import
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.order.view_ordersuggestion %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'order_suggestions' %}active{% endif %}"
+                                           href="{% url 'order_suggestions' %}">
+                                            <i class="bi bi-lightbulb me-2"></i>Bestellvorschläge
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                {% if perms.order.view_ordertemplate %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'order_template_list' %}active{% endif %}"
+                                           href="{% url 'order_template_list' %}">
+                                            <i class="bi bi-clipboard-check me-2"></i>Bestellvorlagen
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
                     {% endif %}
                     <!-- RMA Dropdown -->
-                    {% if perms.rma.view%}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'rma' in request.path %}active{% endif %}"
-                           href="#" id="rmaDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-arrow-return-left"></i> RMAs
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="rmaDropdown">
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'rma_list' %}active{% endif %}"
-                                   href="{% url 'rma_list' %}">
-                                    <i class="bi bi-list-ul me-2"></i>RMA-Übersicht
-                                </a>
-                            </li>
-                            {% if perms.rma.add%}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'rma_create' %}active{% endif %}"
-                                   href="{% url 'rma_create' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Neue RMA erstellen
-                                </a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </li>
+                    {% if perms.rma.view_rma %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'rma' in request.path %}active{% endif %}"
+                               href="#" id="rmaDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-arrow-return-left"></i> RMAs
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="rmaDropdown">
+                                <li>
+                                    <a class="dropdown-item {% if request.resolver_match.url_name == 'rma_list' %}active{% endif %}"
+                                       href="{% url 'rma_list' %}">
+                                        <i class="bi bi-list-ul me-2"></i>RMA-Übersicht
+                                    </a>
+                                </li>
+                                {% if perms.rma.add_rma %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'rma_create' %}active{% endif %}"
+                                           href="{% url 'rma_create' %}">
+                                            <i class="bi bi-plus-circle me-2"></i>Neue RMA erstellen
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
                     {% endif %}
 
                     <!-- Lieferanten -->
-                    {% if perms.supplier.view %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'supplier' in request.path %}active{% endif %}"
-                           href="#" id="supplierDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-truck"></i> Lieferanten
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="supplierDropdown">
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}"
-                                   href="{% url 'supplier_list' %}">
-                                    <i class="bi bi-list-ul me-2"></i>Lieferantenübersicht
-                                </a>
-                            </li>
-                            {% if perms.supplier.add %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_create' %}active{% endif %}"
-                                   href="{% url 'supplier_create' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Lieferant hinzufügen
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_performance_overview' %}active{% endif %}"
-                                   href="{% url 'supplier_performance_overview' %}">
-                                    <i class="bi bi-graph-up me-2"></i>Lieferantenperformance
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                    {% if perms.suppliers.view_supplier %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'supplier' in request.path %}active{% endif %}"
+                               href="#" id="supplierDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-truck"></i> Lieferanten
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="supplierDropdown">
+                                <li>
+                                    <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}"
+                                       href="{% url 'supplier_list' %}">
+                                        <i class="bi bi-list-ul me-2"></i>Lieferantenübersicht
+                                    </a>
+                                </li>
+                                {% if perms.suppliers.add_supplier %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_create' %}active{% endif %}"
+                                           href="{% url 'supplier_create' %}">
+                                            <i class="bi bi-plus-circle me-2"></i>Lieferant hinzufügen
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                {% if perms.data_operations.view_supplierperformance %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'supplier_performance_overview' %}active{% endif %}"
+                                           href="{% url 'supplier_performance_overview' %}">
+                                            <i class="bi bi-graph-up me-2"></i>Lieferantenperformance
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
                     {% endif %}
 
                     <!-- Document Management Dropdown -->
-                    {% if perms.documents.view %}
+                    {% if perms.documents.view_document %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if 'document' in request.path or 'template' in request.path %}active{% endif %}"
                            href="#" id="documentDropdown" role="button"
@@ -393,102 +413,118 @@
                             <i class="bi bi-file-earmark-text"></i> Dokumente
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="documentDropdown">
-                            <li>
-                                <a class="dropdown-item {% if 'document' in request.path and not 'template' in request.path %}active{% endif %}"
-                                   href="{% url 'document_list' %}">
-                                    <i class="bi bi-file-earmark me-2"></i>Dokumentenübersicht
-                                </a>
-                            </li>
-                            {% if perms.documents.add %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'document_upload' %}active{% endif %}"
-                                   href="{% url 'document_upload' %}">
-                                    <i class="bi bi-cloud-upload me-2"></i>Dokument hochladen
-                                </a>
-                            </li>
+                            {% if perms.documents.view_document %}
+                                <li>
+                                    <a class="dropdown-item {% if 'document' in request.path and not 'template' in request.path %}active{% endif %}"
+                                       href="{% url 'document_list' %}">
+                                        <i class="bi bi-file-earmark me-2"></i>Dokumentenübersicht
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if perms.documents.add_document %}
+                                <li>
+                                    <a class="dropdown-item {% if request.resolver_match.url_name == 'document_upload' %}active{% endif %}"
+                                       href="{% url 'document_upload' %}">
+                                        <i class="bi bi-cloud-upload me-2"></i>Dokument hochladen
+                                    </a>
+                                </li>
                             {% endif %}
                             <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item {% if 'template' in request.path %}active{% endif %}"
-                                   href="{% url 'template_list' %}">
-                                    <i class="bi bi-grid-3x3 me-2"></i>Dokumentvorlagen
-                                </a>
-                            </li>
-                            {% if perms.documents.add %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'template_create' %}active{% endif %}"
-                                   href="{% url 'template_create' %}">
-                                    <i class="bi bi-plus-circle me-2"></i>Neue Dokumentvorlage
-                                </a>
-                            </li>
+                            {% if perms.documents.view_documenttemplate %}
+                                <li>
+                                    <a class="dropdown-item {% if 'template' in request.path %}active{% endif %}"
+                                       href="{% url 'template_list' %}">
+                                        <i class="bi bi-grid-3x3 me-2"></i>Dokumentvorlagen
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if perms.documents.add_documenttemplate %}
+                                <li>
+                                    <a class="dropdown-item {% if request.resolver_match.url_name == 'template_create' %}active{% endif %}"
+                                       href="{% url 'template_create' %}">
+                                        <i class="bi bi-plus-circle me-2"></i>Neue Dokumentvorlage
+                                    </a>
+                                </li>
                             {% endif %}
                         </ul>
                     </li>
                     {% endif %}
 
                     <!-- Import Dropdown -->
-                    {% if perms.import.view %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'import' in request.path %}active{% endif %}"
-                           href="#" id="importDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-file-earmark-arrow-down"></i> Import
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="importDropdown">
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_dashboard' %}active{% endif %}"
-                                   href="{% url 'import_dashboard' %}">
-                                    <i class="bi bi-speedometer2 me-2"></i>Import-Dashboard
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            {% if perms.import.add %}
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_products' %}active{% endif %}"
-                                   href="{% url 'import_products' %}">
-                                    <i class="bi bi-box-seam me-2"></i>Produkte importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_categories' %}active{% endif %}"
-                                   href="{% url 'import_categories' %}">
-                                    <i class="bi bi-tags me-2"></i>Kategorien importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouses' %}active{% endif %}"
-                                   href="{% url 'import_warehouses' %}">
-                                    <i class="bi bi-building me-2"></i>Lager importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouse_products' %}active{% endif %}"
-                                   href="{% url 'import_warehouse_products' %}">
-                                    <i class="bi bi-diagram-3 me-2"></i>Produkt-Lager-Bestände importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_suppliers' %}active{% endif %}"
-                                   href="{% url 'import_suppliers' %}">
-                                    <i class="bi bi-truck me-2"></i>Lieferanten importieren
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_supplier_products' %}active{% endif %}"
-                                   href="{% url 'import_supplier_products' %}">
-                                    <i class="bi bi-link me-2"></i>Produkt-Lieferanten importieren
-                                </a>
-                            </li>
-                            {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item {% if request.resolver_match.url_name == 'import_log_list' %}active{% endif %}"
-                                   href="{% url 'import_log_list' %}">
-                                    <i class="bi bi-clock-history me-2"></i>Import-Logs
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                    {% if perms.data_operations.view_import_dashboard %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'import' in request.path %}active{% endif %}"
+                               href="#" id="importDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-file-earmark-arrow-down"></i> Import
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="importDropdown">
+
+                                <li>
+                                    <a class="dropdown-item {% if request.resolver_match.url_name == 'import_dashboard' %}active{% endif %}"
+                                       href="{% url 'import_dashboard' %}">
+                                        <i class="bi bi-speedometer2 me-2"></i>Import-Dashboard
+                                    </a>
+                                </li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                {% if perms.product_management.add_product %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'import_products' %}active{% endif %}"
+                                           href="{% url 'import_products' %}">
+                                            <i class="bi bi-box-seam me-2"></i>Produkte importieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.product_management.add_category %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'import_categories' %}active{% endif %}"
+                                           href="{% url 'import_categories' %}">
+                                            <i class="bi bi-tags me-2"></i>Kategorien importieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.inventory.add_inventory %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouses' %}active{% endif %}"
+                                           href="{% url 'import_warehouses' %}">
+                                            <i class="bi bi-building me-2"></i>Lager importieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.product_management.add_product %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouse_products' %}active{% endif %}"
+                                           href="{% url 'import_warehouse_products' %}">
+                                            <i class="bi bi-diagram-3 me-2"></i>Produkt-Lager-Bestände importieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.suppliers.add_supplier %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'import_suppliers' %}active{% endif %}"
+                                           href="{% url 'import_suppliers' %}">
+                                            <i class="bi bi-truck me-2"></i>Lieferanten importieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.suppliers.add_supplierproduct %}
+                                    <li>
+                                        <a class="dropdown-item {% if request.resolver_match.url_name == 'import_supplier_products' %}active{% endif %}"
+                                           href="{% url 'import_supplier_products' %}">
+                                            <i class="bi bi-link me-2"></i>Produkt-Lieferanten importieren
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item {% if request.resolver_match.url_name == 'import_log_list' %}active{% endif %}"
+                                       href="{% url 'import_log_list' %}">
+                                        <i class="bi bi-clock-history me-2"></i>Import-Logs
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                     {% endif %}
 
                     <!-- Export Dropdown -->

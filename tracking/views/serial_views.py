@@ -134,7 +134,7 @@ def serialnumber_add(request):
 
 
 @login_required
-@permission_required('tracking.transfer_serialnumber', raise_exception=True)
+@permission_required('tracking.change_serialnumber', raise_exception=True)
 def serialnumber_transfer(request):
     """Transferiert eine Seriennummer von einem Lager zu einem anderen."""
     if request.method == 'POST':
@@ -193,7 +193,7 @@ def serialnumber_transfer(request):
 
 
 @login_required
-@permission_required('tracking.import_serialnumber', raise_exception=True)
+@permission_required('tracking.add_serialnumber', raise_exception=True)
 def serialnumber_import(request):
     return handle_csv_import(
         form_class=SerialNumberImportForm,
@@ -213,7 +213,7 @@ def serialnumber_import(request):
 
 
 @login_required
-@permission_required('tracking.export_serialnumber', raise_exception=True)
+@permission_required('tracking.view_serialnumber', raise_exception=True)
 def serialnumber_export(request):
     """Exportiert Seriennummern in eine CSV- oder Excel-Datei."""
     # Filteroptionen für den Export

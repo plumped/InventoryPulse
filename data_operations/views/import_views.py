@@ -23,7 +23,7 @@ from tracking.models.serial_numbers_models import SerialNumber
 
 
 @login_required
-@permission_required('import', 'view')
+@permission_required('data_operations.view_import_dashboard', raise_exception=True)
 def import_dashboard(request):
     """Dashboard for all import functionality."""
     # Get recent import logs
@@ -37,7 +37,7 @@ def import_dashboard(request):
 
 
 @login_required
-@permission_required('import', 'create')
+@permission_required('product_management.add_product', raise_exception=True)
 def import_products(request):
     return handle_csv_import(
         form_class=ProductImportForm,

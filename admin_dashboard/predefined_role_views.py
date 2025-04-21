@@ -5,7 +5,6 @@ Views for managing predefined roles.
 import json
 import logging
 
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required, permission_required
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -20,7 +19,6 @@ logger = logging.getLogger('admin_dashboard')
 
 
 @login_required
-@staff_member_required
 @permission_required('auth.view_group', raise_exception=True)
 def predefined_roles(request):
     """View and manage predefined roles."""
@@ -48,7 +46,6 @@ def predefined_roles(request):
 
 
 @login_required
-@staff_member_required
 @permission_required('auth.add_group', raise_exception=True)
 def create_all_predefined_roles_view(request):
     """Create or update all predefined roles."""
@@ -70,7 +67,6 @@ def create_all_predefined_roles_view(request):
 
 
 @login_required
-@staff_member_required
 @permission_required('auth.add_group', raise_exception=True)
 def create_predefined_role_view(request):
     """Create or update a specific predefined role."""

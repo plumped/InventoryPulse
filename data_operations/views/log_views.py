@@ -13,7 +13,7 @@ from data_operations.models.importers_models import ImportLog
 
 
 @login_required
-@permission_required('import', 'view')
+@permission_required('data_operations.view_importlog', raise_exception=True)
 def import_log_list(request):
     """List all import logs."""
     # Base queryset
@@ -54,7 +54,7 @@ def import_log_list(request):
 
 
 @login_required
-@permission_required('import', 'view')
+@permission_required('data_operations.view_importlog', raise_exception=True)
 def import_log_detail(request, pk):
     """Show details of an import log."""
     log = get_object_or_404(ImportLog, pk=pk)
@@ -69,7 +69,7 @@ def import_log_detail(request, pk):
 
 
 @login_required
-@permission_required('import', 'view')
+@permission_required('data_operations.view_importerror', raise_exception=True)
 def download_error_file(request, log_id):
     """Download the error file for an import log."""
     log = get_object_or_404(ImportLog, pk=log_id)
@@ -106,7 +106,7 @@ def download_error_file(request, log_id):
 
 
 @login_required
-@permission_required('import', 'delete')
+@permission_required('data_operations.delete_importlog', raise_exception=True)
 def delete_import_log(request, log_id):
     """Delete an import log."""
     if request.method == 'POST':
@@ -134,7 +134,7 @@ def delete_import_log(request, log_id):
 
 
 @login_required
-@permission_required('import', 'delete')
+@permission_required('data_operations.delete_importlog', raise_exception=True)
 def bulk_delete_import_logs(request):
     """Delete multiple import logs."""
     if request.method == 'POST':

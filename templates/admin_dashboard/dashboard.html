@@ -11,77 +11,83 @@
 {% endblock %}
 
 {% block admin_content %}
-<div class="row">
-    <!-- Statistik-Karten -->
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                            Benutzer</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.users_count }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-people fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                            Gruppen</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.groups_count }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-collection fa-2x text-gray-300"></i>
+    {% if user.is_superuser or perms.auth.view_user %}
+    <div class="row">
+        <!-- Statistik-Karten -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Benutzer</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.users_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                            Abteilungen</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.departments_count }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-building fa-2x text-gray-300"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-                <div class="row no-gutters align-items-center">
-                    <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                            Lager</div>
-                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.warehouses_count }}</div>
-                    </div>
-                    <div class="col-auto">
-                        <i class="bi bi-box-seam fa-2x text-gray-300"></i>
+    {% endif %}
+    {% if user.is_superuser or perms.auth.view_group %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Gruppen</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.groups_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-collection fa-2x text-gray-300"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    {% endif %}
+    {% if user.is_superuser or perms.master_data.view_department %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Abteilungen</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.departments_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    {% if user.is_superuser or perms.inventory.view_warehouse %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Lager</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.warehouses_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-box-seam fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
+{% if user.is_superuser or perms.interfaces.view_supplierinterface %}
 <!-- Statistik-Karte für Schnittstellen -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6">
@@ -123,44 +129,45 @@
         </div>
     </div>
 </div>
+{% endif %}
 
-<!-- Content Row -->
-<div class="row">
-    <!-- Letzte Aktivitäten -->
-    <div class="col-lg-6 mb-4">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Letzte Aktivitäten</h6>
-            </div>
-            <div class="card-body">
-                {% if recent_activities %}
-                <div class="table-responsive">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                <th>Datum</th>
-                                <th>Benutzer</th>
-                                <th>Aktion</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for activity in recent_activities %}
-                            <tr>
-                                <td>{{ activity.action_time|date:"d.m.Y H:i" }}</td>
-                                <td>{{ activity.user.username }}</td>
-                                <td>{{ activity.object_repr }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+{% if user.is_superuser or perms.admin.view_logentry %}
+    <div class="row">
+        <!-- Letzte Aktivitäten -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Letzte Aktivitäten</h6>
                 </div>
-                {% else %}
-                <p class="text-muted">Keine Aktivitäten gefunden.</p>
-                {% endif %}
+                <div class="card-body">
+                    {% if recent_activities %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Datum</th>
+                                    <th>Benutzer</th>
+                                    <th>Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for activity in recent_activities %}
+                                <tr>
+                                    <td>{{ activity.action_time|date:"d.m.Y H:i" }}</td>
+                                    <td>{{ activity.user.username }}</td>
+                                    <td>{{ activity.object_repr }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Keine Aktivitäten gefunden.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
-
+    {% endif %}
     <!-- System Status -->
     <div class="col-lg-6 mb-4">
         <div class="card shadow mb-4">
@@ -204,23 +211,25 @@
 
 <!-- Verwaltungskacheln -->
 <div class="row">
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Benutzerverwaltung</h6>
-            </div>
-            <div class="card-body">
-                <p>Verwalten Sie Benutzer, Gruppen und Berechtigungen.</p>
-                <a href="{% url 'admin_user_management' %}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-people"></i> Benutzer verwalten
-                </a>
-                <a href="{% url 'admin_group_management' %}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-collection"></i> Gruppen
-                </a>
+    {% if user.is_superuser or perms.auth.view_user and perm.auth.view_group %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Benutzerverwaltung</h6>
+                </div>
+                <div class="card-body">
+                    <p>Verwalten Sie Benutzer, Gruppen und Berechtigungen.</p>
+                    <a href="{% url 'admin_user_management' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-people"></i> Benutzer verwalten
+                    </a>
+                    <a href="{% url 'admin_group_management' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-collection"></i> Gruppen
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
-    
+    {% endif %}
+    {% if user.is_superuser or perms.master_data.view_department and perm.master_data.view_warehouse %}
     <div class="col-lg-4 col-md-6 mb-4">
         <div class="card shadow">
             <div class="card-header py-3">
@@ -237,7 +246,8 @@
             </div>
         </div>
     </div>
-    
+    {% endif %}
+    {% if user.is_superuser or perms.interfaces.view_supplierinterface %}
     <div class="col-lg-4 col-md-6 mb-4">
         <div class="card shadow">
             <div class="card-header py-3">
@@ -254,84 +264,88 @@
             </div>
         </div>
     </div>
-
-    <div class="col-lg-4 col-md-6 mb-4">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Mehrwertsteuersätze</h6>
-            </div>
-            <div class="card-body">
-                <p>Verwalten Sie die Mehrwertsteuersätze für Produkte.</p>
-                <a href="{% url 'admin_tax_management' %}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-percent"></i> Steuersätze verwalten
-                </a>
-                <a href="{% url 'admin_tax_create' %}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-plus"></i> Neuer Steuersatz
-                </a>
+    {% endif %}
+    {% if user.is_superuser or perms.master_data.view_tax %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Mehrwertsteuersätze</h6>
+                </div>
+                <div class="card-body">
+                    <p>Verwalten Sie die Mehrwertsteuersätze für Produkte.</p>
+                    <a href="{% url 'admin_tax_management' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-percent"></i> Steuersätze verwalten
+                    </a>
+                    <a href="{% url 'admin_tax_create' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-plus"></i> Neuer Steuersatz
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
+    {% endif %}
 </div>
 
 <!-- Workflow-Status -->
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Bestellprozess</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-lg-8 mx-auto">
-                        <div class="workflow-diagram">
-                            <div class="d-flex justify-content-between text-center">
-                                <div class="workflow-step {% if workflow_settings.skip_draft_for_small_orders %}workflow-step-optional{% endif %}" data-bs-toggle="tooltip" data-bs-placement="top" title="{% if workflow_settings.skip_draft_for_small_orders %}Optional für kleine Bestellungen{% endif %}">
-                                    <div class="workflow-icon">
-                                        <i class="bi bi-pencil-square"></i>
+{% if user.is_superuser or perms.master_data.view_workflowsettings %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Bestellprozess</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-8 mx-auto">
+                            <div class="workflow-diagram">
+                                <div class="d-flex justify-content-between text-center">
+                                    <div class="workflow-step {% if workflow_settings.skip_draft_for_small_orders %}workflow-step-optional{% endif %}" data-bs-toggle="tooltip" data-bs-placement="top" title="{% if workflow_settings.skip_draft_for_small_orders %}Optional für kleine Bestellungen{% endif %}">
+                                        <div class="workflow-icon">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </div>
+                                        <div class="workflow-text">Entwurf</div>
                                     </div>
-                                    <div class="workflow-text">Entwurf</div>
-                                </div>
-                                <div class="workflow-connector">→</div>
-                                <div class="workflow-step {% if not workflow_settings.order_approval_required %}workflow-step-optional{% endif %}" data-bs-toggle="tooltip" data-bs-placement="top" title="{% if not workflow_settings.order_approval_required %}Optional - basierend auf Einstellungen{% endif %}">
-                                    <div class="workflow-icon">
-                                        <i class="bi bi-clock-history"></i>
+                                    <div class="workflow-connector">→</div>
+                                    <div class="workflow-step {% if not workflow_settings.order_approval_required %}workflow-step-optional{% endif %}" data-bs-toggle="tooltip" data-bs-placement="top" title="{% if not workflow_settings.order_approval_required %}Optional - basierend auf Einstellungen{% endif %}">
+                                        <div class="workflow-icon">
+                                            <i class="bi bi-clock-history"></i>
+                                        </div>
+                                        <div class="workflow-text">Wartend</div>
                                     </div>
-                                    <div class="workflow-text">Wartend</div>
-                                </div>
-                                <div class="workflow-connector">→</div>
-                                <div class="workflow-step {% if not workflow_settings.order_approval_required %}workflow-step-optional{% endif %}" data-bs-toggle="tooltip" data-bs-placement="top" title="{% if not workflow_settings.order_approval_required %}Optional - basierend auf Einstellungen{% endif %}">
-                                    <div class="workflow-icon">
-                                        <i class="bi bi-check-circle"></i>
+                                    <div class="workflow-connector">→</div>
+                                    <div class="workflow-step {% if not workflow_settings.order_approval_required %}workflow-step-optional{% endif %}" data-bs-toggle="tooltip" data-bs-placement="top" title="{% if not workflow_settings.order_approval_required %}Optional - basierend auf Einstellungen{% endif %}">
+                                        <div class="workflow-icon">
+                                            <i class="bi bi-check-circle"></i>
+                                        </div>
+                                        <div class="workflow-text">Genehmigt</div>
                                     </div>
-                                    <div class="workflow-text">Genehmigt</div>
-                                </div>
-                                <div class="workflow-connector">→</div>
-                                <div class="workflow-step">
-                                    <div class="workflow-icon">
-                                        <i class="bi bi-send"></i>
+                                    <div class="workflow-connector">→</div>
+                                    <div class="workflow-step">
+                                        <div class="workflow-icon">
+                                            <i class="bi bi-send"></i>
+                                        </div>
+                                        <div class="workflow-text">Bestellt</div>
                                     </div>
-                                    <div class="workflow-text">Bestellt</div>
-                                </div>
-                                <div class="workflow-connector">→</div>
-                                <div class="workflow-step">
-                                    <div class="workflow-icon">
-                                        <i class="bi bi-box-seam"></i>
+                                    <div class="workflow-connector">→</div>
+                                    <div class="workflow-step">
+                                        <div class="workflow-icon">
+                                            <i class="bi bi-box-seam"></i>
+                                        </div>
+                                        <div class="workflow-text">Erhalten</div>
                                     </div>
-                                    <div class="workflow-text">Erhalten</div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="text-center mt-3">
-                            <a href="{% url 'admin_workflow_settings' %}" class="btn btn-sm btn-primary">
-                                <i class="bi bi-gear"></i> Workflow-Einstellungen anpassen
-                            </a>
+                            <div class="text-center mt-3">
+                                <a href="{% url 'admin_workflow_settings' %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-gear"></i> Workflow-Einstellungen anpassen
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+{% endif %}
 {% endblock %}
 
 {% block admin_extra_js %}

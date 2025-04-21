@@ -13,13 +13,8 @@ from data_operations.views.import_views import (
     import_warehouses,
     import_warehouse_products,
 )
-from data_operations.views.log_views import (
-    bulk_delete_import_logs,
-    delete_import_log,
-    download_error_file,
-    import_log_detail,
-    import_log_list,
-)
+from data_operations.views.log_views import import_log_list, import_log_detail, delete_import_log, download_error_file, \
+    bulk_delete_import_logs
 
 # Die Import-URLs selbst - besser strukturiert mit Gruppierung
 urlpatterns = [

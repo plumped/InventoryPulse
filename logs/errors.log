@@ -9528,3 +9528,183 @@ Traceback (most recent call last):
   File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
     raise NoReverseMatch(msg)
 django.urls.exceptions.NoReverseMatch: Reverse for 'create' not found. 'create' is not a valid view function or pattern name.
+2025-04-21 20:20:37,451 [ERROR] django.request: Internal Server Error: /import/logs/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.
+2025-04-21 20:26:32,927 [ERROR] django.request: Internal Server Error: /import/logs/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.
+2025-04-21 20:30:53,987 [ERROR] django.request: Internal Server Error: /import/logs/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.
+2025-04-21 20:30:54,548 [ERROR] django.request: Internal Server Error: /import/logs/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.
+2025-04-21 20:30:54,768 [ERROR] django.request: Internal Server Error: /import/logs/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.
+2025-04-21 20:30:54,954 [ERROR] django.request: Internal Server Error: /import/logs/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.
+2025-04-21 20:34:15,583 [ERROR] django.request: Internal Server Error: /import/logs/export/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.
+2025-04-21 20:34:21,433 [ERROR] django.request: Internal Server Error: /import/logs/export/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.
+2025-04-21 20:35:32,688 [ERROR] django.request: Internal Server Error: /import/logs/export/
+Traceback (most recent call last):
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 60, in _view_wrapper
+    return view_func(request, *args, **kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 61, in _view_wrapper
+    return _redirect_to_login(request)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\contrib\auth\decorators.py", line 25, in _redirect_to_login
+    resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\shortcuts.py", line 180, in resolve_url
+    return reverse(to, args=args, kwargs=kwargs)
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\base.py", line 88, in reverse
+    return resolver._reverse_with_prefix(view, prefix, *args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\chrsc\PycharmProjects\InventoryPulse\.venv\Lib\site-packages\django\urls\resolvers.py", line 831, in _reverse_with_prefix
+    raise NoReverseMatch(msg)
+django.urls.exceptions.NoReverseMatch: Reverse for 'view' not found. 'view' is not a valid view function or pattern name.

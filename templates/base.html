@@ -492,7 +492,7 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                {% if perms.product_management.add_product %}
+                                {% if perms.product_management.add_productwarehouse %}
                                     <li>
                                         <a class="dropdown-item {% if request.resolver_match.url_name == 'import_warehouse_products' %}active{% endif %}"
                                            href="{% url 'import_warehouse_products' %}">
@@ -516,61 +516,66 @@
                                         </a>
                                     </li>
                                 {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item {% if request.resolver_match.url_name == 'import_log_list' %}active{% endif %}"
-                                       href="{% url 'import_log_list' %}">
-                                        <i class="bi bi-clock-history me-2"></i>Import-Logs
-                                    </a>
-                                </li>
+                                {% if perms.data_operations.view_importlog %}
+                                    <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item {% if request.resolver_match.url_name == 'import_log_list' %}active{% endif %}"
+                                               href="{% url 'import_log_list' %}">
+                                                <i class="bi bi-clock-history me-2"></i>Import-Logs
+                                            </a>
+                                        </li>
+                                {% endif %}
                             </ul>
                         </li>
                     {% endif %}
 
                     <!-- Export Dropdown -->
-                    {% if perms.product.view%}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if 'export' in request.path %}active{% endif %}"
-                           href="#" id="exportDropdown" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-file-earmark-arrow-up"></i> Export
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'export_import_logs' %}?format=csv">
-                                    <i class="bi bi-filetype-csv me-2"></i>Import-Logs (CSV)
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'export_import_logs' %}?format=xlsx">
-                                    <i class="bi bi-filetype-xlsx me-2"></i>Import-Logs (Excel)
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-box-seam me-2"></i>Produktliste
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="bi bi-building me-2"></i>Lagerbestand
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                    {% if perms.data_operations.view_importlog %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'export' in request.path %}active{% endif %}"
+                               href="#" id="exportDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-file-earmark-arrow-up"></i> Export
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'export_import_logs' %}?format=csv">
+                                        <i class="bi bi-filetype-csv me-2"></i>Import-Logs (CSV)
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'export_import_logs' %}?format=xlsx">
+                                        <i class="bi bi-filetype-xlsx me-2"></i>Import-Logs (Excel)
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% if perms.product_management.view_product %}
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="bi bi-box-seam me-2"></i>Produktliste
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                {% if perms.inventory.view_warehouse %}
+                                    <li>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="bi bi-building me-2"></i>Lagerbestand
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
                     {% endif %}
-
                 </ul>
                 <ul class="navbar-nav">
                     <!-- Admin Dashboard für Benutzer mit Admin-Rechten -->
-                    {% if user.is_superuser or perms.admin_dashboard.admin %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'admin-dashboard' in request.path %}active{% endif %}"
-                           href="{% url 'admin_dashboard' %}">
-                           <i class="bi bi-sliders"></i> Admin-Dashboard
-                        </a>
-                    </li>
+                    {% if user.is_superuser or perms.admin_dashboard.view_admin_dashboard %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'admin-dashboard' in request.path %}active{% endif %}"
+                               href="{% url 'admin_dashboard' %}">
+                               <i class="bi bi-sliders"></i> Admin-Dashboard
+                            </a>
+                        </li>
                     {% endif %}
                     <!-- Dark Mode Toggle -->
                     <li class="nav-item me-2">

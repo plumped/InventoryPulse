@@ -4,7 +4,7 @@ import sys
 import django
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group, Permission
 from django.db import connections
 from django.db.models import Q, Count
@@ -100,7 +100,7 @@ def post_save_department(dept, cleaned_data):
 
 
 @login_required
-@staff_member_required
+@permission_required('admin_dashboard.view_admin_dashboard', raise_exception=True)
 def admin_dashboard(request):
     """Main admin dashboard view."""
     logger.info(f"Dashboard accessed by {request.user}.")
@@ -169,7 +169,7 @@ def admin_dashboard(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('auth.view_user', raise_exception=True)
 def user_management(request):
     filters = {
         'search': request.GET.get('search', ''),
@@ -206,7 +206,7 @@ def user_management(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('auth.add_user', raise_exception=True)
 def user_create(request):
     return handle_form_view(
         request,
@@ -223,7 +223,7 @@ def user_create(request):
     )
 
 @login_required
-@staff_member_required
+@permission_required('auth.change_user', raise_exception=True)
 def user_edit(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     try:
@@ -253,7 +253,7 @@ def user_edit(request, user_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('auth.delete_user', raise_exception=True)
 def user_delete(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     if request.method == 'POST':
@@ -268,7 +268,7 @@ def user_delete(request, user_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('auth.view_group', raise_exception=True)
 def group_management(request):
     log_list_view_usage(request, view_name="group_management")
     groups = Group.objects.annotate(user_count=Count('user'))

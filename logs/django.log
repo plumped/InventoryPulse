@@ -6911,3 +6911,413 @@
 2025-04-21 18:46:22,724 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
 2025-04-21 18:46:24,241 [INFO] django.server: "GET /import/products/ HTTP/1.1" 200 38506
 2025-04-21 18:46:37,354 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\models\importers_models.py changed, reloading.
+2025-04-21 18:46:38,157 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:11:21,052 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:11:21,793 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:11:29,353 [INFO] django.server: "GET /import/ HTTP/1.1" 200 39079
+2025-04-21 20:11:32,571 [INFO] django.server: "GET /import/suppliers/ HTTP/1.1" 200 37386
+2025-04-21 20:12:03,250 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:12:03,968 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:12:06,030 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:12:06.030016", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:12:06,030 [INFO] django.server: "GET /admin/auth/permission/?q=categories HTTP/1.1" 200 19737
+2025-04-21 20:12:06,046 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:12:06.046394", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:12:06,046 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:12:09,183 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:12:09.183366", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:12:09,183 [INFO] django.server: "GET /admin/auth/permission/?q=category%C2%A8 HTTP/1.1" 200 19813
+2025-04-21 20:12:09,197 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:12:09.197257", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:12:09,197 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:12:11,243 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:12:11.243471", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:12:11,243 [INFO] django.server: "GET /admin/auth/permission/?q=category HTTP/1.1" 200 23281
+2025-04-21 20:12:11,256 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:12:11.256604", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:12:11,256 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:12:32,615 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:12:33,320 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:12:37,554 [INFO] django.server: "GET /import/ HTTP/1.1" 200 39079
+2025-04-21 20:12:39,922 [INFO] django.server: "GET /import/categories/ HTTP/1.1" 200 37180
+2025-04-21 20:12:57,868 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:12:58,548 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:13:02,821 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:13:02.821488", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:13:02,821 [INFO] django.server: "GET /admin/auth/permission/?q=supplier HTTP/1.1" 200 37761
+2025-04-21 20:13:02,837 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:13:02.837197", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:13:02,837 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:13:18,679 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:13:19,357 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:13:30,453 [INFO] django.server: "GET /import/supplier-products/ HTTP/1.1" 200 37712
+2025-04-21 20:20:37,453 [ERROR] django.server: "GET /import/logs/ HTTP/1.1" 500 101693
+2025-04-21 20:21:32,294 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:21:32,987 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:21:37,394 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:21:37.394365", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:21:37,394 [INFO] django.server: "GET /admin/auth/permission/?q=ware HTTP/1.1" 200 30486
+2025-04-21 20:21:37,413 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:21:37.413753", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:21:37,414 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:21:56,245 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:21:56,934 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:22:03,338 [INFO] django.server: "GET /import/warehouses/ HTTP/1.1" 200 36753
+2025-04-21 20:22:21,240 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:22:21,987 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:22:24,367 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:22:24.367815", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:22:24,368 [INFO] django.server: "GET /admin/auth/permission/?q=departm HTTP/1.1" 200 23200
+2025-04-21 20:22:24,385 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:22:24.385565", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:22:24,385 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:22:47,335 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:22:48,025 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:22:54,326 [INFO] django.server: "GET /import/departments/ HTTP/1.1" 200 36770
+2025-04-21 20:22:56,965 [INFO] django.server: "GET /import/warehouse-products/ HTTP/1.1" 302 0
+2025-04-21 20:22:56,976 [INFO] django.server: "GET /login/?next=/import/warehouse-products/ HTTP/1.1" 200 3344
+2025-04-21 20:23:18,642 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:23:19,342 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:23:22,074 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:23:22.074234", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:23:22,074 [INFO] django.server: "GET /admin/auth/permission/?q=wareh HTTP/1.1" 200 30525
+2025-04-21 20:23:22,090 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:23:22.090858", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:23:22,091 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:23:43,668 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:23:44,377 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:24:12,720 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:24:13,391 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:24:14,195 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:24:14.195375", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:24:14,195 [INFO] django.server: "GET /admin/auth/permission/?q=serial HTTP/1.1" 200 23209
+2025-04-21 20:24:14,213 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:24:14.213083", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:24:14,213 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:24:28,139 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:24:28,820 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:24:33,355 [INFO] django.server: "GET /import/serialnumbers/ HTTP/1.1" 200 37677
+2025-04-21 20:25:04,710 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\import_views.py changed, reloading.
+2025-04-21 20:25:05,502 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:25:46,044 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:25:46.044087", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:25:46,044 [INFO] django.server: "GET /admin/auth/permission/?q=wareh HTTP/1.1" 200 30525
+2025-04-21 20:25:46,058 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:25:46.058395", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:25:46,058 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:26:01,276 [INFO] django.server: "GET /import/ HTTP/1.1" 200 39079
+2025-04-21 20:26:03,194 [INFO] django.server: "GET /import/warehouse-products/ HTTP/1.1" 200 36812
+2025-04-21 20:26:32,929 [ERROR] django.server: "GET /import/logs/ HTTP/1.1" 500 101693
+2025-04-21 20:30:51,013 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\urls.py changed, reloading.
+2025-04-21 20:30:51,687 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:30:53,988 [ERROR] django.server: "GET /import/logs/ HTTP/1.1" 500 101830
+2025-04-21 20:30:54,549 [ERROR] django.server: "GET /import/logs/ HTTP/1.1" 500 101830
+2025-04-21 20:30:54,769 [ERROR] django.server: "GET /import/logs/ HTTP/1.1" 500 101830
+2025-04-21 20:30:54,955 [ERROR] django.server: "GET /import/logs/ HTTP/1.1" 500 101830
+2025-04-21 20:31:44,470 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:31:45,197 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:31:46,119 [INFO] django.server: "GET /import/logs/ HTTP/1.1" 200 44502
+2025-04-21 20:32:09,426 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:32:10,156 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:32:13,875 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:32:13.875672", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:32:13,876 [INFO] django.server: "GET /admin/auth/permission/?q=log HTTP/1.1" 200 30299
+2025-04-21 20:32:13,891 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:32:13.891806", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:32:13,892 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:32:29,253 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:32:29,933 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:32:34,047 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:32:34,737 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:32:39,687 [INFO] django.server: "GET /import/logs/ HTTP/1.1" 200 44502
+2025-04-21 20:33:09,691 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:33:10,398 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:33:15,871 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:33:15.871534", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:33:15,872 [INFO] django.server: "GET /admin/auth/permission/?q=error HTTP/1.1" 200 23242
+2025-04-21 20:33:15,887 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:33:15.887721", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:33:15,888 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:33:31,550 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:33:32,262 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:33:46,920 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:33:47,617 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:33:48,815 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:33:48.815476", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:33:48,816 [INFO] django.server: "GET /admin/auth/permission/?q=import HTTP/1.1" 200 28539
+2025-04-21 20:33:48,833 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:33:48.833886", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:33:48,834 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:33:57,016 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:33:57,694 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:34:06,046 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\log_views.py changed, reloading.
+2025-04-21 20:34:06,723 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:34:11,197 [INFO] django.server: "GET /import/logs/ HTTP/1.1" 200 44502
+2025-04-21 20:34:15,585 [ERROR] django.server: "GET /import/logs/export/?format=csv HTTP/1.1" 500 102219
+2025-04-21 20:34:21,434 [ERROR] django.server: "GET /import/logs/export/?format=xlsx HTTP/1.1" 500 102229
+2025-04-21 20:35:31,234 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 44502
+2025-04-21 20:35:32,689 [ERROR] django.server: "GET /import/logs/export/?format=csv HTTP/1.1" 500 102259
+2025-04-21 20:36:22,629 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\export_views.py changed, reloading.
+2025-04-21 20:36:23,365 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:36:25,435 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:36:25.435395", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:36:25,435 [INFO] django.server: "GET /admin/auth/permission/?q=export HTTP/1.1" 200 19661
+2025-04-21 20:36:25,450 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:36:25.450388", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:36:25,450 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:36:27,486 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:36:27.486175", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:36:27,486 [INFO] django.server: "GET /admin/auth/permission/?q=logs HTTP/1.1" 200 19623
+2025-04-21 20:36:27,499 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:36:27.499368", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:36:27,499 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:36:29,247 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:36:29.247125", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:36:29,247 [INFO] django.server: "GET /admin/auth/permission/?q=log HTTP/1.1" 200 30299
+2025-04-21 20:36:29,260 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:36:29.260868", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:36:29,261 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:36:44,591 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\data_operations\views\export_views.py changed, reloading.
+2025-04-21 20:36:45,311 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:36:50,875 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 44502
+2025-04-21 20:36:52,936 [INFO] django.server: "GET /import/logs/export/?format=csv HTTP/1.1" 200 92
+2025-04-21 20:37:45,250 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 44198
+2025-04-21 20:38:30,013 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 44592
+2025-04-21 20:38:51,072 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 44620
+2025-04-21 20:39:37,286 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 46440
+2025-04-21 20:40:21,117 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:40:21.117539", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:40:21,117 [INFO] django.server: "GET /admin/auth/permission/?q=product HTTP/1.1" 200 37778
+2025-04-21 20:40:21,133 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:40:21.133697", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:40:21,134 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:40:55,573 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:40:55.573658", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:40:55,574 [INFO] django.server: "GET /admin/auth/permission/?q=inventor HTTP/1.1" 200 19699
+2025-04-21 20:40:55,589 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:40:55.589439", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:40:55,589 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:40:57,998 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:40:57.998590", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:40:57,998 [INFO] django.server: "GET /admin/auth/permission/?q=stock HTTP/1.1" 200 27664
+2025-04-21 20:40:58,012 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:40:58.012249", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:40:58,012 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:41:04,316 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:41:04.316798", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:41:04,317 [INFO] django.server: "GET /admin/auth/permission/?q=warehouse HTTP/1.1" 200 30681
+2025-04-21 20:41:04,332 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:41:04.332792", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:41:04,333 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:41:40,024 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 46612
+2025-04-21 20:42:14,037 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:42:14.037673", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:42:14,038 [INFO] django.server: "GET /admin/auth/permission/?q=admin HTTP/1.1" 200 19642
+2025-04-21 20:42:14,051 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:42:14.051648", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:42:14,052 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:42:18,019 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:42:18.019029", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:42:18,019 [INFO] django.server: "GET /admin/auth/permission/?q=dashboard HTTP/1.1" 200 21642
+2025-04-21 20:42:18,034 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:42:18.034084", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:42:18,034 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:43:23,756 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\models.py changed, reloading.
+2025-04-21 20:43:24,281 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:43:32,603 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\models.py changed, reloading.
+2025-04-21 20:43:33,173 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:43:45,715 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\models.py changed, reloading.
+2025-04-21 20:43:46,401 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:43:57,831 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:44:00,277 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:44:00.277386", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:44:00,277 [INFO] django.server: "GET /admin/auth/permission/?q=dashboard HTTP/1.1" 200 22381
+2025-04-21 20:44:00,291 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:44:00.291547", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:44:00,291 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:44:16,869 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\models.py changed, reloading.
+2025-04-21 20:44:17,562 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:44:24,830 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:44:26,421 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:44:26.421468", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:44:26,421 [INFO] django.server: "GET /admin/auth/permission/?q=dashboard HTTP/1.1" 200 23007
+2025-04-21 20:44:26,435 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:44:26.435511", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:44:26,435 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:44:32,110 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:44:32.110508", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "POST"}}
+2025-04-21 20:44:32,110 [INFO] django.server: "POST /admin/auth/permission/?q=dashboard HTTP/1.1" 200 16948
+2025-04-21 20:44:32,926 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:44:32.926919", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "POST"}}
+2025-04-21 20:44:32,927 [INFO] django.server: "POST /admin/auth/permission/?q=dashboard HTTP/1.1" 302 0
+2025-04-21 20:44:32,940 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:44:32.940122", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:44:32,940 [INFO] django.server: "GET /admin/auth/permission/?q=dashboard HTTP/1.1" 200 22518
+2025-04-21 20:44:32,955 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:44:32.955264", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:44:32,955 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:45:01,087 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:45:01.087751", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/user/", "details": {"method": "GET"}}
+2025-04-21 20:45:01,088 [INFO] django.server: "GET /admin/auth/user/ HTTP/1.1" 200 22563
+2025-04-21 20:45:01,102 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:45:01.102695", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:45:01,103 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:45:02,088 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:45:02.088549", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/user/2/change/", "details": {"method": "GET"}}
+2025-04-21 20:45:02,088 [INFO] django.server: "GET /admin/auth/user/2/change/ HTTP/1.1" 200 54255
+2025-04-21 20:45:02,103 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:45:02.103651", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:45:02,104 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:45:37,947 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:45:37.947207", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:45:37,947 [INFO] django.server: "GET /admin/auth/permission/ HTTP/1.1" 200 77813
+2025-04-21 20:45:37,961 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:45:37.961955", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:45:37,962 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:45:40,936 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:45:40.936807", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:45:40,937 [INFO] django.server: "GET /admin/auth/permission/?q=dashboard HTTP/1.1" 200 22378
+2025-04-21 20:45:40,952 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:45:40.952722", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:45:40,953 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:46:00,765 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 46920
+2025-04-21 20:46:02,413 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 302 0
+2025-04-21 20:46:02,427 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:46:02.427676", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin/login/", "details": {"method": "GET"}}
+2025-04-21 20:46:02,428 [INFO] django.server: "GET /admin/login/?next=/admin-dashboard/ HTTP/1.1" 200 3696
+2025-04-21 20:46:02,448 [INFO] django.server: "GET /static/admin/css/base.css HTTP/1.1" 304 0
+2025-04-21 20:46:02,449 [INFO] django.server: "GET /static/admin/css/dark_mode.css HTTP/1.1" 304 0
+2025-04-21 20:46:02,450 [INFO] django.server: "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 304 0
+2025-04-21 20:46:02,450 [INFO] django.server: "GET /static/admin/css/login.css HTTP/1.1" 200 951
+2025-04-21 20:46:02,451 [INFO] django.server: "GET /static/admin/css/responsive.css HTTP/1.1" 304 0
+2025-04-21 20:46:02,451 [INFO] django.server: "GET /static/admin/js/theme.js HTTP/1.1" 304 0
+2025-04-21 20:46:02,453 [INFO] django.server: "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 304 0
+2025-04-21 20:46:52,353 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 302 0
+2025-04-21 20:46:52,364 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:46:52.364119", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin/login/", "details": {"method": "GET"}}
+2025-04-21 20:46:52,364 [INFO] django.server: "GET /admin/login/?next=/admin-dashboard/ HTTP/1.1" 200 3696
+2025-04-21 20:47:26,159 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:47:26,884 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:47:39,011 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:47:39,666 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:47:42,573 [INFO] django.server: "GET /import/logs/?search=&status=&type=&user= HTTP/1.1" 200 46920
+2025-04-21 20:47:43,797 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:47:43,808 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56359
+2025-04-21 20:47:56,309 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 302 0
+2025-04-21 20:47:56,340 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:47:56.339999", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin/login/", "details": {"method": "GET"}}
+2025-04-21 20:47:56,342 [INFO] django.server: "GET /admin/login/?next=/admin-dashboard/users/ HTTP/1.1" 200 3708
+2025-04-21 20:48:08,328 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:48:08.328733", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:48:08,329 [INFO] django.server: "GET /admin/auth/permission/?q=user HTTP/1.1" 200 25663
+2025-04-21 20:48:08,342 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:48:08.342628", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:48:08,343 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:48:55,906 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:48:56,588 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:49:08,081 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:49:08,775 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:49:10,939 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:49:10,992 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56359
+2025-04-21 20:49:11,855 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-21 20:49:11,861 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 54593
+2025-04-21 20:49:15,003 [INFO] django.server: "GET /admin-dashboard/users/create/ HTTP/1.1" 302 0
+2025-04-21 20:49:15,021 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:49:15.021780", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin/login/", "details": {"method": "GET"}}
+2025-04-21 20:49:15,022 [INFO] django.server: "GET /admin/login/?next=/admin-dashboard/users/create/ HTTP/1.1" 200 3722
+2025-04-21 20:49:29,134 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:49:29,947 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:49:30,620 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'user_management', 'filters': {'search': '', 'status': '', 'group': ''}, 'sort_by': 'username', 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/users/'}
+2025-04-21 20:49:30,673 [INFO] django.server: "GET /admin-dashboard/users/ HTTP/1.1" 200 54593
+2025-04-21 20:49:31,755 [INFO] django.server: "GET /admin-dashboard/users/create/ HTTP/1.1" 200 48022
+2025-04-21 20:49:45,776 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:49:46,545 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:49:49,664 [INFO] django.server: "GET /admin-dashboard/users/1/edit/ HTTP/1.1" 200 47118
+2025-04-21 20:50:20,633 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:50:21,331 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:50:46,883 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:50:46.883192", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:50:46,883 [INFO] django.server: "GET /admin/auth/permission/?q=group HTTP/1.1" 200 23268
+2025-04-21 20:50:46,899 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:50:46.899583", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:50:46,899 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:50:54,062 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:50:54,743 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:50:58,893 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\views.py changed, reloading.
+2025-04-21 20:50:59,567 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 20:51:58,274 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:51:58,327 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56359
+2025-04-21 20:52:36,417 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:52:36,429 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56432
+2025-04-21 20:53:17,352 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:53:17,364 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56514
+2025-04-21 20:53:54,722 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:53:54.722183", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:53:54,722 [INFO] django.server: "GET /admin/auth/permission/?q=depart HTTP/1.1" 200 23278
+2025-04-21 20:53:54,737 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:53:54.736991", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:53:54,737 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:54:26,134 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:54:26,148 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56587
+2025-04-21 20:54:44,763 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:54:44.763940", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:54:44,764 [INFO] django.server: "GET /admin/auth/permission/?q=wareho HTTP/1.1" 200 30669
+2025-04-21 20:54:44,781 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:54:44.781028", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:54:44,781 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:55:42,690 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:55:42.690898", "event_type": "permission_denied", "user": "testino", "ip_address": "127.0.0.1", "resource": "/interfaces/", "details": {"method": "GET"}}
+2025-04-21 20:55:42,691 [WARNING] django.server: "GET /interfaces/ HTTP/1.1" 403 135
+2025-04-21 20:56:25,781 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:56:25.781412", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 20:56:25,781 [INFO] django.server: "GET /admin/auth/permission/?q=interface HTTP/1.1" 200 28724
+2025-04-21 20:56:25,796 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:56:25.796538", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:56:25,796 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:56:47,264 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:56:47,276 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56662
+2025-04-21 20:56:48,854 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:56:48,863 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56662
+2025-04-21 20:57:15,922 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:57:15,931 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56662
+2025-04-21 20:57:27,861 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:57:27.861674", "event_type": "permission_denied", "user": "testino", "ip_address": "127.0.0.1", "resource": "/interfaces/", "details": {"method": "GET"}}
+2025-04-21 20:57:27,862 [WARNING] django.server: "GET /interfaces/ HTTP/1.1" 403 135
+2025-04-21 20:57:31,304 [INFO] django.server: "GET /admin-dashboard/interfaces/ HTTP/1.1" 302 0
+2025-04-21 20:57:31,318 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:57:31.318590", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin/login/", "details": {"method": "GET"}}
+2025-04-21 20:57:31,318 [INFO] django.server: "GET /admin/login/?next=/admin-dashboard/interfaces/ HTTP/1.1" 200 3718
+2025-04-21 20:57:33,865 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:57:33.865530", "event_type": "permission_denied", "user": "testino", "ip_address": "127.0.0.1", "resource": "/interfaces/", "details": {"method": "GET"}}
+2025-04-21 20:57:33,865 [WARNING] django.server: "GET /interfaces/ HTTP/1.1" 403 135
+2025-04-21 20:57:47,541 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:57:47.541140", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/", "details": {"method": "GET"}}
+2025-04-21 20:57:47,541 [INFO] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 22809
+2025-04-21 20:57:47,554 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:57:47.554807", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:57:47,555 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:57:48,743 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:57:48.743340", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/2/change/", "details": {"method": "GET"}}
+2025-04-21 20:57:48,743 [INFO] django.server: "GET /admin/auth/group/2/change/ HTTP/1.1" 200 46314
+2025-04-21 20:57:48,759 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:57:48.759140", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:57:48,759 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:58:37,945 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:58:37.944977", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/2/change/", "details": {"method": "POST"}}
+2025-04-21 20:58:37,945 [INFO] django.server: "POST /admin/auth/group/2/change/ HTTP/1.1" 302 0
+2025-04-21 20:58:37,963 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:58:37.963785", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/", "details": {"method": "GET"}}
+2025-04-21 20:58:37,964 [INFO] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 23019
+2025-04-21 20:58:37,978 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:58:37.978817", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:58:37,979 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 20:58:41,790 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 20:58:41,801 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 55218
+2025-04-21 20:59:00,693 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:59:00.693703", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/2/change/", "details": {"method": "GET"}}
+2025-04-21 20:59:00,694 [INFO] django.server: "GET /admin/auth/group/2/change/ HTTP/1.1" 200 46305
+2025-04-21 20:59:00,707 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T20:59:00.707165", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 20:59:00,707 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:00:26,413 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:26.413444", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:00:26,413 [INFO] django.server: "GET /admin/auth/permission/ HTTP/1.1" 200 77813
+2025-04-21 21:00:26,428 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:26.428177", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:00:26,428 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:00:36,552 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:36.552270", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/", "details": {"method": "GET"}}
+2025-04-21 21:00:36,552 [INFO] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 22809
+2025-04-21 21:00:36,567 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:36.567042", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:00:36,567 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:00:38,345 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:38.345445", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/2/change/", "details": {"method": "GET"}}
+2025-04-21 21:00:38,345 [INFO] django.server: "GET /admin/auth/group/2/change/ HTTP/1.1" 200 46305
+2025-04-21 21:00:38,360 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:38.360530", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:00:38,360 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:00:40,428 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:40.428375", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/2/change/", "details": {"method": "POST"}}
+2025-04-21 21:00:40,428 [INFO] django.server: "POST /admin/auth/group/2/change/ HTTP/1.1" 302 0
+2025-04-21 21:00:40,448 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:40.448900", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/", "details": {"method": "GET"}}
+2025-04-21 21:00:40,449 [INFO] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 23019
+2025-04-21 21:00:40,464 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:00:40.464487", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:00:40,464 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:00:43,545 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 21:00:43,557 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56688
+2025-04-21 21:01:08,950 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:08.950077", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:01:08,950 [INFO] django.server: "GET /admin/auth/permission/ HTTP/1.1" 200 77813
+2025-04-21 21:01:08,964 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:08.964036", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:01:08,964 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:01:11,005 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:11.005650", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/", "details": {"method": "GET"}}
+2025-04-21 21:01:11,006 [INFO] django.server: "GET /admin/auth/group/ HTTP/1.1" 200 22809
+2025-04-21 21:01:11,019 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:11.019854", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:01:11,020 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:01:13,105 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:13.105328", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/group/2/change/", "details": {"method": "GET"}}
+2025-04-21 21:01:13,105 [INFO] django.server: "GET /admin/auth/group/2/change/ HTTP/1.1" 200 46314
+2025-04-21 21:01:13,119 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:13.119413", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:01:13,119 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:01:33,018 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:33.018285", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:01:33,018 [INFO] django.server: "GET /admin/auth/permission/ HTTP/1.1" 200 77813
+2025-04-21 21:01:33,034 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:33.034173", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:01:33,034 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:01:36,561 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:36.561418", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:01:36,561 [INFO] django.server: "GET /admin/auth/permission/?q=log HTTP/1.1" 200 30401
+2025-04-21 21:01:36,577 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:01:36.577921", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:01:36,578 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:02:30,602 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 21:02:30,619 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 56694
+2025-04-21 21:04:02,819 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:04:02.818986", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:04:02,819 [INFO] django.server: "GET /admin/auth/permission/?q=group HTTP/1.1" 200 23268
+2025-04-21 21:04:02,835 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:04:02.835199", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:04:02,835 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:06:09,117 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:06:09.117120", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:06:09,117 [INFO] django.server: "GET /admin/auth/permission/?q=interface HTTP/1.1" 200 28724
+2025-04-21 21:06:09,132 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:06:09.132912", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:06:09,133 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:06:57,565 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:06:57.565307", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:06:57,565 [INFO] django.server: "GET /admin/auth/permission/?q=tax HTTP/1.1" 200 23266
+2025-04-21 21:06:57,580 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:06:57.580595", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:06:57,580 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:07:33,842 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 21:07:33,855 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 55644
+2025-04-21 21:07:39,455 [INFO] django.server: "GET /admin-dashboard/interfaces/ HTTP/1.1" 302 0
+2025-04-21 21:07:39,468 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:07:39.468431", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin/login/", "details": {"method": "GET"}}
+2025-04-21 21:07:39,468 [INFO] django.server: "GET /admin/login/?next=/admin-dashboard/interfaces/ HTTP/1.1" 200 3718
+2025-04-21 21:07:43,883 [INFO] django.server: "GET /admin-dashboard/taxes/ HTTP/1.1" 302 0
+2025-04-21 21:07:43,893 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:07:43.893179", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin/login/", "details": {"method": "GET"}}
+2025-04-21 21:07:43,893 [INFO] django.server: "GET /admin/login/?next=/admin-dashboard/taxes/ HTTP/1.1" 200 3708
+2025-04-21 21:07:46,792 [INFO] django.server: "GET /admin-dashboard/taxes/ HTTP/1.1" 302 0
+2025-04-21 21:07:46,801 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:07:46.801345", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin/login/", "details": {"method": "GET"}}
+2025-04-21 21:07:46,801 [INFO] django.server: "GET /admin/login/?next=/admin-dashboard/taxes/ HTTP/1.1" 200 3708
+2025-04-21 21:08:00,042 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:08:00.042236", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:08:00,042 [INFO] django.server: "GET /admin/auth/permission/?q=work HTTP/1.1" 200 23462
+2025-04-21 21:08:00,059 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:08:00.058978", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:08:00,059 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:08:45,947 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 21:08:45,960 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 55878
+2025-04-21 21:09:11,659 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 21:09:11,667 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 55878
+2025-04-21 21:09:14,953 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 21:09:14,961 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 55878
+2025-04-21 21:10:00,715 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-21 21:10:00,728 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 55998
+2025-04-21 21:10:01,665 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-21 21:10:01,679 [INFO] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 64213
+2025-04-21 21:10:24,504 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:10:24.504317", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:10:24,504 [INFO] django.server: "GET /admin/auth/permission/?q=depart HTTP/1.1" 200 23278
+2025-04-21 21:10:24,518 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:10:24.518915", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:10:24,519 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342
+2025-04-21 21:10:48,499 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:10:48.499016", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/auth/permission/", "details": {"method": "GET"}}
+2025-04-21 21:10:48,499 [INFO] django.server: "GET /admin/auth/permission/?q=ware HTTP/1.1" 200 30589
+2025-04-21 21:10:48,512 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-21T21:10:48.512814", "event_type": "sensitive_data_access", "user": "chrigi", "ip_address": "127.0.0.1", "resource": "/admin/jsi18n/", "details": {"method": "GET"}}
+2025-04-21 21:10:48,513 [INFO] django.server: "GET /admin/jsi18n/ HTTP/1.1" 200 3342

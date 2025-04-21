@@ -11,7 +11,7 @@ from data_operations.models.importers_models import ImportLog
 
 
 @login_required
-@permission_required('report', 'view')
+@permission_required('data_operations.view_importlog', raise_exception=True)
 def export_import_logs(request):
     """Export import logs to CSV or Excel."""
     # Base queryset

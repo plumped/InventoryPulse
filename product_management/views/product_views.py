@@ -9,9 +9,9 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 
 from accessmanagement.models import WarehouseAccess
-from core.utils.access import has_object_permission
 from core.utils.pagination import paginate_queryset
 from core.utils.products import get_filtered_products
+from core.utils.view_helpers import check_permission
 from inventory.models import Warehouse, StockMovement
 from product_management.forms.product_forms import ProductForm
 from product_management.models.categories_models import Category
@@ -96,7 +96,7 @@ def product_update(request, pk):
     product = get_object_or_404(Product, pk=pk)
 
     # Check if user has permission to edit this specific product
-    if not request.user.is_superuser and not has_object_permission(request.user, product, 'edit'):
+    if not check_permission(request.user, product, 'edit', 'product_management.change_product'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Produkt zu bearbeiten.")
 
     # Lager abrufen, auf die der Benutzer Zugriff hat
@@ -164,11 +164,11 @@ def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
 
     # Check if user has permission to view this specific product
-    if not request.user.is_superuser and not has_object_permission(request.user, product, 'view'):
+    if not check_permission(request.user, product, 'view', 'product_management.view_product'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Produkt anzusehen.")
 
     # Check if user has permission to edit this specific product
-    can_edit = request.user.is_superuser or has_object_permission(request.user, product, 'edit')
+    can_edit = check_permission(request.user, product, 'edit', 'product_management.change_product')
 
     # Lieferanteninformationen
     supplier_products = SupplierProduct.objects.filter(product=product).select_related('supplier')

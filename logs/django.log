@@ -6089,3 +6089,48 @@
 2025-04-21 15:52:14,565 [INFO] django.server: "GET /products/ HTTP/1.1" 200 13757
 2025-04-21 15:52:15,575 [INFO] accessmanagement: User testino granted view access to product 1 (Reinigungstücher) via warehouse access to Test
 2025-04-21 15:52:15,586 [INFO] django.server: "GET /products/1/ HTTP/1.1" 200 23374
+2025-04-21 15:57:05,716 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\documents\views.py changed, reloading.
+2025-04-21 15:57:06,434 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:57:14,871 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\documents\views.py changed, reloading.
+2025-04-21 15:57:15,628 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:57:34,641 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\documents\views.py changed, reloading.
+2025-04-21 15:57:35,428 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:57:43,859 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\documents\views.py changed, reloading.
+2025-04-21 15:57:44,625 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:58:02,539 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\category_views.py changed, reloading.
+2025-04-21 15:58:03,301 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:58:11,788 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\views\category_views.py changed, reloading.
+2025-04-21 15:58:12,505 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:58:33,619 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:58:34,361 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:58:42,874 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:58:43,724 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:58:54,343 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:58:55,184 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:59:03,753 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:59:04,534 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:59:13,109 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:59:13,907 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:59:30,905 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:59:31,617 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 15:59:53,755 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 15:59:54,501 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:00:12,462 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\views.py changed, reloading.
+2025-04-21 16:00:13,190 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:00:34,341 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-21 16:00:35,044 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:00:44,498 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-21 16:00:45,216 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:01:04,186 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-21 16:01:04,991 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:01:37,851 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-21 16:01:38,734 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:01:48,364 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-21 16:01:49,124 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:02:01,816 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\rma\views.py changed, reloading.
+2025-04-21 16:02:02,535 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:03:27,226 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\documents\views.py changed, reloading.
+2025-04-21 16:03:28,048 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-21 16:03:30,053 [INFO] django.server: "GET /products/ HTTP/1.1" 200 13757
+2025-04-21 16:03:31,264 [INFO] accessmanagement: User testino granted view access to product 1 (Reinigungstücher) via warehouse access to Test
+2025-04-21 16:03:31,278 [INFO] django.server: "GET /products/1/ HTTP/1.1" 200 23374

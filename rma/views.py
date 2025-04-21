@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 
-from core.utils.access import has_object_permission
+from core.utils.view_helpers import check_permission
 from inventory.models import StockMovement
 from master_data.models.addresses_models import CompanyAddress, CompanyAddressType
 from order.models import PurchaseOrder, PurchaseOrderReceiptItem, PurchaseOrderReceipt
@@ -129,7 +129,7 @@ def rma_detail(request, pk):
     )
 
     # Check if user has permission to view this specific RMA
-    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'view'):
+    if not check_permission(request.user, rma, 'view', 'rma.view_rma'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese RMA anzusehen.")
 
     # Group items by resolution
@@ -165,15 +165,9 @@ def rma_detail(request, pk):
     # This would connect to some document templates in the future
 
     # Check user permissions
-    can_edit = (request.user.is_superuser or 
-               (request.user.has_perm('rma.change_rma') and 
-                has_object_permission(request.user, rma, 'edit'))) and rma.status in [RMAStatus.DRAFT]
-    can_approve = (request.user.is_superuser or 
-                  (request.user.has_perm('rma.change_rma') and 
-                   has_object_permission(request.user, rma, 'edit'))) and rma.status == RMAStatus.PENDING
-    can_resolve = (request.user.is_superuser or 
-                  (request.user.has_perm('rma.change_rma') and 
-                   has_object_permission(request.user, rma, 'edit'))) and rma.status in [RMAStatus.SENT, RMAStatus.APPROVED]
+    can_edit = check_permission(request.user, rma, 'edit', 'rma.change_rma', [RMAStatus.DRAFT])
+    can_approve = check_permission(request.user, rma, 'edit', 'rma.change_rma', RMAStatus.PENDING)
+    can_resolve = check_permission(request.user, rma, 'edit', 'rma.change_rma', [RMAStatus.SENT, RMAStatus.APPROVED])
 
     # Forms for changing RMA status
     if request.method == 'POST':
@@ -383,7 +377,7 @@ def rma_update(request, pk):
     rma = get_object_or_404(RMA, pk=pk)
 
     # Check if user has permission to edit this specific RMA
-    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'edit'):
+    if not check_permission(request.user, rma, 'edit', 'rma.change_rma'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese RMA zu bearbeiten.")
 
     # Only allow editing if RMA is in draft status
@@ -426,7 +420,7 @@ def rma_add_item(request, pk, receipt_item_id=None):
     rma = get_object_or_404(RMA, pk=pk)
 
     # Check if user has permission to add items to this specific RMA
-    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'edit'):
+    if not check_permission(request.user, rma, 'edit', 'rma.change_rma'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, Positionen zu dieser RMA hinzuzufügen.")
 
     # Only allow adding items if RMA is in draft status
@@ -538,7 +532,7 @@ def rma_edit_item(request, pk, item_id):
     item = get_object_or_404(RMAItem, pk=item_id, rma=rma)
 
     # Check if user has permission to edit this specific RMA
-    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'edit'):
+    if not check_permission(request.user, rma, 'edit', 'rma.change_rma'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, Positionen dieser RMA zu bearbeiten.")
 
     # Only allow editing if RMA is in draft status
@@ -618,7 +612,7 @@ def rma_delete_item(request, pk, item_id):
     item = get_object_or_404(RMAItem, pk=item_id, rma=rma)
 
     # Check if user has permission to delete items from this specific RMA
-    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'edit'):
+    if not check_permission(request.user, rma, 'edit', 'rma.change_rma'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, Positionen dieser RMA zu löschen.")
 
     # Only allow deleting if RMA is in draft status
@@ -717,7 +711,7 @@ def rma_delete(request, pk):
     rma = get_object_or_404(RMA, pk=pk)
 
     # Check if user has permission to delete this specific RMA
-    if not request.user.is_superuser and not has_object_permission(request.user, rma, 'delete'):
+    if not check_permission(request.user, rma, 'delete', 'rma.delete_rma'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese RMA zu löschen.")
 
     # Only allow deleting if RMA is in draft status

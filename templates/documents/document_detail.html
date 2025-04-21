@@ -2,6 +2,7 @@
 {% load static %}
 {% load document_tags %}
 {% load access_tags %}
+{% load permission_tags %}
 
 {% block title %}{{ document.title }} - Document Detail - InventoryPulse{% endblock %}
 
@@ -124,20 +125,20 @@
                 </a>
                 {% endif %}
                 {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
-                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                    {% if user|has_permission:('edit', document, 'documents.change_document') %}
                     <a href="{% url 'document_process' document.id %}" class="btn btn-primary">
                         <i class="bi bi-arrow-repeat"></i> Process Document
                     </a>
                     {% endif %}
                 {% endif %}
                 {% if document.is_processed and not document.matched_order %}
-                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                    {% if user|has_permission:('edit', document, 'documents.change_document') %}
                     <a href="{% url 'document_match' document.id %}" class="btn btn-success">
                         <i class="bi bi-link"></i> Match to Order
                     </a>
                     {% endif %}
                 {% endif %}
-                {% if user.is_superuser or user|has_object_permission:(document, 'delete') %}
+                {% if user|has_permission:('delete', document, 'documents.delete_document') %}
                 <a href="{% url 'document_delete' document.id %}" class="btn btn-outline-danger">
                     <i class="bi bi-trash"></i> Delete
                 </a>
@@ -254,7 +255,7 @@
                                     <i class="bi bi-eye"></i> View
                                 </a>
                                 {% if document.is_processed and not document.matched_template %}
-                                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                                    {% if user|has_permission:('edit', document, 'documents.change_document') %}
                                     <form method="post" action="{% url 'match_document_to_template' document.id template.id %}" class="d-inline">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-outline-success">
@@ -279,7 +280,7 @@
             {% endif %}
 
             <!-- Match Form -->
-            {% if match_form and not document.matched_order and user|has_object_permission:(document, 'edit') %}
+            {% if match_form and not document.matched_order and user|has_permission:('edit', document, 'documents.change_document') %}
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0">Match to Order</h5>
@@ -379,7 +380,7 @@
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i> No extracted data available.
                                 {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
-                                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                                    {% if user|has_permission:('edit', document, 'documents.change_document') %}
                                     <a href="{% url 'document_process' document.id %}" class="alert-link">Process the document</a> to extract data.
                                     {% else %}
                                     The document needs to be processed to extract data.
@@ -397,7 +398,7 @@
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i> No OCR text available.
                                 {% if document.processing_status == 'pending' or document.processing_status == 'error' %}
-                                    {% if user.is_superuser or user|has_object_permission:(document, 'edit') %}
+                                    {% if user|has_permission:('edit', document, 'documents.change_document') %}
                                     <a href="{% url 'document_process' document.id %}" class="alert-link">Process the document</a> to extract text.
                                     {% else %}
                                     The document needs to be processed to extract text.

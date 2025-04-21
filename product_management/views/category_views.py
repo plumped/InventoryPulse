@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 
-from core.utils.access import has_object_permission
+from core.utils.view_helpers import check_permission
 from product_management.forms.categories_forms import CategoryForm
 from product_management.models.categories_models import Category
 from product_management.models.products_models import Product
@@ -58,7 +58,7 @@ def category_update(request, pk):
     category = get_object_or_404(Category, pk=pk)
 
     # Check if user has permission to edit this specific category
-    if not request.user.is_superuser and not has_object_permission(request.user, category, 'edit'):
+    if not check_permission(request.user, category, 'edit', 'product_management.change_category'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Kategorie zu bearbeiten.")
 
     if request.method == 'POST':

@@ -1,4 +1,4 @@
-import json
+import base64
 import base64
 import json
 from io import BytesIO
@@ -12,8 +12,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from pdf2image import convert_from_path
 
-from core.utils.access import has_object_permission
 from core.utils.pagination import paginate_queryset
+from core.utils.view_helpers import check_permission
 from suppliers.models import Supplier
 from .forms import DocumentUploadForm, DocumentTemplateForm, TemplateFieldForm, DocumentMatchForm
 from .models import Document, DocumentTemplate, TemplateField, DocumentType, DocumentMatch, StandardField
@@ -101,7 +101,7 @@ def document_detail(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
     # Check if user has permission to view this specific document
-    if not request.user.is_superuser and not has_object_permission(request.user, document, 'view'):
+    if not check_permission(request.user, document, 'view', 'documents.view_document'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Dokument anzusehen.")
 
     # Get processing logs
@@ -139,7 +139,7 @@ def document_delete(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
     # Check if user has permission to delete this specific document
-    if not request.user.is_superuser and not has_object_permission(request.user, document, 'delete'):
+    if not check_permission(request.user, document, 'delete', 'documents.delete_document'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Dokument zu löschen.")
 
     if request.method == 'POST':
@@ -161,7 +161,7 @@ def document_process(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
     # Check if user has permission to process this specific document
-    if not request.user.is_superuser and not has_object_permission(request.user, document, 'edit'):
+    if not check_permission(request.user, document, 'edit', 'documents.change_document'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Dokument zu verarbeiten.")
 
     # Process the document with OCR
@@ -188,7 +188,7 @@ def document_match(request, pk):
     document = get_object_or_404(Document, pk=pk)
 
     # Check if user has permission to match this specific document
-    if not request.user.is_superuser and not has_object_permission(request.user, document, 'edit'):
+    if not check_permission(request.user, document, 'edit', 'documents.change_document'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, dieses Dokument zuzuordnen.")
 
     if request.method == 'POST':

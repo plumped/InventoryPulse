@@ -12,7 +12,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 
-from core.utils.access import has_object_permission
+from core.utils.view_helpers import check_permission
 from inventory.models import Warehouse, StockMovement
 from master_data.models.addresses_models import CompanyAddress
 from master_data.models.currency_models import Currency
@@ -133,7 +133,7 @@ def purchase_order_detail(request, pk):
     )
 
     # Check if user has permission to view this specific order
-    if not request.user.is_superuser and not has_object_permission(request.user, order, 'view'):
+    if not check_permission(request.user, order, 'view', 'order.view_purchaseorder'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung anzusehen.")
 
     # Teillieferungen mit zusätzlichen Informationen laden
@@ -168,13 +168,9 @@ def purchase_order_detail(request, pk):
     }
 
     # Ermitteln, ob Benutzer bestimmte Aktionen durchführen darf
-    can_edit = (request.user.is_superuser or 
-                (request.user.has_perm('order.change_purchaseorder') and 
-                 has_object_permission(request.user, order, 'edit'))) and order.status == 'draft'
+    can_edit = check_permission(request.user, order, 'edit', 'order.change_purchaseorder', 'draft')
     can_approve = can_approve_order(request.user, order) and order.status == 'pending'
-    can_receive = (request.user.is_superuser or 
-                  (request.user.has_perm('order.add_purchaseorderreceipt') and 
-                   has_object_permission(request.user, order, 'edit'))) and order.status in ['sent', 'partially_received']
+    can_receive = check_permission(request.user, order, 'edit', 'order.add_purchaseorderreceipt', ['sent', 'partially_received'])
 
     # Wareneingangshistorie abrufen
     receipts = order.receipts.select_related('received_by').prefetch_related('items__order_item__product',
@@ -401,7 +397,7 @@ def purchase_order_update(request, pk):
     order = get_object_or_404(PurchaseOrder, pk=pk)
 
     # Check if user has permission to edit this specific order
-    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+    if not check_permission(request.user, order, 'edit', 'order.change_purchaseorder'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung zu bearbeiten.")
 
     # Nur Entwürfe können bearbeitet werden
@@ -574,7 +570,7 @@ def purchase_order_delete(request, pk):
     order = get_object_or_404(PurchaseOrder, pk=pk)
 
     # Check if user has permission to delete this specific order
-    if not request.user.is_superuser and not has_object_permission(request.user, order, 'delete'):
+    if not check_permission(request.user, order, 'delete', 'order.delete_purchaseorder'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung zu löschen.")
 
     # Nur Entwürfe können gelöscht werden
@@ -604,7 +600,7 @@ def purchase_order_submit(request, pk):
     order = get_object_or_404(PurchaseOrder, pk=pk)
 
     # Check if user has permission to submit this specific order
-    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+    if not check_permission(request.user, order, 'edit', 'order.change_purchaseorder'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung einzureichen.")
 
     # Nur Entwürfe können eingereicht werden
@@ -650,7 +646,7 @@ def purchase_order_approve(request, pk):
     order = get_object_or_404(PurchaseOrder, pk=pk)
 
     # Check if user has permission to approve this specific order
-    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+    if not check_permission(request.user, order, 'edit', 'order.change_purchaseorder'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung zu genehmigen.")
 
     # Nur wartende Bestellungen können genehmigt werden
@@ -695,7 +691,7 @@ def purchase_order_reject(request, pk):
     order = get_object_or_404(PurchaseOrder, pk=pk)
 
     # Check if user has permission to reject this specific order
-    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+    if not check_permission(request.user, order, 'edit', 'order.change_purchaseorder'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung abzulehnen.")
 
     # Nur wartende Bestellungen können abgelehnt werden
@@ -729,7 +725,7 @@ def purchase_order_mark_sent(request, pk):
     order = get_object_or_404(PurchaseOrder, pk=pk)
 
     # Check if user has permission to mark this specific order as sent
-    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+    if not check_permission(request.user, order, 'edit', 'order.change_purchaseorder'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diese Bestellung als bestellt zu markieren.")
 
     # Nur genehmigte Bestellungen können als bestellt markiert werden
@@ -761,7 +757,7 @@ def purchase_order_receive(request, pk):
     order = get_object_or_404(PurchaseOrder, pk=pk)
 
     # Check if user has permission to receive items for this specific order
-    if not request.user.is_superuser and not has_object_permission(request.user, order, 'edit'):
+    if not check_permission(request.user, order, 'edit', 'order.change_purchaseorder'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, Wareneingänge für diese Bestellung zu erfassen.")
 
     # Nur Bestellungen im Status "bestellt" oder "teilweise erhalten" können Wareneingänge haben

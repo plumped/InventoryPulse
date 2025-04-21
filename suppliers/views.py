@@ -10,7 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.utils.timezone import make_aware
 
-from core.utils.access import has_object_permission
+from core.utils.view_helpers import check_permission
 from data_operations.models.performance_models import SupplierPerformance, SupplierPerformanceMetric, \
     SupplierPerformanceCalculator
 from master_data.models.currency_models import Currency
@@ -63,7 +63,7 @@ def supplier_detail(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
 
     # Check if user has permission to view this specific supplier
-    if not request.user.is_superuser and not has_object_permission(request.user, supplier, 'view'):
+    if not check_permission(request.user, supplier, 'view', 'suppliers.view_supplier'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diesen Lieferanten anzusehen.")
 
     # Produkte dieses Lieferanten
@@ -252,7 +252,7 @@ def supplier_update(request, pk):
     supplier = get_object_or_404(Supplier, pk=pk)
 
     # Check if user has permission to edit this specific supplier
-    if not request.user.is_superuser and not has_object_permission(request.user, supplier, 'edit'):
+    if not check_permission(request.user, supplier, 'edit', 'suppliers.change_supplier'):
         return HttpResponseForbidden("Sie haben keine Berechtigung, diesen Lieferanten zu bearbeiten.")
 
     if request.method == 'POST':

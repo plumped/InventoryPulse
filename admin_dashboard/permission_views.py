@@ -22,7 +22,7 @@ from .forms import ObjectPermissionForm, RoleHierarchyForm, TimeBasedPermissionF
 logger = logging.getLogger('admin_dashboard')
 
 @login_required
-@staff_member_required
+@permission_required('accessmanagement.view_permission_dashboard', raise_exception=True)
 def permissions_dashboard(request):
     """Main permissions dashboard view."""
     log_list_view_usage(request, view_name="permissions_dashboard")
@@ -120,7 +120,6 @@ def user_permissions(request, user_id):
     return render(request, 'admin_dashboard/permissions/user_permissions.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.view_objectpermission', raise_exception=True)
 def object_permissions(request):
     """View and manage object permissions."""
@@ -175,7 +174,6 @@ def object_permissions(request):
     return render(request, 'admin_dashboard/permissions/object_permissions.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.add_objectpermission', raise_exception=True)
 def object_permission_add(request):
     """Add a new object permission."""
@@ -197,7 +195,6 @@ def object_permission_add(request):
     return render(request, 'admin_dashboard/permissions/object_permission_form.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.change_objectpermission', raise_exception=True)
 def object_permission_edit(request, pk):
     """Edit an existing object permission."""
@@ -222,7 +219,6 @@ def object_permission_edit(request, pk):
     return render(request, 'admin_dashboard/permissions/object_permission_form.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.delete_objectpermission', raise_exception=True)
 def object_permission_delete(request, pk):
     """Delete an object permission."""
@@ -241,8 +237,7 @@ def object_permission_delete(request, pk):
     return render(request, 'admin_dashboard/permissions/object_permission_confirm_delete.html', context)
 
 @login_required
-@staff_member_required
-@permission_required('auth.view_group', raise_exception=True)
+@permission_required('accessmanagement.view_rolehierarchy', raise_exception=True)
 def role_hierarchy(request):
     """View and manage role hierarchy."""
     log_list_view_usage(request, view_name="role_hierarchy")
@@ -258,8 +253,7 @@ def role_hierarchy(request):
     return render(request, 'admin_dashboard/permissions/role_hierarchy.html', context)
 
 @login_required
-@staff_member_required
-@permission_required('auth.change_group', raise_exception=True)
+@permission_required('accessmanagement.add_rolehierarchy', raise_exception=True)
 def role_hierarchy_add(request):
     """Add a new role hierarchy."""
     if request.method == 'POST':
@@ -280,8 +274,7 @@ def role_hierarchy_add(request):
     return render(request, 'admin_dashboard/permissions/role_hierarchy_form.html', context)
 
 @login_required
-@staff_member_required
-@permission_required('auth.change_group', raise_exception=True)
+@permission_required('accessmanagement.change_rolehierarchy', raise_exception=True)
 def role_hierarchy_edit(request, pk):
     """Edit an existing role hierarchy."""
     hierarchy = get_object_or_404(RoleHierarchy, pk=pk)
@@ -305,8 +298,7 @@ def role_hierarchy_edit(request, pk):
     return render(request, 'admin_dashboard/permissions/role_hierarchy_form.html', context)
 
 @login_required
-@staff_member_required
-@permission_required('auth.change_group', raise_exception=True)
+@permission_required('accessmanagement.delete_rolehierarchy', raise_exception=True)
 def role_hierarchy_delete(request, pk):
     """Delete a role hierarchy."""
     hierarchy = get_object_or_404(RoleHierarchy, pk=pk)
@@ -326,7 +318,6 @@ def role_hierarchy_delete(request, pk):
     return render(request, 'admin_dashboard/permissions/role_hierarchy_confirm_delete.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.view_objectpermission', raise_exception=True)
 def time_based_permissions(request):
     """View and manage time-based permissions."""
@@ -345,7 +336,6 @@ def time_based_permissions(request):
     return render(request, 'admin_dashboard/permissions/time_based_permissions.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.add_objectpermission', raise_exception=True)
 def time_based_permission_add(request):
     """Add a new time-based permission."""
@@ -367,7 +357,6 @@ def time_based_permission_add(request):
     return render(request, 'admin_dashboard/permissions/time_based_permission_form.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.change_objectpermission', raise_exception=True)
 def time_based_permission_edit(request, pk):
     """Edit an existing time-based permission."""
@@ -392,7 +381,6 @@ def time_based_permission_edit(request, pk):
     return render(request, 'admin_dashboard/permissions/time_based_permission_form.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.delete_objectpermission', raise_exception=True)
 def time_based_permission_delete(request, pk):
     """Delete a time-based permission."""
@@ -411,7 +399,6 @@ def time_based_permission_delete(request, pk):
     return render(request, 'admin_dashboard/permissions/time_based_permission_confirm_delete.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.view_warehouseaccess', raise_exception=True)
 def warehouse_access(request):
     """View and manage warehouse access."""
@@ -434,7 +421,6 @@ def warehouse_access(request):
     return render(request, 'admin_dashboard/permissions/warehouse_access.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.add_warehouseaccess', raise_exception=True)
 def warehouse_access_add(request):
     """Add new warehouse access."""
@@ -456,7 +442,6 @@ def warehouse_access_add(request):
     return render(request, 'admin_dashboard/permissions/warehouse_access_form.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.change_warehouseaccess', raise_exception=True)
 def warehouse_access_edit(request, pk):
     """Edit existing warehouse access."""
@@ -481,7 +466,6 @@ def warehouse_access_edit(request, pk):
     return render(request, 'admin_dashboard/permissions/warehouse_access_form.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('accessmanagement.delete_warehouseaccess', raise_exception=True)
 def warehouse_access_delete(request, pk):
     """Delete warehouse access."""
@@ -502,7 +486,6 @@ def warehouse_access_delete(request, pk):
     return render(request, 'admin_dashboard/permissions/warehouse_access_confirm_delete.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('auth.view_permission', raise_exception=True)
 def permission_audit(request):
     """View permission audit reports."""
@@ -539,7 +522,6 @@ def permission_audit(request):
     return render(request, 'admin_dashboard/permissions/permission_audit.html', context)
 
 @login_required
-@staff_member_required
 @permission_required('auth.view_permission', raise_exception=True)
 def run_permission_audit(request):
     """Run the permission audit command."""
@@ -567,7 +549,6 @@ def run_permission_audit(request):
     return redirect('admin_permission_audit')
 
 @login_required
-@staff_member_required
 @permission_required('auth.view_permission', raise_exception=True)
 def download_report(request, filename):
     """Download a permission audit report."""
@@ -595,7 +576,6 @@ def download_report(request, filename):
         return redirect('admin_permission_audit')
 
 @login_required
-@staff_member_required
 @permission_required('auth.view_permission', raise_exception=True)
 def view_report(request, filename):
     """View a permission audit report."""
@@ -619,7 +599,7 @@ def view_report(request, filename):
         return JsonResponse({'error': f'Error serving report file: {str(e)}'}, status=500)
 
 @login_required
-@staff_member_required
+@permission_required('auth.view_permission', raise_exception=True)
 def get_objects_for_content_type(request):
     """Get objects for a specific content type."""
     content_type_id = request.GET.get('content_type_id')

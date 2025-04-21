@@ -7,7 +7,7 @@ from master_data.models.currency_models import Currency
 
 
 @login_required
-@permission_required('core', 'view')
+@permission_required('master_data.view_currency', raise_exception=True)
 def currency_list(request):
     """List all currencies."""
     currencies = Currency.objects.all().order_by('code')
@@ -20,7 +20,7 @@ def currency_list(request):
 
 
 @login_required
-@permission_required('core', 'create')
+@permission_required('master_data.add_currency', raise_exception=True)
 def currency_create(request):
     """Create a new currency."""
     if request.method == 'POST':
@@ -41,7 +41,7 @@ def currency_create(request):
 
 
 @login_required
-@permission_required('core', 'edit')
+@permission_required('master_data.change_currency', raise_exception=True)
 def currency_update(request, pk):
     """Update an existing currency."""
     currency = get_object_or_404(Currency, pk=pk)
@@ -65,7 +65,7 @@ def currency_update(request, pk):
 
 
 @login_required
-@permission_required('core', 'delete')
+@permission_required('master_data.delete_currency', raise_exception=True)
 def currency_delete(request, pk):
     """Delete a currency."""
     currency = get_object_or_404(Currency, pk=pk)

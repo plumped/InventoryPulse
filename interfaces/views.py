@@ -18,8 +18,7 @@ from .services import send_order_via_interface, InterfaceError
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('interfaces.view_supplierinterface', raise_exception=True)
 def interface_list(request):
     """Liste aller Schnittstellen."""
     interfaces = SupplierInterface.objects.select_related('supplier', 'interface_type')
@@ -79,7 +78,7 @@ def interface_list(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
+@permission_required('interfaces.view_supplierinterface', raise_exception=True)
 def interface_detail(request, pk):
     """Detailansicht einer Schnittstelle."""
     interface = get_object_or_404(SupplierInterface.objects.select_related('supplier', 'interface_type'), pk=pk)
@@ -114,7 +113,7 @@ def interface_detail(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'create')
+@permission_required('interfaces.add_supplierinterface', raise_exception=True)
 def interface_create(request):
     """Neue Schnittstelle erstellen."""
     if request.method == 'POST':
@@ -153,7 +152,7 @@ def interface_create(request):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('interfaces.change_supplierinterface', raise_exception=True)
 def interface_update(request, pk):
     """Schnittstelle bearbeiten."""
     interface = get_object_or_404(SupplierInterface, pk=pk)
@@ -182,7 +181,7 @@ def interface_update(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'delete')
+@permission_required('interfaces.delete_supplierinterface', raise_exception=True)
 def interface_delete(request, pk):
     """Schnittstelle löschen."""
     interface = get_object_or_404(SupplierInterface, pk=pk)
@@ -203,7 +202,7 @@ def interface_delete(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('interfaces.change_supplierinterface', raise_exception=True)
 def interface_toggle_active(request, pk):
     """Aktivieren/Deaktivieren einer Schnittstelle."""
     interface = get_object_or_404(SupplierInterface, pk=pk)
@@ -218,7 +217,7 @@ def interface_toggle_active(request, pk):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('interfaces.change_supplierinterface', raise_exception=True)
 def interface_set_default(request, pk):
     """Schnittstelle als Standard setzen."""
     interface = get_object_or_404(SupplierInterface, pk=pk)
@@ -236,7 +235,7 @@ def interface_set_default(request, pk):
 
 # In views.py hinzufügen
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('interfaces.change_supplierinterface', raise_exception=True)
 def test_interface_connectivity(request, pk=None):
     """
     AJAX-Endpunkt zum Testen der Konnektivität einer Schnittstellenkonfiguration.
@@ -396,7 +395,7 @@ def test_connectivity_ftp(interface):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('interfaces.view_interfacelog', raise_exception=True)
 def interface_logs(request, interface_id=None):
     """Liste der Übertragungsprotokolle, optional gefiltert nach Schnittstelle."""
     # Add debugging
@@ -486,7 +485,7 @@ def interface_logs(request, interface_id=None):
 
 
 @login_required
-@permission_required('order', 'view')
+@permission_required('interfaces.view_interfacelog', raise_exception=True)
 def interface_log_detail(request, pk):
     """Detailansicht eines Übertragungsprotokolls."""
     log = get_object_or_404(
@@ -502,7 +501,7 @@ def interface_log_detail(request, pk):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def send_order(self, order, user=None):
     """Sendet eine Bestellung über FTP"""
     try:
@@ -637,7 +636,7 @@ def send_order(self, order, user=None):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def select_interface(request, order_id):
     """Bestellung über eine ausgewählte Schnittstelle senden."""
     order = get_object_or_404(PurchaseOrder, pk=order_id)
@@ -691,7 +690,7 @@ def select_interface(request, order_id):
 
 
 @login_required
-@permission_required('order', 'edit')
+@permission_required('order.change_purchaseorder', raise_exception=True)
 def retry_failed_transmission(request, log_id):
     """Erneuter Versuch, eine fehlgeschlagene Übertragung zu senden."""
     log = get_object_or_404(InterfaceLog, pk=log_id)
@@ -728,8 +727,7 @@ def retry_failed_transmission(request, log_id):
 # AJAX-Endpunkte
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('interfaces.view_supplierinterface', raise_exception=True)
 def get_supplier_interfaces(request):
     """AJAX-Endpunkt, um die Schnittstellen eines Lieferanten abzurufen."""
     supplier_id = request.GET.get('supplier_id')
@@ -755,8 +753,7 @@ def get_supplier_interfaces(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('interfaces.view_supplierinterface', raise_exception=True)
 def get_interface_fields(request):
     """AJAX-Endpunkt, um die relevanten Felder für einen Schnittstellentyp abzurufen."""
     interface_type_id = request.GET.get('interface_type_id')
@@ -796,7 +793,7 @@ def get_interface_fields(request):
 
 
 @login_required
-@permission_required('supplier', 'edit')
+@permission_required('interfaces.change_supplierinterface', raise_exception=True)
 def test_send_order(request):
     """
     AJAX-Endpunkt zum Testen des Versands einer Bestellung über eine Schnittstelle.
@@ -863,8 +860,7 @@ def test_send_order(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('interfaces.view_xmlstandardtemplate', raise_exception=True)
 def get_xml_template(request, template_id):
     """AJAX-Endpunkt zum Abrufen einer XML-Standardvorlage"""
     try:
@@ -888,8 +884,7 @@ def get_xml_template(request, template_id):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('interfaces.view_xmlstandardtemplate', raise_exception=True)
 def preview_xml_template(request):
     """AJAX-Endpunkt zur Vorschau einer XML-Vorlage mit Beispieldaten"""
     if request.method != 'POST':
@@ -929,8 +924,7 @@ def preview_xml_template(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('interfaces.view_xmlstandardtemplate', raise_exception=True)
 def list_xml_templates(request):
     """Listet alle verfügbaren XML-Standardvorlagen auf"""
     templates = XMLStandardTemplate.objects.filter(is_active=True).order_by('industry', 'name')
@@ -964,8 +958,7 @@ def list_xml_templates(request):
 
 
 @login_required
-@permission_required('supplier.view_supplier', raise_exception=True)
-
+@permission_required('interfaces.view_xmlstandardtemplate', raise_exception=True)
 def xml_template_detail(request, template_id):
     """Zeigt die Details einer XML-Standardvorlage an"""
     template = get_object_or_404(XMLStandardTemplate, pk=template_id, is_active=True)

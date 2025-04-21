@@ -3,7 +3,6 @@ import sys
 
 import django
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import User, Group, Permission
 from django.db import connections
@@ -885,7 +884,7 @@ def company_address_delete(request, address_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('documents.view_documenttype', raise_exception=True)
 def document_type_management(request):
     """View for managing document types."""
     filters = {
@@ -915,7 +914,7 @@ def document_type_management(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('documents.add_documenttype', raise_exception=True)
 def document_type_create(request):
     """View for creating a new document type."""
     return handle_form_view(
@@ -929,7 +928,7 @@ def document_type_create(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('documents.change_documenttype', raise_exception=True)
 def document_type_edit(request, type_id):
     """View for editing an existing document type."""
     document_type = get_object_or_404(DocumentType, pk=type_id)
@@ -945,7 +944,7 @@ def document_type_edit(request, type_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('documents.delete_documenttype', raise_exception=True)
 def document_type_delete(request, type_id):
     """View for deleting a document type."""
     document_type = get_object_or_404(DocumentType, pk=type_id)
@@ -973,7 +972,7 @@ def document_type_delete(request, type_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('documents.add_documenttype', raise_exception=True)
 def setup_standard_fields(request):
     """View for setting up standard fields for document types."""
     from django.core.management import call_command

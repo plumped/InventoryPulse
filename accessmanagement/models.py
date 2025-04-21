@@ -341,3 +341,17 @@ class RoleHierarchy(models.Model):
             parent_roles.update(cls.get_all_parent_roles(hierarchy.parent_role))
 
         return parent_roles
+
+
+class PermissionDashboard(models.Model):
+    """
+    Dieses Modell existiert nur für Berechtigungszwecke.
+    """
+    class Meta:
+        managed = False
+        default_permissions = ()
+        permissions = [
+            ('view_permission_dashboard', 'Can view permission dashboard'),
+            # Weitere benötigte Berechtigungen...
+        ]
+        app_label = 'accessmanagement'

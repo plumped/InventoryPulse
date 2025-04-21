@@ -56,87 +56,106 @@
                                 </a>
                             </li>
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'permissions' %}active bg-light{% endif %}" href="{% url 'admin_permissions_dashboard' %}">
-                                <i class="bi bi-shield-lock me-2"></i> Berechtigungsverwaltung
-                            </a>
-                        </li>
-
+                        {% if user.is_superuser or perms.accessmanagement.view_permission_dashboard %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if section == 'permissions' %}active bg-light{% endif %}" href="{% url 'admin_permissions_dashboard' %}">
+                                    <i class="bi bi-shield-lock me-2"></i> Berechtigungsverwaltung
+                                </a>
+                            </li>
+                        {% endif %}
                         <li class="nav-item">
                             <div class="card-header py-3">
                                 <h6 class="m-0 font-weight-bold text-primary">Unternehmenseinstellungen</h6>
                             </div>
                         </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'system_settings' %}active bg-light{% endif %}" href="{% url 'admin_system_settings' %}">
-                                <i class="bi bi-gear me-2"></i> Systemeinstellungen
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'company_addresses' %}active bg-light{% endif %}" href="{% url 'admin_company_address_management' %}">
-                                <i class="bi bi-building me-2"></i> Unternehmensadressen
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'workflow_settings' %}active bg-light{% endif %}" href="{% url 'admin_workflow_settings' %}">
-                                <i class="bi bi-diagram-3 me-2"></i> Workflow-Einstellungen
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'taxes' %}active bg-light{% endif %}" href="{% url 'admin_tax_management' %}">
-                                <i class="bi bi-percent me-2"></i> Mehrwertsteuersätze
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'taxes' %}active bg-light{% endif %}" href="{% url 'currency_list' %}">
-                                <i class="bi bi-bank me-2"></i> Währungen
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Dokumente-Verwaltung</h6>
-                            </div>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'document_types' %}active bg-light{% endif %}"
-                               href="{% url 'admin_document_type_management' %}">
-                                <i class="bi bi-files me-2"></i> Dokumenttypen
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'template_list' %}">
-                                <i class="bi bi-file-earmark-text me-2"></i> Dokumentvorlagen
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Schnittstellen-Verwaltung</h6>
-                            </div>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link {% if section == 'interfaces' %}active bg-light{% endif %}" href="{% url 'admin_interface_management' %}">
-                                <i class="bi bi-globe me-2"></i> Schnittstellen-Verwaltung
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'interface_list' %}">
-                                <i class="bi bi-plug me-2"></i> Lieferanten-Schnittstellen
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'interface_logs' %}">
-                                <i class="bi bi-journal-text me-2"></i> Übertragungsprotokolle
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'list_xml_templates' %}">
-                                <i class="bi bi-filetype-xml me-2"></i> XML-Templates
-                            </a>
-                        </li>
+                        {% if user.is_superuser or perms.master_data.view_systemsettings %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if section == 'system_settings' %}active bg-light{% endif %}" href="{% url 'admin_system_settings' %}">
+                                    <i class="bi bi-gear me-2"></i> Systemeinstellungen
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.master_data.view_companyaddress %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if section == 'company_addresses' %}active bg-light{% endif %}" href="{% url 'admin_company_address_management' %}">
+                                    <i class="bi bi-building me-2"></i> Unternehmensadressen
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.master_data.view_workflowsettings %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if section == 'workflow_settings' %}active bg-light{% endif %}" href="{% url 'admin_workflow_settings' %}">
+                                    <i class="bi bi-diagram-3 me-2"></i> Workflow-Einstellungen
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.master_data.view_tax %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if section == 'taxes' %}active bg-light{% endif %}" href="{% url 'admin_tax_management' %}">
+                                    <i class="bi bi-percent me-2"></i> Mehrwertsteuersätze
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.master_data.view_currency %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if section == 'taxes' %}active bg-light{% endif %}" href="{% url 'currency_list' %}">
+                                    <i class="bi bi-bank me-2"></i> Währungen
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.documents.view_document %}
+                            <li class="nav-item">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Dokumente-Verwaltung</h6>
+                                </div>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.documents.view_documenttype %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if section == 'document_types' %}active bg-light{% endif %}"
+                                   href="{% url 'admin_document_type_management' %}">
+                                    <i class="bi bi-files me-2"></i> Dokumenttypen
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.documents.view_documenttemplate %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'template_list' %}">
+                                    <i class="bi bi-file-earmark-text me-2"></i> Dokumentvorlagen
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.interfaces.view_supplierinterface %}
+                            <li class="nav-item">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Schnittstellen-Verwaltung</h6>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if section == 'interfaces' %}active bg-light{% endif %}" href="{% url 'admin_interface_management' %}">
+                                    <i class="bi bi-globe me-2"></i> Schnittstellen-Verwaltung
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'interface_list' %}">
+                                    <i class="bi bi-plug me-2"></i> Lieferanten-Schnittstellen
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.interfaces.view_interfacelog %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'interface_logs' %}">
+                                    <i class="bi bi-journal-text me-2"></i> Übertragungsprotokolle
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% if user.is_superuser or perms.interfaces.view_xmlstandardtemplate %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'list_xml_templates' %}">
+                                    <i class="bi bi-filetype-xml me-2"></i> XML-Templates
+                                </a>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>

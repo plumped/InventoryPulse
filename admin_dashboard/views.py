@@ -282,7 +282,7 @@ def group_management(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('auth.add_group', raise_exception=True)
 def group_create(request):
     # Standard Django permission actions
     standard_actions = ['view', 'add', 'change', 'delete']
@@ -323,7 +323,7 @@ def group_create(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('auth.change_group', raise_exception=True)
 def group_edit(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
 
@@ -370,7 +370,7 @@ def group_edit(request, group_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('auth.delete_group', raise_exception=True)
 def group_delete(request, group_id):
     group = get_object_or_404(Group, pk=group_id)
     if request.method == 'POST':
@@ -386,7 +386,7 @@ def group_delete(request, group_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.view_department', raise_exception=True)
 def department_management(request):
     filters = {
         'search': request.GET.get('search', '')
@@ -415,7 +415,7 @@ def department_management(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.add_department', raise_exception=True)
 def department_create(request):
     return handle_form_view(
         request,
@@ -432,7 +432,7 @@ def department_create(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.change_department', raise_exception=True)
 def department_edit(request, department_id):
     department = get_object_or_404(Department, pk=department_id)
     initial_members = [profile.user.id for profile in department.user_profiles.all()]
@@ -454,7 +454,7 @@ def department_edit(request, department_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.delete_department', raise_exception=True)
 def department_delete(request, department_id):
     department = get_object_or_404(Department, pk=department_id)
     if request.method == 'POST':
@@ -476,7 +476,7 @@ def department_delete(request, department_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('inventory.delete_warehouse', raise_exception=True)
 def warehouse_access_delete(request, access_id):
     access = get_object_or_404(WarehouseAccess, pk=access_id)
     if request.method == 'POST':
@@ -490,7 +490,7 @@ def warehouse_access_delete(request, access_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.change_systemsettings', raise_exception=True)
 def system_settings(request):
     settings, _ = SystemSettings.objects.get_or_create(pk=1)
     return handle_form_view(
@@ -505,7 +505,7 @@ def system_settings(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.change_workflowsettings', raise_exception=True)
 def workflow_settings(request):
     settings, _ = WorkflowSettings.objects.get_or_create(pk=1)
     return handle_form_view(
@@ -523,7 +523,7 @@ def workflow_settings(request):
 # AJAX-Endpunkte
 
 @login_required
-@staff_member_required
+@permission_required('auth.view_user', raise_exception=True)
 def get_user_details(request, user_id):
     """AJAX endpoint to get user details."""
     user = get_object_or_404(User, pk=user_id)
@@ -554,7 +554,7 @@ def get_user_details(request, user_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.view_department', raise_exception=True)
 def get_department_details(request, department_id):
     """AJAX endpoint to get department details."""
     department = get_object_or_404(Department, pk=department_id)
@@ -587,7 +587,7 @@ def get_department_details(request, department_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.view_tax', raise_exception=True)
 def tax_management(request):
     filters = {
         'search': request.GET.get('search', '')
@@ -608,7 +608,7 @@ def tax_management(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.add_tax', raise_exception=True)
 def tax_create(request):
     return handle_form_view(
         request,
@@ -621,7 +621,7 @@ def tax_create(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.change_tax', raise_exception=True)
 def tax_edit(request, tax_id):
     tax = get_object_or_404(Tax, pk=tax_id)
     return handle_form_view(
@@ -636,7 +636,7 @@ def tax_edit(request, tax_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.delete_tax', raise_exception=True)
 def tax_delete(request, tax_id):
     """Einen Mehrwertsteuersatz löschen."""
     tax = get_object_or_404(Tax, pk=tax_id)
@@ -659,7 +659,7 @@ def tax_delete(request, tax_id):
     return render(request, 'admin_dashboard/tax_confirm_delete.html', context)
 
 @login_required
-@staff_member_required
+@permission_required('interfaces.view_supplierinterface', raise_exception=True)
 def interface_management(request):
     from interfaces.models import InterfaceType, SupplierInterface, InterfaceLog
     from django.utils import timezone
@@ -704,7 +704,7 @@ def interface_management(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('interfaces.view_interfacetype', raise_exception=True)
 def interface_type_management(request):
     from interfaces.models import InterfaceType, SupplierInterface
 
@@ -730,7 +730,7 @@ def interface_type_management(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('interfaces.add_interfacetype', raise_exception=True)
 def interface_type_create(request):
     return handle_form_view(
         request,
@@ -746,7 +746,7 @@ def interface_type_create(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('interfaces.change_interfacetype', raise_exception=True)
 def interface_type_edit(request, type_id):
     interface_type = get_object_or_404(InterfaceType, pk=type_id)
     return handle_form_view(
@@ -765,7 +765,7 @@ def interface_type_edit(request, type_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('interfaces.delete_interfacetype', raise_exception=True)
 def interface_type_delete(request, type_id):
     """Schnittstellentyp löschen."""
     from interfaces.models import InterfaceType, SupplierInterface
@@ -798,14 +798,7 @@ def interface_type_delete(request, type_id):
 
 
 @login_required
-@staff_member_required
-def admin_menu(request):
-    """Admin menu view with links to all admin sections."""
-    return render(request, 'admin_dashboard/base_menu.html', {'section': 'menu'})
-
-
-@login_required
-@staff_member_required
+@permission_required('master_data.view_companyaddress', raise_exception=True)
 def company_address_management(request):
     filters = {
         'search': request.GET.get('search', ''),
@@ -837,7 +830,7 @@ def company_address_management(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.add_companyaddress', raise_exception=True)
 def company_address_create(request):
     initial = {}
     address_type = request.GET.get('type')
@@ -856,7 +849,7 @@ def company_address_create(request):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.change_companyaddress', raise_exception=True)
 def company_address_edit(request, address_id):
     address = get_object_or_404(CompanyAddress, pk=address_id)
     return handle_form_view(
@@ -871,7 +864,7 @@ def company_address_edit(request, address_id):
 
 
 @login_required
-@staff_member_required
+@permission_required('master_data.delete_companyaddress', raise_exception=True)
 def company_address_delete(request, address_id):
     """Unternehmensadresse löschen."""
     address = get_object_or_404(CompanyAddress, pk=address_id)

@@ -66,8 +66,6 @@ urlpatterns = [
     path('document-types/<int:type_id>/delete/', views.document_type_delete, name='admin_document_type_delete'),
     path('document-types/setup-standard-fields/', views.setup_standard_fields, name='setup_standard_fields'),
 
-    # Admin Menu
-    path('menu/', views.admin_menu, name='admin_menu'),
 
     # Permissions Management
     path('permissions/', include([

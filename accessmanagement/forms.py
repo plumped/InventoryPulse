@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.models import User, Permission
 
-from inventory.models import Warehouse
+from core.models import Warehouse
 from master_data.models.organisations_models import Department
 from .models import WarehouseAccess
 

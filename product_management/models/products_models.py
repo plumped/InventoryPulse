@@ -2,7 +2,9 @@ import os
 
 from django.db import models
 
-from inventory.models import Warehouse, VariantWarehouse
+from core.models import Warehouse
+from core.models.stock import BaseProductWarehouse
+from inventory.models import VariantWarehouse
 from master_data.models.tax_models import Tax
 from product_management.models.categories_models import Category
 
@@ -49,13 +51,18 @@ class Product(models.Model):
         return 0
 
 
-class ProductWarehouse(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+class ProductWarehouse(BaseProductWarehouse):
+    """
+    Model for tracking product stock in warehouses.
 
-    class Meta:
+    This model extends the BaseProductWarehouse class from core.models.stock.
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name="Product")
+
+    class Meta(BaseProductWarehouse.Meta):
         unique_together = ('product', 'warehouse')
+        verbose_name = "Product Warehouse"
+        verbose_name_plural = "Product Warehouses"
 
 
 class ProductPhoto(models.Model):

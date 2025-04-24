@@ -42,5 +42,12 @@ def create_predefined_roles(sender, **kwargs):
     This ensures that the predefined roles are created when the application is first installed.
     """
     if sender.name == 'accessmanagement':
-        from .predefined_roles import create_all_predefined_roles
-        create_all_predefined_roles()
+        try:
+            from .predefined_roles import create_all_predefined_roles
+            create_all_predefined_roles()
+        except Exception as e:
+            # Log the error but don't fail the migration
+            import logging
+            logger = logging.getLogger('accessmanagement')
+            logger.warning(f"Error creating predefined roles: {str(e)}")
+            # Continue with the migration process

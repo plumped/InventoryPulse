@@ -23,7 +23,7 @@ class SerialNumber(models.Model):
     purchase_date = models.DateField(null=True, blank=True)  # Einkaufsdatum
     expiry_date = models.DateField(null=True, blank=True)  # Verfallsdatum
     notes = models.TextField(blank=True)
-    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
+    warehouse = models.ForeignKey('core.Warehouse', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

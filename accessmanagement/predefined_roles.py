@@ -189,27 +189,11 @@ def get_permissions_for_role(role_config):
         if '.' in permission_spec:
             # Format: 'app_label.model'
             app_label, model = permission_spec.split('.')
-            content_type = ContentType.objects.get(app_label=app_label, model=model)
+            try:
+                content_type = ContentType.objects.get(app_label=app_label, model=model)
 
-            for action in actions:
-                codename = get_permission_codename(app_label, model, action)
-                try:
-                    permission = Permission.objects.get(
-                        content_type=content_type,
-                        codename=codename
-                    )
-                    permissions.append(permission)
-                except Permission.DoesNotExist:
-                    # Skip if permission doesn't exist
-                    continue
-        else:
-            # Format: 'app_label'
-            app_label = permission_spec
-            content_types = ContentType.objects.filter(app_label=app_label)
-
-            for content_type in content_types:
                 for action in actions:
-                    codename = get_permission_codename(app_label, content_type.model, action)
+                    codename = get_permission_codename(app_label, model, action)
                     try:
                         permission = Permission.objects.get(
                             content_type=content_type,
@@ -219,6 +203,31 @@ def get_permissions_for_role(role_config):
                     except Permission.DoesNotExist:
                         # Skip if permission doesn't exist
                         continue
+            except ContentType.DoesNotExist:
+                # Skip if content type doesn't exist yet
+                continue
+        else:
+            # Format: 'app_label'
+            app_label = permission_spec
+            try:
+                content_types = ContentType.objects.filter(app_label=app_label)
+
+                for content_type in content_types:
+                    for action in actions:
+                        codename = get_permission_codename(app_label, content_type.model, action)
+                        try:
+                            permission = Permission.objects.get(
+                                content_type=content_type,
+                                codename=codename
+                            )
+                            permissions.append(permission)
+                        except Permission.DoesNotExist:
+                            # Skip if permission doesn't exist
+                            continue
+            except Exception as e:
+                # Skip if there's an error with content types
+                # This could happen if the app doesn't exist yet
+                continue
 
     return permissions
 
@@ -267,7 +276,14 @@ def create_all_predefined_roles():
     roles = {}
 
     for role_key in PREDEFINED_ROLES:
-        roles[role_key] = create_predefined_role(role_key)
+        try:
+            roles[role_key] = create_predefined_role(role_key)
+        except Exception as e:
+            # Log the error but continue with other roles
+            import logging
+            logger = logging.getLogger('accessmanagement')
+            logger.warning(f"Error creating predefined role '{role_key}': {str(e)}")
+            continue
 
     return roles
 

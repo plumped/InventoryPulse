@@ -13,9 +13,9 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from accessmanagement.models import WarehouseAccess, ObjectPermission, RoleHierarchy
+from core.models import Warehouse
 from core.utils.logging_utils import log_list_view_usage
 from core.utils.pagination import paginate_queryset
-from inventory.models import Warehouse
 from master_data.models.organisations_models import Department
 from .forms import ObjectPermissionForm, RoleHierarchyForm, TimeBasedPermissionForm, WarehouseAccessForm
 

@@ -1,6 +1,6 @@
 from django import forms
 
-from inventory.models import Warehouse
+from core.models import Warehouse
 from product_management.models.products_models import ProductVariant, \
     Product
 from tracking.models.batch_numbers_models import BatchNumber

@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.db import models
 from django.utils import timezone
 
-from inventory.models import Warehouse
+from core.models import Warehouse
 from master_data.models.organisations_models import Department
 
 logger = logging.getLogger('accessmanagement')

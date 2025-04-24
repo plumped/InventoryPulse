@@ -450,7 +450,7 @@ class PurchaseOrderReceiptItem(models.Model):
     expiry_date = models.DateField(null=True, blank=True)
 
     # Ziel-Lager
-    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.PROTECT)
+    warehouse = models.ForeignKey('core.Warehouse', on_delete=models.PROTECT)
 
     def __str__(self):
         return f"{self.order_item.product.name}: {self.quantity_received} {self.order_item.product.unit}"

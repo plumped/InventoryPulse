@@ -7978,3 +7978,96 @@
 2025-04-24 02:46:27,003 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 47839
 2025-04-24 02:46:29,266 [INFO] django.server: "GET /admin-dashboard/system-settings/ HTTP/1.1" 200 47665
 2025-04-24 02:46:42,485 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\utils\products.py changed, reloading.
+2025-04-24 02:46:43,345 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 02:47:40,359 [INFO] django.server: "GET /admin-dashboard/system-settings/ HTTP/1.1" 200 47665
+2025-04-24 02:47:43,768 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-24T02:47:43.768630", "event_type": "logout", "user": "testino", "ip_address": "127.0.0.1", "resource": null, "details": null}
+2025-04-24 02:47:43,772 [INFO] django.server: "POST /logout/ HTTP/1.1" 302 0
+2025-04-24 02:47:43,774 [INFO] django.server: "GET /login/ HTTP/1.1" 200 3317
+2025-04-24 02:47:47,409 [INFO] django.server: "GET / HTTP/1.1" 302 0
+2025-04-24 02:47:47,412 [INFO] django.server: "GET /login/?next=/ HTTP/1.1" 200 3318
+2025-04-24 02:48:00,908 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-24T02:48:00.908630", "event_type": "login", "user": "testino", "ip_address": "127.0.0.1", "resource": null, "details": null}
+2025-04-24 02:48:00,912 [INFO] django.server: "POST /login/?next=/ HTTP/1.1" 302 0
+2025-04-24 02:48:00,917 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 02:48:00,936 [INFO] django.server: "GET / HTTP/1.1" 200 71804
+2025-04-24 13:45:39,068 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 13:45:41,233 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 13:45:41,308 [INFO] django.server: "GET / HTTP/1.1" 200 71804
+2025-04-24 13:45:41,678 [WARNING] django.server: "GET /favicon.ico HTTP/1.1" 404 8299
+2025-04-24 13:45:41,686 [WARNING] django.server: "GET /favicon.ico HTTP/1.1" 404 8299
+2025-04-24 13:45:43,647 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 13:45:43,650 [INFO] accessmanagement: System Administrator testino granted edit access to warehouse Test
+2025-04-24 13:45:43,652 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 35785
+2025-04-24 13:45:45,225 [INFO] django.server: "GET /order/ HTTP/1.1" 200 42064
+2025-04-24 13:48:41,012 [INFO] django.server: "GET / HTTP/1.1" 302 0
+2025-04-24 13:48:41,016 [INFO] django.server: "GET /login/?next=/ HTTP/1.1" 200 3318
+2025-04-24 13:53:42,508 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 13:53:42,510 [INFO] accessmanagement: System Administrator testino granted edit access to warehouse Test
+2025-04-24 13:53:42,510 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 35785
+2025-04-24 13:53:44,046 [INFO] django.server: "GET /inventory/warehouses/bulk-transfer/ HTTP/1.1" 200 39229
+2025-04-24 13:53:45,321 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 13:53:45,326 [INFO] django.server: "GET /inventory/movements/ HTTP/1.1" 200 36872
+2025-04-24 13:53:46,298 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 13:53:46,300 [INFO] accessmanagement: System Administrator testino granted edit access to warehouse Test
+2025-04-24 13:53:46,301 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 35785
+2025-04-24 13:58:23,654 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 13:58:23,656 [INFO] accessmanagement: System Administrator testino granted edit access to warehouse Test
+2025-04-24 13:58:23,657 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 35785
+2025-04-24 13:58:26,058 [INFO] django.server: "GET /inventory/warehouses/bulk-transfer/ HTTP/1.1" 200 39229
+2025-04-24 14:10:55,233 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\utils\products.py changed, reloading.
+2025-04-24 14:10:56,180 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 14:11:34,311 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\utils\stock.py changed, reloading.
+2025-04-24 14:11:34,983 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 14:12:22,453 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\utils\access.py changed, reloading.
+2025-04-24 14:12:23,118 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 14:13:00,155 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\utils\access.py changed, reloading.
+2025-04-24 14:13:00,830 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 14:16:03,707 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 14:18:22,601 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 14:18:25,737 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\views\warehouse_views.py changed, reloading.
+2025-04-24 14:18:26,472 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:21:57,864 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\models.py changed, reloading.
+2025-04-24 18:21:58,704 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:22:09,629 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\models.py changed, reloading.
+2025-04-24 18:22:10,332 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:22:26,485 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\models.py changed, reloading.
+2025-04-24 18:22:27,199 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:22:41,264 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\models.py changed, reloading.
+2025-04-24 18:22:42,012 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:23:23,552 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\inventory\models.py changed, reloading.
+2025-04-24 18:23:24,278 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:23:45,820 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\models\products_models.py changed, reloading.
+2025-04-24 18:23:46,545 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:24:00,687 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\product_management\models\products_models.py changed, reloading.
+2025-04-24 18:24:01,455 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:25:00,968 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:33:22,289 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:35:32,947 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:36:12,921 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\order\models.py changed, reloading.
+2025-04-24 18:36:13,710 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:36:58,019 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\permission_views.py changed, reloading.
+2025-04-24 18:36:58,816 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:37:57,437 [ERROR] django.server: "GET / HTTP/1.1" 500 146499
+2025-04-24 18:47:43,322 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:47:47,070 [INFO] django.server: "GET / HTTP/1.1" 302 0
+2025-04-24 18:47:47,077 [INFO] django.server: "GET /login/?next=/ HTTP/1.1" 200 3318
+2025-04-24 18:48:04,999 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-24T18:48:04.999847", "event_type": "user_created", "user": "chrigi", "ip_address": null, "resource": null, "details": {"username": "chrigi"}}
+2025-04-24 18:48:07,453 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 18:48:09,939 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-24T18:48:09.939018", "event_type": "login", "user": "chrigi", "ip_address": "127.0.0.1", "resource": null, "details": null}
+2025-04-24 18:48:09,942 [INFO] django.server: "POST /login/?next=/ HTTP/1.1" 302 0
+2025-04-24 18:48:10,002 [INFO] django.server: "GET / HTTP/1.1" 200 70546
+2025-04-24 18:48:11,826 [INFO] django.server: "GET /products/ HTTP/1.1" 200 35691
+2025-04-24 18:48:12,737 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 34177
+2025-04-24 18:48:13,672 [INFO] django.server: "GET /inventory/warehouses/bulk-transfer/ HTTP/1.1" 200 39613
+2025-04-24 18:48:15,046 [INFO] django.server: "GET /inventory/movements/ HTTP/1.1" 200 36273
+2025-04-24 18:48:16,078 [INFO] django.server: "GET /order/create/ HTTP/1.1" 200 80509
+2025-04-24 18:48:17,505 [INFO] django.server: "GET /order/ HTTP/1.1" 200 42530
+2025-04-24 18:48:18,792 [INFO] django.server: "GET /rma/ HTTP/1.1" 200 37348
+2025-04-24 18:48:19,778 [INFO] django.server: "GET /rma/create/ HTTP/1.1" 200 41109
+2025-04-24 18:48:20,742 [INFO] django.server: "GET /suppliers/create/ HTTP/1.1" 200 41014
+2025-04-24 18:48:21,675 [INFO] django.server: "GET /suppliers/ HTTP/1.1" 200 34724
+2025-04-24 18:48:22,679 [INFO] django.server: "GET /documents/ HTTP/1.1" 200 37178
+2025-04-24 18:48:24,012 [INFO] django.server: "GET /import/ HTTP/1.1" 200 42045
+2025-04-24 18:48:26,063 [INFO] django.server: "GET /import/categories/ HTTP/1.1" 200 40146
+2025-04-24 18:48:28,560 [INFO] django.server: "GET /import/suppliers/ HTTP/1.1" 200 40352
+2025-04-24 18:48:29,440 [INFO] django.server: "GET / HTTP/1.1" 200 70546
+2025-04-24 18:50:46,809 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\templatetags\access_tags.py changed, reloading.

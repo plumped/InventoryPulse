@@ -5,36 +5,24 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import F
 
-
-class Warehouse(models.Model):
-    name = models.CharField(max_length=100)
-    location = models.CharField(max_length=200)
-    description = models.TextField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.name
+from core.models import Warehouse
+from core.models.stock import BaseStockMovement, BaseProductWarehouse
 
 
-class StockMovement(models.Model):
-    product = models.ForeignKey('product_management.Product', on_delete=models.CASCADE)  # String-Referenz
-    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
-    movement_type = models.CharField(
-        max_length=3,
-        choices=[
-            ('in', 'Eingang'),
-            ('out', 'Ausgang'),
-            ('adj', 'Anpassung'),
-        ]
-    )
-    reference = models.CharField(max_length=255, blank=True)
-    notes = models.TextField(blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+class StockMovement(BaseStockMovement):
+    """
+    Stock movement model for tracking inventory changes.
+
+    This model extends the BaseStockMovement class from core.models.stock.
+    """
+    product = models.ForeignKey('product_management.Product', on_delete=models.CASCADE, verbose_name="Product")
 
     def __str__(self):
         return f"{self.get_movement_type_display()} - {self.product.name} ({self.quantity})"
+
+    class Meta(BaseStockMovement.Meta):
+        verbose_name = "Stock Movement"
+        verbose_name_plural = "Stock Movements"
 
 
 class StockTake(models.Model):
@@ -56,7 +44,7 @@ class StockTake(models.Model):
     completed_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='stock_takes_completed', null=True,
                                      blank=True, verbose_name="Abgeschlossen von")
     notes = models.TextField(blank=True, verbose_name="Anmerkungen")
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, verbose_name="Warehouse")
     inventory_type = models.CharField(
         max_length=20,
         choices=[
@@ -181,38 +169,36 @@ class StockTakeItem(models.Model):
         verbose_name_plural = "Inventurpositionen"
 
 
-class VariantWarehouse(models.Model):
+class VariantWarehouse(BaseProductWarehouse):
     """
-    Modell für die Verwaltung des Lagerbestands von Produktvarianten in bestimmten Lagern.
+    Model for tracking variant stock in warehouses.
+
+    This model extends the BaseProductWarehouse class from core.models.stock.
     """
     variant = models.ForeignKey('product_management.ProductVariant', on_delete=models.CASCADE,
-                                related_name='warehouse_stocks', verbose_name="Produktvariante")
-    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE,
-                                  related_name='variant_stocks', verbose_name="Lager")
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0,
-                                   verbose_name="Bestandsmenge")
+                                related_name='warehouse_stocks', verbose_name="Variant")
     min_stock_level = models.DecimalField(max_digits=10, decimal_places=2, default=0,
-                                          verbose_name="Mindestbestand")
+                                          verbose_name="Minimum Stock")
     max_stock_level = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
-                                          verbose_name="Maximalbestand")
-    last_updated = models.DateTimeField(auto_now=True, verbose_name="Letzte Aktualisierung")
+                                          verbose_name="Maximum Stock")
+    last_updated = models.DateTimeField(auto_now=True, verbose_name="Last Updated")
 
-    class Meta:
+    class Meta(BaseProductWarehouse.Meta):
         unique_together = ('variant', 'warehouse')
-        verbose_name = "Varianten-Lagerbestand"
-        verbose_name_plural = "Varianten-Lagerbestände"
+        verbose_name = "Variant Warehouse"
+        verbose_name_plural = "Variant Warehouses"
 
     def __str__(self):
         return f"{self.variant.name} - {self.warehouse.name}: {self.quantity}"
 
     @property
     def is_below_min_stock(self):
-        """Prüft, ob der Bestand unter dem Mindestbestand liegt."""
+        """Checks if the stock is below the minimum stock level."""
         return self.quantity < self.min_stock_level
 
     @property
     def is_above_max_stock(self):
-        """Prüft, ob der Bestand über dem Maximalbestand liegt."""
+        """Checks if the stock is above the maximum stock level."""
         if self.max_stock_level is None:
             return False
         return self.quantity > self.max_stock_level

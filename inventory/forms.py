@@ -1,8 +1,9 @@
 from django import forms
 
+from core.models import Warehouse
 from master_data.models.organisations_models import Department
 from product_management.models.products_models import Product
-from .models import StockMovement, StockTake, StockTakeItem, Warehouse
+from .models import StockMovement, StockTake, StockTakeItem
 
 
 class StockMovementForm(forms.ModelForm):

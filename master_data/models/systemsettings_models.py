@@ -25,7 +25,7 @@ class SystemSettings(models.Model):
     """Systemweite Konfiguration."""
     company_name = models.CharField(max_length=200, default="InventoryPulse")
     company_logo = models.ImageField(upload_to='company_logo/', null=True, blank=True)
-    default_warehouse = models.ForeignKey('inventory.Warehouse', null=True, blank=True, on_delete=models.SET_NULL,
+    default_warehouse = models.ForeignKey('core.Warehouse', null=True, blank=True, on_delete=models.SET_NULL,
                                           related_name='default_warehouse_setting')
     default_stock_min = models.IntegerField(default=10, help_text="Standard-Mindestbestand")
     default_lead_time = models.IntegerField(default=7, help_text="Standard-Lieferzeit in Tagen")

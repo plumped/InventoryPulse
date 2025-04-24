@@ -8071,3 +8071,4 @@
 2025-04-24 18:48:28,560 [INFO] django.server: "GET /import/suppliers/ HTTP/1.1" 200 40352
 2025-04-24 18:48:29,440 [INFO] django.server: "GET / HTTP/1.1" 200 70546
 2025-04-24 18:50:46,809 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\admin_dashboard\templatetags\access_tags.py changed, reloading.
+2025-04-24 18:50:47,740 [INFO] django.utils.autoreload: Watching for file changes with StatReloader

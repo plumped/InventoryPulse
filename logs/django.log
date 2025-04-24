@@ -7940,3 +7940,41 @@
 2025-04-22 19:59:05,151 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'tax_management', 'filters': {'search': ''}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/taxes/'}
 2025-04-22 19:59:05,155 [INFO] django.server: "GET /admin-dashboard/taxes/ HTTP/1.1" 200 41189
 2025-04-22 19:59:07,335 [INFO] django.server: "GET /admin-dashboard/taxes/create/ HTTP/1.1" 200 36011
+2025-04-24 02:41:26,462 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 02:41:42,132 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 02:42:04,738 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 02:43:18,915 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 02:43:39,247 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 02:46:02,436 [INFO] django.utils.autoreload: Watching for file changes with StatReloader
+2025-04-24 02:46:03,756 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 02:46:03,822 [INFO] django.server: "GET / HTTP/1.1" 200 71804
+2025-04-24 02:46:06,323 [INFO] django.server: "GET /products/create/ HTTP/1.1" 200 53617
+2025-04-24 02:46:07,801 [INFO] django.server: "GET /serialnumbers/ HTTP/1.1" 200 45978
+2025-04-24 02:46:09,033 [INFO] accessmanagement: System Administrator testino granted view access to warehouse Test
+2025-04-24 02:46:09,036 [INFO] accessmanagement: System Administrator testino granted edit access to warehouse Test
+2025-04-24 02:46:09,036 [INFO] django.server: "GET /inventory/warehouses/ HTTP/1.1" 200 35785
+2025-04-24 02:46:10,080 [INFO] django.server: "GET /inventory/warehouses/bulk-transfer/ HTTP/1.1" 200 39229
+2025-04-24 02:46:11,110 [INFO] django.server: "GET /order/create/ HTTP/1.1" 200 79996
+2025-04-24 02:46:12,045 [INFO] django.server: "GET /order/ HTTP/1.1" 200 42064
+2025-04-24 02:46:13,283 [INFO] django.server: "GET /import/logs/export/?format=csv HTTP/1.1" 200 92
+2025-04-24 02:46:16,215 [INFO] django.server: "GET /import/ HTTP/1.1" 200 41497
+2025-04-24 02:46:17,129 [INFO] django.server: "GET /documents/ HTTP/1.1" 200 36766
+2025-04-24 02:46:18,197 [INFO] django.server: "GET /documents/templates/create/ HTTP/1.1" 200 43826
+2025-04-24 02:46:19,521 [INFO] django.server: "GET /suppliers/create/ HTTP/1.1" 200 40466
+2025-04-24 02:46:20,330 [INFO] django.server: "GET /suppliers/ HTTP/1.1" 200 35753
+2025-04-24 02:46:21,301 [INFO] admin_dashboard.views: Dashboard accessed by testino.
+2025-04-24 02:46:21,312 [INFO] django.server: "GET /admin-dashboard/ HTTP/1.1" 200 57037
+2025-04-24 02:46:22,668 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'group_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/groups/'}
+2025-04-24 02:46:22,682 [INFO] django.server: "GET /admin-dashboard/groups/ HTTP/1.1" 200 65259
+2025-04-24 02:46:23,465 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'department_management', 'filters': {'search': ''}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/departments/'}
+2025-04-24 02:46:23,469 [INFO] django.server: "GET /admin-dashboard/departments/ HTTP/1.1" 200 42677
+2025-04-24 02:46:24,023 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'warehouse_access_management', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/access/warehouse-access/'}
+2025-04-24 02:46:24,026 [INFO] django.server: "GET /access/warehouse-access/ HTTP/1.1" 200 47556
+2025-04-24 02:46:24,520 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-24 02:46:24,528 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-24T02:46:24.528296", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-24 02:46:24,528 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 47839
+2025-04-24 02:46:26,995 [INFO] core.utils.logging_utils: ListView accessed: {'user': 'testino', 'view': 'permissions_dashboard', 'filters': {}, 'sort_by': None, 'page': None, 'extra': {}, 'method': 'GET', 'path': '/admin-dashboard/permissions/'}
+2025-04-24 02:46:27,002 [INFO] accessmanagement: SECURITY_EVENT: {"timestamp": "2025-04-24T02:46:27.002948", "event_type": "sensitive_data_access", "user": "testino", "ip_address": "127.0.0.1", "resource": "/admin-dashboard/permissions/", "details": {"method": "GET"}}
+2025-04-24 02:46:27,003 [INFO] django.server: "GET /admin-dashboard/permissions/ HTTP/1.1" 200 47839
+2025-04-24 02:46:29,266 [INFO] django.server: "GET /admin-dashboard/system-settings/ HTTP/1.1" 200 47665
+2025-04-24 02:46:42,485 [INFO] django.utils.autoreload: C:\Users\chrsc\PycharmProjects\InventoryPulse\core\utils\products.py changed, reloading.
